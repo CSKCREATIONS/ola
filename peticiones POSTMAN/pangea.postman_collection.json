@@ -1,0 +1,564 @@
+{
+	"info": {
+		"_postman_id": "e83eaa67-bb76-4826-b65d-3d336af474a5",
+		"name": "pangea",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "45102944",
+		"_collection_link": "https://natalia-5212252.postman.co/workspace/Natalia's-Workspace~cf231795-7577-454b-8002-c0a858828a6d/collection/45102944-e83eaa67-bb76-4826-b65d-3d336af474a5?action=share&source=collection_link&creator=45102944"
+	},
+	"item": [
+		{
+			"name": "usuarios",
+			"item": [
+				{
+					"name": "signup",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4NThiOGFjMjBlM2Y0OGE0Njc0MDEzZCIsInJvbGUiOiJhZG1pbiIsInBlcm1pc3Npb25zIjpbInVzdWFyaW9zLnZlciIsInVzdWFyaW9zLmNyZWFyIiwidXN1YXJpb3MuZWRpdGFyIiwidXN1YXJpb3MuZWxpbWluYXIiLCJyb2xlcy5jcmVhciIsInJvbGVzLnZlciJdLCJpYXQiOjE3NTA3Mzg3NzcsImV4cCI6MTc1MDc2NzU3N30.zizaxmj82Cb2d7cIPVDiBWl2wtP7VNdVh7RkTjT6B3o",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"username\": \"administrador\",\r\n  \"email\": \"administrador@jlaglobal.com\",\r\n  \"password\": \"admin123\",\r\n  \"firstName\": \"Natalia\",\r\n  \"secondName\": \"Andrea\",\r\n  \"surname\": \"Cardenas\",\r\n  \"secondSurname\": \"Lopez\",\r\n  \"role\": \"Administrador\"\r\n}\r\n\r\n"
+						},
+						"url": {
+							"raw": "{{base_url}}auth/signup",
+							"host": [
+								"{{base_url}}auth"
+							],
+							"path": [
+								"signup"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "signin",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const response = pm.response.json();\r",
+									"\r",
+									"if (response.token) {\r",
+									"    pm.collectionVariables.set(\"admin_token\", response.token);\r",
+									"    console.log(\"Token de admin guardado\");\r",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"username\": \"Administrador\",\r\n    \"password\": \"admin123\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}auth/signin",
+							"host": [
+								"{{base_url}}auth"
+							],
+							"path": [
+								"signin"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "changeOwnPassword",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{admin_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"newPassword\": \"admin123\"\r\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}users/change-password",
+							"host": [
+								"{{base_url}}users"
+							],
+							"path": [
+								"change-password"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "updateOwnProfile",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{admin_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"firstName\": \"Natalia\",\r\n  \"username\": \"admin\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}users/me",
+							"host": [
+								"{{base_url}}users"
+							],
+							"path": [
+								"me"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "createUser",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{admin_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"username\": \"editor\",\r\n  \"email\": \"aeditor@jlaglobal.com\",\r\n  \"password\": \"editor123\",\r\n  \"firstName\": \"Viviana\",\r\n  \"secondName\": \"Lucia\",\r\n  \"surname\": \"Perea\",\r\n  \"secondSurname\": \"Acosta\",\r\n  \"role\": \"Administrador\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}users",
+							"host": [
+								"{{base_url}}users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getAllUsers",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{admin_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}users",
+							"host": [
+								"{{base_url}}users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "updateUser",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{admin_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"username\": \"vladimir.quintero\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}users/686499a862bbfea49625528b",
+							"host": [
+								"{{base_url}}users"
+							],
+							"path": [
+								"686499a862bbfea49625528b"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "userEnabled",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{admin_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"enabled\": \"false\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}users/6858d863122584f580c87cf6/toggle-enabled",
+							"host": [
+								"{{base_url}}users"
+							],
+							"path": [
+								"6858d863122584f580c87cf6",
+								"toggle-enabled"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "changePassword",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{admin_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"newPassword\": \"roberto123\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}users/6858b84e20e3f48a46740133/change-password",
+							"host": [
+								"{{base_url}}users"
+							],
+							"path": [
+								"6858b84e20e3f48a46740133",
+								"change-password"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "deleteUser",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{admin_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}users/6866338687d64ab7cffaf36b",
+							"host": [
+								"{{base_url}}users"
+							],
+							"path": [
+								"6866338687d64ab7cffaf36b"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getAllRoles",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{admin_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}roles",
+							"host": [
+								"{{base_url}}roles"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "createRole",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{admin_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"Coordinador de Inventario\",\r\n    \"permissions\": [\r\n        \"productos.ver\",\r\n        \"productos.crear\",\r\n        \"productos.editar\",\r\n        \"productos.inactivar\",\r\n        \"categorias.ver\",\r\n        \"subcategorias.ver\",\r\n        \"proveedores.ver\",\r\n        \"cotizaciones.ver\"\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}roles",
+							"host": [
+								"{{base_url}}roles"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getAllRoles",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{admin_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{base_url}}roles",
+							"host": [
+								"{{base_url}}roles"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "roleEnabled",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{admin_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"enabled\": true\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}roles/685a2d2d81b79670eea3309a/toggle-enabled",
+							"host": [
+								"{{base_url}}roles"
+							],
+							"path": [
+								"685a2d2d81b79670eea3309a",
+								"toggle-enabled"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "updateRole",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{admin_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"name\": \"users controller\",\r\n  \"permissions\": [\r\n    \"usuarios.eliminar\",\r\n    \"usuarios.ver\",\r\n    \"usuarios.crear\",\r\n    \"usuarios.editar\",\r\n    \"usuarios.inhabilitar\",\r\n    \"roles.ver\"\r\n  ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}roles/685a2d2d81b79670eea3309a",
+							"host": [
+								"{{base_url}}roles"
+							],
+							"path": [
+								"685a2d2d81b79670eea3309a"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:5000/api/",
+			"type": "string"
+		},
+		{
+			"key": "admin_token",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

@@ -1,0 +1,252 @@
+[{
+  "_id": {
+    "$oid": "686884654901e18164eea3d4"
+  },
+  "nombre": "Valentina",
+  "ciudad": "Cali",
+  "direccion": "Calle 123",
+  "telefono": "123456",
+  "correo": "Val@sena.com",
+  "esCliente": false,
+  "createdAt": {
+    "$date": "2025-07-05T01:48:21.235Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-05T01:48:21.235Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6869673353dfb595afcd1885"
+  },
+  "nombre": "oscar",
+  "ciudad": "cali",
+  "direccion": "calo123245",
+  "telefono": "12345",
+  "correo": "osc@cat.com",
+  "esCliente": false,
+  "createdAt": {
+    "$date": "2025-07-05T17:56:03.429Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-05T17:56:03.429Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6869710b53dfb595afcd196d"
+  },
+  "nombre": "sofia",
+  "ciudad": "milan",
+  "direccion": "calle123",
+  "telefono": "123454",
+  "correo": "soft@ia.com",
+  "esCliente": false,
+  "createdAt": {
+    "$date": "2025-07-05T18:38:03.136Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-05T18:38:03.136Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6869726153dfb595afcd1992"
+  },
+  "nombre": "robin",
+  "ciudad": "pensilvania",
+  "direccion": "calle12",
+  "telefono": "1234",
+  "correo": "rob@in.com",
+  "esCliente": false,
+  "createdAt": {
+    "$date": "2025-07-05T18:43:45.999Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-05T18:43:45.999Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6869743a53dfb595afcd19c1"
+  },
+  "nombre": "a",
+  "ciudad": "a",
+  "direccion": "a",
+  "telefono": "a",
+  "correo": "a@a.com",
+  "esCliente": false,
+  "createdAt": {
+    "$date": "2025-07-05T18:51:38.650Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-05T18:51:38.650Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6869c7dbd51f0a2b7089d260"
+  },
+  "nombre": "julian",
+  "ciudad": "bogota",
+  "direccion": "call12",
+  "telefono": "12435",
+  "correo": "jul@an.com",
+  "esCliente": false,
+  "createdAt": {
+    "$date": "2025-07-06T00:48:27.095Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-06T00:48:27.095Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "686a00a0f3dacd0f5b9d3a01"
+  },
+  "nombre": "stefanie",
+  "ciudad": "cali",
+  "direccion": "calle123",
+  "telefono": "123425",
+  "correo": "lala@v.com",
+  "esCliente": false,
+  "createdAt": {
+    "$date": "2025-07-06T04:50:40.547Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-06T04:50:40.547Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "686a010bf3dacd0f5b9d3a56"
+  },
+  "nombre": "valeria",
+  "ciudad": "tunja",
+  "direccion": "cer123",
+  "telefono": "12345",
+  "correo": "vel@c.com",
+  "esCliente": false,
+  "createdAt": {
+    "$date": "2025-07-06T04:52:27.120Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-06T04:52:27.120Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "686a05d4f3dacd0f5b9d3beb"
+  },
+  "nombre": "mani",
+  "ciudad": "cali",
+  "direccion": "ca1243",
+  "telefono": "23454",
+  "correo": "am@m.com",
+  "esCliente": false,
+  "createdAt": {
+    "$date": "2025-07-06T05:12:52.088Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-06T05:12:52.088Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "686a08fdf3dacd0f5b9d3e3b"
+  },
+  "nombre": "emely",
+  "ciudad": "cali",
+  "direccion": "casd213",
+  "telefono": "234345",
+  "correo": "eme@lu.com",
+  "esCliente": false,
+  "createdAt": {
+    "$date": "2025-07-06T05:26:21.239Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-06T05:26:21.239Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "686cc541756688ce5cf030d4"
+  },
+  "nombre": "juan",
+  "ciudad": "yupi",
+  "direccion": "yupiii",
+  "telefono": "3131341423",
+  "correo": "jdjd@gmail.com",
+  "esCliente": false,
+  "createdAt": {
+    "$date": "2025-07-08T07:14:09.181Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-08T07:14:09.181Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "686cc55a756688ce5cf030d8"
+  },
+  "nombre": "juan",
+  "ciudad": "yupi",
+  "direccion": "yupiii",
+  "telefono": "3131341423",
+  "correo": "jdj@gmail.com",
+  "esCliente": false,
+  "createdAt": {
+    "$date": "2025-07-08T07:14:34.728Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-08T07:14:34.728Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "686cde9410a527aca186f2a4"
+  },
+  "nombre": "lizeth",
+  "ciudad": "bogota",
+  "direccion": "calle123",
+  "telefono": "12323425",
+  "correo": "liz@gmial.com",
+  "esCliente": true,
+  "createdAt": {
+    "$date": "2025-07-08T09:02:12.574Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-08T09:11:25.385Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "686d79e0b7ca8d3e51d0f4e9"
+  },
+  "nombre": "juan1",
+  "ciudad": "yupi",
+  "direccion": "yupiii",
+  "telefono": "3131341423",
+  "correo": "jdj1@gmail.com",
+  "esCliente": false,
+  "createdAt": {
+    "$date": "2025-07-08T20:04:48.822Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-08T20:04:48.822Z"
+  },
+  "__v": 0
+}]

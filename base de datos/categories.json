@@ -1,0 +1,112 @@
+[{
+  "_id": {
+    "$oid": "684508af28a89e5874b3a632"
+  },
+  "name": "Cilindros de oxigeno",
+  "description": "cilindros de oxigeno de los buenos",
+  "createdAt": {
+    "$date": "2025-06-08T03:51:11.974Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-08T06:35:01.828Z"
+  },
+  "activo": true
+},
+{
+  "_id": {
+    "$oid": "68450adefc88e90d35621b7e"
+  },
+  "name": "Televisores",
+  "description": "Solo televisores pantalla plana",
+  "createdAt": {
+    "$date": "2025-06-08T04:00:30.459Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-08T02:43:01.422Z"
+  },
+  "activo": true
+},
+{
+  "_id": {
+    "$oid": "68450bcefc88e90d35621b83"
+  },
+  "name": "camisetas skiny",
+  "description": "Las mejores del mercado",
+  "createdAt": {
+    "$date": "2025-06-08T04:04:30.990Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-08T06:12:28.090Z"
+  },
+  "activo": true
+},
+{
+  "_id": {
+    "$oid": "68462cd621a3ee921e5db6fb"
+  },
+  "name": "Grama sintetica",
+  "description": "Grama sintetica de la buena",
+  "createdAt": {
+    "$date": "2025-06-09T00:37:42.712Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-08T01:50:21.025Z"
+  },
+  "activo": true
+},
+{
+  "_id": {
+    "$oid": "686c8012de6530b74f744a58"
+  },
+  "name": "Tecnologia",
+  "description": "Equipos de hardware",
+  "activo": true,
+  "createdAt": {
+    "$date": "2025-07-08T02:18:58.047Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-08T03:27:40.592Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "686cb64a8cd5670555cab9b4"
+  },
+  "name": "tulio",
+  "description": "melo",
+  "activo": true,
+  "createdAt": {
+    "$date": "2025-07-08T06:10:18.506Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-08T06:10:18.506Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "686cb6a78cd5670555cab9c8"
+  },
+  "name": "tulo",
+  "description": "melo",
+  "activo": true,
+  "createdAt": {
+    "$date": "2025-07-08T06:11:51.060Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-08T06:11:51.060Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "686d784ab7ca8d3e51d0f4d4"
+  },
+  "name": "aroro",
+  "description": "aruru",
+  "activo": true,
+  "createdAt": {
+    "$date": "2025-07-08T19:58:02.017Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-08T19:58:02.017Z"
+  }
+}]

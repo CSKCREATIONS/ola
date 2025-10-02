@@ -1,0 +1,101 @@
+[{
+  "_id": {
+    "$oid": "68687a04ccc62f877cbf1034"
+  },
+  "nombre": "natalia",
+  "contacto": {
+    "telefono": "1234",
+    "correo": "Nat@gmail.com"
+  },
+  "direccion": {
+    "calle": "clla123",
+    "pais": "Colombia"
+  },
+  "empresa": "",
+  "productos": [
+    {
+      "$oid": "68687c2d4901e18164eea37d"
+    },
+    {
+      "$oid": "6868aaaeee7c45c13e255296"
+    },
+    {
+      "$oid": "686c914ab389c09c8a9ac1fb"
+    },
+    {
+      "$oid": "686cb79a8cd5670555cab9d9"
+    },
+    {
+      "$oid": "686cb7b18cd5670555cab9e3"
+    }
+  ],
+  "activo": false,
+  "fechaCreacion": {
+    "$date": "2025-07-05T01:04:04.775Z"
+  },
+  "__v": 0,
+  "updatedAt": {
+    "$date": "2025-07-08T07:01:42.169Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6869fcb0f3dacd0f5b9d3883"
+  },
+  "nombre": "julian",
+  "contacto": {
+    "telefono": "12345",
+    "correo": "julian@gmail.com"
+  },
+  "direccion": {
+    "calle": "car124",
+    "pais": "Estados Unidos"
+  },
+  "empresa": "Microsoft",
+  "productos": [
+    {
+      "$oid": "686b3f8d4010829b53d15dbd"
+    },
+    {
+      "$oid": "686c8053de6530b74f744a7c"
+    },
+    {
+      "$oid": "686c8c7e9022f5feff88760e"
+    }
+  ],
+  "activo": true,
+  "fechaCreacion": {
+    "$date": "2025-07-06T04:33:52.900Z"
+  },
+  "__v": 0,
+  "updatedAt": {
+    "$date": "2025-07-08T19:57:39.092Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "686cc0ce8cd5670555caba9b"
+  },
+  "nombre": "juan12",
+  "contacto": {
+    "telefono": "3213421312",
+    "correo": "juandiablo12@cozreo.com"
+  },
+  "direccion": {
+    "calle": "cll 123 # 1231",
+    "pais": "Colombia"
+  },
+  "empresa": "google",
+  "productos": [],
+  "activo": false,
+  "fechaCreacion": {
+    "$date": "2025-07-08T06:55:10.672Z"
+  },
+  "createdAt": {
+    "$date": "2025-07-08T06:55:10.672Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-08T19:57:26.466Z"
+  },
+  "__v": 0
+}]

@@ -1,0 +1,320 @@
+[{
+  "_id": {
+    "$oid": "6868a6d0ee7c45c13e25523c"
+  },
+  "proveedor": {
+    "$oid": "68687a04ccc62f877cbf1034"
+  },
+  "productos": [
+    {
+      "producto": {
+        "$oid": "68687c2d4901e18164eea37d"
+      },
+      "cantidad": 112,
+      "precioUnitario": 10000,
+      "_id": {
+        "$oid": "6868a6d0ee7c45c13e25523d"
+      }
+    }
+  ],
+  "fechaCompra": {
+    "$date": "2025-07-05T04:15:12.328Z"
+  },
+  "total": 1120000,
+  "condicionesPago": "transferencia",
+  "observaciones": "hola",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6868aa7dee7c45c13e255278"
+  },
+  "proveedor": {
+    "$oid": "68687a04ccc62f877cbf1034"
+  },
+  "productos": [
+    {
+      "producto": {
+        "$oid": "68687c2d4901e18164eea37d"
+      },
+      "cantidad": 1312,
+      "precioUnitario": 10000,
+      "_id": {
+        "$oid": "6868aa7dee7c45c13e255279"
+      }
+    }
+  ],
+  "fechaCompra": {
+    "$date": "2025-07-05T04:30:53.848Z"
+  },
+  "total": 13120000,
+  "condicionesPago": "",
+  "observaciones": "",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6868b25fbbb8e97656fa2710"
+  },
+  "proveedor": {
+    "$oid": "68687a04ccc62f877cbf1034"
+  },
+  "productos": [
+    {
+      "producto": {
+        "$oid": "6868aaaeee7c45c13e255296"
+      },
+      "cantidad": 123,
+      "precioUnitario": 300000,
+      "_id": {
+        "$oid": "6868b25fbbb8e97656fa2711"
+      }
+    },
+    {
+      "producto": {
+        "$oid": "68687c2d4901e18164eea37d"
+      },
+      "cantidad": 1213,
+      "precioUnitario": 10000,
+      "_id": {
+        "$oid": "6868b25fbbb8e97656fa2712"
+      }
+    }
+  ],
+  "fecha": {
+    "$date": "2025-07-05T05:04:31.726Z"
+  },
+  "total": 49030000,
+  "condicionesPago": "hola",
+  "observaciones": "hola",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6868b928a09cce1d5c344ad6"
+  },
+  "proveedor": {
+    "$oid": "68687a04ccc62f877cbf1034"
+  },
+  "productos": [
+    {
+      "producto": {
+        "$oid": "6868aaaeee7c45c13e255296"
+      },
+      "cantidad": 113,
+      "precioUnitario": 300000,
+      "_id": {
+        "$oid": "6868b928a09cce1d5c344ad7"
+      }
+    },
+    {
+      "producto": {
+        "$oid": "68687c2d4901e18164eea37d"
+      },
+      "cantidad": 1312,
+      "precioUnitario": 10000,
+      "_id": {
+        "$oid": "6868b928a09cce1d5c344ad8"
+      }
+    }
+  ],
+  "fecha": {
+    "$date": "2025-07-05T05:33:28.553Z"
+  },
+  "total": 47020000,
+  "condicionesPago": "nequi",
+  "observaciones": "cosas",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6868c596f9e75c67f96c035d"
+  },
+  "proveedor": {
+    "$oid": "68687a04ccc62f877cbf1034"
+  },
+  "productos": [
+    {
+      "producto": {
+        "$oid": "6868aaaeee7c45c13e255296"
+      },
+      "cantidad": 16,
+      "precioUnitario": 300000,
+      "_id": {
+        "$oid": "6868c867f9e75c67f96c0405"
+      }
+    },
+    {
+      "producto": {
+        "$oid": "68687c2d4901e18164eea37d"
+      },
+      "cantidad": 19,
+      "precioUnitario": 10000,
+      "_id": {
+        "$oid": "6868c867f9e75c67f96c0406"
+      }
+    }
+  ],
+  "fecha": {
+    "$date": "2025-07-05T06:26:30.269Z"
+  },
+  "total": 4990000,
+  "condicionesPago": "especie",
+  "observaciones": "al",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6868c87cf9e75c67f96c0416"
+  },
+  "proveedor": {
+    "$oid": "68687a04ccc62f877cbf1034"
+  },
+  "productos": [
+    {
+      "producto": {
+        "$oid": "6868aaaeee7c45c13e255296"
+      },
+      "cantidad": 12,
+      "precioUnitario": 300000,
+      "_id": {
+        "$oid": "6868c87cf9e75c67f96c0417"
+      }
+    },
+    {
+      "producto": {
+        "$oid": "68687c2d4901e18164eea37d"
+      },
+      "cantidad": 13,
+      "precioUnitario": 10000,
+      "_id": {
+        "$oid": "6868c87cf9e75c67f96c0418"
+      }
+    }
+  ],
+  "fecha": {
+    "$date": "2025-07-05T06:38:52.038Z"
+  },
+  "total": 3730000,
+  "condicionesPago": "12",
+  "observaciones": "21",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "68695a5153dfb595afcd142d"
+  },
+  "proveedor": {
+    "$oid": "68687a04ccc62f877cbf1034"
+  },
+  "productos": [
+    {
+      "producto": {
+        "$oid": "6868aaaeee7c45c13e255296"
+      },
+      "cantidad": 1,
+      "precioUnitario": 300000,
+      "_id": {
+        "$oid": "68695a5153dfb595afcd142e"
+      }
+    }
+  ],
+  "fecha": {
+    "$date": "2025-07-05T17:01:05.092Z"
+  },
+  "total": 300000,
+  "condicionesPago": "2",
+  "observaciones": "1",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6869fc29f3dacd0f5b9d3831"
+  },
+  "proveedor": {
+    "$oid": "68687a04ccc62f877cbf1034"
+  },
+  "productos": [
+    {
+      "producto": {
+        "$oid": "6868aaaeee7c45c13e255296"
+      },
+      "cantidad": 112,
+      "precioUnitario": 300000,
+      "_id": {
+        "$oid": "6869fc29f3dacd0f5b9d3832"
+      }
+    },
+    {
+      "producto": {
+        "$oid": "68687c2d4901e18164eea37d"
+      },
+      "cantidad": 1213,
+      "precioUnitario": 10000,
+      "_id": {
+        "$oid": "6869fc29f3dacd0f5b9d3833"
+      }
+    }
+  ],
+  "fecha": {
+    "$date": "2025-07-06T04:31:37.584Z"
+  },
+  "total": 45730000,
+  "condicionesPago": "12",
+  "observaciones": "12",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "686cbe818cd5670555caba1e"
+  },
+  "proveedor": {
+    "$oid": "68687a04ccc62f877cbf1034"
+  },
+  "productos": [
+    {
+      "producto": {
+        "$oid": "686cb79a8cd5670555cab9d9"
+      },
+      "cantidad": 15,
+      "precioUnitario": 10000,
+      "_id": {
+        "$oid": "686cbfdf8cd5670555caba7e"
+      }
+    }
+  ],
+  "fecha": {
+    "$date": "2025-07-08T06:45:21.318Z"
+  },
+  "total": 150000,
+  "condicionesPago": "crediculo",
+  "observaciones": "ninguna",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "686cbff78cd5670555caba81"
+  },
+  "proveedor": {
+    "$oid": "68687a04ccc62f877cbf1034"
+  },
+  "productos": [
+    {
+      "producto": {
+        "$oid": "686cb79a8cd5670555cab9d9"
+      },
+      "cantidad": 15,
+      "precioUnitario": 10000,
+      "_id": {
+        "$oid": "686cbff78cd5670555caba82"
+      }
+    }
+  ],
+  "fecha": {
+    "$date": "2025-07-08T06:51:35.418Z"
+  },
+  "total": 150000,
+  "condicionesPago": "credicuca",
+  "observaciones": "ninguna",
+  "__v": 0
+}]

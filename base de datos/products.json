@@ -1,0 +1,104 @@
+[{
+  "_id": {
+    "$oid": "686c8c7e9022f5feff88760e"
+  },
+  "name": "Mouse gamer",
+  "description": "3600 dpi + luces rgb",
+  "price": 20000,
+  "stock": 15,
+  "category": {
+    "$oid": "686c8012de6530b74f744a58"
+  },
+  "subcategory": {
+    "$oid": "686c802fde6530b74f744a63"
+  },
+  "images": [],
+  "activo": false,
+  "proveedor": {
+    "$oid": "6869fcb0f3dacd0f5b9d3883"
+  },
+  "createdAt": {
+    "$date": "2025-07-08T03:11:58.286Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-08T06:31:42.988Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "686c914ab389c09c8a9ac1fb"
+  },
+  "name": "mangos",
+  "description": "verdes",
+  "price": 5000,
+  "stock": 100,
+  "category": {
+    "$oid": "68462cd621a3ee921e5db6fb"
+  },
+  "subcategory": {
+    "$oid": "6868793eccc62f877cbf102e"
+  },
+  "images": [],
+  "activo": true,
+  "proveedor": {
+    "$oid": "68687a04ccc62f877cbf1034"
+  },
+  "createdAt": {
+    "$date": "2025-07-08T03:32:26.401Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-08T06:35:01.833Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "686cb79a8cd5670555cab9d9"
+  },
+  "name": "RTX 5090 TI1",
+  "description": "grafica",
+  "price": 1000,
+  "stock": 10,
+  "category": {
+    "$oid": "68462cd621a3ee921e5db6fb"
+  },
+  "subcategory": {
+    "$oid": "6868793eccc62f877cbf102e"
+  },
+  "images": [],
+  "activo": true,
+  "proveedor": {
+    "$oid": "68687a04ccc62f877cbf1034"
+  },
+  "createdAt": {
+    "$date": "2025-07-08T06:15:54.086Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-08T06:35:01.833Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "686cb7b18cd5670555cab9e3"
+  },
+  "name": "RTX 5090 TI11",
+  "description": "graficasssssss",
+  "price": 100,
+  "stock": 10,
+  "category": {
+    "$oid": "68462cd621a3ee921e5db6fb"
+  },
+  "subcategory": {
+    "$oid": "6868793eccc62f877cbf102e"
+  },
+  "images": [],
+  "activo": true,
+  "proveedor": {
+    "$oid": "68687a04ccc62f877cbf1034"
+  },
+  "createdAt": {
+    "$date": "2025-07-08T06:16:17.157Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-08T06:35:01.833Z"
+  }
+}]

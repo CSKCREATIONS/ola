@@ -1,0 +1,540 @@
+[{
+  "_id": {
+    "$oid": "6868855a4901e18164eea440"
+  },
+  "numeroPedido": "PED-00001",
+  "productos": [
+    {
+      "product": {
+        "$oid": "6847a85e80fba650e43fdd9b"
+      },
+      "cantidad": 12,
+      "precioUnitario": 70000,
+      "_id": {
+        "$oid": "6868855a4901e18164eea441"
+      }
+    },
+    {
+      "product": {
+        "$oid": "68687a53ccc62f877cbf1047"
+      },
+      "cantidad": 23,
+      "precioUnitario": 1000,
+      "_id": {
+        "$oid": "6868855a4901e18164eea442"
+      }
+    },
+    {
+      "product": {
+        "$oid": "6847984280fba650e43fdd4c"
+      },
+      "cantidad": 123,
+      "precioUnitario": 1200000,
+      "_id": {
+        "$oid": "6868855a4901e18164eea443"
+      }
+    }
+  ],
+  "fechaEntrega": {
+    "$date": "2025-07-04T00:00:00.000Z"
+  },
+  "observacion": "hola",
+  "motivoDevolucion": "lo que sea",
+  "cliente": {
+    "$oid": "686884654901e18164eea3d4"
+  },
+  "createdAt": {
+    "$date": "2025-07-05T01:52:26.820Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-08T08:27:26.074Z"
+  },
+  "__v": 0,
+  "estado": "devuelto"
+},
+{
+  "_id": {
+    "$oid": "686a0624f3dacd0f5b9d3c5e"
+  },
+  "numeroPedido": "PED-00002",
+  "productos": [
+    {
+      "product": {
+        "$oid": "684796b380fba650e43fdd37"
+      },
+      "cantidad": 21,
+      "precioUnitario": 600000,
+      "_id": {
+        "$oid": "686a0624f3dacd0f5b9d3c5f"
+      }
+    },
+    {
+      "product": {
+        "$oid": "6847a8c980fba650e43fddaa"
+      },
+      "cantidad": 21,
+      "precioUnitario": 55000,
+      "_id": {
+        "$oid": "686a0624f3dacd0f5b9d3c60"
+      }
+    },
+    {
+      "product": {
+        "$oid": "68687a53ccc62f877cbf1047"
+      },
+      "cantidad": 20,
+      "precioUnitario": 1000,
+      "_id": {
+        "$oid": "686a0624f3dacd0f5b9d3c61"
+      }
+    }
+  ],
+  "fechaEntrega": {
+    "$date": "2025-07-08T00:00:00.000Z"
+  },
+  "observacion": "32",
+  "motivoDevolucion": "",
+  "cliente": {
+    "$oid": "686a05d4f3dacd0f5b9d3beb"
+  },
+  "createdAt": {
+    "$date": "2025-07-06T05:14:12.723Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-08T08:15:59.858Z"
+  },
+  "__v": 0,
+  "estado": "cancelado"
+},
+{
+  "_id": {
+    "$oid": "686cceabea6148f3876d76e9"
+  },
+  "numeroPedido": "PED-00004",
+  "productos": [
+    {
+      "product": {
+        "$oid": "686c914ab389c09c8a9ac1fb"
+      },
+      "cantidad": 2,
+      "precioUnitario": 1500,
+      "_id": {
+        "$oid": "686cceabea6148f3876d76ea"
+      }
+    },
+    {
+      "product": {
+        "$oid": "686cb79a8cd5670555cab9d9"
+      },
+      "cantidad": 1,
+      "precioUnitario": 2000,
+      "_id": {
+        "$oid": "686cceabea6148f3876d76eb"
+      }
+    }
+  ],
+  "fechaEntrega": {
+    "$date": "2025-07-10T15:00:00.000Z"
+  },
+  "observacion": "Entregar después de las 3 PM",
+  "motivoDevolucion": "",
+  "estado": "entregado",
+  "cliente": {
+    "$oid": "686884654901e18164eea3d4"
+  },
+  "createdAt": {
+    "$date": "2025-07-08T07:54:19.290Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-08T08:56:24.631Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "686cd303db6bdedfd929837b"
+  },
+  "numeroPedido": "PED-00005",
+  "productos": [
+    {
+      "product": {
+        "$oid": "686c914ab389c09c8a9ac1fb"
+      },
+      "cantidad": 2,
+      "precioUnitario": 1500,
+      "_id": {
+        "$oid": "686cd303db6bdedfd929837c"
+      }
+    },
+    {
+      "product": {
+        "$oid": "686cb79a8cd5670555cab9d9"
+      },
+      "cantidad": 1,
+      "precioUnitario": 2000,
+      "_id": {
+        "$oid": "686cd303db6bdedfd929837d"
+      }
+    }
+  ],
+  "fechaEntrega": {
+    "$date": "2025-07-10T15:00:00.000Z"
+  },
+  "observacion": "Entregar después de las 3 PM",
+  "motivoDevolucion": "",
+  "estado": "entregado",
+  "cliente": {
+    "$oid": "686884654901e18164eea3d4"
+  },
+  "createdAt": {
+    "$date": "2025-07-08T08:12:51.305Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-08T08:13:31.518Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "686cd349db6bdedfd929838c"
+  },
+  "numeroPedido": "PED-00006",
+  "productos": [
+    {
+      "product": {
+        "$oid": "686c914ab389c09c8a9ac1fb"
+      },
+      "cantidad": 2,
+      "precioUnitario": 15000,
+      "_id": {
+        "$oid": "686cd349db6bdedfd929838d"
+      }
+    },
+    {
+      "product": {
+        "$oid": "686cb79a8cd5670555cab9d9"
+      },
+      "cantidad": 1,
+      "precioUnitario": 2000,
+      "_id": {
+        "$oid": "686cd349db6bdedfd929838e"
+      }
+    }
+  ],
+  "fechaEntrega": {
+    "$date": "2025-07-10T15:00:00.000Z"
+  },
+  "observacion": "Entregar después de las 3 PM",
+  "motivoDevolucion": "",
+  "estado": "entregado",
+  "cliente": {
+    "$oid": "686884654901e18164eea3d4"
+  },
+  "createdAt": {
+    "$date": "2025-07-08T08:14:01.179Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-08T08:21:51.002Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "686cd3f8db6bdedfd92983b5"
+  },
+  "numeroPedido": "PED-00007",
+  "productos": [
+    {
+      "product": {
+        "$oid": "686c914ab389c09c8a9ac1fb"
+      },
+      "cantidad": 2,
+      "precioUnitario": 150000,
+      "_id": {
+        "$oid": "686cd3f8db6bdedfd92983b6"
+      }
+    },
+    {
+      "product": {
+        "$oid": "686cb79a8cd5670555cab9d9"
+      },
+      "cantidad": 1,
+      "precioUnitario": 2000,
+      "_id": {
+        "$oid": "686cd3f8db6bdedfd92983b7"
+      }
+    }
+  ],
+  "fechaEntrega": {
+    "$date": "2025-07-10T15:00:00.000Z"
+  },
+  "observacion": "Entregar después de las 3 PM",
+  "motivoDevolucion": "",
+  "estado": "cancelado",
+  "cliente": {
+    "$oid": "686884654901e18164eea3d4"
+  },
+  "createdAt": {
+    "$date": "2025-07-08T08:16:56.904Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-08T08:27:17.023Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "686cdeeb10a527aca186f3bc"
+  },
+  "numeroPedido": "PED-00008",
+  "productos": [
+    {
+      "product": {
+        "$oid": "686cb7b18cd5670555cab9e3"
+      },
+      "cantidad": 21,
+      "precioUnitario": 100,
+      "_id": {
+        "$oid": "686cdeeb10a527aca186f3bd"
+      }
+    },
+    {
+      "product": {
+        "$oid": "686c914ab389c09c8a9ac1fb"
+      },
+      "cantidad": 32,
+      "precioUnitario": 5000,
+      "_id": {
+        "$oid": "686cdeeb10a527aca186f3be"
+      }
+    },
+    {
+      "product": {
+        "$oid": "686c8c7e9022f5feff88760e"
+      },
+      "cantidad": 12,
+      "precioUnitario": 20000,
+      "_id": {
+        "$oid": "686cdeeb10a527aca186f3bf"
+      }
+    },
+    {
+      "product": {
+        "$oid": "686c914ab389c09c8a9ac1fb"
+      },
+      "cantidad": 3,
+      "precioUnitario": 5000,
+      "_id": {
+        "$oid": "686cdeeb10a527aca186f3c0"
+      }
+    }
+  ],
+  "fechaEntrega": {
+    "$date": "2025-07-17T00:00:00.000Z"
+  },
+  "observacion": "hola",
+  "motivoDevolucion": "",
+  "estado": "entregado",
+  "cliente": {
+    "$oid": "686cde9410a527aca186f2a4"
+  },
+  "createdAt": {
+    "$date": "2025-07-08T09:03:39.231Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-08T09:03:57.452Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "686ce012549cf7b61c97240e"
+  },
+  "numeroPedido": "PED-00009",
+  "productos": [
+    {
+      "product": {
+        "$oid": "686cb7b18cd5670555cab9e3"
+      },
+      "cantidad": 21,
+      "precioUnitario": 100,
+      "_id": {
+        "$oid": "686ce012549cf7b61c97240f"
+      }
+    },
+    {
+      "product": {
+        "$oid": "686c914ab389c09c8a9ac1fb"
+      },
+      "cantidad": 32,
+      "precioUnitario": 5000,
+      "_id": {
+        "$oid": "686ce012549cf7b61c972410"
+      }
+    },
+    {
+      "product": {
+        "$oid": "686c8c7e9022f5feff88760e"
+      },
+      "cantidad": 12,
+      "precioUnitario": 20000,
+      "_id": {
+        "$oid": "686ce012549cf7b61c972411"
+      }
+    },
+    {
+      "product": {
+        "$oid": "686c914ab389c09c8a9ac1fb"
+      },
+      "cantidad": 3,
+      "precioUnitario": 5000,
+      "_id": {
+        "$oid": "686ce012549cf7b61c972412"
+      }
+    }
+  ],
+  "fechaEntrega": {
+    "$date": "2025-07-02T00:00:00.000Z"
+  },
+  "observacion": "k",
+  "motivoDevolucion": "",
+  "estado": "entregado",
+  "cliente": {
+    "$oid": "686cde9410a527aca186f2a4"
+  },
+  "createdAt": {
+    "$date": "2025-07-08T09:08:34.959Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-08T09:11:37.597Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "686ce0c26243b7341974bd11"
+  },
+  "numeroPedido": "PED-00010",
+  "productos": [
+    {
+      "product": {
+        "$oid": "686cb7b18cd5670555cab9e3"
+      },
+      "cantidad": 21,
+      "precioUnitario": 100,
+      "_id": {
+        "$oid": "686ce0c26243b7341974bd12"
+      }
+    },
+    {
+      "product": {
+        "$oid": "686c914ab389c09c8a9ac1fb"
+      },
+      "cantidad": 32,
+      "precioUnitario": 5000,
+      "_id": {
+        "$oid": "686ce0c26243b7341974bd13"
+      }
+    },
+    {
+      "product": {
+        "$oid": "686c8c7e9022f5feff88760e"
+      },
+      "cantidad": 12,
+      "precioUnitario": 20000,
+      "_id": {
+        "$oid": "686ce0c26243b7341974bd14"
+      }
+    },
+    {
+      "product": {
+        "$oid": "686c914ab389c09c8a9ac1fb"
+      },
+      "cantidad": 3,
+      "precioUnitario": 5000,
+      "_id": {
+        "$oid": "686ce0c26243b7341974bd15"
+      }
+    }
+  ],
+  "fechaEntrega": {
+    "$date": "2025-07-02T00:00:00.000Z"
+  },
+  "observacion": "s",
+  "motivoDevolucion": "",
+  "estado": "agendado",
+  "cliente": {
+    "$oid": "686cde9410a527aca186f2a4"
+  },
+  "createdAt": {
+    "$date": "2025-07-08T09:11:30.676Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-08T09:11:30.676Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "686d7793b7ca8d3e51d0f43f"
+  },
+  "numeroPedido": "PED-00011",
+  "productos": [
+    {
+      "product": {
+        "$oid": "686cb7b18cd5670555cab9e3"
+      },
+      "cantidad": 21,
+      "precioUnitario": 100,
+      "_id": {
+        "$oid": "686d7793b7ca8d3e51d0f440"
+      }
+    },
+    {
+      "product": {
+        "$oid": "686c914ab389c09c8a9ac1fb"
+      },
+      "cantidad": 32,
+      "precioUnitario": 5000,
+      "_id": {
+        "$oid": "686d7793b7ca8d3e51d0f441"
+      }
+    },
+    {
+      "product": {
+        "$oid": "686c8c7e9022f5feff88760e"
+      },
+      "cantidad": 12,
+      "precioUnitario": 20000,
+      "_id": {
+        "$oid": "686d7793b7ca8d3e51d0f442"
+      }
+    },
+    {
+      "product": {
+        "$oid": "686c914ab389c09c8a9ac1fb"
+      },
+      "cantidad": 3,
+      "precioUnitario": 5000,
+      "_id": {
+        "$oid": "686d7793b7ca8d3e51d0f443"
+      }
+    }
+  ],
+  "fechaEntrega": {
+    "$date": "2025-07-09T00:00:00.000Z"
+  },
+  "observacion": "as",
+  "motivoDevolucion": "",
+  "estado": "agendado",
+  "cliente": {
+    "$oid": "686cde9410a527aca186f2a4"
+  },
+  "createdAt": {
+    "$date": "2025-07-08T19:54:59.974Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-08T19:54:59.974Z"
+  },
+  "__v": 0
+}]

@@ -1,0 +1,34 @@
+[{
+  "_id": {
+    "$oid": "6868793eccc62f877cbf102e"
+  },
+  "name": "tulio tulio123",
+  "description": "melo3123asdsdaf",
+  "category": {
+    "$oid": "684508af28a89e5874b3a632"
+  },
+  "activo": true,
+  "createdAt": {
+    "$date": "2025-07-05T01:00:46.519Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-08T06:35:01.830Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "686c802fde6530b74f744a63"
+  },
+  "name": "Perifericos",
+  "description": "Perifericos funcionales para pc",
+  "category": {
+    "$oid": "686c8012de6530b74f744a58"
+  },
+  "activo": false,
+  "createdAt": {
+    "$date": "2025-07-08T02:19:27.417Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-08T06:31:42.986Z"
+  }
+}]

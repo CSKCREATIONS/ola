@@ -1,0 +1,27 @@
+.custom-footer {
+  width: 100%;
+  text-align: center;
+  padding: 10px 0;
+  margin-top: auto;
+  /* para que quede al final si usas layout flex */
+}
+
+.custom-footer-text {
+  font-size: 0.7rem;
+  /* letra pequeña */
+  color: #9ca3af;
+  /* gris suave */
+  margin: 0;
+}
+
+.custom-highlight {
+  color: #54a8c2;
+  /* amarillo */
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.custom-highlight:hover {
+  color: #54a8c2;
+  filter: brightness(1.2);
+}
