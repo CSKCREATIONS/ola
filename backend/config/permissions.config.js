@@ -60,7 +60,8 @@ module.exports = {
     VERCANCELADOS: 'pedidosCancelados.ver',
     VERDEVUELTOS: 'pedidosDevueltos.ver',
     VERREPORTES: 'reportesVentas.ver',
-    REMISIONAR: 'pedidos.remisionar'
+    REMISIONAR: 'pedidos.remisionar',
+    ENVIAR: 'pedidos.enviar'
   },
   COTIZACIONES: {
     VER: 'cotizaciones.ver',

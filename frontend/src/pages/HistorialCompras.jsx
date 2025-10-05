@@ -5,6 +5,119 @@ import '../App.css';
 import Fijo from '../components/Fijo';
 import NavCompras from '../components/NavCompras';
 
+// CSS inyectado para diseño avanzado
+const advancedStyles = `
+  .historial-compras-advanced-table {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    border: 1px solid #e5e7eb;
+  }
+  
+  .historial-compras-header-section {
+    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+    padding: 20px 25px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  
+  .historial-compras-table-container {
+    overflow: auto;
+  }
+  
+  .historial-compras-advanced-table table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  
+  .historial-compras-advanced-table thead tr {
+    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+    border-bottom: 2px solid #e5e7eb;
+  }
+  
+  .historial-compras-advanced-table thead th {
+    padding: 16px 12px;
+    text-align: left;
+    font-weight: 600;
+    color: #374151;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+  }
+  
+  .historial-compras-advanced-table tbody tr {
+    border-bottom: 1px solid #f3f4f6;
+    transition: all 0.2s ease;
+  }
+  
+  .historial-compras-advanced-table tbody tr:hover {
+    background-color: #f8fafc;
+  }
+  
+  .historial-compras-advanced-table tbody td {
+    padding: 16px 12px;
+    color: #4b5563;
+    font-weight: 500;
+  }
+  
+  .historial-compras-pagination-container {
+    padding: 20px 25px;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+  }
+  
+  .historial-compras-pagination-btn {
+    padding: 8px 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    background: white;
+    color: #4b5563;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .historial-compras-pagination-btn.active {
+    border-color: #6366f1;
+    background: #6366f1;
+    color: white;
+  }
+  
+  .historial-compras-pagination-btn:hover:not(.active) {
+    border-color: #6366f1;
+    color: #6366f1;
+  }
+  
+  .historial-compras-action-btn {
+    background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+    color: #1e40af;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(30, 64, 175, 0.2);
+  }
+  
+  .historial-compras-action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(30, 64, 175, 0.3);
+  }
+`;
+
+// Inyectar estilos
+if (!document.getElementById('historial-compras-advanced-styles')) {
+  const styleSheet = document.createElement('style');
+  styleSheet.id = 'historial-compras-advanced-styles';
+  styleSheet.textContent = advancedStyles;
+  document.head.appendChild(styleSheet);
+}
+
 export default function HistorialCompras() {
   const [compras, setCompras] = useState([]);
   const [modalDetallesVisible, setModalDetallesVisible] = useState(false);
@@ -50,81 +163,433 @@ export default function HistorialCompras() {
       <div className="content">
         <NavCompras />
         <div className="contenido-modulo">
-          <div className='encabezado-modulo'>
-            <div>
-              <h3 className='titulo-profesional'>Historial de Compras</h3>
-              <p className='subtitulo'>Compras realizadas a partir de órdenes de compra</p>
+          {/* Encabezado profesional */}
+          <div style={{
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            borderRadius: '20px',
+            padding: '30px',
+            marginBottom: '30px',
+            color: 'white',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            <div style={{
+              position: 'absolute',
+              top: '-50%',
+              right: '-10%',
+              width: '300px',
+              height: '300px',
+              background: 'rgba(255,255,255,0.1)',
+              borderRadius: '50%',
+              zIndex: 1
+            }}></div>
+            <div style={{ position: 'relative', zIndex: 2 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                <div style={{
+                  background: 'rgba(255,255,255,0.2)',
+                  borderRadius: '16px',
+                  padding: '20px',
+                  backdropFilter: 'blur(10px)'
+                }}>
+                  <i className="fa-solid fa-history" style={{ fontSize: '2.5rem', color: 'white' }}></i>
+                </div>
+                <div>
+                  <h2 style={{ margin: '0 0 8px 0', fontSize: '2rem', fontWeight: '700' }}>
+                    Historial de Compras
+                  </h2>
+                  <p style={{ margin: 0, fontSize: '1.1rem', opacity: 0.9 }}>
+                    Compras realizadas a partir de órdenes de compra
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
 
-          <br />
-          <div className="table-container">
-            <table>
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Número Orden</th>
-                  <th>Proveedor</th>
-                  <th>Total</th>
-                  <th>Fecha</th>
-                  <th>Solicitado Por</th>
-                </tr>
-              </thead>
-              <tbody>
-                {currentItems.map((compra, index) => (
-                  <tr key={compra._id}>
-                    <td>{indexOfFirstItem + index + 1}</td>
-                    <td>
-                      <button
-                        onClick={() => verDetallesCompra(compra)}
-                        className="btn btn-link btn-sm p-0"
-                        style={{ textDecoration: 'none', color: '#007bff', fontWeight: 'bold' }}
+          {/* Estadísticas avanzadas */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+            gap: '20px',
+            marginBottom: '30px'
+          }}>
+            <div style={{
+              background: 'linear-gradient(135deg, #ffffff, #f8fafc)',
+              borderRadius: '16px',
+              padding: '25px',
+              border: '1px solid #e5e7eb',
+              transition: 'all 0.3s ease',
+              cursor: 'pointer'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-5px)';
+              e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.15)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = 'none';
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                <div style={{
+                  background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+                  borderRadius: '12px',
+                  padding: '15px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <i className="fa-solid fa-shopping-cart" style={{ color: 'white', fontSize: '1.5rem' }}></i>
+                </div>
+                <div>
+                  <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
+                    {compras.length}
+                  </h3>
+                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
+                    Total Compras
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div style={{
+              background: 'linear-gradient(135deg, #ffffff, #f8fafc)',
+              borderRadius: '16px',
+              padding: '25px',
+              border: '1px solid #e5e7eb',
+              transition: 'all 0.3s ease',
+              cursor: 'pointer'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-5px)';
+              e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.15)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = 'none';
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                <div style={{
+                  background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+                  borderRadius: '12px',
+                  padding: '15px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <i className="fa-solid fa-dollar-sign" style={{ color: 'white', fontSize: '1.5rem' }}></i>
+                </div>
+                <div>
+                  <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
+                    ${compras.reduce((sum, c) => sum + (c.total || 0), 0).toLocaleString()}
+                  </h3>
+                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
+                    Valor Total Compras
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div style={{
+              background: 'linear-gradient(135deg, #ffffff, #f8fafc)',
+              borderRadius: '16px',
+              padding: '25px',
+              border: '1px solid #e5e7eb',
+              transition: 'all 0.3s ease',
+              cursor: 'pointer'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-5px)';
+              e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.15)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = 'none';
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                <div style={{
+                  background: 'linear-gradient(135deg, #10b981, #059669)',
+                  borderRadius: '12px',
+                  padding: '15px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <i className="fa-solid fa-chart-bar" style={{ color: 'white', fontSize: '1.5rem' }}></i>
+                </div>
+                <div>
+                  <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
+                    {compras.length > 0 ? (compras.reduce((sum, c) => sum + (c.total || 0), 0) / compras.length).toLocaleString() : 0}
+                  </h3>
+                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
+                    Promedio por Compra
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          {/* Tabla principal con diseño moderno */}
+          <div style={{
+            background: 'linear-gradient(135deg, #ffffff, #f8fafc)',
+            borderRadius: '20px',
+            padding: '30px',
+            border: '1px solid #e5e7eb',
+            backdropFilter: 'blur(10px)'
+          }}>
+            <div style={{
+              overflowX: 'auto',
+              borderRadius: '12px',
+              border: '1px solid #e5e7eb'
+            }}>
+              <table style={{
+                width: '100%',
+                borderCollapse: 'collapse',
+                background: 'white',
+                borderRadius: '12px',
+                overflow: 'hidden'
+              }}>
+                <thead>
+                  <tr style={{
+                    background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                    color: 'white'
+                  }}>
+                    <th style={{
+                      padding: '20px 15px',
+                      textAlign: 'left',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px'
+                    }}>#</th>
+                    <th style={{
+                      padding: '20px 15px',
+                      textAlign: 'left',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px'
+                    }}>Número Orden</th>
+                    <th style={{
+                      padding: '20px 15px',
+                      textAlign: 'left',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px'
+                    }}>Proveedor</th>
+                    <th style={{
+                      padding: '20px 15px',
+                      textAlign: 'left',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px'
+                    }}>Total</th>
+                    <th style={{
+                      padding: '20px 15px',
+                      textAlign: 'left',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px'
+                    }}>Fecha</th>
+                    <th style={{
+                      padding: '20px 15px',
+                      textAlign: 'left',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px'
+                    }}>Solicitado Por</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {currentItems.map((compra, index) => (
+                    <tr 
+                      key={compra._id} 
+                      style={{
+                        borderBottom: '1px solid #f3f4f6',
+                        transition: 'all 0.3s ease',
+                        cursor: 'pointer'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'linear-gradient(135deg, #f8fafc, #f1f5f9)';
+                        e.currentTarget.style.transform = 'scale(1.01)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'white';
+                        e.currentTarget.style.transform = 'scale(1)';
+                      }}
+                    >
+                      <td style={{
+                        padding: '20px 15px',
+                        fontSize: '14px',
+                        fontWeight: '500',
+                        color: '#6b7280'
+                      }}>
+                        {indexOfFirstItem + index + 1}
+                      </td>
+                      <td style={{
+                        padding: '20px 15px',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        color: '#1f2937'
+                      }}>
+                        <button
+                          onClick={() => verDetallesCompra(compra)}
+                          style={{
+                            background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                            color: 'white',
+                            border: 'none',
+                            padding: '8px 16px',
+                            borderRadius: '8px',
+                            fontSize: '12px',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            transition: 'all 0.3s ease',
+                            textDecoration: 'none'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.target.style.transform = 'translateY(-2px)';
+                            e.target.style.boxShadow = '0 5px 15px rgba(99, 102, 241, 0.4)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.target.style.transform = 'translateY(0)';
+                            e.target.style.boxShadow = 'none';
+                          }}
+                        >
+                          {compra.numeroOrden || 'N/A'}
+                        </button>
+                      </td>
+                      <td style={{
+                        padding: '20px 15px',
+                        fontSize: '14px',
+                        fontWeight: '500',
+                        color: '#374151'
+                      }}>
+                        {compra.proveedor?.nombre || compra.proveedor || 'Proveedor no especificado'}
+                      </td>
+                      <td style={{
+                        padding: '20px 15px',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        color: '#059669'
+                      }}>
+                        ${compra.total?.toLocaleString()}
+                      </td>
+                      <td style={{
+                        padding: '20px 15px',
+                        fontSize: '14px',
+                        color: '#6b7280'
+                      }}>
+                        {new Date(compra.fecha || compra.fechaCompra).toLocaleDateString()}
+                      </td>
+                      <td style={{
+                        padding: '20px 15px',
+                        fontSize: '14px',
+                        color: '#374151'
+                      }}>
+                        {compra.solicitadoPor || compra.responsable || 'No especificado'}
+                      </td>
+                    </tr>
+                  ))}
+                  {compras.length === 0 && (
+                    <tr>
+                      <td 
+                        colSpan="6" 
+                        style={{
+                          padding: '40px',
+                          textAlign: 'center',
+                          color: '#9ca3af',
+                          fontStyle: 'italic',
+                          fontSize: '16px'
+                        }}
                       >
-                        {compra.numeroOrden || 'N/A'}
-                      </button>
-                    </td>
-                    <td>{compra.proveedor?.nombre || compra.proveedor || 'Proveedor no especificado'}</td>
-                    <td>${compra.total?.toLocaleString()}</td>
-                    <td>{new Date(compra.fecha || compra.fechaCompra).toLocaleDateString()}</td>
-                    <td>{compra.solicitadoPor || compra.responsable || 'No especificado'}</td>
-                  </tr>
-                ))}
-                {compras.length === 0 && (
-                  <tr>
-                    <td colSpan="7" className="text-center">No hay compras registradas en el historial</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                        No hay compras registradas en el historial
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
 
-          {/* Paginación */}
+          {/* Paginación moderna */}
           {compras.length > 0 && (
-            <div className="pagination">
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              gap: '10px',
+              marginTop: '30px',
+              padding: '20px'
+            }}>
               <button
                 onClick={() => paginate(currentPage - 1)}
                 disabled={currentPage === 1}
-                className="pagination-btn"
+                style={{
+                  background: currentPage === 1 ? '#f3f4f6' : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                  color: currentPage === 1 ? '#9ca3af' : 'white',
+                  border: 'none',
+                  padding: '12px 20px',
+                  borderRadius: '10px',
+                  fontWeight: '600',
+                  cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.3s ease'
+                }}
               >
-                Anterior
+                ← Anterior
               </button>
 
-              {Array.from({ length: totalPages }, (_, i) => (
-                <button
-                  key={i + 1}
-                  onClick={() => paginate(i + 1)}
-                  className={currentPage === i + 1 ? 'active-page' : 'pagination-btn'}
-                >
-                  {i + 1}
-                </button>
-              ))}
+              <div style={{ display: 'flex', gap: '5px' }}>
+                {Array.from({ length: totalPages }, (_, i) => (
+                  <button
+                    key={i + 1}
+                    onClick={() => paginate(i + 1)}
+                    style={{
+                      background: currentPage === i + 1 ? 
+                        'linear-gradient(135deg, #6366f1, #8b5cf6)' : 
+                        'white',
+                      color: currentPage === i + 1 ? 'white' : '#6b7280',
+                      border: '1px solid #e5e7eb',
+                      padding: '10px 15px',
+                      borderRadius: '8px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                      minWidth: '45px'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (currentPage !== i + 1) {
+                        e.target.style.background = '#f8fafc';
+                        e.target.style.transform = 'translateY(-2px)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (currentPage !== i + 1) {
+                        e.target.style.background = 'white';
+                        e.target.style.transform = 'translateY(0)';
+                      }
+                    }}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+              </div>
 
               <button
                 onClick={() => paginate(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className="pagination-btn"
+                style={{
+                  background: currentPage === totalPages ? '#f3f4f6' : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                  color: currentPage === totalPages ? '#9ca3af' : 'white',
+                  border: 'none',
+                  padding: '12px 20px',
+                  borderRadius: '10px',
+                  fontWeight: '600',
+                  cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.3s ease'
+                }}
               >
-                Siguiente
+                Siguiente →
               </button>
             </div>
           )}

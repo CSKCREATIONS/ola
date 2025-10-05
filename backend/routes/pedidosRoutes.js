@@ -8,13 +8,15 @@ const { checkRole } = require('../middlewares/role');
 const Venta = require('../models/venta');
 const { checkPermission } = require('../middlewares/role');
 
-// Función para generar número de pedido
+// Función para generar número de pedido usando Counter
 async function generarNumeroPedido() {
-  const ultimo = await Pedido.findOne().sort({ createdAt: -1 });
-  const siguiente = ultimo && ultimo.numeroPedido
-    ? parseInt(ultimo.numeroPedido.replace('PED-', '')) + 1
-    : 1;
-  return `PED-${siguiente.toString().padStart(5, '0')}`;
+  const Counter = require('../models/Counter');
+  const counter = await Counter.findByIdAndUpdate(
+    'pedido',
+    { $inc: { seq: 1 } },
+    { new: true, upsert: true }
+  );
+  return `PED-${String(counter.seq).padStart(5, '0')}`;
 }
 
 //
@@ -97,7 +99,26 @@ router.put('/:id/entregar', verifyToken, async (req, res) => {
 
     await nuevaVenta.save();
 
-    // Solo actualizamos el estado del pedido, no tocamos los productos
+    // Actualizar el stock de los productos
+    for (const item of pedido.productos) {
+      if (item.product) {
+        const producto = await require('../models/Products').findById(item.product._id);
+        if (producto) {
+          // Verificar que hay suficiente stock
+          if (producto.stock < item.cantidad) {
+            throw new Error(`Stock insuficiente para ${producto.name}. Stock actual: ${producto.stock}, requerido: ${item.cantidad}`);
+          }
+          
+          // Disminuir el stock
+          producto.stock -= item.cantidad;
+          await producto.save();
+          
+          console.log(`📦 Stock actualizado: ${producto.name} - Stock anterior: ${producto.stock + item.cantidad}, Stock nuevo: ${producto.stock}`);
+        }
+      }
+    }
+
+    // Actualizar el estado del pedido
     pedido.estado = 'entregado';
     await pedido.save();
 
@@ -173,6 +194,54 @@ router.post('/:id/crear-remision',
   verifyToken,
   checkPermission('pedidos.remisionar'),
   pedidoController.crearRemisionDesdePedido
+);
+
+// Enviar pedido agendado por correo
+router.post('/:id/enviar-agendado',
+  verifyToken,
+  checkPermission('pedidos.enviar'),
+  pedidoController.enviarPedidoAgendadoPorCorreo
+);
+
+// Enviar pedido por correo (general)
+router.post('/:id/enviar-correo',
+  verifyToken,
+  checkPermission('pedidos.enviar'),
+  pedidoController.enviarPedidoPorCorreo
+);
+
+// Enviar remisión por correo
+router.post('/:id/enviar-remision',
+  verifyToken,
+  checkPermission('pedidos.enviar'),
+  pedidoController.enviarRemisionPorCorreo
+);
+
+// Enviar remisión formal por correo
+router.post('/:id/enviar-remision-formal',
+  verifyToken,
+  checkPermission('pedidos.enviar'),
+  pedidoController.enviarRemisionFormalPorCorreo
+);
+
+// Enviar pedido devuelto por correo
+router.post('/:id/enviar-devuelto',
+  verifyToken,
+  checkPermission('pedidos.enviar'),
+  pedidoController.enviarPedidoDevueltoPorCorreo
+);
+
+// Enviar pedido cancelado por correo
+router.post('/:id/enviar-cancelado',
+  verifyToken,
+  checkPermission('pedidos.enviar'),
+  pedidoController.enviarPedidoCanceladoPorCorreo
+);
+
+// Ruta para probar configuración de correo
+router.post('/test-email',
+  verifyToken,
+  pedidoController.testEmailConfiguration
 );
 
 module.exports = router;

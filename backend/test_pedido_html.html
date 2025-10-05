@@ -1,0 +1,259 @@
+
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>PEDIDO AGENDADO PED-0011</title>
+        <style>
+            body { 
+                font-family: Arial, sans-serif; 
+                margin: 0; 
+                padding: 24px; 
+                font-size: 14px;
+                line-height: 1.4;
+                background: #fff;
+            }
+            .pdf-pedido {
+                background: #fff;
+                padding: 24px;
+                border-radius: 8px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+                font-size: 14px;
+            }
+            .pedido-encabezado h2 { 
+                color: #28a745; 
+                font-weight: bold; 
+                font-size: 24px; 
+                margin: 0 0 8px 0; 
+            }
+                background: #fff;
+                padding: 24px;
+                border-radius: 8px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+                font-size: 14px;
+            }
+            .cotizacion-encabezado h2 { 
+                color: #2563eb; 
+                font-weight: bold; 
+                font-size: 24px; 
+                margin: 0 0 8px 0; 
+            }
+            .info-container { 
+                display: flex; 
+                justify-content: space-between; 
+                align-items: flex-start;
+                font-size: 13px;
+                margin-bottom: 12px;
+            }
+            .info-section { 
+                flex: 1; 
+            }
+            .info-section:first-child { 
+                margin-right: 16px; 
+            }
+            .info-title { 
+                color: #374151; 
+                margin-bottom: 5px; 
+                font-size: 14px;
+                font-weight: normal;
+            }
+            .info-box { 
+                background-color: #f9fafb; 
+                padding: 8px; 
+                border-radius: 4px; 
+                border: 1px solid #e5e7eb; 
+                font-size: 12px; 
+            }
+            .info-box p { 
+                margin: 2px 0; 
+            }
+            .info-box .nombre { 
+                font-weight: bold; 
+                margin-bottom: 2px;
+                font-size: 13px; 
+            }
+            .info-box .ref { 
+                color: #6b7280;
+                font-size: 12px;
+            }
+            hr { 
+                border: none; 
+                border-top: 1px solid #e5e7eb; 
+                margin: 12px 0; 
+            }
+            .descripcion-section { 
+                margin-bottom: 12px; 
+            }
+            .descripcion-title {
+                color: #374151;
+                font-size: 14px;
+                margin-bottom: 5px;
+            }
+            .descripcion-box { 
+                background-color: #fffbeb; 
+                padding: 8px; 
+                border-radius: 4px; 
+                border: 1px solid #fed7aa; 
+                font-size: 12px; 
+            }
+            .estado-section {
+                margin-bottom: 12px;
+            }
+            .estado-badge {
+                padding: 8px 16px;
+                border-radius: 4px;
+                font-weight: bold;
+                font-size: 12px;
+                text-align: center;
+                background-color: #fef3c7;
+                color: #f59e0b;
+                border: 1px solid #f59e0b;
+            }
+            .tabla-pedido { 
+                width: 100%; 
+                border-collapse: collapse; 
+                margin-bottom: 16px; 
+                font-size: 13px; 
+            }
+            .tabla-pedido thead tr { 
+                background-color: #f3f4f6; 
+            }
+            .tabla-pedido th { 
+                text-align: left;
+                padding: 10px; 
+                font-size: 13px; 
+                font-weight: bold;
+                border-bottom: 1px solid #e5e7eb;
+            }
+            .tabla-pedido td { 
+                padding: 10px; 
+                border-bottom: 1px solid #e5e7eb; 
+                font-size: 13px;
+            }
+            .tabla-pedido tfoot tr { 
+                background-color: #f9fafb; 
+                font-weight: bold; 
+            }
+            .tabla-pedido tfoot td:last-child { 
+                font-size: 16px;
+                color: #059669; 
+            }
+            .tabla-cotizacion { 
+                width: 100%; 
+                border-collapse: collapse; 
+                margin-bottom: 16px; 
+                font-size: 13px; 
+            }
+            .tabla-cotizacion thead tr { 
+                background-color: #f3f4f6; 
+            }
+            .tabla-cotizacion th { 
+                text-align: left;
+                padding: 10px; 
+                font-size: 13px; 
+                font-weight: bold;
+                border-bottom: 1px solid #e5e7eb;
+            }
+            .tabla-cotizacion td { 
+                padding: 10px; 
+                border-bottom: 1px solid #e5e7eb; 
+                font-size: 13px;
+            }
+            .tabla-cotizacion tfoot tr { 
+                background-color: #f9fafb; 
+                font-weight: bold; 
+            }
+            .tabla-cotizacion tfoot td:last-child { 
+                font-size: 16px;
+                color: #059669; 
+            }
+        </style>
+    </head>
+    <body>
+      <div class="pdf-pedido">
+        <div class="pedido-encabezado">
+          <h2>PEDIDO AGENDADO</h2>
+        </div>
+
+        <div class="estado-section">
+          <div class="estado-badge">
+            Estado del pedido: Agendado
+          </div>
+        </div>
+
+        <div class="info-container">
+          <div class="info-section">
+            <h4 class="info-title">ENTREGAR A:</h4>
+            <div class="info-box">
+              <p class="nombre">pepe</p>
+              <p>via bogota</p>
+              <p>pereira</p>
+              <p>Tel: 23456789</p>
+              <p>juliandavicast@gmail.com</p>
+            </div>
+          </div>
+          
+          <div class="info-section">
+            <h4 class="info-title">REMITE:</h4>
+            <div class="info-box">
+              <p class="nombre">Pangea Sistemas</p>
+              <p>Responsable: Natalia Cardenas</p>
+              <p class="ref">Ref. Pedido: PED-0011</p>
+              <p class="ref">Fecha: 1/10/2025</p>
+              <p class="ref">F. Entrega: 1/10/2025</p>
+            </div>
+          </div>
+        </div>
+
+        <hr />
+
+        
+
+        <table class="tabla-pedido">
+          <thead>
+            <tr>
+              <th>Cant.</th>
+              <th>Producto</th>
+              <th>Descripción</th>
+              <th style="text-align: right;">Valor Unit.</th>
+              <th style="text-align: right;">% Desc.</th>
+              <th style="text-align: right;">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            
+              <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="font-weight: bold;">23</td>
+                <td>Producto sin nombre</td>
+                <td style="color: #6b7280;">Sin descripción</td>
+                <td style="text-align: right;">$100</td>
+                <td style="text-align: right;">0%</td>
+                <td style="text-align: right; font-weight: bold;">$2.300</td>
+              </tr>
+            
+              <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="font-weight: bold;">3</td>
+                <td>Producto sin nombre</td>
+                <td style="color: #6b7280;">Sin descripción</td>
+                <td style="text-align: right;">$2.000.000</td>
+                <td style="text-align: right;">0%</td>
+                <td style="text-align: right; font-weight: bold;">$6.000.000</td>
+              </tr>
+            
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="5" style="padding: 12px; text-align: right; font-size: 14px;">
+                TOTAL PEDIDO:
+              </td>
+              <td style="padding: 12px; text-align: right; font-size: 16px; color: #059669;">
+                $6.002.300
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </body>
+    </html>
+    

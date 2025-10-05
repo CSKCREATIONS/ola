@@ -1,5 +1,8 @@
 const Remision = require('../models/Remision');
+const Pedido = require('../models/Pedido');
+const Counter = require('../models/Counter');
 const nodemailer = require('nodemailer');
+const PDFService = require('../services/pdfService');
 const sgMail = require('@sendgrid/mail');
 
 // Obtener todas las remisiones
@@ -14,6 +17,7 @@ exports.getAllRemisiones = async (req, res) => {
 
     const remisiones = await Remision.find(filtro)
       .populate('responsable', 'username firstName surname')
+      .populate('cotizacionReferencia', 'codigo')
       .sort({ fechaRemision: -1 })
       .limit(parseInt(limite))
       .skip((parseInt(pagina) - 1) * parseInt(limite));
@@ -32,11 +36,114 @@ exports.getAllRemisiones = async (req, res) => {
   }
 };
 
+// 🆕 Crear remisión desde un pedido
+exports.crearRemisionDesdePedido = async (req, res) => {
+  try {
+    const pedidoId = req.params.pedidoId;
+    console.log(`📋 Creando remisión desde pedido ID: ${pedidoId}`);
+
+    // Obtener el pedido con toda la información poblada
+    const pedido = await Pedido.findById(pedidoId)
+      .populate('cliente')
+      .populate('productos.product');
+
+    if (!pedido) {
+      return res.status(404).json({ 
+        message: 'Pedido no encontrado',
+        error: 'PEDIDO_NOT_FOUND'
+      });
+    }
+
+    // Verificar que el pedido esté en estado que permita crear remisión
+    if (!['entregado', 'despachado'].includes(pedido.estado)) {
+      return res.status(400).json({ 
+        message: 'Solo se pueden crear remisiones de pedidos entregados o despachados',
+        estadoActual: pedido.estado
+      });
+    }
+
+    // Verificar si ya existe una remisión para este pedido
+    const remisionExistente = await Remision.findOne({ pedidoReferencia: pedidoId });
+    if (remisionExistente) {
+      return res.status(200).json({
+        message: 'Ya existe una remisión para este pedido',
+        remision: remisionExistente,
+        existente: true
+      });
+    }
+
+    // Generar número de remisión automático
+    const counter = await Counter.findByIdAndUpdate(
+      'remision',
+      { $inc: { seq: 1 } },
+      { new: true, upsert: true }
+    );
+    const numeroRemision = `REM-${String(counter.seq).padStart(5, '0')}`;
+
+    // Calcular totales
+    const productos = pedido.productos.map(p => ({
+      nombre: p.product?.name || p.product?.nombre || p.nombreProducto || `Producto ${p.product?._id || 'ID'}`,
+      cantidad: p.cantidad,
+      precioUnitario: p.precioUnitario,
+      total: p.cantidad * p.precioUnitario,
+      descripcion: p.product?.description || p.product?.descripcion || '',
+      codigo: p.product?.code || p.product?.codigo || ''
+    }));
+
+    const total = productos.reduce((sum, p) => sum + p.total, 0);
+    const cantidadTotal = productos.reduce((sum, p) => sum + p.cantidad, 0);
+
+    // Crear la remisión
+    const nuevaRemision = new Remision({
+      numeroRemision,
+      pedidoReferencia: pedido._id,
+      codigoPedido: pedido.numeroPedido,
+      cliente: {
+        nombre: pedido.cliente?.nombre,
+        correo: pedido.cliente?.correo,
+        telefono: pedido.cliente?.telefono,
+        ciudad: pedido.cliente?.ciudad,
+        direccion: pedido.cliente?.direccion
+      },
+      productos,
+      fechaRemision: new Date(),
+      fechaEntrega: pedido.fechaEntrega || new Date(),
+      observaciones: `Remisión generada automáticamente desde pedido ${pedido.numeroPedido}`,
+      responsable: req.userId, // ID del usuario que crea la remisión
+      estado: 'activa',
+      total,
+      cantidadItems: productos.length,
+      cantidadTotal
+    });
+
+    const remisionGuardada = await nuevaRemision.save();
+    
+    // Poblar datos para la respuesta
+    await remisionGuardada.populate('responsable', 'username firstName surname');
+
+    console.log(`✅ Remisión creada: ${numeroRemision} para pedido ${pedido.numeroPedido}`);
+
+    res.status(201).json({
+      message: 'Remisión creada exitosamente',
+      remision: remisionGuardada,
+      creada: true
+    });
+
+  } catch (error) {
+    console.error('❌ Error al crear remisión desde pedido:', error);
+    res.status(500).json({ 
+      message: 'Error al crear remisión',
+      error: error.message 
+    });
+  }
+};
+
 // Obtener una remisión por ID
 exports.getRemisionById = async (req, res) => {
   try {
     const remision = await Remision.findById(req.params.id)
       .populate('responsable', 'username firstName surname')
+      .populate('cotizacionReferencia', 'codigo')
       .populate('pedidoReferencia');
 
     if (!remision) {
@@ -111,6 +218,9 @@ exports.getEstadisticasRemisiones = async (req, res) => {
 // Enviar remisión por correo electrónico
 exports.enviarRemisionPorCorreo = async (req, res) => {
   try {
+    console.log(`📧 Iniciando envío de remisión por correo. ID: ${req.params.id}`);
+    console.log('📋 Body recibido:', req.body);
+    
     const { remisionId, correoDestino, asunto, mensaje } = req.body;
     
     // Validar datos requeridos
@@ -130,10 +240,16 @@ exports.enviarRemisionPorCorreo = async (req, res) => {
 
     // Obtener la remisión
     const remision = await Remision.findById(req.params.id)
-      .populate('responsable', 'username firstName surname');
+      .populate('responsable', 'username firstName surname')
+      .populate('cotizacionReferencia', 'codigo');
 
     if (!remision) {
-      return res.status(404).json({ message: 'Remisión no encontrada' });
+      console.log(`❌ Remisión no encontrada con ID: ${req.params.id}`);
+      return res.status(404).json({ 
+        message: 'Remisión no encontrada',
+        id: req.params.id,
+        error: 'REMISION_NOT_FOUND'
+      });
     }
 
     // Verificar que la remisión tenga productos
@@ -154,6 +270,23 @@ exports.enviarRemisionPorCorreo = async (req, res) => {
         total: p.total
       }))
     });
+
+    // Generar PDF de la remisión
+    let pdfAttachment = null;
+    try {
+      console.log('📄 Generando PDF de la remisión...');
+      const pdfService = new PDFService();
+      const pdfData = await pdfService.generarPDFRemision(remision);
+      pdfAttachment = {
+        filename: pdfData.filename,
+        content: pdfData.buffer,
+        contentType: pdfData.contentType
+      };
+      console.log('✅ PDF generado exitosamente:', pdfData.filename);
+    } catch (pdfError) {
+      console.error('⚠️ Error generando PDF:', pdfError.message);
+      // Continuar sin PDF si hay error
+    }
 
     // Configurar SendGrid si está disponible
     if (process.env.SENDGRID_API_KEY) {
@@ -578,7 +711,12 @@ exports.enviarRemisionPorCorreo = async (req, res) => {
           to: correoDestino,
           subject: asunto,
           html: htmlContent,
-          text: mensaje
+          text: mensaje,
+          attachments: pdfAttachment ? [{
+            filename: pdfAttachment.filename,
+            content: pdfAttachment.content,
+            contentType: pdfAttachment.contentType
+          }] : []
         });
 
         emailSent = true;
@@ -625,7 +763,13 @@ exports.enviarRemisionPorCorreo = async (req, res) => {
           from: fromEmail,
           subject: asunto,
           html: htmlContent,
-          text: mensaje
+          text: mensaje,
+          attachments: pdfAttachment ? [{
+            content: pdfAttachment.content.toString('base64'),
+            filename: pdfAttachment.filename,
+            type: pdfAttachment.contentType,
+            disposition: 'attachment'
+          }] : []
         });
 
         emailSent = true;

@@ -15,6 +15,13 @@ const RemisionSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  cotizacionReferencia: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Cotizacion'
+  },
+  codigoCotizacion: {
+    type: String
+  },
   cliente: {
     nombre: String,
     correo: String,
@@ -68,7 +75,6 @@ const RemisionSchema = new mongoose.Schema({
 });
 
 // Índices para búsquedas eficientes
-RemisionSchema.index({ numeroRemision: 1 });
 RemisionSchema.index({ estado: 1 });
 RemisionSchema.index({ fechaRemision: -1 });
 RemisionSchema.index({ 'cliente.nombre': 1 });

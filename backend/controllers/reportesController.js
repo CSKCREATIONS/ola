@@ -297,7 +297,6 @@ exports.reporteVentasPorPeriodo = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error en reporteVentasPorPeriodo:', error);
     res.status(500).json({ success: false, message: 'Error al generar el reporte de ventas por periodo' });
   }
 };
@@ -460,7 +459,6 @@ exports.reporteVentasConsolidado = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error en reporteVentasConsolidado:', error);
     res.status(500).json({ success: false, message: 'Error al generar el reporte consolidado de ventas' });
   }
 };
@@ -492,7 +490,6 @@ exports.reportePedidosPorEstado = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error en reportePedidosPorEstado:', error);
     res.status(500).json({ success: false, message: 'Error al generar el reporte de pedidos por estado' });
   }
 };
@@ -531,7 +528,6 @@ exports.reporteCotizaciones = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error en reporteCotizaciones:', error);
     res.status(500).json({ success: false, message: 'Error al generar el reporte de cotizaciones' });
   }
 };
@@ -562,7 +558,6 @@ exports.reporteClientes = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error en reporteClientes:', error);
     res.status(500).json({ success: false, message: 'Error al generar el reporte de clientes' });
   }
 };
@@ -634,6 +629,355 @@ exports.reporteProveedoresRecientes = async (req, res) => {
     res.json({ success: true, data: resultado });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Error al obtener proveedores recientes' });
+  }
+};
+
+// ===== NUEVOS CONTROLADORES PARA REPORTES SIMPLIFICADOS =====
+
+// Estadísticas de Ventas
+exports.estadisticasVentas = async (req, res) => {
+  try {
+    const totalVentas = await Venta.countDocuments();
+    const totalPedidos = await Pedido.countDocuments();
+    const clientesActivos = await Cliente.countDocuments({ activo: true });
+    
+    const ventasConPrecio = await Venta.aggregate([
+      { $group: { _id: null, total: { $sum: "$total" } } }
+    ]);
+    
+    const ventasTotales = ventasConPrecio.length > 0 ? ventasConPrecio[0].total : 0;
+    
+    const ventasMensuales = await Venta.aggregate([
+      {
+        $group: {
+          _id: { $month: "$fecha" },
+          ventas: { $sum: 1 },
+          ingresos: { $sum: "$total" }
+        }
+      },
+      { $sort: { "_id": 1 } },
+      {
+        $project: {
+          mes: {
+            $switch: {
+              branches: [
+                { case: { $eq: ["$_id", 1] }, then: "Enero" },
+                { case: { $eq: ["$_id", 2] }, then: "Febrero" },
+                { case: { $eq: ["$_id", 3] }, then: "Marzo" },
+                { case: { $eq: ["$_id", 4] }, then: "Abril" },
+                { case: { $eq: ["$_id", 5] }, then: "Mayo" },
+                { case: { $eq: ["$_id", 6] }, then: "Junio" },
+                { case: { $eq: ["$_id", 7] }, then: "Julio" },
+                { case: { $eq: ["$_id", 8] }, then: "Agosto" },
+                { case: { $eq: ["$_id", 9] }, then: "Septiembre" },
+                { case: { $eq: ["$_id", 10] }, then: "Octubre" },
+                { case: { $eq: ["$_id", 11] }, then: "Noviembre" },
+                { case: { $eq: ["$_id", 12] }, then: "Diciembre" }
+              ],
+              default: "Desconocido"
+            }
+          },
+          ventas: 1,
+          ingresos: 1
+        }
+      }
+    ]);
+
+    const response = {
+      ventasTotales,
+      totalPedidos,
+      clientesActivos,
+      crecimiento: 5.2, // Puedes calcular esto basado en datos históricos
+      ventasMensuales
+    };
+
+    res.json({
+      success: true,
+      data: response
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error al obtener estadísticas de ventas', error: error.message });
+  }
+};
+
+// Estados de Pedidos
+exports.estadosPedidos = async (req, res) => {
+  try {
+    const estados = await Pedido.aggregate([
+      {
+        $group: {
+          _id: "$estado",
+          value: { $sum: 1 }
+        }
+      },
+      {
+        $project: {
+          name: "$_id",
+          value: 1,
+          _id: 0
+        }
+      }
+    ]);
+
+    res.json({ success: true, data: estados });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error al obtener estados de pedidos' });
+  }
+};
+
+// Estadísticas de Productos
+exports.estadisticasProductos = async (req, res) => {
+  try {
+    const totalProductos = await Product.countDocuments();
+    const productosActivos = await Product.countDocuments({ activo: true });
+    const productosInactivos = await Product.countDocuments({ activo: false });
+    const stockBajo = await Product.countDocuments({ stock: { $lt: 10 } });
+
+    res.json({
+      success: true,
+      data: {
+        totalProductos,
+        productosActivos,
+        productosInactivos,
+        stockBajo
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error al obtener estadísticas de productos', error: error.message });
+  }
+};
+
+// Productos por Categoría
+exports.productosPorCategoria = async (req, res) => {
+  try {
+    const productos = await Product.aggregate([
+      {
+        $lookup: {
+          from: 'categories',
+          localField: 'category',
+          foreignField: '_id',
+          as: 'categoriaInfo'
+        }
+      },
+      {
+        $unwind: '$categoriaInfo'
+      },
+      {
+        $group: {
+          _id: '$categoriaInfo._id',
+          categoria: { $first: '$categoriaInfo.name' },
+          cantidad: { $sum: 1 }
+        }
+      },
+      { $sort: { cantidad: -1 } }
+    ]);
+
+    res.json({ success: true, data: productos });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error al obtener productos por categoría' });
+  }
+};
+
+// Productos por Estado
+exports.productosPorEstado = async (req, res) => {
+  try {
+    const estados = await Product.aggregate([
+      {
+        $group: {
+          _id: "$activo",
+          value: { $sum: 1 }
+        }
+      },
+      {
+        $project: {
+          name: { $cond: { if: "$_id", then: "Activos", else: "Inactivos" } },
+          value: 1,
+          _id: 0
+        }
+      }
+    ]);
+
+    res.json({ success: true, data: estados });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error al obtener productos por estado' });
+  }
+};
+
+// Estadísticas de Proveedores
+exports.estadisticasProveedores = async (req, res) => {
+  try {
+    const totalProveedores = await Proveedor.countDocuments();
+    const proveedoresActivos = await Proveedor.countDocuments({ activo: true });
+    const proveedoresInactivos = await Proveedor.countDocuments({ activo: false });
+    
+    const conProductos = await Product.distinct('proveedor').then(ids => ids.length);
+
+    res.json({
+      success: true,
+      data: {
+        totalProveedores,
+        proveedoresActivos,
+        proveedoresInactivos,
+        conProductos
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error al obtener estadísticas de proveedores' });
+  }
+};
+
+// Proveedores por País
+exports.proveedoresPorPais = async (req, res) => {
+  try {
+    const paises = await Proveedor.aggregate([
+      {
+        $group: {
+          _id: "$direccion.pais", // Corregido: usar direccion.pais
+          cantidad: { $sum: 1 }
+        }
+      },
+      {
+        $project: {
+          pais: { $ifNull: ["$_id", "Sin País"] }, // Si es null, mostrar "Sin País"
+          cantidad: 1,
+          _id: 0
+        }
+      },
+      { $sort: { cantidad: -1 } }
+    ]);
+
+    res.json({ success: true, data: paises });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error al obtener proveedores por país', error: error.message });
+  }
+};
+
+// Proveedores por Estado
+exports.proveedoresPorEstado = async (req, res) => {
+  try {
+    const estados = await Proveedor.aggregate([
+      {
+        $group: {
+          _id: "$activo",
+          cantidad: { $sum: 1 }
+        }
+      },
+      {
+        $project: {
+          estado: { $cond: { if: "$_id", then: "Activos", else: "Inactivos" } },
+          cantidad: 1,
+          _id: 0
+        }
+      }
+    ]);
+
+    res.json({ success: true, data: estados });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error al obtener proveedores por estado' });
+  }
+};
+
+// Productos por Proveedor
+exports.productosPorProveedor = async (req, res) => {
+  try {
+    const productos = await Product.aggregate([
+      {
+        $lookup: {
+          from: 'proveedors',
+          localField: 'proveedor',
+          foreignField: '_id',
+          as: 'proveedorInfo'
+        }
+      },
+      {
+        $unwind: '$proveedorInfo'
+      },
+      {
+        $group: {
+          _id: '$proveedorInfo._id',
+          nombre: { $first: '$proveedorInfo.nombre' },
+          empresa: { $first: '$proveedorInfo.empresa' },
+          totalProductos: { $sum: 1 }
+        }
+      },
+      { $sort: { totalProductos: -1 } },
+      { $limit: 10 }
+    ]);
+
+    res.json({ success: true, data: productos });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error al obtener productos por proveedor' });
+  }
+};
+
+// Proveedores Recientes (nueva versión)
+exports.proveedoresRecientes = async (req, res) => {
+  try {
+    const proveedores = await Proveedor.find()
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .select('nombre empresa activo createdAt');
+
+    res.json({ success: true, data: proveedores });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error al obtener proveedores recientes' });
+  }
+};
+
+// Clientes para reporte de ventas
+exports.clientes = async (req, res) => {
+  try {
+    const topClientes = await Cliente.aggregate([
+      {
+        $lookup: {
+          from: 'pedidos',
+          localField: '_id',
+          foreignField: 'cliente',
+          as: 'pedidos'
+        }
+      },
+      {
+        $project: {
+          nombre: 1,
+          email: 1,
+          totalCompras: { $size: '$pedidos' }
+        }
+      },
+      { $sort: { totalCompras: -1 } },
+      { $limit: 5 }
+    ]);
+
+    res.json({ success: true, data: { topClientes } });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error al obtener clientes' });
+  }
+};
+
+// Productos para reporte de ventas
+exports.productos = async (req, res) => {
+  try {
+    const topProductos = await Product.aggregate([
+      {
+        $lookup: {
+          from: 'ventas',
+          localField: '_id',
+          foreignField: 'productos.producto',
+          as: 'ventas'
+        }
+      },
+      {
+        $project: {
+          nombre: 1,
+          cantidadVendida: { $size: '$ventas' }
+        }
+      },
+      { $sort: { cantidadVendida: -1 } },
+      { $limit: 5 }
+    ]);
+
+    res.json({ success: true, data: { topProductos } });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error al obtener productos' });
   }
 };
 

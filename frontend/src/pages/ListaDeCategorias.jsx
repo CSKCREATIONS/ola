@@ -7,6 +7,195 @@ import NavProductos from '../components/NavProductos'
 const API_URL = 'http://localhost:5000/api/categories';
 const token = localStorage.getItem('token');
 
+/* Estilos CSS avanzados para Categorías */
+const categoriasStyles = `
+  <style>
+    .categoria-advanced-container {
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .categoria-stats-card {
+      background: linear-gradient(135deg, #ffffff, #f8fafc);
+      border-radius: 16px;
+      padding: 25px;
+      border: 1px solid #e5e7eb;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .categoria-stats-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    }
+
+    .categoria-stats-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899);
+    }
+
+    .categoria-professional-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 20px;
+      padding: 30px;
+      margin-bottom: 30px;
+      color: white;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .categoria-header-decoration {
+      position: absolute;
+      top: -50%;
+      right: -10%;
+      width: 300px;
+      height: 300px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 50%;
+      z-index: 1;
+    }
+
+    .categoria-icon-container {
+      background: rgba(255,255,255,0.2);
+      border-radius: 16px;
+      padding: 20px;
+      backdrop-filter: blur(10px);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .categoria-table-modern {
+      background: linear-gradient(135deg, #ffffff, #f8fafc);
+      border-radius: 20px;
+      padding: 30px;
+      border: 1px solid #e5e7eb;
+      backdrop-filter: blur(10px);
+    }
+
+    .categoria-table-wrapper {
+      overflow-x: auto;
+      border-radius: 12px;
+      border: 1px solid #e5e7eb;
+    }
+
+    .categoria-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .categoria-table thead tr {
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      color: white;
+    }
+
+    .categoria-table th {
+      padding: 20px 15px;
+      text-align: left;
+      font-size: 14px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .categoria-table tbody tr {
+      border-bottom: 1px solid #f3f4f6;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .categoria-table tbody tr:hover {
+      background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+      transform: scale(1.01);
+    }
+
+    .categoria-table td {
+      padding: 20px 15px;
+      font-size: 14px;
+      color: #374151;
+    }
+
+    .categoria-action-btn {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin: 0 2px;
+    }
+
+    .categoria-action-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(99, 102, 241, 0.4);
+    }
+
+    .categoria-action-btn.danger {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+    }
+
+    .categoria-action-btn.danger:hover {
+      box-shadow: 0 5px 15px rgba(239, 68, 68, 0.4);
+    }
+
+    .categoria-add-btn {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-bottom: 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .categoria-add-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+    }
+
+    .categoria-badge {
+      background: linear-gradient(135deg, #ddd6fe, #e0e7ff);
+      color: #6366f1;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+  </style>
+`;
+
+if (typeof document !== 'undefined') {
+  const existingStyles = document.getElementById('categoria-advanced-styles');
+  if (!existingStyles) {
+    const styleElement = document.createElement('div');
+    styleElement.id = 'categoria-advanced-styles';
+    styleElement.innerHTML = categoriasStyles;
+    document.head.appendChild(styleElement);
+  }
+}
+
 const CategoriaModal = ({ categoria, onClose, onSave }) => {
   const [name, setName] = useState(categoria ? categoria.name : '');
   const [description, setDescription] = useState(categoria ? categoria.description : '');
@@ -44,54 +233,259 @@ const CategoriaModal = ({ categoria, onClose, onSave }) => {
   };
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-compact">
-        <div className="modal-header">
-          <h5 className="modal-title">
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.6)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 1000,
+      backdropFilter: 'blur(4px)',
+      margin: 0,
+      padding: 0
+    }}>
+      <form onSubmit={handleSubmit} style={{
+        backgroundColor: 'white',
+        borderRadius: '20px',
+        maxWidth: '600px',
+        width: '90%',
+        maxHeight: '90vh',
+        overflow: 'hidden',
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+        animation: 'modalSlideIn 0.3s ease-out',
+        margin: 0,
+        padding: 0,
+        position: 'relative',
+        display: 'flex',
+        flexDirection: 'column'
+      }}>
+        {/* Header del modal */}
+        <div style={{
+          background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+          color: 'white',
+          padding: '2rem',
+          borderRadius: '20px 20px 0 0'
+        }}>
+          <h3 style={{ 
+            margin: 0, 
+            fontSize: '1.5rem', 
+            fontWeight: '600',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem'
+          }}>
+            <div style={{
+              width: '50px',
+              height: '50px',
+              borderRadius: '12px',
+              background: 'rgba(255, 255, 255, 0.2)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <i className="fa-solid fa-tags" style={{ fontSize: '1.5rem' }}></i>
+            </div>
             {categoria ? 'Editar Categoría' : 'Nueva Categoría'}
-          </h5>
-          <button className="modal-close" onClick={onClose}>&times;</button>
+          </h3>
+          <p style={{ 
+            margin: '0.5rem 0 0 4rem', 
+            opacity: 0.9, 
+            fontSize: '0.95rem' 
+          }}>
+            {categoria ? 'Modifica la información de la categoría' : 'Crea una nueva categoría para organizar productos'}
+          </p>
         </div>
 
-        <form onSubmit={handleSubmit}>
-          <div className="modal-body">
-            <div className="form-group">
-              <label className="form-label required">Nombre de la categoría</label>
-              <input
-                type="text"
-                className="form-input"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Ej. Tecnología"
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label className="form-label required">Descripción</label>
-              <input
-                type="text"
-                className="form-input"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Ej. Equipos electrónicos y software"
-                required
-              />
-            </div>
+        {/* Contenido scrolleable */}
+        <div style={{ 
+          flex: 1,
+          overflowY: 'auto',
+          padding: '2.5rem',
+          backgroundColor: '#f8fafc'
+        }}>
+          {/* Nombre de la categoría */}
+          <div style={{
+            background: 'white',
+            padding: '2rem',
+            borderRadius: '12px',
+            marginBottom: '2rem',
+            border: '1px solid #e2e8f0',
+            borderLeft: '4px solid #f59e0b'
+          }}>
+            <label style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              marginBottom: '0.75rem',
+              fontWeight: '600',
+              color: '#374151',
+              fontSize: '1.1rem'
+            }}>
+              <i className="fa-solid fa-tag" style={{ color: '#f59e0b', fontSize: '1rem' }}></i>
+              Nombre de la Categoría
+              <span style={{ color: '#ef4444' }}>*</span>
+            </label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Ej: Electrónicos, Ropa, Hogar..."
+              style={{
+                width: '100%',
+                padding: '0.875rem 1rem',
+                border: '2px solid #e5e7eb',
+                borderRadius: '10px',
+                fontSize: '1rem',
+                transition: 'all 0.3s ease',
+                backgroundColor: '#ffffff',
+                fontFamily: 'inherit',
+                boxSizing: 'border-box'
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = '#f59e0b';
+                e.target.style.boxShadow = '0 0 0 3px rgba(245, 158, 11, 0.1)';
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = '#e5e7eb';
+                e.target.style.boxShadow = 'none';
+              }}
+              required
+            />
           </div>
 
-          <div className="modal-footer">
-            <button type="button" className="btn btn-cancel" onClick={onClose}>Cancelar</button>
-            <button type="submit" className="btn btn-save">
-              {categoria ? 'Actualizar' : 'Guardar'}
-            </button>
+          {/* Descripción */}
+          <div style={{
+            background: 'white',
+            padding: '2rem',
+            borderRadius: '12px',
+            border: '1px solid #e2e8f0',
+            borderLeft: '4px solid #10b981'
+          }}>
+            <label style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              marginBottom: '0.75rem',
+              fontWeight: '600',
+              color: '#374151',
+              fontSize: '1.1rem'
+            }}>
+              <i className="fa-solid fa-align-left" style={{ color: '#10b981', fontSize: '1rem' }}></i>
+              Descripción
+              <span style={{ color: '#ef4444' }}>*</span>
+            </label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Describe brevemente esta categoría y qué tipo de productos incluye..."
+              rows="4"
+              style={{
+                width: '100%',
+                padding: '0.875rem 1rem',
+                border: '2px solid #e5e7eb',
+                borderRadius: '10px',
+                fontSize: '1rem',
+                transition: 'all 0.3s ease',
+                backgroundColor: '#ffffff',
+                fontFamily: 'inherit',
+                boxSizing: 'border-box',
+                resize: 'vertical',
+                minHeight: '120px'
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = '#10b981';
+                e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)';
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = '#e5e7eb';
+                e.target.style.boxShadow = 'none';
+              }}
+              required
+            />
           </div>
-        </form>
-      </div>
+        </div>
+
+        {/* Botones de acción */}
+        <div style={{ 
+          display: 'flex', 
+          gap: '1.5rem', 
+          justifyContent: 'flex-end',
+          padding: '2rem 2.5rem',
+          borderTop: '2px solid #e5e7eb',
+          backgroundColor: 'white',
+          borderRadius: '0 0 20px 20px',
+          flexShrink: 0
+        }}>
+          <button 
+            type="button" 
+            onClick={onClose}
+            style={{
+              padding: '0.875rem 1.5rem',
+              border: '2px solid #e5e7eb',
+              borderRadius: '10px',
+              backgroundColor: 'white',
+              color: '#374151',
+              cursor: 'pointer',
+              fontWeight: '600',
+              fontSize: '0.95rem',
+              transition: 'all 0.3s ease',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.backgroundColor = '#f3f4f6';
+              e.target.style.borderColor = '#d1d5db';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.backgroundColor = 'white';
+              e.target.style.borderColor = '#e5e7eb';
+            }}
+          >
+            <i className="fa-solid fa-times"></i>
+            Cancelar
+          </button>
+          
+          <button 
+            type="submit"
+            style={{
+              padding: '0.875rem 1.5rem',
+              border: 'none',
+              borderRadius: '10px',
+              background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+              color: 'white',
+              cursor: 'pointer',
+              fontWeight: '600',
+              fontSize: '0.95rem',
+              transition: 'all 0.3s ease',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              boxShadow: '0 4px 6px -1px rgba(245, 158, 11, 0.3)'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.transform = 'translateY(-1px)';
+              e.target.style.boxShadow = '0 6px 12px -1px rgba(245, 158, 11, 0.4)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.transform = 'translateY(0)';
+              e.target.style.boxShadow = '0 4px 6px -1px rgba(245, 158, 11, 0.3)';
+            }}
+          >
+            <i className="fa-solid fa-tags"></i>
+            {categoria ? 'Actualizar' : 'Crear'}
+          </button>
+        </div>
+      </form>
     </div>
   );
 };
 
-const GestionCategorias = () => {
+const ListaDeCategorias = () => {
   const [categorias, setCategorias] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [categoriaEditando, setCategoriaEditando] = useState(null);
@@ -105,48 +499,50 @@ const GestionCategorias = () => {
       const res = await fetch(API_URL, {
         headers: { 'x-access-token': token }
       });
-
+      
+      if (!res.ok) throw new Error('Error al cargar categorías');
+      
       const result = await res.json();
-      const categories = result.categories || result.data || result;
-      setCategorias(categories);
+      const categoriesData = result.categories || result.data || result;
+      setCategorias(Array.isArray(categoriesData) ? categoriesData : []);
     } catch (err) {
-      Swal.fire('Error', 'No se pudieron cargar las categorías', 'error');
+      console.error('Error loading categories:', err);
+      Swal.fire('Error', err.message, 'error');
     }
   };
 
-  const handleSave = async (categoria) => {
-    const url = categoria.id ? `${API_URL}/${categoria.id}` : API_URL;
-    const method = categoria.id ? 'PUT' : 'POST';
-
+  const handleSave = async (categoriaData) => {
     try {
+      const method = categoriaData.id ? 'PUT' : 'POST';
+      const url = categoriaData.id ? `${API_URL}/${categoriaData.id}` : API_URL;
+      
       const res = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
           'x-access-token': token
         },
-        body: JSON.stringify({ name: categoria.name, description: categoria.description })
+        body: JSON.stringify({ 
+          name: categoriaData.name, 
+          description: categoriaData.description 
+        })
       });
 
-      if (!res.ok) throw new Error(categoria.id ? 'Error al actualizar la categoría' : 'Error al crear la categoría');
-
-      Swal.fire('Éxito', categoria.id ? 'Categoría actualizada correctamente' : 'Categoría creada correctamente', 'success');
+      if (!res.ok) throw new Error('Error al guardar categoría');
+      
+      Swal.fire('Éxito', `Categoría ${categoriaData.id ? 'actualizada' : 'creada'} correctamente`, 'success');
       setModalVisible(false);
+      setCategoriaEditando(null);
       loadCategories();
     } catch (err) {
       Swal.fire('Error', err.message, 'error');
     }
   };
 
-  const handleEdit = (categoria) => {
-    setCategoriaEditando({ id: categoria._id, name: categoria.name, description: categoria.description });
-    setModalVisible(true);
-  };
-
-  const handleDelete = async (id) => {
+  const deleteCategory = async (id) => {
     const confirm = await Swal.fire({
       title: '¿Estás seguro?',
-      text: 'Esta acción eliminará la categoría permanentemente',
+      text: 'Esta acción eliminará la categoría y todas sus subcategorías',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonText: 'Sí, eliminar',
@@ -182,26 +578,33 @@ const GestionCategorias = () => {
   if (!confirm.isConfirmed) return;
 
   try {
-    const res = await fetch(`${API_URL}/${id}/${activar ? 'activate' : 'deactivate'}`, {
-      method: 'PATCH',
-      headers: { 'x-access-token': token }
+    const res = await fetch(`${API_URL}/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-access-token': token
+      },
+      body: JSON.stringify({ activo: activar })
     });
 
-    if (!res.ok) throw new Error(`No se pudo ${activar ? 'activar' : 'desactivar'} la categoría`);
+    if (!res.ok) throw new Error('No se pudo actualizar el estado');
 
-    await Swal.fire(
-      activar ? 'Categoría activada' : 'Categoría desactivada',
-      '',
+    Swal.fire(
+      activar ? 'Activada' : 'Desactivada',
+      `Categoría ${activar ? 'activada' : 'desactivada'} correctamente`,
       'success'
     );
-
-    // ✅ IMPORTANTE: vuelve a cargar los datos actualizados
-    await loadCategories();
+    
+    loadCategories();
   } catch (err) {
     Swal.fire('Error', err.message, 'error');
   }
 };
 
+const handleEdit = (categoria) => {
+  setCategoriaEditando(categoria);
+  setModalVisible(true);
+};
 
   return (
     <div>
@@ -209,60 +612,192 @@ const GestionCategorias = () => {
       <div className="content">
         <NavProductos/>
         <div className="contenido-modulo">
-          <div className='encabezado-modulo'>
-            <h3 className='titulo-profesional'>Lista de categorias</h3>
+          {/* Encabezado profesional */}
+          <div className="categoria-professional-header">
+            <div className="categoria-header-decoration"></div>
+            <div style={{ position: 'relative', zIndex: 2 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                <div className="categoria-icon-container">
+                  <i className="fa-solid fa-tags" style={{ fontSize: '2.5rem', color: 'white' }}></i>
+                </div>
+                <div>
+                  <h2 style={{ margin: '0 0 8px 0', fontSize: '2rem', fontWeight: '700' }}>
+                    Lista de Categorías
+                  </h2>
+                  <p style={{ margin: 0, fontSize: '1.1rem', opacity: 0.9 }}>
+                    Organización y gestión de categorías de productos
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
-          <br />
-          <br />
 
-          <div className="d-flex justify-content-end mb-3">
-            <button className="btn btn-save" onClick={() => { setCategoriaEditando(null); setModalVisible(true); }}>+ Nueva Categoría</button>
+          {/* Estadísticas avanzadas */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+            gap: '20px',
+            marginBottom: '30px'
+          }}>
+            <div className="categoria-stats-card">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                <div style={{
+                  background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+                  borderRadius: '12px',
+                  padding: '15px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <i className="fa-solid fa-tags" style={{ color: 'white', fontSize: '1.5rem' }}></i>
+                </div>
+                <div>
+                  <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
+                    {categorias.length}
+                  </h3>
+                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
+                    Total Categorías
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="categoria-stats-card">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                <div style={{
+                  background: 'linear-gradient(135deg, #10b981, #059669)',
+                  borderRadius: '12px',
+                  padding: '15px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <i className="fa-solid fa-check-circle" style={{ color: 'white', fontSize: '1.5rem' }}></i>
+                </div>
+                <div>
+                  <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
+                    {categorias.filter(c => c.activo !== false).length}
+                  </h3>
+                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
+                    Categorías Activas
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="categoria-stats-card">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                <div style={{
+                  background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+                  borderRadius: '12px',
+                  padding: '15px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <i className="fa-solid fa-pause-circle" style={{ color: 'white', fontSize: '1.5rem' }}></i>
+                </div>
+                <div>
+                  <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
+                    {categorias.filter(c => c.activo === false).length}
+                  </h3>
+                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
+                    Categorías Inactivas
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
-          <br />
-          <div className="table-container">
-            <table>
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Nombre</th>
-                  <th>Descripción</th>
-                  <th>Estado</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {categorias.length === 0 ? (
+
+          {/* Botón agregar */}
+          <button 
+            className="categoria-add-btn" 
+            onClick={() => { setCategoriaEditando(null); setModalVisible(true); }}
+          >
+            <i className="fa-solid fa-plus"></i>
+            Nueva Categoría
+          </button>
+
+          {/* Tabla principal con diseño moderno */}
+          <div className="categoria-table-modern">
+            <div className="categoria-table-wrapper">
+              <table className="categoria-table">
+                <thead>
                   <tr>
-                    <td colSpan={5} style={{ textAlign: 'center', padding: '1rem' }}>
-                      No hay categorías disponibles
-                    </td>
+                    <th>#</th>
+                    <th>Categoría</th>
+                    <th>Descripción</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
                   </tr>
-                ) : (
-                  categorias.map((cat, index) => (
-                    <tr key={cat._id}>
-                      <td>{index + 1}</td>
-                      <td>{cat.name}</td>
-                      <td>{cat.description}</td>
-                      <td>
-                        <label className="switch">
-                          <input
-                            type="checkbox"
-                            checked={!!cat.activo}
-                            onChange={(e) => toggleEstadoCategoria(cat._id, e.target.checked)}
-                          />
-                          <span className="slider"></span>
-                        </label>
-                      </td>
-                      <td>
-                        <button className="btnTransparente" onClick={() => handleEdit(cat)}>
-                          <i className="fa-solid fa-pen-to-square"></i>
-                        </button>
+                </thead>
+                <tbody>
+                  {categorias.length === 0 ? (
+                    <tr>
+                      <td 
+                        colSpan={5} 
+                        style={{
+                          padding: '40px',
+                          textAlign: 'center',
+                          color: '#9ca3af',
+                          fontStyle: 'italic',
+                          fontSize: '16px'
+                        }}
+                      >
+                        No hay categorías disponibles
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  ) : (
+                    categorias.map((cat, index) => (
+                      <tr key={cat._id}>
+                        <td style={{ fontWeight: '500', color: '#6b7280' }}>
+                          {index + 1}
+                        </td>
+                        <td style={{ fontWeight: '600', color: '#1f2937' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <div style={{
+                              background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                              borderRadius: '8px',
+                              padding: '8px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              minWidth: '35px'
+                            }}>
+                              <i className="fa-solid fa-tag" style={{ color: 'white', fontSize: '12px' }}></i>
+                            </div>
+                            {cat.name}
+                          </div>
+                        </td>
+                        <td style={{ color: '#6b7280', fontSize: '14px' }}>
+                          {cat.description}
+                        </td>
+                        <td>
+                          <label className="switch">
+                            <input
+                              type="checkbox"
+                              checked={!!cat.activo}
+                              onChange={(e) => toggleEstadoCategoria(cat._id, e.target.checked)}
+                            />
+                            <span className="slider"></span>
+                          </label>
+                        </td>
+                        <td>
+                          <div style={{ display: 'flex', gap: '5px' }}>
+                            <button 
+                              className="categoria-action-btn"
+                              onClick={() => handleEdit(cat)}
+                            >
+                              <i className="fa-solid fa-pen-to-square"></i>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
 
@@ -284,4 +819,4 @@ const GestionCategorias = () => {
   );
 };
 
-export default GestionCategorias;
+export default ListaDeCategorias;

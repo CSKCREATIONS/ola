@@ -3075,3 +3075,53 @@ select:focus {
   background: #4b5563;
   transform: translateY(-2px);
 }
+
+/* ESTILOS GLOBALES PARA ELIMINAR BORDES BLANCOS EN TABLAS MODERNAS */
+.table-container {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.contenido-modulo .table-container {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.contenido-modulo table {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Asegurar que los contenedores modernos no tengan bordes blancos */
+.categoria-table-modern,
+.subcategoria-table-modern,
+.proveedor-table-modern,
+.pedidos-table-modern {
+  border: none !important;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important;
+}
+
+.categoria-table-wrapper,
+.subcategoria-table-wrapper,
+.proveedor-table-wrapper,
+.pedidos-table-wrapper {
+  border: 1px solid #e5e7eb !important;
+  box-shadow: none !important;
+}
+
+/* Eliminar cualquier borde blanco restante */
+div[class*="-advanced-container"] .table-container {
+  background: transparent !important;
+  border: none !important;
+}
+
+div[class*="-advanced-container"] table {
+  border: none !important;
+  background: transparent !important;
+}

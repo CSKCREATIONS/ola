@@ -1,7 +1,7 @@
 const nodemailer = require('nodemailer');
 
 // Configuración alternativa con Gmail
-const gmailTransporter = nodemailer.createTransporter({
+const gmailTransporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
     user: process.env.GMAIL_USER,

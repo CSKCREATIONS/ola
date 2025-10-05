@@ -1,0 +1,216 @@
+import React, { useState } from 'react';
+import Swal from 'sweetalert2';
+
+export default function PedidoDevueltoEmail({ datos, onClose, onEmailSent }) {
+  // Obtener usuario logueado
+  const usuario = JSON.parse(localStorage.getItem('user') || '{}');
+  const [showEnviarModal, setShowEnviarModal] = useState(false);
+  
+  // Estados para el formulario de envío de correo
+  const [correo, setCorreo] = useState('');
+  const [asunto, setAsunto] = useState('');
+  const [mensaje, setMensaje] = useState('');
+  const [motivoDevolucion, setMotivoDevolucion] = useState('');
+
+  // Función para abrir modal con datos actualizados
+  const abrirModalEnvio = () => {
+    // Calcular total dinámicamente si no existe
+    const totalCalculado = datos?.productos?.reduce((total, producto) => {
+      const cantidad = Number(producto.cantidad) || 0;
+      const precio = Number(producto.precioUnitario) || 0;
+      return total + (cantidad * precio);
+    }, 0) || 0;
+    
+    const totalFinal = datos?.total || totalCalculado;
+    
+    // Actualizar datos autocompletados cada vez que se abre el modal
+    setCorreo(datos?.cliente?.correo || '');
+    setAsunto(`Pedido Devuelto ${datos?.numeroPedido || ''} - ${datos?.cliente?.nombre || 'Cliente'} | ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}`);
+    setMensaje(
+      `Estimado/a ${datos?.cliente?.nombre || 'cliente'},
+
+Lamentamos informarle que su pedido ha sido devuelto. A continuación los detalles:
+
+📦 DETALLES DEL PEDIDO DEVUELTO:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Número de pedido: ${datos?.numeroPedido || 'N/A'}
+• Fecha de pedido original: ${datos?.createdAt ? new Date(datos.createdAt).toLocaleDateString('es-ES') : datos?.fecha ? new Date(datos.fecha).toLocaleDateString('es-ES') : 'N/A'}
+• Fecha de devolución: ${new Date().toLocaleDateString('es-ES')}
+• Cliente: ${datos?.cliente?.nombre || 'N/A'}
+• Correo: ${datos?.cliente?.correo || 'N/A'}
+• Teléfono: ${datos?.cliente?.telefono || 'N/A'}
+• Ciudad: ${datos?.cliente?.ciudad || 'N/A'}
+• Estado: Devuelto ↩️
+• Total de productos: ${datos?.productos?.length || 0} artículos
+• VALOR TOTAL: $${totalFinal.toLocaleString('es-ES')}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Nos pondremos en contacto con usted para coordinar el proceso de devolución y resolver cualquier inconveniente.
+
+${datos?.observacion ? `📝 OBSERVACIONES ORIGINALES:
+${datos.observacion}
+
+` : ''}Lamentamos cualquier inconveniente causado y trabajaremos para resolver esta situación de la mejor manera posible.
+
+Para cualquier consulta sobre esta devolución, no dude en contactarnos.
+
+Saludos cordiales,
+
+${usuario?.firstName || usuario?.nombre || 'Equipo de atención al cliente'} ${usuario?.surname || ''}${usuario?.email ? `
+📧 Correo: ${usuario.email}` : ''}${usuario?.telefono ? `
+📞 Teléfono: ${usuario.telefono}` : ''}
+
+${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
+🌐 Soluciones tecnológicas integrales`
+    );
+    setShowEnviarModal(true);
+  };
+
+  // Función para enviar por correo
+  const enviarPorCorreo = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:5000/api/pedidos/${datos._id}/enviar-devuelto`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          correoDestino: correo,
+          asunto: asunto,
+          mensaje: mensaje,
+          motivoDevolucion: motivoDevolucion
+        })
+      });
+
+      if (response.ok) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Correo enviado',
+          text: 'La notificación de pedido devuelto ha sido enviada exitosamente'
+        });
+        setShowEnviarModal(false);
+        
+        // Llamar al callback para actualizar el componente padre
+        if (onEmailSent) {
+          onEmailSent(datos._id);
+        }
+      } else {
+        throw new Error('Error al enviar correo');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'No se pudo enviar el correo del pedido devuelto'
+      });
+    }
+  };
+
+  return (
+    <>
+      {/* Botón para abrir modal de envío */}
+      <button
+        onClick={abrirModalEnvio}
+        className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+      >
+        <span>↩️</span>
+        Enviar notificación
+      </button>
+
+      {/* Modal de envío de correo */}
+      {showEnviarModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center p-6 border-b border-gray-200">
+              <h3 className="text-xl font-semibold text-gray-800">
+                ↩️ Enviar Notificación de Pedido Devuelto
+              </h3>
+              <button
+                onClick={() => setShowEnviarModal(false)}
+                className="text-gray-400 hover:text-gray-600 text-2xl font-bold"
+              >
+                ×
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Correo destinatario:
+                </label>
+                <input
+                  type="email"
+                  value={correo}
+                  onChange={(e) => setCorreo(e.target.value)}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder="correo@ejemplo.com"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Asunto:
+                </label>
+                <input
+                  type="text"
+                  value={asunto}
+                  onChange={(e) => setAsunto(e.target.value)}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder="Asunto del correo"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Motivo de la devolución:
+                </label>
+                <input
+                  type="text"
+                  value={motivoDevolucion}
+                  onChange={(e) => setMotivoDevolucion(e.target.value)}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder="Ej: Producto defectuoso, solicitud del cliente, etc."
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Mensaje:
+                </label>
+                <textarea
+                  value={mensaje}
+                  onChange={(e) => setMensaje(e.target.value)}
+                  rows={12}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-vertical"
+                  placeholder="Escriba su mensaje aquí..."
+                  required
+                />
+              </div>
+            </div>
+            
+            <div className="flex justify-end gap-3 p-6 border-t border-gray-200">
+              <button
+                onClick={() => setShowEnviarModal(false)}
+                className="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={enviarPorCorreo}
+                className="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors flex items-center gap-2"
+              >
+                <span>↩️</span>
+                Enviar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}

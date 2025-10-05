@@ -4,6 +4,169 @@ import '../App.css';
 import Fijo from '../components/Fijo';
 import NavCompras from '../components/NavCompras';
 
+// CSS inyectado para diseño avanzado
+const advancedStyles = `
+  .orden-compra-advanced-table {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    border: 1px solid #e5e7eb;
+  }
+  
+  .orden-compra-header-section {
+    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+    padding: 20px 25px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  
+  .orden-compra-table-container {
+    overflow: auto;
+  }
+  
+  .orden-compra-advanced-table table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  
+  .orden-compra-advanced-table thead tr {
+    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+    border-bottom: 2px solid #e5e7eb;
+  }
+  
+  .orden-compra-advanced-table thead th {
+    padding: 16px 12px;
+    text-align: left;
+    font-weight: 600;
+    color: #374151;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+  }
+  
+  .orden-compra-advanced-table tbody tr {
+    border-bottom: 1px solid #f3f4f6;
+    transition: all 0.2s ease;
+  }
+  
+  .orden-compra-advanced-table tbody tr:hover {
+    background-color: #f8fafc;
+  }
+  
+  .orden-compra-advanced-table tbody td {
+    padding: 16px 12px;
+    color: #4b5563;
+    font-weight: 500;
+  }
+  
+  .orden-numero-link {
+    color: #6366f1;
+    text-decoration: none;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    font-weight: 600;
+    display: inline-block;
+  }
+  
+  .orden-numero-link:hover {
+    background: rgba(99, 102, 241, 0.1);
+    text-decoration: underline;
+  }
+  
+  .orden-estado-pendiente {
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    color: #d97706;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(217, 119, 6, 0.2);
+  }
+  
+  .orden-estado-pendiente:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(217, 119, 6, 0.3);
+  }
+  
+  .orden-estado-completada {
+    background: #dcfce7;
+    color: #16a34a;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-block;
+  }
+  
+  .orden-estado-cancelada {
+    background: #fee2e2;
+    color: #dc2626;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-block;
+  }
+  
+  .orden-action-btn {
+    background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+    color: #1e40af;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 10px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(30, 64, 175, 0.2);
+    margin-right: 6px;
+  }
+  
+  .orden-action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(30, 64, 175, 0.3);
+  }
+  
+  .orden-action-btn.delete {
+    background: linear-gradient(135deg, #fee2e2, #fecaca);
+    color: #dc2626;
+    box-shadow: 0 2px 4px rgba(220, 38, 38, 0.2);
+  }
+  
+  .orden-action-btn.delete:hover {
+    box-shadow: 0 4px 8px rgba(220, 38, 38, 0.3);
+  }
+  
+  .orden-empty-state {
+    text-align: center;
+    padding: 80px 20px;
+  }
+  
+  .orden-empty-icon {
+    background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+    border-radius: 50%;
+    padding: 25px;
+    margin: 0 auto 20px auto;
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+`;
+
+// Inyectar estilos
+if (!document.getElementById('orden-compra-advanced-styles')) {
+  const styleSheet = document.createElement('style');
+  styleSheet.id = 'orden-compra-advanced-styles';
+  styleSheet.textContent = advancedStyles;
+  document.head.appendChild(styleSheet);
+}
+
 export default function OrdenCompra() {
   const [ordenes, setOrdenes] = useState([]);
   const [proveedores, setProveedores] = useState([]);
@@ -953,87 +1116,592 @@ const verificarStockDisponible = async (productos) => {
       <div className="content">
         <NavCompras />
         <div className="contenido-modulo">
-          <h3 className='titulo-profesional'>Órdenes de Compra</h3>
-          <br />
-          <button className="btn btn-success" onClick={abrirModalAgregar}>Agregar Orden de Compra</button>
-          <br /><br />
+          {/* Encabezado profesional */}
+          <div style={{
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            borderRadius: '20px',
+            padding: '30px',
+            marginBottom: '30px',
+            color: 'white',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            <div style={{
+              position: 'absolute',
+              top: '-50%',
+              right: '-10%',
+              width: '300px',
+              height: '300px',
+              background: 'rgba(255,255,255,0.1)',
+              borderRadius: '50%',
+              zIndex: 1
+            }}></div>
+            <div style={{ position: 'relative', zIndex: 2 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '20px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                  <div style={{
+                    background: 'rgba(255,255,255,0.2)',
+                    borderRadius: '16px',
+                    padding: '20px',
+                    backdropFilter: 'blur(10px)'
+                  }}>
+                    <i className="fa-solid fa-file-invoice-dollar" style={{ fontSize: '2.5rem', color: 'white' }}></i>
+                  </div>
+                  <div>
+                    <h2 style={{ margin: '0 0 8px 0', fontSize: '2rem', fontWeight: '700' }}>
+                      Órdenes de Compra
+                    </h2>
+                    <p style={{ margin: 0, fontSize: '1.1rem', opacity: 0.9 }}>
+                      Gestiona y supervisa las órdenes de compra a proveedores
+                    </p>
+                  </div>
+                </div>
+                <div>
+                  <button 
+                    onClick={abrirModalAgregar}
+                    style={{
+                      background: 'linear-gradient(135deg, #10b981, #059669)',
+                      border: 'none',
+                      borderRadius: '12px',
+                      padding: '12px 24px',
+                      color: 'white',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                      boxShadow: '0 4px 15px rgba(16, 185, 129, 0.4)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.transform = 'translateY(-2px)';
+                      e.target.style.boxShadow = '0 6px 20px rgba(16, 185, 129, 0.6)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.transform = 'translateY(0)';
+                      e.target.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.4)';
+                    }}
+                  >
+                    <i className="fa-solid fa-plus"></i>
+                    Agregar Orden de Compra
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
 
-          <div className="table-container">
-            <table>
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Número Orden</th>
-                  <th>Proveedor</th>
-                  <th>Total</th>
-                  <th>Fecha</th>
-                  <th>Solicitado Por</th>
-                  <th>Estado</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {ordenesPendientes.map((orden, index) => (
-                  <tr key={orden._id}>
-                    <td>{index + 1}</td>
-                    <td>
-                      <button
-                        onClick={() => verDetallesOrden(orden)}
-                        className="btn btn-link btn-sm p-0"
-                        style={{ textDecoration: 'none', color: '#007bff', fontWeight: 'bold' }}
-                      >
-                        {orden.numeroOrden}
-                      </button>
-                    </td>
-                    <td>{orden.proveedor || 'No especificado'}</td>
-                    <td>${orden.total?.toLocaleString()}</td>
-                    <td>{new Date(orden.fechaOrden).toLocaleDateString()}</td>
-                    <td>{orden.solicitadoPor || 'No especificado'}</td>
-                    <td>
-                      {orden.estado === 'Pendiente' ? (
+          {/* Estadísticas avanzadas */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+            gap: '20px',
+            marginBottom: '30px'
+          }}>
+            <div style={{
+              background: 'linear-gradient(135deg, #ffffff, #f8fafc)',
+              borderRadius: '16px',
+              padding: '25px',
+              border: '1px solid #e5e7eb',
+              transition: 'all 0.3s ease',
+              cursor: 'pointer'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-5px)';
+              e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.15)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = 'none';
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                <div style={{
+                  background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+                  borderRadius: '12px',
+                  padding: '15px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <i className="fa-solid fa-file-invoice-dollar" style={{ color: 'white', fontSize: '1.5rem' }}></i>
+                </div>
+                <div>
+                  <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
+                    {ordenes.length}
+                  </h3>
+                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
+                    Total Órdenes
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div style={{
+              background: 'linear-gradient(135deg, #ffffff, #f8fafc)',
+              borderRadius: '16px',
+              padding: '25px',
+              border: '1px solid #e5e7eb',
+              transition: 'all 0.3s ease',
+              cursor: 'pointer'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-5px)';
+              e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.15)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = 'none';
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                <div style={{
+                  background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                  borderRadius: '12px',
+                  padding: '15px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <i className="fa-solid fa-clock" style={{ color: 'white', fontSize: '1.5rem' }}></i>
+                </div>
+                <div>
+                  <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
+                    {ordenesPendientes.length}
+                  </h3>
+                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
+                    Órdenes Pendientes
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div style={{
+              background: 'linear-gradient(135deg, #ffffff, #f8fafc)',
+              borderRadius: '16px',
+              padding: '25px',
+              border: '1px solid #e5e7eb',
+              transition: 'all 0.3s ease',
+              cursor: 'pointer'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-5px)';
+              e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.15)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = 'none';
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                <div style={{
+                  background: 'linear-gradient(135deg, #10b981, #059669)',
+                  borderRadius: '12px',
+                  padding: '15px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <i className="fa-solid fa-check-circle" style={{ color: 'white', fontSize: '1.5rem' }}></i>
+                </div>
+                <div>
+                  <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
+                    {ordenes.filter(o => o.estado === 'Completada').length}
+                  </h3>
+                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
+                    Órdenes Completadas
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div style={{
+              background: 'linear-gradient(135deg, #ffffff, #f8fafc)',
+              borderRadius: '16px',
+              padding: '25px',
+              border: '1px solid #e5e7eb',
+              transition: 'all 0.3s ease',
+              cursor: 'pointer'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-5px)';
+              e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.15)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = 'none';
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                <div style={{
+                  background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+                  borderRadius: '12px',
+                  padding: '15px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <i className="fa-solid fa-dollar-sign" style={{ color: 'white', fontSize: '1.5rem' }}></i>
+                </div>
+                <div>
+                  <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
+                    ${ordenes.reduce((sum, o) => sum + (o.total || 0), 0).toLocaleString()}
+                  </h3>
+                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
+                    Valor Total Órdenes
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Tabla de órdenes mejorada */}
+          <div style={{
+            background: 'white',
+            borderRadius: '16px',
+            overflow: 'hidden',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+            border: '1px solid #e5e7eb'
+          }}>
+            <div style={{
+              background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)',
+              padding: '20px 25px',
+              borderBottom: '1px solid #e5e7eb',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{
+                  background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                  borderRadius: '12px',
+                  padding: '10px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <i className="fa-solid fa-table" style={{ color: 'white', fontSize: '16px' }}></i>
+                </div>
+                <div>
+                  <h4 style={{ margin: '0 0 4px 0', color: '#1f2937', fontSize: '1.3rem', fontWeight: '600' }}>
+                    Lista de Órdenes de Compra
+                  </h4>
+                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px' }}>
+                    Mostrando {ordenesPendientes.length} órdenes pendientes
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div style={{ overflow: 'auto' }}>
+              <table style={{
+                width: '100%',
+                borderCollapse: 'collapse',
+                fontSize: '14px'
+              }}>
+                <thead>
+                  <tr style={{ 
+                    background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)',
+                    borderBottom: '2px solid #e5e7eb'
+                  }}>
+                    <th style={{ 
+                      padding: '16px 12px', 
+                      textAlign: 'left', 
+                      fontWeight: '600', 
+                      color: '#374151',
+                      fontSize: '13px',
+                      letterSpacing: '0.5px'
+                    }}>
+                      <i className="fa-solid fa-hashtag" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      #
+                    </th>
+                    <th style={{ 
+                      padding: '16px 12px', 
+                      textAlign: 'left', 
+                      fontWeight: '600', 
+                      color: '#374151',
+                      fontSize: '13px',
+                      letterSpacing: '0.5px'
+                    }}>
+                      <i className="fa-solid fa-file-invoice" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      NÚMERO ORDEN
+                    </th>
+                    <th style={{ 
+                      padding: '16px 12px', 
+                      textAlign: 'left', 
+                      fontWeight: '600', 
+                      color: '#374151',
+                      fontSize: '13px',
+                      letterSpacing: '0.5px'
+                    }}>
+                      <i className="fa-solid fa-truck" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      PROVEEDOR
+                    </th>
+                    <th style={{ 
+                      padding: '16px 12px', 
+                      textAlign: 'left', 
+                      fontWeight: '600', 
+                      color: '#374151',
+                      fontSize: '13px',
+                      letterSpacing: '0.5px'
+                    }}>
+                      <i className="fa-solid fa-dollar-sign" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      TOTAL
+                    </th>
+                    <th style={{ 
+                      padding: '16px 12px', 
+                      textAlign: 'left', 
+                      fontWeight: '600', 
+                      color: '#374151',
+                      fontSize: '13px',
+                      letterSpacing: '0.5px'
+                    }}>
+                      <i className="fa-solid fa-calendar" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      FECHA
+                    </th>
+                    <th style={{ 
+                      padding: '16px 12px', 
+                      textAlign: 'left', 
+                      fontWeight: '600', 
+                      color: '#374151',
+                      fontSize: '13px',
+                      letterSpacing: '0.5px'
+                    }}>
+                      <i className="fa-solid fa-user" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      SOLICITADO POR
+                    </th>
+                    <th style={{ 
+                      padding: '16px 12px', 
+                      textAlign: 'center', 
+                      fontWeight: '600', 
+                      color: '#374151',
+                      fontSize: '13px',
+                      letterSpacing: '0.5px'
+                    }}>
+                      <i className="fa-solid fa-flag" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      ESTADO
+                    </th>
+                    <th style={{ 
+                      padding: '16px 12px', 
+                      textAlign: 'center', 
+                      fontWeight: '600', 
+                      color: '#374151',
+                      fontSize: '13px',
+                      letterSpacing: '0.5px'
+                    }}>
+                      <i className="fa-solid fa-cogs" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      ACCIONES
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {ordenesPendientes.map((orden, index) => (
+                    <tr key={orden._id} 
+                        style={{
+                          borderBottom: '1px solid #f3f4f6',
+                          transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = '#f8fafc';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'transparent';
+                        }}
+                    >
+                      <td style={{ padding: '16px 12px', fontWeight: '600', color: '#6366f1' }}>
+                        {index + 1}
+                      </td>
+                      <td style={{ padding: '16px 12px' }}>
                         <button
-                          onClick={() => abrirModalConfirmacion(orden)}
-                          className="btn btn-warning btn-sm"
+                          onClick={() => verDetallesOrden(orden)}
+                          className="orden-numero-link"
                           style={{
-                            padding: '0.25rem 0.5rem',
-                            fontSize: '0.75rem',
-                            fontWeight: 'bold',
-                            background: '#ffc107',
+                            background: 'none',
                             border: 'none',
-                            borderRadius: '4px'
+                            color: '#6366f1',
+                            textDecoration: 'none',
+                            padding: '4px 8px',
+                            borderRadius: '6px',
+                            transition: 'all 0.2s ease',
+                            fontWeight: '600',
+                            display: 'inline-block',
+                            cursor: 'pointer'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.target.style.background = 'rgba(99, 102, 241, 0.1)';
+                            e.target.style.textDecoration = 'underline';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.target.style.background = 'none';
+                            e.target.style.textDecoration = 'none';
                           }}
                         >
-                          Pendiente
+                          {orden.numeroOrden}
                         </button>
-                      ) : (
-                        <span className={`badge ${orden.estado === 'Completada' ? 'bg-success' : 'bg-danger'}`}>
-                          {orden.estado}
+                      </td>
+                      <td style={{ padding: '16px 12px' }}>
+                        <span style={{
+                          background: '#fef3c7',
+                          color: '#d97706',
+                          padding: '6px 12px',
+                          borderRadius: '20px',
+                          fontSize: '12px',
+                          fontWeight: '600',
+                          display: 'inline-block'
+                        }}>
+                          {orden.proveedor || 'No especificado'}
                         </span>
-                      )}
-                    </td>
-                    <td>
-                      <button
-                        onClick={() => abrirModalEditar(orden)}
-                        className="btnTransparente"
-                        style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', marginRight: '0.5rem' }}
-                      >
-                        <i className="fa-solid fa-pen-to-square"></i>
-                      </button>
-                      <button className='btnTransparente'
-                        onClick={() => eliminarOrden(orden._id)}
-                      >
-                        <i className="fa-solid fa-trash fa-xl" style={{ color: '#dc3545' }} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-                {ordenesPendientes.length === 0 && (
-                  <tr>
-                    <td colSpan="8" className="text-center">No hay órdenes pendientes</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                      </td>
+                      <td style={{ padding: '16px 12px', fontWeight: '600', color: '#1f2937' }}>
+                        ${orden.total?.toLocaleString()}
+                      </td>
+                      <td style={{ padding: '16px 12px', color: '#4b5563', fontWeight: '500' }}>
+                        {new Date(orden.fechaOrden).toLocaleDateString()}
+                      </td>
+                      <td style={{ padding: '16px 12px', color: '#4b5563', fontWeight: '500' }}>
+                        {orden.solicitadoPor || 'No especificado'}
+                      </td>
+                      <td style={{ padding: '16px 12px', textAlign: 'center' }}>
+                        {orden.estado === 'Pendiente' ? (
+                          <button
+                            onClick={() => abrirModalConfirmacion(orden)}
+                            style={{
+                              background: 'linear-gradient(135deg, #fef3c7, #fde68a)',
+                              color: '#d97706',
+                              border: 'none',
+                              borderRadius: '8px',
+                              padding: '6px 12px',
+                              cursor: 'pointer',
+                              fontSize: '12px',
+                              fontWeight: '600',
+                              transition: 'all 0.2s ease',
+                              boxShadow: '0 2px 4px rgba(217, 119, 6, 0.2)'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.target.style.transform = 'translateY(-2px)';
+                              e.target.style.boxShadow = '0 4px 8px rgba(217, 119, 6, 0.3)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.target.style.transform = 'translateY(0)';
+                              e.target.style.boxShadow = '0 2px 4px rgba(217, 119, 6, 0.2)';
+                            }}
+                          >
+                            Pendiente
+                          </button>
+                        ) : (
+                          <span style={{
+                            background: orden.estado === 'Completada' ? '#dcfce7' : '#fee2e2',
+                            color: orden.estado === 'Completada' ? '#16a34a' : '#dc2626',
+                            padding: '6px 12px',
+                            borderRadius: '20px',
+                            fontSize: '12px',
+                            fontWeight: '600',
+                            display: 'inline-block'
+                          }}>
+                            {orden.estado}
+                          </span>
+                        )}
+                      </td>
+                      <td style={{ padding: '16px 12px', textAlign: 'center' }}>
+                        <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
+                          <button
+                            onClick={() => abrirModalEditar(orden)}
+                            title="Editar orden"
+                            style={{
+                              background: 'linear-gradient(135deg, #dbeafe, #bfdbfe)',
+                              color: '#1e40af',
+                              border: 'none',
+                              borderRadius: '8px',
+                              padding: '8px 10px',
+                              cursor: 'pointer',
+                              fontSize: '12px',
+                              fontWeight: '600',
+                              transition: 'all 0.2s ease',
+                              boxShadow: '0 2px 4px rgba(30, 64, 175, 0.2)'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.target.style.transform = 'translateY(-2px)';
+                              e.target.style.boxShadow = '0 4px 8px rgba(30, 64, 175, 0.3)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.target.style.transform = 'translateY(0)';
+                              e.target.style.boxShadow = '0 2px 4px rgba(30, 64, 175, 0.2)';
+                            }}
+                          >
+                            <i className="fa-solid fa-pen-to-square"></i>
+                          </button>
+                          <button 
+                            onClick={() => eliminarOrden(orden._id)}
+                            title="Eliminar orden"
+                            style={{
+                              background: 'linear-gradient(135deg, #fee2e2, #fecaca)',
+                              color: '#dc2626',
+                              border: 'none',
+                              borderRadius: '8px',
+                              padding: '8px 10px',
+                              cursor: 'pointer',
+                              fontSize: '12px',
+                              fontWeight: '600',
+                              transition: 'all 0.2s ease',
+                              boxShadow: '0 2px 4px rgba(220, 38, 38, 0.2)'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.target.style.transform = 'translateY(-2px)';
+                              e.target.style.boxShadow = '0 4px 8px rgba(220, 38, 38, 0.3)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.target.style.transform = 'translateY(0)';
+                              e.target.style.boxShadow = '0 2px 4px rgba(220, 38, 38, 0.2)';
+                            }}
+                          >
+                            <i className="fa-solid fa-trash"></i>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  
+                  {ordenesPendientes.length === 0 && (
+                    <tr>
+                      <td colSpan="8" style={{ textAlign: 'center', padding: '80px 20px' }}>
+                        <div style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          gap: '20px'
+                        }}>
+                          <div style={{
+                            background: 'linear-gradient(135deg, #f3f4f6, #e5e7eb)',
+                            borderRadius: '50%',
+                            padding: '25px',
+                            marginBottom: '10px'
+                          }}>
+                            <i className="fa-solid fa-file-invoice-dollar" style={{ 
+                              fontSize: '3.5rem', 
+                              color: '#9ca3af'
+                            }}></i>
+                          </div>
+                          <div style={{ textAlign: 'center' }}>
+                            <h5 style={{ 
+                              color: '#6b7280', 
+                              margin: '0 0 12px 0',
+                              fontSize: '1.2rem',
+                              fontWeight: '600'
+                            }}>
+                              No hay órdenes pendientes
+                            </h5>
+                            <p style={{ 
+                              color: '#9ca3af', 
+                              margin: 0, 
+                              fontSize: '14px',
+                              lineHeight: '1.5'
+                            }}>
+                              No se encontraron órdenes de compra pendientes
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
 
           {/* Modal para agregar nueva orden */}

@@ -4,6 +4,7 @@ const Producto = require('../models/Products');
 const Product = require('../models/Products'); // Ensure both references work
 const sgMail = require('@sendgrid/mail');
 const nodemailer = require('nodemailer');
+const PDFService = require('../services/pdfService');
 
 const { validationResult } = require('express-validator');
 
@@ -421,11 +422,28 @@ exports.enviarCotizacionPorCorreo = async (req, res) => {
     }
 
     const destinatario = correoDestino || cotizacion.cliente.correo;
-    const asuntoFinal = asunto || `Cotización ${cotizacion.codigo} - Pangea Sistemas`;
+    const asuntoFinal = asunto || `Cotización ${cotizacion.codigo} - JLA Global Company`;
     const mensajeFinal = mensaje || `Nos complace enviarle la cotización ${cotizacion.codigo}. Esperamos que sea de su interés y quedamos atentos a sus comentarios.`;
 
     // Generar HTML de la cotización
     const cotizacionHTML = generarHTMLCotizacion(cotizacion);
+    
+    // Generar PDF de la cotización
+    let pdfAttachment = null;
+    try {
+      console.log('📄 Generando PDF de la cotización...');
+      const pdfService = new PDFService();
+      const pdfData = await pdfService.generarPDFCotizacion(cotizacion);
+      pdfAttachment = {
+        filename: pdfData.filename,
+        content: pdfData.buffer,
+        contentType: pdfData.contentType
+      };
+      console.log('✅ PDF generado exitosamente:', pdfData.filename);
+    } catch (pdfError) {
+      console.error('⚠️ Error generando PDF:', pdfError.message);
+      // Continuar sin PDF si hay error
+    }
     
     // Debug: Verificar datos de la cotización
     console.log('📊 Datos de cotización para HTML:');
@@ -457,10 +475,15 @@ exports.enviarCotizacionPorCorreo = async (req, res) => {
         console.log('� Enviando con Gmail...');
         
         const mailOptions = {
-          from: `"Pangea Sistemas" <${process.env.GMAIL_USER}>`,
+          from: `"JLA Global Company" <${process.env.GMAIL_USER}>`,
           to: destinatario,
           subject: asuntoFinal,
-          html: htmlCompleto
+          html: htmlCompleto,
+          attachments: pdfAttachment ? [{
+            filename: pdfAttachment.filename,
+            content: pdfAttachment.content,
+            contentType: pdfAttachment.contentType
+          }] : []
         };
 
         await gmailTransporter.sendMail(mailOptions);
@@ -500,7 +523,13 @@ exports.enviarCotizacionPorCorreo = async (req, res) => {
           },
           subject: asuntoFinal,
           text: mensajeFinal,
-          html: htmlCompleto
+          html: htmlCompleto,
+          attachments: pdfAttachment ? [{
+            content: pdfAttachment.content.toString('base64'),
+            filename: pdfAttachment.filename,
+            type: pdfAttachment.contentType,
+            disposition: 'attachment'
+          }] : []
         };
 
         await sgMail.send(msg);
@@ -581,19 +610,6 @@ function generarHTMLCotizacion(cotizacion) {
   // Validar que totalFinal sea un número válido
   const totalSeguro = Number(totalFinal) || 0;
 
-  const productosHTML = cotizacion.productos.map((p, index) => `
-    <tr style="${index % 2 === 0 ? 'background: #f8f9fa;' : ''}">
-      <td data-label="Producto:" style="padding: 15px; border-bottom: 1px solid #eee;">
-        <strong>${p.producto?.name || 'Producto'}</strong>
-        ${p.descripcion ? `<br><small style="color: #666;">${p.descripcion}</small>` : ''}
-      </td>
-      <td data-label="Cantidad:" style="padding: 15px; border-bottom: 1px solid #eee; text-align: center; font-weight: bold;">${p.cantidad || 0}</td>
-      <td data-label="Precio Unit.:" style="padding: 15px; border-bottom: 1px solid #eee; text-align: right;">$${(p.valorUnitario || 0).toLocaleString('es-ES')}</td>
-      <td data-label="Descuento:" style="padding: 15px; border-bottom: 1px solid #eee; text-align: center;">${p.descuento || 0}%</td>
-      <td data-label="Subtotal:" style="padding: 15px; border-bottom: 1px solid #eee; text-align: right; font-weight: bold;">$${(p.subtotal || 0).toLocaleString('es-ES')}</td>
-    </tr>
-  `).join('');
-
   return `
     <!DOCTYPE html>
     <html lang="es">
@@ -620,41 +636,19 @@ function generarHTMLCotizacion(cotizacion) {
           box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
         .header { 
-          background: linear-gradient(135deg, #667eea, #764ba2); 
+          background: linear-gradient(135deg, #007bff, #0056b3); 
           color: white; 
           padding: 20px; 
           text-align: center; 
-          position: relative;
-          overflow: hidden;
-        }
-        .header:before {
-          content: '';
-          position: absolute;
-          top: -50%;
-          left: -50%;
-          width: 200%;
-          height: 200%;
-          background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="30" r="1.5" fill="rgba(255,255,255,0.1)"/><circle cx="40" cy="70" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="90" cy="80" r="2.5" fill="rgba(255,255,255,0.1)"/></svg>');
-          animation: float 20s infinite linear;
-          pointer-events: none;
-        }
-        @keyframes float {
-          0% { transform: translateX(-100%) translateY(-100%) rotate(0deg); }
-          100% { transform: translateX(0%) translateY(0%) rotate(360deg); }
         }
         .header h1 { 
           font-size: 2em; 
           margin-bottom: 10px; 
           font-weight: 300; 
-          position: relative;
-          z-index: 1;
-          text-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
         .header p { 
           font-size: 1em; 
           opacity: 0.9; 
-          position: relative;
-          z-index: 1;
         }
         .content { 
           padding: 20px; 
@@ -664,31 +658,21 @@ function generarHTMLCotizacion(cotizacion) {
           margin-bottom: 20px; 
         }
         .info-card { 
-          background: linear-gradient(135deg, #f8fafc, #e2e8f0); 
+          background: #f8f9fa; 
           padding: 15px; 
-          border-radius: 12px; 
-          border-left: 4px solid #667eea; 
+          border-radius: 8px; 
+          border-left: 4px solid #007bff; 
           margin-bottom: 15px;
-          box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
         }
         .info-card h3 { 
-          color: #667eea; 
+          color: #007bff; 
           margin-bottom: 10px; 
           font-size: 1.1em; 
-          text-align: center;
-          border-bottom: 2px dotted #cbd5e1;
-          padding-bottom: 8px;
         }
         .info-card p { 
-          margin-bottom: 8px; 
+          margin-bottom: 5px; 
           color: #555; 
           font-size: 0.9em;
-          padding: 3px 0;
-          border-bottom: 1px dotted #e5e7eb;
-        }
-        .info-card p:last-child {
-          border-bottom: none;
-          margin-bottom: 0;
         }
         .info-card strong { 
           color: #333; 
@@ -697,7 +681,7 @@ function generarHTMLCotizacion(cotizacion) {
           margin: 20px 0; 
         }
         .products-title { 
-          background: #667eea; 
+          background: #007bff; 
           color: white; 
           padding: 15px; 
           margin-bottom: 0; 
@@ -726,120 +710,58 @@ function generarHTMLCotizacion(cotizacion) {
         
         .products-table tr { 
           display: block; 
-          border: 1px solid #e0e7ff; 
-          margin-bottom: 15px; 
-          border-radius: 12px; 
-          background: linear-gradient(135deg, #ffffff, #f8fafc); 
-          padding: 15px; 
-          box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
-          border-left: 4px solid #667eea;
+          border: 1px solid #eee; 
+          margin-bottom: 10px; 
+          border-radius: 8px; 
+          background: white; 
+          padding: 10px; 
         }
         
         .products-table td { 
           display: block; 
           text-align: left !important; 
-          padding: 8px 0; 
+          padding: 5px 0; 
           border: none; 
           position: relative; 
-          padding-left: 130px; 
-          font-size: 0.95em;
+          padding-left: 120px; 
         }
         
         .products-table td:before { 
           content: attr(data-label); 
           position: absolute; 
           left: 0; 
-          width: 120px; 
+          width: 110px; 
           font-weight: bold; 
-          color: #667eea; 
+          color: #007bff; 
           font-size: 0.9em; 
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-        }
-        
-        .products-table td:first-child {
-          border-bottom: 1px solid #e5e7eb;
-          margin-bottom: 8px;
-          padding-bottom: 12px;
-        }
-        
-        .products-table td:first-child strong {
-          color: #1f2937;
-          font-size: 1.05em;
-        }
-        
-        .products-table td:last-child {
-          background: linear-gradient(135deg, #667eea, #764ba2);
-          color: white;
-          margin: 10px -15px -15px -15px;
-          padding: 12px 15px 12px 130px;
-          border-radius: 0 0 8px 8px;
-          font-weight: bold;
-          font-size: 1.1em;
-        }
-        
-        .products-table td:last-child:before {
-          color: #e0e7ff;
         }
         
         .total-row { 
           background: #e3f2fd !important; 
           font-weight: bold; 
-          border: 2px solid #667eea !important; 
+          border: 2px solid #007bff !important; 
         }
         
         .total-row td { 
-          color: #667eea; 
+          color: #007bff; 
           font-size: 1.1em; 
         }
         
         .total-row td:before { 
-          color: #667eea; 
+          color: #007bff; 
         }
         
         /* Mobile total summary */
         .mobile-total {
           display: block;
-          background: linear-gradient(135deg, #667eea, #764ba2);
+          background: linear-gradient(135deg, #007bff, #0056b3);
           color: white;
-          padding: 20px;
-          border-radius: 12px;
-          margin: 20px 0;
-          text-align: center;
-          font-size: 1.3em;
-          font-weight: bold;
-          box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-          border: 3px solid #e0e7ff;
-        }
-        
-        .mobile-summary {
-          display: block;
-          background: linear-gradient(135deg, #f8fafc, #e2e8f0);
-          border: 2px solid #667eea;
-          border-radius: 12px;
           padding: 15px;
+          border-radius: 8px;
           margin: 15px 0;
-        }
-        
-        .mobile-summary h4 {
-          color: #667eea;
-          font-size: 1.1em;
-          margin-bottom: 10px;
           text-align: center;
-        }
-        
-        .mobile-summary p {
-          margin: 5px 0;
-          font-size: 0.95em;
-          padding: 3px 0;
-          border-bottom: 1px dotted #cbd5e1;
-        }
-        
-        .mobile-summary p:last-child {
-          border-bottom: none;
+          font-size: 1.2em;
           font-weight: bold;
-          font-size: 1.05em;
-          color: #667eea;
         }
         
         .message-section { 
@@ -874,7 +796,7 @@ function generarHTMLCotizacion(cotizacion) {
           font-size: 0.8em; 
           font-weight: bold; 
           text-transform: uppercase; 
-          background: #667eea; 
+          background: #28a745; 
           color: white; 
         }
         
@@ -882,9 +804,6 @@ function generarHTMLCotizacion(cotizacion) {
         @media (min-width: 768px) { 
           body { 
             padding: 20px; 
-          }
-          .header { 
-            padding: 30px; 
           }
           .header h1 { 
             font-size: 2.5em; 
@@ -902,19 +821,12 @@ function generarHTMLCotizacion(cotizacion) {
           }
           .info-card { 
             padding: 20px; 
-            margin-bottom: 0;
           }
           .info-card h3 { 
             font-size: 1.2em; 
           }
           .info-card p { 
             font-size: 1em; 
-          }
-          .products-section { 
-            margin: 30px 0; 
-          }
-          .products-title { 
-            font-size: 1.3em; 
           }
           
           /* Desktop table styles */
@@ -943,7 +855,7 @@ function generarHTMLCotizacion(cotizacion) {
             display: none; 
           }
           .products-table th { 
-            background: #764ba2; 
+            background: #0056b3; 
             color: white; 
             padding: 15px; 
             text-align: left; 
@@ -953,7 +865,7 @@ function generarHTMLCotizacion(cotizacion) {
             background: #f8f9fa; 
           }
           .total-row td { 
-            border-top: 3px solid #667eea; 
+            border-top: 3px solid #007bff; 
             font-size: 1.1em; 
           }
           .message-section { 
@@ -978,84 +890,6 @@ function generarHTMLCotizacion(cotizacion) {
           .mobile-total {
             display: none;
           }
-          
-          .mobile-summary {
-            display: none;
-          }
-        } 
-          margin-bottom: 15px; 
-          font-size: 1.2em; 
-        }
-        .info-card p { 
-          margin-bottom: 8px; 
-          color: #555; 
-        }
-        .info-card strong { 
-          color: #333; 
-        }
-        .products-section { 
-          margin: 30px 0; 
-        }
-        .products-title { 
-          background: #667eea; 
-          color: white; 
-          padding: 15px; 
-          margin-bottom: 0; 
-          border-radius: 8px 8px 0 0; 
-          font-size: 1.3em; 
-        }
-        .products-table { 
-          width: 100%; 
-          border-collapse: collapse; 
-          background: white; 
-          border-radius: 0 0 8px 8px; 
-          overflow: hidden; 
-          box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
-        }
-        .products-table th { 
-          background: #5a67d8; 
-          color: white; 
-          padding: 15px; 
-          text-align: left; 
-          font-weight: 600; 
-        }
-        .products-table td { 
-          padding: 15px; 
-          border-bottom: 1px solid #eee; 
-        }
-        .products-table tr:hover { 
-          background: #f1f5f9; 
-        }
-        .total-row { 
-          background: #e3f2fd !important; 
-          font-weight: bold; 
-          font-size: 1.1em; 
-        }
-        .total-row td { 
-          color: #667eea; 
-          border-top: 3px solid #667eea; 
-        }
-        .status-badge { 
-          display: inline-block; 
-          padding: 5px 12px; 
-          border-radius: 20px; 
-          font-size: 0.9em; 
-          font-weight: bold; 
-          text-transform: uppercase; 
-          background: #4ade80; 
-          color: white; 
-        }
-        @media (max-width: 600px) { 
-          .info-grid { 
-            grid-template-columns: 1fr; 
-            gap: 20px; 
-          } 
-          .container { 
-            margin: 10px; 
-          }
-          .header h1 { 
-            font-size: 2em; 
-          }
         }
       </style>
     </head>
@@ -1063,8 +897,8 @@ function generarHTMLCotizacion(cotizacion) {
       <div class="container">
         <!-- Header -->
         <div class="header">
-          <h1>💼 COTIZACIÓN</h1>
-          <p>Propuesta comercial No. <strong>${cotizacion.codigo}</strong></p>
+          <h1>📄 COTIZACIÓN</h1>
+          <p>Documento de cotización No. <strong>${cotizacion.codigo}</strong></p>
           <span class="status-badge">${cotizacion.estado?.toUpperCase() || 'ACTIVA'}</span>
         </div>
 
@@ -1082,7 +916,7 @@ function generarHTMLCotizacion(cotizacion) {
               <p><strong>Ciudad:</strong> ${cotizacion.cliente?.ciudad || 'N/A'}</p>
             </div>
 
-            <!-- Cotización -->
+            <!-- Detalles de la Cotización -->
             <div class="info-card">
               <h3>📋 Detalles de la Cotización</h3>
               <p><strong>Fecha:</strong> ${new Date(cotizacion.fecha).toLocaleDateString('es-ES', { 
@@ -1090,21 +924,12 @@ function generarHTMLCotizacion(cotizacion) {
                 month: 'long', 
                 day: 'numeric' 
               })}</p>
-              <p><strong>Estado:</strong> ${cotizacion.estado || 'Pendiente'}</p>
+              <p><strong>Estado:</strong> ${cotizacion.estado || 'activa'}</p>
+              <p><strong>Responsable:</strong> ${cotizacion.responsable?.firstName || ''} ${cotizacion.responsable?.surname || ''}</p>
               <p><strong>Validez:</strong> ${cotizacion.validez || '15 días'}</p>
               <p><strong>Items:</strong> ${cotizacion.productos?.length || 0} productos</p>
-              <p><strong>Total:</strong> $${totalSeguro.toLocaleString('es-ES')}</p>
+              <p><strong>Cantidad Total:</strong> ${cotizacion.productos.reduce((total, p) => total + (p.cantidad || 0), 0)} unidades</p>
             </div>
-          </div>
-
-          <!-- Mobile Summary -->
-          <div class="mobile-summary">
-            <h4>📊 Resumen de la Cotización</h4>
-            <p><strong>Cliente:</strong> ${cotizacion.cliente?.nombre || 'N/A'}</p>
-            <p><strong>Fecha:</strong> ${new Date(cotizacion.fecha).toLocaleDateString('es-ES')}</p>
-            <p><strong>Validez:</strong> ${cotizacion.validez || '15 días'}</p>
-            <p><strong>Productos:</strong> ${cotizacion.productos?.length || 0} items</p>
-            <p><strong>Total General:</strong> $${totalSeguro.toLocaleString('es-ES')}</p>
           </div>
 
           <!-- Products Section -->
@@ -1116,16 +941,25 @@ function generarHTMLCotizacion(cotizacion) {
                   <th>Producto</th>
                   <th style="text-align: center;">Cantidad</th>
                   <th style="text-align: right;">Precio Unitario</th>
-                  <th style="text-align: center;">Descuento</th>
-                  <th style="text-align: right;">Subtotal</th>
+                  <th style="text-align: right;">Total</th>
                 </tr>
               </thead>
               <tbody>
-                ${productosHTML}
+                ${cotizacion.productos.map((producto, index) => `
+                  <tr>
+                    <td data-label="Producto:">
+                      <strong>${producto.producto?.name || 'Producto'}</strong>
+                      ${producto.producto?.codigo ? `<br><small style="color: #666;">Código: ${producto.producto.codigo}</small>` : ''}
+                    </td>
+                    <td data-label="Cantidad:" style="text-align: center; font-weight: bold;">${producto.cantidad || 0}</td>
+                    <td data-label="Precio Unit.:" style="text-align: right;">$${(producto.valorUnitario || 0).toLocaleString('es-ES')}</td>
+                    <td data-label="Total:" style="text-align: right; font-weight: bold;">$${(producto.subtotal || 0).toLocaleString('es-ES')}</td>
+                  </tr>
+                `).join('')}
               </tbody>
               <tfoot>
                 <tr class="total-row">
-                  <td data-label="TOTAL:" colspan="4" style="text-align: right; font-size: 1.2em;">💰 <strong>TOTAL GENERAL:</strong></td>
+                  <td data-label="TOTAL:" colspan="3" style="text-align: right; font-size: 1.2em;">💰 <strong>TOTAL GENERAL:</strong></td>
                   <td data-label="" style="text-align: right; font-size: 1.3em;"><strong>$${totalSeguro.toLocaleString('es-ES')}</strong></td>
                 </tr>
               </tfoot>
@@ -1137,29 +971,27 @@ function generarHTMLCotizacion(cotizacion) {
             </div>
           </div>
 
-          ${cotizacion.descripcion ? `
-          <!-- Descripción -->
-          <div class="info-card" style="margin-top: 20px;">
-            <h3>📝 Descripción</h3>
-            <p>${cotizacion.descripcion}</p>
+          <!-- Message Section -->
+          <div class="message-section">
+            <h3>💬 Mensaje</h3>
+            <p>Estimado/a ${cotizacion.cliente?.nombre || 'Cliente'}, esperamos que se encuentre muy bien. Adjunto encontrará la cotización solicitada con todos los detalles de los productos y servicios requeridos. Esta cotización tiene una validez de ${cotizacion.validez || '15 días'} a partir de la fecha de emisión. Quedamos atentos a sus comentarios y esperamos tener la oportunidad de trabajar juntos.</p>
           </div>
-          ` : ''}
 
-          ${cotizacion.condicionesPago ? `
-          <!-- Condiciones -->
-          <div class="info-card" style="margin-top: 20px; border-left-color: #f59e0b;">
-            <h3 style="color: #f59e0b;">💳 Condiciones de Pago</h3>
-            <p>${cotizacion.condicionesPago}</p>
+          ${cotizacion.observaciones ? `
+          <!-- Observaciones -->
+          <div class="info-card" style="margin-top: 20px;">
+            <h3>📝 Observaciones</h3>
+            <p>${cotizacion.observaciones}</p>
           </div>
           ` : ''}
         </div>
 
         <!-- Footer -->
-        <div style="background: #343a40; color: #adb5bd; padding: 25px; text-align: center;">
-          <p><strong>${process.env.COMPANY_NAME || 'Pangea Sistemas'}</strong></p>
+        <div class="footer">
+          <p><strong>${process.env.COMPANY_NAME || 'JLA Global Company'}</strong></p>
           <p>📧 ${process.env.GMAIL_USER || process.env.SENDGRID_FROM_EMAIL || 'contacto@empresa.com'} | 📞 ${process.env.COMPANY_PHONE || 'Tel: (555) 123-4567'}</p>
           <p style="margin-top: 15px; font-size: 0.9em;">
-            Esta cotización fue generada automáticamente el ${new Date().toLocaleDateString('es-ES')} a las ${new Date().toLocaleTimeString('es-ES')}
+            Este documento fue generado automáticamente el ${new Date().toLocaleDateString('es-ES')} a las ${new Date().toLocaleTimeString('es-ES')}
           </p>
         </div>
       </div>
@@ -1180,23 +1012,102 @@ exports.remisionarCotizacion = async (req, res) => {
       return res.status(404).json({ message: 'Cotización no encontrada' });
     }
 
+    // Función para generar número de pedido secuencial usando Counter
+    const generarNumeroPedido = async () => {
+      const Counter = require('../models/Counter');
+      const counter = await Counter.findByIdAndUpdate(
+        'pedido',
+        { $inc: { seq: 1 } },
+        { new: true, upsert: true }
+      );
+      return `PED-${String(counter.seq).padStart(5, '0')}`;
+    };
+
+    // Función para generar número de remisión secuencial
+    const generarNumeroRemision = async () => {
+      const Counter = require('../models/Counter');
+      const counter = await Counter.findByIdAndUpdate(
+        'remision',
+        { $inc: { seq: 1 } },
+        { new: true, upsert: true }
+      );
+      return `REM-${String(counter.seq).padStart(5, '0')}`;
+    };
+
+    // Generar números secuenciales
+    const numeroPedido = await generarNumeroPedido();
+    const numeroRemision = await generarNumeroRemision();
+
+    // Mapear productos de cotización a pedido
+    const productosRemision = cotizacion.productos.map(prodCotizacion => ({
+      product: prodCotizacion.producto.id, // Mapear producto.id de cotización a product en pedido
+      cantidad: prodCotizacion.cantidad,
+      precioUnitario: prodCotizacion.valorUnitario || prodCotizacion.precioUnitario || 0
+    }));
+
     // Crear el pedido/remisión
     const Pedido = require('../models/Pedido');
     
     const nuevoPedido = new Pedido({
-      numeroPedido: `PED-${Date.now()}`,
-      cliente: cotizacion.cliente,
-      productos: cotizacion.productos,
-      fechaEntrega: fechaEntrega || new Date(),
-      estado: 'pendiente',
-      descripcion: cotizacion.descripcion,
-      condicionesPago: cotizacion.condicionesPago,
-      observaciones: observaciones || '',
-      cotizacionReferencia: cotizacionId,
-      responsable: cotizacion.responsable
+      numeroPedido: numeroPedido,
+      cliente: cotizacion.cliente.referencia._id, // Referenciar al cliente
+      productos: productosRemision,
+      fechaEntrega: fechaEntrega ? new Date(fechaEntrega) : new Date(),
+      estado: 'entregado', // Estado entregado al crear desde cotización (remisión directa)
+      observacion: observaciones || '',
+      cotizacionReferenciada: cotizacionId,
+      cotizacionCodigo: cotizacion.codigo
     });
 
     await nuevoPedido.save();
+
+    // Crear la remisión automáticamente
+    const Remision = require('../models/Remision');
+    
+    // Calcular totales para la remisión
+    const total = cotizacion.productos.reduce((sum, prod) => {
+      return sum + (prod.cantidad * (prod.valorUnitario || prod.precioUnitario || 0));
+    }, 0);
+    
+    const cantidadTotal = cotizacion.productos.reduce((sum, prod) => {
+      return sum + prod.cantidad;
+    }, 0);
+
+    // Mapear productos para la remisión
+    const productosRemisionDoc = cotizacion.productos.map(prod => ({
+      nombre: prod.producto?.name || prod.nombre || 'Producto sin nombre',
+      cantidad: prod.cantidad,
+      precioUnitario: prod.valorUnitario || prod.precioUnitario || 0,
+      total: prod.cantidad * (prod.valorUnitario || prod.precioUnitario || 0),
+      descripcion: prod.descripcion || prod.producto?.description || '',
+      codigo: prod.producto?.codigo || prod.codigo || ''
+    }));
+
+    const nuevaRemision = new Remision({
+      numeroRemision: numeroRemision,
+      pedidoReferencia: nuevoPedido._id,
+      codigoPedido: numeroPedido,
+      cotizacionReferencia: cotizacionId,
+      codigoCotizacion: cotizacion.codigo,
+      cliente: {
+        nombre: cotizacion.cliente?.nombre || cotizacion.cliente.referencia?.nombre,
+        correo: cotizacion.cliente?.correo || cotizacion.cliente.referencia?.correo,
+        telefono: cotizacion.cliente?.telefono || cotizacion.cliente.referencia?.telefono,
+        ciudad: cotizacion.cliente?.ciudad || cotizacion.cliente.referencia?.ciudad,
+        direccion: cotizacion.cliente?.direccion || cotizacion.cliente.referencia?.direccion
+      },
+      productos: productosRemisionDoc,
+      fechaRemision: new Date(),
+      fechaEntrega: fechaEntrega ? new Date(fechaEntrega) : new Date(),
+      observaciones: `Remisión generada automáticamente desde cotización ${cotizacion.codigo}. ${observaciones || ''}`,
+      responsable: req.userId, // ID del usuario que crea la remisión
+      estado: 'activa',
+      total: total,
+      cantidadItems: productosRemisionDoc.length,
+      cantidadTotal: cantidadTotal
+    });
+
+    await nuevaRemision.save();
 
     // Actualizar estado de la cotización
     await Cotizacion.findByIdAndUpdate(cotizacionId, { 
@@ -1204,9 +1115,21 @@ exports.remisionarCotizacion = async (req, res) => {
       pedidoReferencia: nuevoPedido._id 
     });
 
+    // Poblar el pedido para la respuesta
+    const pedidoCompleto = await Pedido.findById(nuevoPedido._id)
+      .populate('cliente')
+      .populate('productos.product');
+
+    // Poblar la remisión para la respuesta
+    const remisionCompleta = await Remision.findById(nuevaRemision._id)
+      .populate('responsable', 'username firstName surname');
+
     res.status(201).json({ 
       message: 'Cotización remisionada exitosamente',
-      pedido: nuevoPedido
+      pedido: pedidoCompleto,
+      remision: remisionCompleta,
+      numeroPedido: numeroPedido,
+      numeroRemision: numeroRemision
     });
   } catch (error) {
     console.error('Error remisionando cotización:', error);

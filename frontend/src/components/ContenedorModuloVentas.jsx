@@ -12,6 +12,7 @@ export default function ContenedorModuloVentas() {
   const [puedeVerListaDeClientes, setPuedeVerListaDeClientes] = useState(false);
   const [puedeVerProspectos, setPuedeVerProspectos] = useState(false);
   const [puedeVerReportesVentas, setPuedeVerReportesVentas] = useState(false);
+  const [puedeVerRemisiones, setPuedeVerRemisiones] = useState(false);
 
   useEffect(() => {
     const usuario = JSON.parse(localStorage.getItem('user'));
@@ -26,6 +27,7 @@ export default function ContenedorModuloVentas() {
       setPuedeVerListaDeClientes(usuario.permissions.includes('clientes.ver'));
       setPuedeVerProspectos(usuario.permissions.includes('prospectos.ver'));
       setPuedeVerReportesVentas(usuario.permissions.includes('reportesVentas.ver'));
+      setPuedeVerRemisiones(usuario.permissions.includes('remisiones.ver'));
     }
   }, []);
 
@@ -91,11 +93,20 @@ export default function ContenedorModuloVentas() {
             </Link>
           )}
 
-          {puedeVerPedidosDevueltos && (
+          {/*{puedeVerPedidosDevueltos && (
             <Link to="/PedidosDevueltos">
               <button className="flex flex-col items-center justify-center w-28 h-28 p-4 rounded-xl bg-gray-800 text-yellow-400 shadow-md hover:scale-105 hover:bg-yellow-500 hover:text-black transition duration-300" style={{ width: "140px", height: "140px", gap: "6px", borderRadius: "15px"}}>
                 <img src="https://cdn-icons-png.freepik.com/256/14185/14185243.png" alt="Pedidos devueltos" style={{ width: "80px", height: "80px" }} />
                 <span className="text-sm font-medium">Pedidos devueltos</span>
+              </button>
+            </Link>
+          )}}*/}
+
+          {puedeVerRemisiones && (
+            <Link to="/ListaDeRemisiones">
+              <button className="flex flex-col items-center justify-center w-28 h-28 p-4 rounded-xl bg-gray-800 text-yellow-400 shadow-md hover:scale-105 hover:bg-yellow-500 hover:text-black transition duration-300" style={{ width: "140px", height: "140px", gap: "6px", borderRadius: "15px"}}>
+                <img src="https://cdn-icons-png.freepik.com/256/3659/3659898.png" alt="Lista de remisiones" style={{ width: "80px", height: "80px" }} />
+                <span className="text-sm font-medium">Lista de remisiones</span>
               </button>
             </Link>
           )}

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Routes, Route, BrowserRouter, } from "react-router-dom";
+import './tablesModernStyles.css'; // Estilos para eliminar bordes blancos
 import ListaDeUsuarios from './pages/ListaDeUsuarios';
 import CambiarContrasena from './components/CambiarContraseña';
 import Perfil from './pages/Perfil';
@@ -30,6 +31,7 @@ import ReporteProveedores from './pages/ReporteProveedores';
 import ReporteProductos from './pages/ReporteProductos';
 import OrdenCompra from './pages/OrdenCompra';
 import RegistrarCompra from './pages/RegistrarCompra';
+import ListaDeRemisiones from './pages/ListaDeRemisiones';
 
 
 const App = () => {
@@ -296,6 +298,17 @@ const App = () => {
               <PrivateRoute>
                 <PermisoRoute permiso="reportesVentas.ver">
                   <ReportessVentas />
+                </PermisoRoute>
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path='/ListaDeRemisiones'
+            element={
+              <PrivateRoute>
+                <PermisoRoute permiso="remisiones.ver">
+                  <ListaDeRemisiones />
                 </PermisoRoute>
               </PrivateRoute>
             }

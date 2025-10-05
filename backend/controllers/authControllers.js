@@ -95,8 +95,11 @@ exports.signin = async (req, res) => {
   try {
     const { username, password } = req.body;
 
+    console.log('[AuthController] Intento de login:', { username, hasPassword: !!password });
+
     // 1. Validación básica
     if (!username || !password) {
+      console.log('[AuthController] Faltan credenciales');
       return res.status(400).json({
         success: false,
         message: "Usuario o contraseña incorrectos"
@@ -108,8 +111,16 @@ exports.signin = async (req, res) => {
       .select('+password')
       .populate('role'); // trae el objeto de rol completo
 
+    console.log('[AuthController] Usuario encontrado:', { 
+      found: !!user, 
+      username: user?.username, 
+      enabled: user?.enabled,
+      roleEnabled: user?.role?.enabled,
+      roleName: user?.role?.name
+    });
 
     if (!user) {
+      console.log('[AuthController] Usuario no existe');
       return res.status(404).json({
         success: false,
         message: "Usuario no encontrado"
@@ -118,6 +129,7 @@ exports.signin = async (req, res) => {
 
     // valida si en usuario esta inhabilitado 
     if (!user.enabled) {
+      console.log('[AuthController] Usuario inhabilitado');
       return res.status(403).json({
         success: false,
         message: "Usuario inhabilitado"
@@ -126,6 +138,7 @@ exports.signin = async (req, res) => {
 
     // valida si el rol del usuario está inhabilitado
     if (!user.role.enabled) {
+      console.log('[AuthController] Rol inhabilitado');
       return res.status(403).json({
         success: false,
         message: "Rol inhabilitado"
@@ -133,8 +146,10 @@ exports.signin = async (req, res) => {
     }
 
     const isMatch = await user.comparePassword(password);
+    console.log('[AuthController] Verificación de contraseña:', { isMatch });
 
     if (!isMatch) {
+      console.log('[AuthController] Contraseña incorrecta');
       return res.status(401).json({
         success: false,
         message: "Credenciales inválidas"

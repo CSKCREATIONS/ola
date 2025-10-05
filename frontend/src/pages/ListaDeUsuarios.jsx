@@ -10,6 +10,243 @@ import jsPDF from "jspdf";
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 
+// CSS inyectado para diseño avanzado
+const advancedStyles = `
+  .usuarios-advanced-table {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    border: 1px solid #e5e7eb;
+  }
+  
+  .usuarios-header-section {
+    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+    padding: 20px 25px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  
+  .usuarios-title-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 15px;
+  }
+  
+  .usuarios-icon-box {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 12px;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .usuarios-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+  }
+  
+  .usuarios-stat-card {
+    background: linear-gradient(135deg, #ffffff, #f8fafc);
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #e5e7eb;
+    transition: all 0.3s ease;
+  }
+  
+  .usuarios-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+  }
+  
+  .usuarios-filters-section {
+    background: linear-gradient(135deg, #f9fafb, #f3f4f6);
+    padding: 25px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  
+  .usuarios-filters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+  }
+  
+  .usuarios-filter-group {
+    position: relative;
+  }
+  
+  .usuarios-filter-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    background: white;
+  }
+  
+  .usuarios-filter-input:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  }
+  
+  .usuarios-table-container {
+    overflow: auto;
+  }
+  
+  .usuarios-advanced-table table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  
+  .usuarios-advanced-table thead tr {
+    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+    border-bottom: 2px solid #e5e7eb;
+  }
+  
+  .usuarios-advanced-table thead th {
+    padding: 16px 12px;
+    text-align: left;
+    font-weight: 600;
+    color: #374151;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+  }
+  
+  .usuarios-advanced-table tbody tr {
+    border-bottom: 1px solid #f3f4f6;
+    transition: all 0.2s ease;
+  }
+  
+  .usuarios-advanced-table tbody tr:hover {
+    background-color: #f8fafc;
+  }
+  
+  .usuarios-advanced-table tbody td {
+    padding: 16px 12px;
+    color: #4b5563;
+    font-weight: 500;
+  }
+  
+  .usuarios-pagination-container {
+    padding: 20px 25px;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+  }
+  
+  .usuarios-pagination-btn {
+    padding: 8px 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    background: white;
+    color: #4b5563;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .usuarios-pagination-btn.active {
+    border-color: #6366f1;
+    background: #6366f1;
+    color: white;
+  }
+  
+  .usuarios-pagination-btn:hover:not(.active) {
+    border-color: #6366f1;
+    color: #6366f1;
+  }
+  
+  .usuarios-action-btn {
+    background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+    color: #1e40af;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 10px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(30, 64, 175, 0.2);
+    margin-right: 6px;
+  }
+  
+  .usuarios-action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(30, 64, 175, 0.3);
+  }
+  
+  .usuarios-action-btn.delete {
+    background: linear-gradient(135deg, #fee2e2, #fecaca);
+    color: #dc2626;
+    box-shadow: 0 2px 4px rgba(220, 38, 38, 0.2);
+  }
+  
+  .usuarios-action-btn.delete:hover {
+    box-shadow: 0 4px 8px rgba(220, 38, 38, 0.3);
+  }
+  
+  .usuarios-status-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-block;
+  }
+  
+  .usuarios-status-badge.activo {
+    background: #dcfce7;
+    color: #16a34a;
+  }
+  
+  .usuarios-status-badge.inactivo {
+    background: #fee2e2;
+    color: #dc2626;
+  }
+  
+  .usuarios-role-badge {
+    background: #fef3c7;
+    color: #d97706;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-block;
+  }
+  
+  .usuarios-empty-state {
+    text-align: center;
+    padding: 80px 20px;
+  }
+  
+  .usuarios-empty-icon {
+    background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+    border-radius: 50%;
+    padding: 25px;
+    margin: 0 auto 20px auto;
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+`;
+
+// Inyectar estilos
+if (!document.getElementById('usuarios-advanced-styles')) {
+  const styleSheet = document.createElement('style');
+  styleSheet.id = 'usuarios-advanced-styles';
+  styleSheet.textContent = advancedStyles;
+  document.head.appendChild(styleSheet);
+}
+
 
 
 /****Funcion para exportar a pdf*** */
@@ -271,202 +508,847 @@ export default function ListaDeUsuarios() {
       <div className="content">
         <NavUsuarios />
         <div className="contenido-modulo">
-          <div className='encabezado-modulo'>
-            <div>
-              <h3 className='titulo-profesional'>Lista de usuarios</h3>
-              <button
-                onClick={() => exportToExcel(todosLosUsuarios)}
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '0.45rem 0.9rem', border: '1.5px solid #16a34a', borderRadius: '8px', background: 'transparent', color: '#16a34a',
-                  fontSize: '14px', fontWeight: '500', cursor: 'pointer', transition: 'all 0.3s ease'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#16a34a';
-                  e.currentTarget.style.color = 'white';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'transparent';
-                  e.currentTarget.style.color = '#16a34a';
-                }}
-              >
-                <i className="fa-solid fa-file-excel" style={{ color: 'inherit', fontSize: '16px' }}></i>
-                <span>Exportar a Excel</span>
-              </button>
-
-              <button
-                onClick={exportarPDF}
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '0.45rem 0.9rem', border: '1.5px solid #dc2626', borderRadius: '8px', background: 'transparent', color: '#dc2626',
-                  fontSize: '14px', fontWeight: '500', cursor: 'pointer', transition: 'all 0.3s ease'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#dc2626';
-                  e.currentTarget.style.color = 'white';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'transparent';
-                  e.currentTarget.style.color = '#dc2626';
-                }}
-              >
-                <i className="fa-solid fa-file-pdf" style={{ color: 'inherit', fontSize: '16px' }}></i>
-                <span>Exportar a PDF</span>
-              </button>
-
+          {/* Encabezado profesional */}
+          <div style={{
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            borderRadius: '20px',
+            padding: '30px',
+            marginBottom: '30px',
+            color: 'white',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            <div style={{
+              position: 'absolute',
+              top: '-50%',
+              right: '-10%',
+              width: '300px',
+              height: '300px',
+              background: 'rgba(255,255,255,0.1)',
+              borderRadius: '50%',
+              zIndex: 1
+            }}></div>
+            <div style={{ position: 'relative', zIndex: 2 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '20px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                  <div style={{
+                    background: 'rgba(255,255,255,0.2)',
+                    borderRadius: '16px',
+                    padding: '20px',
+                    backdropFilter: 'blur(10px)'
+                  }}>
+                    <i className="fa-solid fa-users" style={{ fontSize: '2.5rem', color: 'white' }}></i>
+                  </div>
+                  <div>
+                    <h2 style={{ margin: '0 0 8px 0', fontSize: '2rem', fontWeight: '700' }}>
+                      Gestión de Usuarios
+                    </h2>
+                    <p style={{ margin: 0, fontSize: '1.1rem', opacity: 0.9 }}>
+                      Administra y supervisa todos los usuarios del sistema
+                    </p>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                  <button
+                    onClick={() => exportToExcel(todosLosUsuarios)}
+                    style={{
+                      background: 'rgba(255,255,255,0.2)',
+                      border: '2px solid rgba(255,255,255,0.3)',
+                      borderRadius: '12px',
+                      padding: '12px 20px',
+                      color: 'white',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                      backdropFilter: 'blur(10px)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.background = 'rgba(255,255,255,0.3)';
+                      e.target.style.transform = 'translateY(-2px)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.background = 'rgba(255,255,255,0.2)';
+                      e.target.style.transform = 'translateY(0)';
+                    }}
+                  >
+                    <i className="fa-solid fa-file-excel"></i>
+                    Exportar Excel
+                  </button>
+                  <button
+                    onClick={exportarPDF}
+                    style={{
+                      background: 'rgba(255,255,255,0.2)',
+                      border: '2px solid rgba(255,255,255,0.3)',
+                      borderRadius: '12px',
+                      padding: '12px 20px',
+                      color: 'white',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                      backdropFilter: 'blur(10px)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.background = 'rgba(255,255,255,0.3)';
+                      e.target.style.transform = 'translateY(-2px)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.background = 'rgba(255,255,255,0.2)';
+                      e.target.style.transform = 'translateY(0)';
+                    }}
+                  >
+                    <i className="fa-solid fa-file-pdf"></i>
+                    Exportar PDF
+                  </button>
+                  {puedeCrearUsuario && (
+                    <button 
+                      onClick={() => openModal('agregar-usuario')}
+                      style={{
+                        background: 'linear-gradient(135deg, #10b981, #059669)',
+                        border: 'none',
+                        borderRadius: '12px',
+                        padding: '12px 24px',
+                        color: 'white',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease',
+                        boxShadow: '0 4px 15px rgba(16, 185, 129, 0.4)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.transform = 'translateY(-2px)';
+                        e.target.style.boxShadow = '0 6px 20px rgba(16, 185, 129, 0.6)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.transform = 'translateY(0)';
+                        e.target.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.4)';
+                      }}
+                    >
+                      <i className="fa-solid fa-plus"></i>
+                      Crear Usuario
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
-            {puedeCrearUsuario && (
-              <button onClick={() => openModal('agregar-usuario')} type='submit' className='btn-agregar'>+ Crear usuario</button>
-            )}
-
           </div>
 
-          <br />
-
-          <div className="filtros-tabla">
-            <div className="filtro-grupo">
-              <input
-                className='filtro-input'
-                type="text"
-                placeholder="Buscar por nombre o correo"
-                value={filtroTexto}
-                onChange={(e) => setFiltroTexto(e.target.value)}
-                style={{ marginRight: '10px' }}
-              />
+          {/* Estadísticas avanzadas */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+            gap: '20px',
+            marginBottom: '30px'
+          }}>
+            <div style={{
+              background: 'linear-gradient(135deg, #ffffff, #f8fafc)',
+              borderRadius: '16px',
+              padding: '25px',
+              border: '1px solid #e5e7eb',
+              transition: 'all 0.3s ease',
+              cursor: 'pointer'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-5px)';
+              e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.15)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = 'none';
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                <div style={{
+                  background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+                  borderRadius: '12px',
+                  padding: '15px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <i className="fa-solid fa-users" style={{ color: 'white', fontSize: '1.5rem' }}></i>
+                </div>
+                <div>
+                  <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
+                    {todosLosUsuarios.length}
+                  </h3>
+                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
+                    Total Usuarios
+                  </p>
+                </div>
+              </div>
             </div>
 
-            <div className="filtro-grupo">
-              <select
-                className='filtro-input'
-                value={filtroRol}
-                onChange={(e) => setFiltroRol(e.target.value)}
-                style={{ marginRight: '10px' }}
-              >
-                <option value="todos">Todos los roles</option>
-                {[...new Set(todosLosUsuarios.map((u) => u.role?._id))].map((rolId) => {
-                  const rol = todosLosUsuarios.find(u => u.role?._id === rolId)?.role;
-                  return (
-                    <option key={rolId} value={rolId}>
-                      {rol?.name || 'Sin rol'}
-                    </option>
-                  );
-                })}
-
-              </select>
+            <div style={{
+              background: 'linear-gradient(135deg, #ffffff, #f8fafc)',
+              borderRadius: '16px',
+              padding: '25px',
+              border: '1px solid #e5e7eb',
+              transition: 'all 0.3s ease',
+              cursor: 'pointer'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-5px)';
+              e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.15)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = 'none';
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                <div style={{
+                  background: 'linear-gradient(135deg, #10b981, #059669)',
+                  borderRadius: '12px',
+                  padding: '15px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <i className="fa-solid fa-user-check" style={{ color: 'white', fontSize: '1.5rem' }}></i>
+                </div>
+                <div>
+                  <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
+                    {todosLosUsuarios.filter(u => u.enabled).length}
+                  </h3>
+                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
+                    Usuarios Activos
+                  </p>
+                </div>
+              </div>
             </div>
 
-
-            <div className="filtro-grupo">
-              <select
-                className='filtro-input'
-                value={filtroEstado}
-                onChange={(e) => setFiltroEstado(e.target.value)}
-              >
-                <option value="todos">Todos los estados</option>
-                <option value="habilitado">Habilitado</option>
-                <option value="inhabilitado">Inhabilitado</option>
-              </select>
+            <div style={{
+              background: 'linear-gradient(135deg, #ffffff, #f8fafc)',
+              borderRadius: '16px',
+              padding: '25px',
+              border: '1px solid #e5e7eb',
+              transition: 'all 0.3s ease',
+              cursor: 'pointer'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-5px)';
+              e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.15)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = 'none';
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                <div style={{
+                  background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+                  borderRadius: '12px',
+                  padding: '15px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <i className="fa-solid fa-user-slash" style={{ color: 'white', fontSize: '1.5rem' }}></i>
+                </div>
+                <div>
+                  <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
+                    {todosLosUsuarios.filter(u => !u.enabled).length}
+                  </h3>
+                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
+                    Usuarios Inactivos
+                  </p>
+                </div>
+              </div>
             </div>
 
+            <div style={{
+              background: 'linear-gradient(135deg, #ffffff, #f8fafc)',
+              borderRadius: '16px',
+              padding: '25px',
+              border: '1px solid #e5e7eb',
+              transition: 'all 0.3s ease',
+              cursor: 'pointer'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-5px)';
+              e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.15)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = 'none';
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                <div style={{
+                  background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+                  borderRadius: '12px',
+                  padding: '15px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <i className="fa-solid fa-shield-alt" style={{ color: 'white', fontSize: '1.5rem' }}></i>
+                </div>
+                <div>
+                  <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
+                    {[...new Set(todosLosUsuarios.map(u => u.role?.name))].filter(Boolean).length}
+                  </h3>
+                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
+                    Roles Diferentes
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Panel de filtros avanzado */}
+          <div style={{
+            background: 'linear-gradient(135deg, #f9fafb, #f3f4f6)',
+            borderRadius: '16px',
+            padding: '25px',
+            marginBottom: '30px',
+            border: '1px solid #e5e7eb'
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              marginBottom: '20px'
+            }}>
+              <i className="fa-solid fa-filter" style={{ color: '#6366f1', fontSize: '1.2rem' }}></i>
+              <h4 style={{ margin: 0, color: '#374151', fontSize: '1.1rem', fontWeight: '600' }}>
+                Filtros Avanzados
+              </h4>
+            </div>
+            
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+              gap: '20px'
+            }}>
+              <div style={{ position: 'relative' }}>
+                <label style={{
+                  position: 'absolute',
+                  top: '-8px',
+                  left: '12px',
+                  background: '#f9fafb',
+                  padding: '0 8px',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  color: '#6366f1',
+                  zIndex: 1
+                }}>
+                  Buscar Usuario
+                </label>
+                <input
+                  type="text"
+                  placeholder="Nombre o correo electrónico..."
+                  value={filtroTexto}
+                  onChange={(e) => setFiltroTexto(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    border: '2px solid #e5e7eb',
+                    borderRadius: '10px',
+                    fontSize: '14px',
+                    transition: 'all 0.3s ease',
+                    background: 'white'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#6366f1';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(99, 102, 241, 0.1)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#e5e7eb';
+                    e.target.style.boxShadow = 'none';
+                  }}
+                />
+              </div>
+
+              <div style={{ position: 'relative' }}>
+                <label style={{
+                  position: 'absolute',
+                  top: '-8px',
+                  left: '12px',
+                  background: '#f9fafb',
+                  padding: '0 8px',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  color: '#6366f1',
+                  zIndex: 1
+                }}>
+                  Filtrar por Rol
+                </label>
+                <select
+                  value={filtroRol}
+                  onChange={(e) => setFiltroRol(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    border: '2px solid #e5e7eb',
+                    borderRadius: '10px',
+                    fontSize: '14px',
+                    transition: 'all 0.3s ease',
+                    background: 'white',
+                    cursor: 'pointer'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#6366f1';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(99, 102, 241, 0.1)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#e5e7eb';
+                    e.target.style.boxShadow = 'none';
+                  }}
+                >
+                  <option value="todos">Todos los roles</option>
+                  {[...new Set(todosLosUsuarios.map((u) => u.role?._id))].map((rolId) => {
+                    const rol = todosLosUsuarios.find(u => u.role?._id === rolId)?.role;
+                    return (
+                      <option key={rolId} value={rolId}>
+                        {rol?.name || 'Sin rol'}
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+
+              <div style={{ position: 'relative' }}>
+                <label style={{
+                  position: 'absolute',
+                  top: '-8px',
+                  left: '12px',
+                  background: '#f9fafb',
+                  padding: '0 8px',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  color: '#6366f1',
+                  zIndex: 1
+                }}>
+                  Estado del Usuario
+                </label>
+                <select
+                  value={filtroEstado}
+                  onChange={(e) => setFiltroEstado(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    border: '2px solid #e5e7eb',
+                    borderRadius: '10px',
+                    fontSize: '14px',
+                    transition: 'all 0.3s ease',
+                    background: 'white',
+                    cursor: 'pointer'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#6366f1';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(99, 102, 241, 0.1)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#e5e7eb';
+                    e.target.style.boxShadow = 'none';
+                  }}
+                >
+                  <option value="todos">Todos los estados</option>
+                  <option value="habilitado">Usuarios Activos</option>
+                  <option value="inhabilitado">Usuarios Inactivos</option>
+                </select>
+              </div>
+            </div>
           </div>
 
 
 
-          <div className="table-container">
-            <table id='tabla_lista_usuarios'>
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Nombre completo</th>
-                  <th>Rol</th>
-                  <th>Correo</th>
-                  <th>Nombre de usuario</th>
-                  <th>Estado</th>
-                  <th>Creado</th>
-                  <th>Último acceso</th>
-                  <th>Acciones</th>
-
-                </tr>
-              </thead>
-              <tbody>
-                {currentItems.map((usuario, index) => (
-                  <tr key={usuario._id}>
-                    <td>{indexOfFirstItem + index + 1}</td>
-                    <td>{usuario.firstName} {usuario.secondName} {usuario.surname} {usuario.secondSurname}</td>
-                    <td>{usuario.role?.name || 'Sin rol'}</td>
-                    <td>{usuario.email}</td>
-                    <td>{usuario.username}</td>
-                    <td>
-                      <label className="switch">
-                        <input
-                          type="checkbox"
-                          checked={usuario.enabled}
-                          onChange={() => {
-                            if (puedeInhabilitarUsuario) {
-                              toggleEstadoUsuario(usuario._id, usuario.enabled, usuario.username);
-                            } else {
-                              Swal.fire({
-                                icon: 'error',
-                                title: 'Acción no permitida',
-                                text: 'No tienes permisos para esta accion',
-                                confirmButtonText: 'Entendido'
-                              });
-                            }
-                          }}
-                        />
-                        <span className="slider"></span>
-                      </label>
-                    </td>
-
-
-                    <td>{new Date(usuario.createdAt).toLocaleDateString()}</td>
-                    <td>
-                      {usuario.lastLogin
-                        ? new Date(usuario.lastLogin).toLocaleString('es-CO', {
-                          day: '2-digit',
-                          month: '2-digit',
-                          year: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })
-                        : 'Nunca'}
-                    </td>
-
-                    {(puedeEditarUsuario || puedeEliminarUsuario) && (
-                      <td>
-                        {puedeEditarUsuario && (
-                          <button className='btnTransparente'  onClick={() => { setUsuarioEditando(usuario); openModal('editUserModal'); }}>
-                            <i className="fa-solid fa-pen-to-square"></i>
-                          </button>
-                        )}
-                        {puedeEliminarUsuario && usuario.lastLogin === null && (
-                          <button
-                            className='btnTransparente'
-                            onClick={() => eliminarUsuario(usuario)}
-                          >
-                            <i className="fa-solid fa-trash" style={{ color: '#dc3545' }} ></i>
-                          </button>
-                        )}
-
-                      </td>
-                    )}
-
+          {/* Tabla de usuarios mejorada */}
+          <div style={{
+            background: 'white',
+            borderRadius: '16px',
+            overflow: 'hidden',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+            border: '1px solid #e5e7eb'
+          }}>
+            <div style={{
+              background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)',
+              padding: '20px 25px',
+              borderBottom: '1px solid #e5e7eb',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{
+                  background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                  borderRadius: '12px',
+                  padding: '10px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <i className="fa-solid fa-table" style={{ color: 'white', fontSize: '16px' }}></i>
+                </div>
+                <div>
+                  <h4 style={{ margin: '0 0 4px 0', color: '#1f2937', fontSize: '1.3rem', fontWeight: '600' }}>
+                    Lista de Usuarios
+                  </h4>
+                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px' }}>
+                    Mostrando {usuarios.length} de {todosLosUsuarios.length} usuarios
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div style={{ overflow: 'auto' }}>
+              <table style={{
+                width: '100%',
+                borderCollapse: 'collapse',
+                fontSize: '14px'
+              }} id='tabla_lista_usuarios'>
+                <thead>
+                  <tr style={{ 
+                    background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)',
+                    borderBottom: '2px solid #e5e7eb'
+                  }}>
+                    <th style={{ 
+                      padding: '16px 12px', 
+                      textAlign: 'left', 
+                      fontWeight: '600', 
+                      color: '#374151',
+                      fontSize: '13px',
+                      letterSpacing: '0.5px'
+                    }}>
+                      <i className="fa-solid fa-hashtag" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      #
+                    </th>
+                    <th style={{ 
+                      padding: '16px 12px', 
+                      textAlign: 'left', 
+                      fontWeight: '600', 
+                      color: '#374151',
+                      fontSize: '13px',
+                      letterSpacing: '0.5px'
+                    }}>
+                      <i className="fa-solid fa-user" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      NOMBRE COMPLETO
+                    </th>
+                    <th style={{ 
+                      padding: '16px 12px', 
+                      textAlign: 'left', 
+                      fontWeight: '600', 
+                      color: '#374151',
+                      fontSize: '13px',
+                      letterSpacing: '0.5px'
+                    }}>
+                      <i className="fa-solid fa-shield-alt" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      ROL
+                    </th>
+                    <th style={{ 
+                      padding: '16px 12px', 
+                      textAlign: 'left', 
+                      fontWeight: '600', 
+                      color: '#374151',
+                      fontSize: '13px',
+                      letterSpacing: '0.5px'
+                    }}>
+                      <i className="fa-solid fa-envelope" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      CORREO
+                    </th>
+                    <th style={{ 
+                      padding: '16px 12px', 
+                      textAlign: 'left', 
+                      fontWeight: '600', 
+                      color: '#374151',
+                      fontSize: '13px',
+                      letterSpacing: '0.5px'
+                    }}>
+                      <i className="fa-solid fa-at" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      USUARIO
+                    </th>
+                    <th style={{ 
+                      padding: '16px 12px', 
+                      textAlign: 'center', 
+                      fontWeight: '600', 
+                      color: '#374151',
+                      fontSize: '13px',
+                      letterSpacing: '0.5px'
+                    }}>
+                      <i className="fa-solid fa-toggle-on" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      ESTADO
+                    </th>
+                    <th style={{ 
+                      padding: '16px 12px', 
+                      textAlign: 'left', 
+                      fontWeight: '600', 
+                      color: '#374151',
+                      fontSize: '13px',
+                      letterSpacing: '0.5px'
+                    }}>
+                      <i className="fa-solid fa-calendar-plus" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      CREADO
+                    </th>
+                    <th style={{ 
+                      padding: '16px 12px', 
+                      textAlign: 'left', 
+                      fontWeight: '600', 
+                      color: '#374151',
+                      fontSize: '13px',
+                      letterSpacing: '0.5px'
+                    }}>
+                      <i className="fa-solid fa-clock" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      ÚLTIMO ACCESO
+                    </th>
+                    <th style={{ 
+                      padding: '16px 12px', 
+                      textAlign: 'center', 
+                      fontWeight: '600', 
+                      color: '#374151',
+                      fontSize: '13px',
+                      letterSpacing: '0.5px'
+                    }}>
+                      <i className="fa-solid fa-cogs" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      ACCIONES
+                    </th>
                   </tr>
+                </thead>
+                <tbody>
+                  {currentItems.map((usuario, index) => (
+                    <tr key={usuario._id} 
+                        style={{
+                          borderBottom: '1px solid #f3f4f6',
+                          transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = '#f8fafc';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'transparent';
+                        }}
+                    >
+                      <td style={{ padding: '16px 12px', fontWeight: '600', color: '#6366f1' }}>
+                        {indexOfFirstItem + index + 1}
+                      </td>
+                      <td style={{ padding: '16px 12px' }}>
+                        <div style={{ fontWeight: '600', color: '#1f2937', fontSize: '14px' }}>
+                          {`${usuario.firstName} ${usuario.secondName} ${usuario.surname} ${usuario.secondSurname}`}
+                        </div>
+                      </td>
+                      <td style={{ padding: '16px 12px' }}>
+                        <span style={{
+                          background: '#fef3c7',
+                          color: '#d97706',
+                          padding: '6px 12px',
+                          borderRadius: '20px',
+                          fontSize: '12px',
+                          fontWeight: '600',
+                          display: 'inline-block'
+                        }}>
+                          {usuario.role?.name || 'Sin rol'}
+                        </span>
+                      </td>
+                      <td style={{ padding: '16px 12px', color: '#4b5563', fontWeight: '500' }}>
+                        {usuario.email}
+                      </td>
+                      <td style={{ padding: '16px 12px', color: '#4b5563', fontWeight: '500' }}>
+                        {usuario.username}
+                      </td>
+                      <td style={{ padding: '16px 12px', textAlign: 'center' }}>
+                        <label className="switch" style={{ position: 'relative', display: 'inline-block', width: '50px', height: '24px' }}>
+                          <input
+                            type="checkbox"
+                            checked={usuario.enabled}
+                            onChange={() => {
+                              if (puedeInhabilitarUsuario) {
+                                toggleEstadoUsuario(usuario._id, usuario.enabled, usuario.username);
+                              } else {
+                                Swal.fire({
+                                  icon: 'error',
+                                  title: 'Acción no permitida',
+                                  text: 'No tienes permisos para esta accion',
+                                  confirmButtonText: 'Entendido'
+                                });
+                              }
+                            }}
+                            style={{ opacity: 0, width: 0, height: 0 }}
+                          />
+                          <span className="slider" style={{
+                            position: 'absolute',
+                            cursor: 'pointer',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            backgroundColor: usuario.enabled ? '#10b981' : '#ef4444',
+                            transition: '0.4s',
+                            borderRadius: '24px'
+                          }}></span>
+                        </label>
+                      </td>
+                      <td style={{ padding: '16px 12px', color: '#4b5563', fontWeight: '500' }}>
+                        {new Date(usuario.createdAt).toLocaleDateString()}
+                      </td>
+                      <td style={{ padding: '16px 12px', color: '#4b5563', fontWeight: '500' }}>
+                        {usuario.lastLogin
+                          ? new Date(usuario.lastLogin).toLocaleString('es-CO', {
+                              day: '2-digit',
+                              month: '2-digit',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })
+                          : 'Nunca'}
+                      </td>
+                      <td style={{ padding: '16px 12px', textAlign: 'center' }}>
+                        <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
+                          {puedeEditarUsuario && (
+                            <button
+                              onClick={() => { setUsuarioEditando(usuario); openModal('editUserModal'); }}
+                              title="Editar usuario"
+                              style={{
+                                background: 'linear-gradient(135deg, #dbeafe, #bfdbfe)',
+                                color: '#1e40af',
+                                border: 'none',
+                                borderRadius: '8px',
+                                padding: '8px 10px',
+                                cursor: 'pointer',
+                                fontSize: '12px',
+                                fontWeight: '600',
+                                transition: 'all 0.2s ease',
+                                boxShadow: '0 2px 4px rgba(30, 64, 175, 0.2)'
+                              }}
+                              onMouseEnter={(e) => {
+                                e.target.style.transform = 'translateY(-2px)';
+                                e.target.style.boxShadow = '0 4px 8px rgba(30, 64, 175, 0.3)';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.target.style.transform = 'translateY(0)';
+                                e.target.style.boxShadow = '0 2px 4px rgba(30, 64, 175, 0.2)';
+                              }}
+                            >
+                              <i className="fa-solid fa-pen-to-square"></i>
+                            </button>
+                          )}
+                          {puedeEliminarUsuario && usuario.lastLogin === null && (
+                            <button
+                              onClick={() => eliminarUsuario(usuario)}
+                              title="Eliminar usuario"
+                              style={{
+                                background: 'linear-gradient(135deg, #fee2e2, #fecaca)',
+                                color: '#dc2626',
+                                border: 'none',
+                                borderRadius: '8px',
+                                padding: '8px 10px',
+                                cursor: 'pointer',
+                                fontSize: '12px',
+                                fontWeight: '600',
+                                transition: 'all 0.2s ease',
+                                boxShadow: '0 2px 4px rgba(220, 38, 38, 0.2)'
+                              }}
+                              onMouseEnter={(e) => {
+                                e.target.style.transform = 'translateY(-2px)';
+                                e.target.style.boxShadow = '0 4px 8px rgba(220, 38, 38, 0.3)';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.target.style.transform = 'translateY(0)';
+                                e.target.style.boxShadow = '0 2px 4px rgba(220, 38, 38, 0.2)';
+                              }}
+                            >
+                              <i className="fa-solid fa-trash"></i>
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  
+                  {usuarios.length === 0 && (
+                    <tr>
+                      <td colSpan="9" style={{ textAlign: 'center', padding: '80px 20px' }}>
+                        <div style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          gap: '20px'
+                        }}>
+                          <div style={{
+                            background: 'linear-gradient(135deg, #f3f4f6, #e5e7eb)',
+                            borderRadius: '50%',
+                            padding: '25px',
+                            marginBottom: '10px'
+                          }}>
+                            <i className="fa-solid fa-users" style={{ 
+                              fontSize: '3.5rem', 
+                              color: '#9ca3af'
+                            }}></i>
+                          </div>
+                          <div style={{ textAlign: 'center' }}>
+                            <h5 style={{ 
+                              color: '#6b7280', 
+                              margin: '0 0 12px 0',
+                              fontSize: '1.2rem',
+                              fontWeight: '600'
+                            }}>
+                              No hay usuarios disponibles
+                            </h5>
+                            <p style={{ 
+                              color: '#9ca3af', 
+                              margin: 0, 
+                              fontSize: '14px',
+                              lineHeight: '1.5'
+                            }}>
+                              No se encontraron usuarios con los criterios de búsqueda
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+            
+            {/* Paginación mejorada */}
+            {totalPages > 1 && (
+              <div style={{
+                padding: '20px 25px',
+                borderTop: '1px solid #e5e7eb',
+                display: 'flex',
+                justifyContent: 'center',
+                gap: '8px'
+              }}>
+                {Array.from({ length: totalPages }, (_, i) => (
+                  <button
+                    key={i + 1}
+                    onClick={() => paginate(i + 1)}
+                    style={{
+                      padding: '8px 16px',
+                      border: currentPage === i + 1 ? '2px solid #6366f1' : '2px solid #e5e7eb',
+                      borderRadius: '8px',
+                      background: currentPage === i + 1 ? '#6366f1' : 'white',
+                      color: currentPage === i + 1 ? 'white' : '#4b5563',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (currentPage !== i + 1) {
+                        e.target.style.borderColor = '#6366f1';
+                        e.target.style.color = '#6366f1';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (currentPage !== i + 1) {
+                        e.target.style.borderColor = '#e5e7eb';
+                        e.target.style.color = '#4b5563';
+                      }
+                    }}
+                  >
+                    {i + 1}
+                  </button>
                 ))}
-                {usuarios.length === 0 && <tr><td colSpan="9">No hay usuarios disponibles</td></tr>}
-
-              </tbody>
-            </table>
-
-          </div>
-          <div className="pagination">
-            {Array.from({ length: totalPages }, (_, i) => (
-              <button
-                key={i + 1}
-                onClick={() => paginate(i + 1)}
-                className={currentPage === i + 1 ? 'active-page' : ''}
-              >
-                {i + 1}
-              </button>
-            ))}
+              </div>
+            )}
           </div>
           
           

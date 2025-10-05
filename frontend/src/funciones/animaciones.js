@@ -41,9 +41,20 @@ export function cerrarMenu(){
 
 
 /**Funcion para abrir los popup */
-export function openModal(modalId)/*Recibe el Id del popup a abrir */ {
+export function openModal(modalId) {
+    // Para modales antiguos que aún usan display
     const targetModal = document.getElementById(modalId);
-    targetModal.style.display = 'block'
+    if (targetModal) {
+        targetModal.style.display = 'block';
+        return;
+    }
+    
+    // Para los nuevos modales controlados por React
+    if (modalId === 'agregar-usuario' && window.openModalUsuario) {
+        window.openModalUsuario();
+    } else if (modalId === 'crear-rol' && window.openModalRol) {
+        window.openModalRol();
+    }
 }
 export function closeModal(modalId) {
     const targetModal = document.getElementById(modalId);

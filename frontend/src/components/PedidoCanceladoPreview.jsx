@@ -1,242 +1,641 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
 
-export default function PedidoCanceladoPreview({ datos, onClose }) {
+export default function PedidoCanceladoPreview({ datos, onClose, onEmailSent }) {
   const navigate = useNavigate();
-  // Obtener usuario logueado
-  const usuario = JSON.parse(localStorage.getItem('user') || '{}');
+  // Obtener usuario del localStorage
+  const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
   const [showEnviarModal, setShowEnviarModal] = useState(false);
   const [correo, setCorreo] = useState('');
   const [asunto, setAsunto] = useState('');
   const [mensaje, setMensaje] = useState('');
 
+  // Función para formatear fecha
+  const formatDate = (fecha) => {
+    if (!fecha) return 'No especificada';
+    const date = new Date(fecha);
+    return date.toLocaleDateString('es-ES', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+  };
+
+  // Función para calcular total
+  const calcularTotal = () => {
+    if (!datos?.productos) return 0;
+    return datos.productos.reduce((total, producto) => {
+      return total + (producto.cantidad * parseFloat(producto.precioUnitario || 0));
+    }, 0);
+  };
+
+  // Autocompletar datos del cliente al abrir modal
+  useEffect(() => {
+    if (datos?.cliente) {
+      setCorreo(datos.cliente.correo || '');
+    }
+  }, [datos]);
+
+  // Función para abrir modal de envío
+  const abrirModalEnvio = () => {
+    const totalFinal = calcularTotal();
+    setAsunto(`Pedido Cancelado ${datos?.numeroPedido || datos?.codigo || ''} - ${datos?.cliente?.nombre || 'Cliente'} | ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}`);
+    setMensaje(
+      `Estimado/a ${datos?.cliente?.nombre || 'cliente'},
+
+Lamentamos informarle que el pedido con la siguiente información ha sido cancelado:
+
+📋 DETALLES DEL PEDIDO CANCELADO:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Número de pedido: ${datos?.numeroPedido || datos?.codigo || 'N/A'}
+• Fecha de emisión: ${datos?.fecha ? new Date(datos.fecha).toLocaleDateString('es-ES') : 'N/A'}
+• Fecha de cancelación: ${new Date().toLocaleDateString('es-ES')}
+• Cliente: ${datos?.cliente?.nombre || 'N/A'}
+• Correo: ${datos?.cliente?.correo || 'N/A'}
+• Teléfono: ${datos?.cliente?.telefono || 'N/A'}
+• Ciudad: ${datos?.cliente?.ciudad || 'N/A'}
+• Estado: CANCELADO ❌
+• Total de productos: ${datos?.productos?.length || 0} artículos
+• TOTAL DEL PEDIDO: S/. ${totalFinal.toLocaleString('es-ES')}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+${datos?.motivoCancelacion ? `📝 MOTIVO DE CANCELACIÓN:
+${datos.motivoCancelacion}
+
+` : ''}Nos disculpamos por cualquier inconveniente que esto pueda causar. Si tiene alguna pregunta o desea realizar un nuevo pedido, no dude en contactarnos.
+
+Agradecemos su comprensión y esperamos poder atenderle en futuras oportunidades.
+
+Saludos cordiales,
+
+${usuario?.firstName || usuario?.nombre || 'Equipo de atención'} ${usuario?.surname || ''}${usuario?.email ? `
+📧 Correo: ${usuario.email}` : ''}${usuario?.telefono ? `
+📞 Teléfono: ${usuario.telefono}` : ''}
+
+${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
+🌐 Productos de calidad`
+    );
+    setShowEnviarModal(true);
+  };
+
+  // Función para enviar por correo
+  const enviarPorCorreo = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:5000/api/pedidos/${datos._id}/enviar-cancelado`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          pedidoId: datos._id,
+          correoDestino: correo,
+          asunto: asunto,
+          mensaje: mensaje
+        })
+      });
+
+      if (response.ok) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Correo enviado',
+          text: 'La notificación de cancelación ha sido enviada exitosamente',
+          confirmButtonColor: '#dc2626'
+        });
+        setShowEnviarModal(false);
+        
+        // Actualizar el estado local para reflejar que fue enviado
+        if (datos) {
+          datos.enviadoCorreo = true;
+        }
+        
+        // Llamar al callback para actualizar el componente padre
+        if (onEmailSent) {
+          onEmailSent(datos._id);
+        }
+      } else {
+        throw new Error('Error al enviar correo');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'No se pudo enviar el correo',
+        confirmButtonColor: '#dc2626'
+      });
+    }
+  };
+
   return (
-    <div className="modal-cotizacion-overlay" style={{ alignItems: 'flex-start', paddingTop: '50px', overflow: 'auto' }}>
-      <div className="modal-cotizacion" style={{ maxWidth: '95vw', maxHeight: 'none', width: '900px', height: 'auto', marginBottom: '50px' }}>
-        <button className="close-modal" onClick={onClose}>×</button>
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <span className='modal-title'> {datos.numeroPedido}</span>
-          <div className="botones-cotizacion" style={{ display: 'flex', gap: '18px', justifyContent: 'center', marginBottom: '1rem' }}>
-            <button className="btn-cotizacion moderno" title="Enviar" onClick={() => setShowEnviarModal(true)}>
-              <i className="fa-solid fa-envelope" style={{ fontSize: '1rem', color: '#EA4335', marginRight: '6px' }}></i>
-              Enviar
-            </button>
-            <button className="btn-cotizacion moderno" title="Imprimir" onClick={() => {
-              // Imprimir solo el bloque de cancelado en una ventana nueva
-              const printContent = document.getElementById('pdf-cancelado-block');
-              const printWindow = window.open('', '', 'width=900,height=600');
-              printWindow.document.write('<html><head><title>Imprimir</title></head><body>');
-              printWindow.document.write(printContent.outerHTML);
-              printWindow.document.write('</body></html>');
-              printWindow.document.close();
-              printWindow.focus();
-              printWindow.print();
-              printWindow.close();
-            }}>
-              <i className="fa-solid fa-print" style={{ fontSize: '1.2rem', marginRight: '8px' }}></i>
-            </button>
-          </div>
-        </div>
-
-        {/* Contenido PDF debajo */}
-        <div
-          className="pdf-cotizacion"
-          id="pdf-cancelado-block"
-          style={{ 
-            background: '#fff', 
-            padding: '1.5rem', 
-            borderRadius: '8px', 
-            boxShadow: '0 2px 8px rgba(0,0,0,0.08)', 
-            marginTop: '0.5rem', 
-            userSelect: 'none', 
-            WebkitUserSelect: 'none', 
-            MozUserSelect: 'none', 
-            msUserSelect: 'none', 
-            fontSize: '0.9rem',
-            maxHeight: '85vh',
-            overflowY: 'auto'
-          }}
-          onCopy={e => e.preventDefault()}
-        >
-          <div className="cotizacion-encabezado">
-            <h2 style={{ color: '#dc2626', fontWeight: 'bold', fontSize: '1.5rem', margin: '0 0 0.5rem 0' }}>
-              PEDIDO CANCELADO
-            </h2>
-          </div>
-
-          {/* Información del cliente y empresa */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', fontSize: '0.8rem', marginBottom: '0.75rem' }}>
-            <div style={{ flex: 1 }}>
-              <h4 style={{ color: '#374151', marginBottom: '0.3rem', fontSize: '0.85rem' }}>CLIENTE:</h4>
-              <div style={{ backgroundColor: '#f9fafb', padding: '0.5rem', borderRadius: '4px', border: '1px solid #e5e7eb' }}>
-                <p style={{ fontWeight: 'bold', marginBottom: '0.15rem', fontSize: '0.8rem' }}>
-                  {datos.cliente?.nombre || 'Cliente no especificado'}
-                </p>
-                <p style={{ marginBottom: '0.15rem', fontSize: '0.75rem' }}>
-                  {datos.cliente?.direccion || 'Dirección no especificada'}
-                </p>
-                <p style={{ marginBottom: '0.15rem', fontSize: '0.75rem' }}>
-                  {datos.cliente?.ciudad || 'Ciudad no especificada'}
-                </p>
-                <p style={{ marginBottom: '0.15rem', fontSize: '0.75rem' }}>
-                  Tel: {datos.cliente?.telefono || 'No especificado'}
-                </p>
-                <p style={{ fontSize: '0.75rem' }}>
-                  {datos.cliente?.correo || 'Sin correo'}
-                </p>
-              </div>
-            </div>
-            
-            <div style={{ flex: 1, marginLeft: '1rem' }}>
-              <h4 style={{ color: '#374151', marginBottom: '0.3rem', fontSize: '0.85rem' }}>EMPRESA:</h4>
-              <div style={{ backgroundColor: '#f9fafb', padding: '0.5rem', borderRadius: '4px', border: '1px solid #e5e7eb' }}>
-                <p style={{ fontWeight: 'bold', marginBottom: '0.15rem', fontSize: '0.8rem' }}>
-                  {datos.empresa?.nombre || 'PANGEA'}
-                </p>
-                <p style={{ marginBottom: '0.15rem', fontSize: '0.75rem' }}>
-                  {datos.empresa?.direccion || ''}
-                </p>
-                <p style={{ marginBottom: '0.15rem', fontSize: '0.75rem' }}>
-                  Responsable: {usuario.firstName || ''} {usuario.surname || ''}
-                </p>
-                <p style={{ marginBottom: '0.15rem', color: '#6b7280', fontSize: '0.75rem' }}>
-                  Ref. Pedido: {datos.numeroPedido || 'N/A'}
-                </p>
-                <p style={{ marginBottom: '0.15rem', color: '#6b7280', fontSize: '0.75rem' }}>
-                  F. Cancelación: {new Date().toLocaleDateString('es-ES')}
-                </p>
-                {datos.fechaEntrega && (
-                  <p style={{ marginBottom: '0.15rem', color: '#6b7280', fontSize: '0.75rem' }}>
-                    F. Entrega Prev.: {new Date(datos.fechaEntrega).toLocaleDateString('es-ES')}
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Motivo de cancelación */}
-          <div style={{ marginBottom: '0.75rem' }}>
-            <h4 style={{ color: '#dc2626', fontSize: '0.85rem', marginBottom: '0.3rem' }}>Motivo de cancelación:</h4>
-            <div style={{ backgroundColor: '#fef2f2', padding: '0.5rem', borderRadius: '4px', border: '1px solid #fecaca' }}>
-              <p style={{ margin: 0, fontSize: '0.75rem', color: '#dc2626' }}>
-                {datos.motivoCancelacion || datos.observacion || 'No se especificó motivo de cancelación'}
+    <div className="modal-cotizacion-overlay" style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.8)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 1000,
+      padding: '1rem'
+    }}>
+      <div style={{
+        backgroundColor: 'white',
+        borderRadius: '15px',
+        padding: '0',
+        maxWidth: '95vw',
+        maxHeight: '95vh',
+        width: '1000px',
+        display: 'flex',
+        flexDirection: 'column',
+        boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+        overflow: 'hidden'
+      }}>
+        {/* Header del modal */}
+        <div style={{
+          background: 'linear-gradient(135deg, #dc2626, #b91c1c)',
+          color: 'white',
+          padding: '1.5rem 2rem',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <i className="fa-solid fa-ban" style={{ fontSize: '1.8rem' }}></i>
+            <div>
+              <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 'bold' }}>
+                Vista Previa - Pedido Cancelado
+              </h2>
+              <p style={{ margin: 0, opacity: 0.9, fontSize: '0.95rem' }}>
+                N° {datos?.numeroPedido || 'Sin número'}
               </p>
             </div>
           </div>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            {/* Botón de imprimir */}
+            <button
+              onClick={() => {
+                const printContent = document.querySelector('.pdf-pedido-cancelado');
+                const newWindow = window.open('', '_blank');
+                newWindow.document.write(`
+                  <html>
+                    <head>
+                      <title>Pedido Cancelado - ${datos?.numeroPedido}</title>
+                      <style>
+                        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+                        .header { text-align: center; margin-bottom: 30px; padding: 20px; background: linear-gradient(135deg, #dc2626, #b91c1c); color: white; border-radius: 10px; }
+                        .info-section { margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; }
+                        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+                        th { background: linear-gradient(135deg, #dc2626, #b91c1c); color: white; font-weight: bold; }
+                        .total-row { background: #fee2e2; font-weight: bold; }
+                        .status-badge { background: #dc2626; color: white; padding: 8px 16px; border-radius: 20px; display: inline-block; }
+                      </style>
+                    </head>
+                    <body>
+                      ${printContent.innerHTML}
+                    </body>
+                  </html>
+                `);
+                newWindow.document.close();
+                newWindow.focus();
+                newWindow.print();
+                newWindow.close();
+              }}
+              style={{
+                background: 'rgba(255, 255, 255, 0.2)',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '0.75rem',
+                color: 'white',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                fontSize: '0.9rem',
+                fontWeight: 'bold',
+                transition: 'all 0.3s ease'
+              }}
+              onMouseEnter={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.3)'}
+              onMouseLeave={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.2)'}
+            >
+              <i className="fa-solid fa-print" style={{ fontSize: '1.2rem', marginRight: '8px' }}></i>
+            </button>
 
-          {/* Tabla de productos */}
-          <table className="tabla-cotizacion" style={{ fontSize: '0.8rem', width: '100%', marginBottom: '1rem' }}>
-            <thead>
-              <tr style={{ backgroundColor: '#f3f4f6' }}>
-                <th style={{ textAlign: 'left', padding: '0.6rem', fontSize: '0.8rem' }}>Cant.</th>
-                <th style={{ textAlign: 'left', padding: '0.6rem', fontSize: '0.8rem' }}>Producto</th>
-                <th style={{ textAlign: 'left', padding: '0.6rem', fontSize: '0.8rem' }}>Descripción</th>
-                <th style={{ textAlign: 'right', padding: '0.6rem', fontSize: '0.8rem' }}>Valor Unit.</th>
-                <th style={{ textAlign: 'right', padding: '0.6rem', fontSize: '0.8rem' }}>Total</th>
-                <th style={{ textAlign: 'center', padding: '0.6rem', fontSize: '0.8rem' }}>Estado</th>
-              </tr>
-            </thead>
-            <tbody>
-              {datos.productos && datos.productos.length > 0 ? datos.productos.map((p, idx) => (
-                <tr key={idx} style={{ borderBottom: '1px solid #e5e7eb' }}>
-                  <td style={{ padding: '0.6rem', fontWeight: 'bold', fontSize: '0.8rem' }}>
-                    {p.cantidad || 0}
-                  </td>
-                  <td style={{ padding: '0.6rem', fontSize: '0.8rem' }}>
-                    {p.product?.name || p.producto?.name || p.nombre || 'Producto sin nombre'}
-                  </td>
-                  <td style={{ padding: '0.6rem', fontSize: '0.8rem', color: '#6b7280' }}>
-                    {p.product?.description || p.descripcion || 'Sin descripción'}
-                  </td>
-                  <td style={{ padding: '0.6rem', textAlign: 'right', fontSize: '0.8rem' }}>
-                    ${(p.valorUnitario || p.precioUnitario || p.product?.price || 0).toLocaleString('es-CO')}
-                  </td>
-                  <td style={{ padding: '0.6rem', textAlign: 'right', fontWeight: 'bold', fontSize: '0.8rem' }}>
-                    ${(() => {
-                      const cantidad = parseFloat(p.cantidad) || 0;
-                      const precio = parseFloat(p.valorUnitario || p.precioUnitario || p.product?.price) || 0;
-                      return (cantidad * precio).toLocaleString('es-CO');
-                    })()}
-                  </td>
-                  <td style={{ padding: '0.6rem', textAlign: 'center', fontSize: '0.8rem' }}>
-                    <span style={{ 
-                      backgroundColor: '#f8d7da', 
-                      color: '#721c24', 
-                      padding: '0.25rem 0.5rem', 
-                      borderRadius: '4px', 
-                      fontSize: '0.75rem',
-                      fontWeight: 'bold'
+            {/* Botón de enviar por correo */}
+            <button
+              onClick={abrirModalEnvio}
+              style={{
+                background: 'rgba(255, 255, 255, 0.2)',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '0.75rem 1rem',
+                color: 'white',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                fontSize: '0.9rem',
+                fontWeight: 'bold',
+                transition: 'all 0.3s ease'
+              }}
+              onMouseEnter={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.3)'}
+              onMouseLeave={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.2)'}
+            >
+              <i className="fa-solid fa-envelope"></i>
+              Enviar
+            </button>
+
+            {/* Botón de cerrar */}
+            <button
+              onClick={onClose}
+              style={{
+                background: 'rgba(255, 255, 255, 0.2)',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '0.75rem',
+                color: 'white',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                fontSize: '1.2rem',
+                transition: 'all 0.3s ease'
+              }}
+              onMouseEnter={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.3)'}
+              onMouseLeave={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.2)'}
+            >
+              <i className="fa-solid fa-times"></i>
+            </button>
+          </div>
+        </div>
+
+        {/* Contenido scrolleable */}
+        <div style={{
+          flex: 1,
+          overflow: 'auto',
+          padding: '2rem',
+          backgroundColor: '#f8f9fa'
+        }}>
+          {/* Contenido del pedido cancelado */}
+          <div
+            className="pdf-pedido-cancelado"
+            id="pdf-cancelado-block"
+            style={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              background: '#fff', 
+              padding: '2rem', 
+              borderRadius: '10px', 
+              boxShadow: '0 2px 8px rgba(0,0,0,0.08)', 
+              marginTop: '1rem',
+              userSelect: 'none',
+              WebkitUserSelect: 'none',
+              MozUserSelect: 'none',
+              msUserSelect: 'none'
+            }}
+            onCopy={e => e.preventDefault()}
+            onSelectStart={e => e.preventDefault()}
+          >
+            <div className="header" style={{
+              textAlign: 'center',
+              color: 'white',
+              marginBottom: '2rem',
+              padding: '1.5rem',
+              background: 'linear-gradient(135deg, #dc2626, #b91c1c)',
+              borderRadius: '8px',
+              fontSize: '1.8rem',
+              fontWeight: 'bold'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem' }}>
+                <i className="fa-solid fa-ban" style={{ fontSize: '2rem' }}></i>
+                <div>
+                  <div>PEDIDO CANCELADO</div>
+                  <div style={{ fontSize: '1rem', fontWeight: 'normal', marginTop: '0.5rem' }}>
+                    N° {datos?.numeroPedido}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Información del cliente y empresa */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '2rem',
+              marginBottom: '2rem'
+            }}>
+              <div>
+                <h3 style={{ 
+                  borderBottom: '3px solid #dc2626', 
+                  paddingBottom: '0.5rem', 
+                  color: '#dc2626',
+                  fontSize: '1.2rem',
+                  fontWeight: 'bold',
+                  marginBottom: '1rem'
+                }}>
+                  Información del Cliente
+                </h3>
+                <div style={{ lineHeight: '1.8' }}>
+                  <p><strong>Cliente:</strong> {datos.cliente?.nombre || 'Cliente no especificado'}</p>
+                  <p><strong>Teléfono:</strong> {datos.cliente?.telefono || 'No especificado'}</p>
+                  <p><strong>Email:</strong> {datos.cliente?.correo || 'Sin correo'}</p>
+                  <p><strong>Dirección:</strong> {datos.cliente?.direccion || 'Dirección no especificada'}</p>
+                  <p><strong>Ciudad:</strong> {datos.cliente?.ciudad || 'Ciudad no especificada'}</p>
+                </div>
+              </div>
+
+              <div>
+                <h3 style={{ 
+                  borderBottom: '3px solid #dc2626', 
+                  paddingBottom: '0.5rem', 
+                  color: '#dc2626',
+                  fontSize: '1.2rem',
+                  fontWeight: 'bold',
+                  marginBottom: '1rem'
+                }}>
+                  Detalles de la Cancelación
+                </h3>
+                <div style={{ lineHeight: '1.8' }}>
+                  <p><strong>Fecha de Pedido:</strong> {formatDate(datos?.createdAt)}</p>
+                  <p><strong>Fecha de Cancelación:</strong> {formatDate(new Date())}</p>
+                  <p><strong>Estado:</strong> 
+                    <span style={{
+                      background: '#dc2626',
+                      color: 'white',
+                      padding: '4px 12px',
+                      borderRadius: '15px',
+                      fontSize: '0.9rem',
+                      marginLeft: '0.5rem'
                     }}>
                       CANCELADO
                     </span>
-                  </td>
-                </tr>
-              )) : (
-                <tr>
-                  <td colSpan={6} style={{ padding: '1rem', textAlign: 'center', fontSize: '0.8rem', color: '#6b7280' }}>
-                    No hay productos disponibles
-                  </td>
-                </tr>
-              )}
-            </tbody>
-            <tfoot>
-              <tr style={{ backgroundColor: '#f9fafb', fontWeight: 'bold' }}>
-                <td colSpan={4} style={{ padding: '0.75rem', textAlign: 'right', fontSize: '0.9rem' }}>
-                  TOTAL CANCELADO:
-                </td>
-                <td style={{ padding: '0.75rem', textAlign: 'right', fontSize: '1rem', color: '#dc2626' }}>
-                  ${datos.productos && datos.productos.length > 0 ? datos.productos
-                    .reduce((acc, p) => {
-                      const cantidad = parseFloat(p.cantidad) || 0;
-                      const precio = parseFloat(p.valorUnitario || p.precioUnitario || p.product?.price) || 0;
-                      return acc + (cantidad * precio);
-                    }, 0)
-                    .toLocaleString('es-CO') : '0'}
-                </td>
-                <td style={{ padding: '0.75rem' }}></td>
-              </tr>
-            </tfoot>
-          </table>
+                  </p>
+                  <p><strong>Responsable:</strong> {usuario?.firstName || ''} {usuario?.surname || ''}</p>
+                </div>
+              </div>
+            </div>
 
-          {/* Información adicional */}
-          <div style={{ 
-            marginTop: '1rem', 
-            padding: '0.75rem', 
-            backgroundColor: '#fef2f2', 
-            borderRadius: '6px', 
-            border: '1px solid #fecaca'
+            {/* Motivo de cancelación si existe */}
+            {datos?.motivoCancelacion && (
+              <div style={{ marginBottom: '2rem' }}>
+                <h3 style={{ 
+                  borderBottom: '3px solid #dc2626', 
+                  paddingBottom: '0.5rem', 
+                  color: '#dc2626',
+                  fontSize: '1.2rem',
+                  fontWeight: 'bold',
+                  marginBottom: '1rem'
+                }}>
+                  Motivo de Cancelación
+                </h3>
+                <div style={{
+                  background: '#fef2f2',
+                  padding: '1rem',
+                  borderRadius: '8px',
+                  borderLeft: '4px solid #dc2626',
+                  lineHeight: '1.6'
+                }}>
+                  {datos.motivoCancelacion}
+                </div>
+              </div>
+            )}
+
+            {/* Tabla de productos */}
+            <div style={{ marginBottom: '2rem' }}>
+              <h3 style={{ 
+                borderBottom: '3px solid #dc2626', 
+                paddingBottom: '0.5rem', 
+                color: '#dc2626',
+                fontSize: '1.2rem',
+                fontWeight: 'bold',
+                marginBottom: '1rem'
+              }}>
+                Productos del Pedido Cancelado
+              </h3>
+              <table className="tabla-cotizacion" style={{
+                width: '100%',
+                borderCollapse: 'collapse',
+                marginTop: '1rem',
+                borderRadius: '8px',
+                overflow: 'hidden',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+              }}>
+                <thead>
+                  <tr style={{ background: 'linear-gradient(135deg, #dc2626, #b91c1c)', color: 'white' }}>
+                    <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 'bold' }}>Producto</th>
+                    <th style={{ padding: '1rem', textAlign: 'center', fontWeight: 'bold' }}>Cantidad</th>
+                    <th style={{ padding: '1rem', textAlign: 'right', fontWeight: 'bold' }}>Precio Unit.</th>
+                    <th style={{ padding: '1rem', textAlign: 'right', fontWeight: 'bold' }}>Subtotal</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {datos?.productos && datos.productos.map((producto, index) => (
+                    <tr key={index} style={{ 
+                      borderBottom: '1px solid #eee',
+                      backgroundColor: index % 2 === 0 ? '#fafafa' : 'white',
+                      opacity: 0.7
+                    }}>
+                      <td style={{ padding: '1rem' }}>
+                        <div style={{ fontWeight: 'bold', color: '#333', textDecoration: 'line-through' }}>
+                          {producto.product?.name || producto.product?.nombre || producto.nombre || 'Producto sin nombre'}
+                        </div>
+                        {producto.product?.categoria && (
+                          <div style={{ fontSize: '0.9rem', color: '#666', marginTop: '0.25rem' }}>
+                            {producto.product.categoria}
+                          </div>
+                        )}
+                      </td>
+                      <td style={{ padding: '1rem', textAlign: 'center', fontWeight: 'bold' }}>
+                        {producto.cantidad}
+                      </td>
+                      <td style={{ padding: '1rem', textAlign: 'right' }}>
+                        S/. {parseFloat(producto.precioUnitario || 0).toFixed(2)}
+                      </td>
+                      <td style={{ padding: '1rem', textAlign: 'right', fontWeight: 'bold' }}>
+                        S/. {(producto.cantidad * parseFloat(producto.precioUnitario || 0)).toFixed(2)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr style={{ 
+                    background: 'linear-gradient(135deg, #fef2f2, #fee2e2)', 
+                    borderTop: '2px solid #dc2626',
+                    opacity: 0.7
+                  }}>
+                    <td colSpan="3" style={{ 
+                      padding: '1rem', 
+                      textAlign: 'right', 
+                      fontWeight: 'bold', 
+                      fontSize: '1.1rem',
+                      color: '#dc2626',
+                      textDecoration: 'line-through'
+                    }}>
+                      TOTAL CANCELADO:
+                    </td>
+                    <td style={{ 
+                      padding: '1rem', 
+                      textAlign: 'right', 
+                      fontWeight: 'bold', 
+                      fontSize: '1.3rem',
+                      color: '#dc2626',
+                      textDecoration: 'line-through'
+                    }}>
+                      S/. {calcularTotal().toFixed(2)}
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+
+            {/* Footer */}
+            <div style={{
+              marginTop: '3rem',
+              padding: '1.5rem',
+              background: 'linear-gradient(135deg, #f8f9fa, #e9ecef)',
+              borderRadius: '8px',
+              textAlign: 'center',
+              borderTop: '3px solid #dc2626'
+            }}>
+              <div style={{ 
+                fontSize: '1.1rem', 
+                fontWeight: 'bold', 
+                color: '#dc2626',
+                marginBottom: '0.5rem'
+              }}>
+                JLA Global Company
+              </div>
+              <div style={{ fontSize: '0.9rem', color: '#666' }}>
+                Lamentamos los inconvenientes • Pedido cancelado
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Modal para enviar por correo */}
+        {showEnviarModal && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000
           }}>
-            <h5 style={{ fontSize: '0.8rem', color: '#dc2626', marginBottom: '0.4rem' }}>INFORMACIÓN SOBRE LA CANCELACIÓN:</h5>
-            <ul style={{ fontSize: '0.7rem', color: '#721c24', margin: 0, paddingLeft: '1rem', lineHeight: '1.3' }}>
-              <li>Este pedido ha sido cancelado según solicitud del cliente</li>
-              <li>Los productos no fueron procesados ni enviados</li>
-              <li>Para realizar un nuevo pedido, contacte a nuestro equipo de ventas</li>
-            </ul>
-          </div>
-        </div>
-      </div>
+            <div style={{
+              backgroundColor: 'white',
+              padding: '2rem',
+              borderRadius: '10px',
+              maxWidth: '600px',
+              width: '90%',
+              maxHeight: '80vh',
+              overflow: 'auto'
+            }}>
+              <h3 style={{ marginBottom: '1rem', color: '#dc2626' }}>
+                <i className="fa-solid fa-envelope" style={{ marginRight: '0.5rem' }}></i>
+                Enviar Notificación de Cancelación
+              </h3>
+              
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                  Correo del destinatario:
+                </label>
+                <input
+                  type="email"
+                  value={correo}
+                  onChange={(e) => setCorreo(e.target.value)}
+                  placeholder="ejemplo@correo.com"
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid #ddd',
+                    borderRadius: '6px',
+                    fontSize: '1rem'
+                  }}
+                />
+              </div>
 
-      {showEnviarModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
-          <div className="modal-cotizacion" style={{ maxWidth: 400 }}>
-            <button className="close-modal" onClick={() => setShowEnviarModal(false)}>×</button>
-            <h3 style={{ textAlign: 'center', marginBottom: '1rem' }}>Enviar pedido cancelado</h3>
-            <div style={{ marginBottom: '1rem' }}>
-              <label>Correo destinatario:</label>
-              <input type="email" className="cuadroTexto" value={correo} onChange={e => setCorreo(e.target.value)} style={{ width: '100%' }} />
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                  Asunto:
+                </label>
+                <input
+                  type="text"
+                  value={asunto}
+                  onChange={(e) => setAsunto(e.target.value)}
+                  placeholder="Asunto del correo"
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid #ddd',
+                    borderRadius: '6px',
+                    fontSize: '1rem'
+                  }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                  Mensaje:
+                </label>
+                <textarea
+                  value={mensaje}
+                  onChange={(e) => setMensaje(e.target.value)}
+                  placeholder="Escriba un mensaje personalizado..."
+                  rows="8"
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid #ddd',
+                    borderRadius: '6px',
+                    fontSize: '1rem',
+                    resize: 'vertical',
+                    fontFamily: 'monospace'
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+                <button
+                  onClick={() => setShowEnviarModal(false)}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    border: '1px solid #ddd',
+                    borderRadius: '6px',
+                    backgroundColor: 'white',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={enviarPorCorreo}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    border: 'none',
+                    borderRadius: '6px',
+                    backgroundColor: '#dc2626',
+                    color: 'white',
+                    cursor: 'pointer',
+                    fontWeight: 'bold'
+                  }}
+                >
+                  <i className="fa-solid fa-envelope" style={{ marginRight: '0.5rem' }}></i>
+                  Enviar Notificación
+                </button>
+              </div>
             </div>
-            <div style={{ marginBottom: '1rem' }}>
-              <label>Asunto:</label>
-              <input type="text" className="cuadroTexto" value={asunto} onChange={e => setAsunto(e.target.value)} style={{ width: '100%' }} placeholder={`Pedido Cancelado ${datos.numeroPedido}`} />
-            </div>
-            <div style={{ marginBottom: '1rem' }}>
-              <label>Mensaje:</label>
-              <textarea className="cuadroTexto" value={mensaje} onChange={e => setMensaje(e.target.value)} style={{ width: '100%', minHeight: '80px' }} placeholder="Notificación de cancelación de pedido..." />
-            </div>
-            <button className="btn-enviar-modal" style={{ width: '100%' }} onClick={() => { }}>Enviar</button>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

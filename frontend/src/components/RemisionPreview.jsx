@@ -4,27 +4,61 @@ import './FormatoCotizacion.css';
 
 export default function RemisionPreview({ datos, onClose }) {
   const navigate = useNavigate();
-  // Obtener usuario logueado
-  const usuario = JSON.parse(localStorage.getItem('user') || '{}');
+  // Obtener usuario logueado con fallback
+  const usuarioStorage = JSON.parse(localStorage.getItem('user') || '{}');
+  const usuario = {
+    firstName: usuarioStorage.firstName || 'Equipo',
+    surname: usuarioStorage.surname || 'Pangea',
+    email: usuarioStorage.email || 'info@pangea.com',
+    telefono: usuarioStorage.telefono || '000-000-000',
+    ...usuarioStorage
+  };
   const [showEnviarModal, setShowEnviarModal] = useState(false);
   
+  // Agregar datos por defecto si faltan
+  const datosConDefaults = {
+    numeroRemision: datos?.numeroRemision || 'REM-000',
+    codigoPedido: datos?.codigoPedido || 'PED-000',
+    fechaRemision: datos?.fechaRemision || new Date().toISOString(),
+    estado: datos?.estado || 'activa',
+    total: datos?.total || 0,
+    cliente: {
+      nombre: datos?.cliente?.nombre || 'Cliente de prueba',
+      correo: datos?.cliente?.correo || 'cliente@ejemplo.com',
+      telefono: datos?.cliente?.telefono || '123456789',
+      direccion: datos?.cliente?.direccion || 'Dirección de ejemplo',
+      ciudad: datos?.cliente?.ciudad || 'Ciudad de ejemplo',
+      ...datos?.cliente
+    },
+    productos: datos?.productos?.length ? datos.productos : [
+      {
+        nombre: 'Producto de ejemplo',
+        cantidad: 1,
+        precioUnitario: 100,
+        total: 100,
+        descripcion: 'Descripción de ejemplo'
+      }
+    ],
+    ...datos
+  };
+  
   // Autocompletar información del correo para remisión
-  const [correo, setCorreo] = useState(datos?.cliente?.correo || '');
-  const [asunto, setAsunto] = useState(`Remisión ${datos?.numeroRemision || ''} - ${datos?.cliente?.nombre || 'Cliente'}`);
+  const [correo, setCorreo] = useState(datosConDefaults?.cliente?.correo || '');
+  const [asunto, setAsunto] = useState(`Remisión ${datosConDefaults?.numeroRemision || ''} - ${datosConDefaults?.cliente?.nombre || 'Cliente'}`);
   const [mensaje, setMensaje] = useState(
-    `Estimado/a ${datos?.cliente?.nombre || 'cliente'},
+    `Estimado/a ${datosConDefaults?.cliente?.nombre || 'cliente'},
 
-Esperamos se encuentre bien. Adjunto encontrará la remisión con número ${datos?.numeroRemision || ''}.
+Esperamos se encuentre bien. Adjunto encontrará la remisión con número ${datosConDefaults?.numeroRemision || ''}.
 
 Detalles de la remisión:
-- Fecha: ${datos?.fecha ? new Date(datos.fecha).toLocaleDateString('es-ES') : 'N/A'}
-- Total: $${datos?.total?.toLocaleString('es-ES') || '0'}
-- Productos: ${datos?.productos?.length || 0} artículos
+- Fecha: ${datosConDefaults?.fechaRemision ? new Date(datosConDefaults.fechaRemision).toLocaleDateString('es-ES') : 'N/A'}
+- Total: S/. ${datosConDefaults?.total?.toLocaleString('es-ES') || '0'}
+- Productos: ${datosConDefaults?.productos?.length || 0} artículos
 
 Esta remisión confirma la entrega de los productos solicitados.
 
 Saludos cordiales,
-${usuario?.nombre || 'Equipo de ventas'}
+${usuario?.firstName || 'Equipo'} ${usuario?.surname || 'de ventas'}
 ${usuario?.email ? `\n${usuario.email}` : ''}
 ${usuario?.telefono ? `\nTel: ${usuario.telefono}` : ''}`
   );
@@ -41,7 +75,7 @@ ${usuario?.telefono ? `\nTel: ${usuario.telefono}` : ''}`
     
     // Actualizar datos autocompletados cada vez que se abre el modal
     setCorreo(datos?.cliente?.correo || '');
-    setAsunto(`Remisión ${datos?.numeroRemision || ''} - ${datos?.cliente?.nombre || 'Cliente'} | ${process.env.REACT_APP_COMPANY_NAME || 'Pangea Sistemas'}`);
+    setAsunto(`Remisión ${datos?.numeroRemision || ''} - ${datos?.cliente?.nombre || 'Cliente'} | ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}`);
     setMensaje(
       `Estimado/a ${datos?.cliente?.nombre || 'cliente'},
 
@@ -50,14 +84,16 @@ Esperamos se encuentre muy bien. Adjunto encontrará la remisión de entrega con
 📦 DETALLES DE LA REMISIÓN:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 • Número de remisión: ${datos?.numeroRemision || 'N/A'}
-• Fecha de entrega: ${datos?.fecha ? new Date(datos.fecha).toLocaleDateString('es-ES') : 'N/A'}
+• Fecha de remisión: ${datos?.fechaRemision ? new Date(datos.fechaRemision).toLocaleDateString('es-ES') : 'N/A'}
+• Fecha de entrega: ${datos?.fechaEntrega ? new Date(datos.fechaEntrega).toLocaleDateString('es-ES') : 'N/A'}
 • Cliente: ${datos?.cliente?.nombre || 'N/A'}
 • Correo: ${datos?.cliente?.correo || 'N/A'}
 • Teléfono: ${datos?.cliente?.telefono || 'N/A'}
 • Ciudad: ${datos?.cliente?.ciudad || 'N/A'}
-• Estado: Entregado ✅
+• Estado: ${datos?.estado || 'Entregado'} ✅
 • Total de productos entregados: ${datos?.productos?.length || 0} artículos
-• TOTAL GENERAL: $${totalFinal.toLocaleString('es-ES')}
+• TOTAL GENERAL: S/. ${totalFinal.toLocaleString('es-ES')}
+• Ref. Pedido: ${datos?.codigoPedido || 'N/A'}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Esta remisión confirma oficialmente la entrega exitosa de todos los productos solicitados según las especificaciones acordadas.
@@ -75,8 +111,8 @@ ${usuario?.firstName || usuario?.nombre || 'Equipo de entrega'} ${usuario?.surna
 📧 Correo: ${usuario.email}` : ''}${usuario?.telefono ? `
 📞 Teléfono: ${usuario.telefono}` : ''}
 
-${process.env.REACT_APP_COMPANY_NAME || 'Pangea Sistemas'}
-🌐 Soluciones tecnológicas integrales`
+${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
+🌐 Productos de calidad`
     );
     setShowEnviarModal(true);
   };
@@ -122,311 +158,625 @@ ${process.env.REACT_APP_COMPANY_NAME || 'Pangea Sistemas'}
   };
 
   // Generar número de remisión si no existe
-  const numeroRemision = datos.numeroRemision || `REM-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+  const numeroRemision = datosConDefaults.numeroRemision || `REM-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+
+  // Debug: Ver qué datos están llegando
+  console.log('📦 Datos de remisión recibidos:', datos);
+  console.log('👥 Datos del cliente:', datos?.cliente);
+  console.log('📋 Datos de productos:', datos?.productos);
+  console.log('🏢 Número de remisión:', datos?.numeroRemision);
+  console.log('💰 Total:', datos?.total);
+  console.log('📅 Fecha remisión:', datos?.fechaRemision);
+  console.log('🔄 Estado:', datos?.estado);
 
   return (
-    <div className="modal-cotizacion-overlay" style={{ alignItems: 'flex-start', paddingTop: '50px', overflow: 'auto' }}>
-      <div className="modal-cotizacion" style={{ maxWidth: '95vw', maxHeight: 'none', width: '900px', height: 'auto', marginBottom: '50px' }}>
-        <button className="close-modal" onClick={onClose}>×</button>
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <span className='modal-title'>Remisión {numeroRemision}</span>
-          <div className="botones-cotizacion" style={{ display: 'flex', gap: '18px', justifyContent: 'center', marginBottom: '1rem' }}>
-            <button className="btn-cotizacion moderno" title="Confirmar Entrega" onClick={() => {}}>
-            </button>
-            <button className="btn-cotizacion moderno" title="Enviar" onClick={abrirModalEnvio}>
-              <i className="fa-solid fa-envelope" style={{ fontSize: '1rem', color: '#EA4335', marginRight: '6px' }}></i>
-              Enviar
-            </button>
-            <button className="btn-cotizacion moderno" title="Imprimir" onClick={() => {
-              // Método seguro de impresión sin manipular DOM
-              const printContent = document.getElementById('pdf-remision-block');
-              const newWindow = window.open('', '_blank');
-              newWindow.document.write(`
-                <html>
-                  <head>
-                    <title>Remisión</title>
-                    <style>
-                      body { font-family: Arial, sans-serif; margin: 20px; }
-                      table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-                      th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-                      th { background-color: #f2f2f2; }
-                      .header { text-align: center; margin-bottom: 30px; }
-                      .info-section { margin: 20px 0; }
-                      .signature-section { margin-top: 50px; }
-                    </style>
-                  </head>
-                  <body>
-                    ${printContent.innerHTML}
-                  </body>
-                </html>
-              `);
-              newWindow.document.close();
-              newWindow.focus();
-              newWindow.print();
-              newWindow.close();
-            }}>
+    <div className="modal-cotizacion-overlay" style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.8)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 1000,
+      padding: '1rem'
+    }}>
+      <div style={{
+        backgroundColor: 'white',
+        borderRadius: '15px',
+        padding: '0',
+        maxWidth: '95vw',
+        maxHeight: '95vh',
+        width: '1000px',
+        display: 'flex',
+        flexDirection: 'column',
+        boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+        overflow: 'hidden'
+      }}>
+        {/* Header del modal */}
+        <div style={{
+          background: 'linear-gradient(135deg, #059669, #065f46)',
+          color: 'white',
+          padding: '1.5rem 2rem',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <i className="fa-solid fa-truck" style={{ fontSize: '1.8rem' }}></i>
+            <div>
+              <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 'bold' }}>
+                Vista Previa - Remisión
+              </h2>
+              <p style={{ margin: 0, opacity: 0.9, fontSize: '0.95rem' }}>
+                N° {numeroRemision}
+              </p>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            {/* Botón de imprimir */}
+            <button
+              onClick={() => {
+                const printContent = document.querySelector('.pdf-remision');
+                const newWindow = window.open('', '_blank');
+                newWindow.document.write(`
+                  <html>
+                    <head>
+                      <title>Remisión - ${numeroRemision}</title>
+                      <style>
+                        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+                        .header { text-align: center; margin-bottom: 30px; padding: 20px; background: linear-gradient(135deg, #059669, #065f46); color: white; border-radius: 10px; }
+                        .info-section { margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; }
+                        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+                        th { background: linear-gradient(135deg, #059669, #065f46); color: white; font-weight: bold; }
+                        .total-row { background: #d1fae5; font-weight: bold; }
+                        .status-badge { background: #059669; color: white; padding: 8px 16px; border-radius: 20px; display: inline-block; }
+                      </style>
+                    </head>
+                    <body>
+                      ${printContent.innerHTML}
+                    </body>
+                  </html>
+                `);
+                newWindow.document.close();
+                newWindow.focus();
+                newWindow.print();
+                newWindow.close();
+              }}
+              style={{
+                background: 'rgba(255, 255, 255, 0.2)',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '0.75rem',
+                color: 'white',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                fontSize: '0.9rem',
+                fontWeight: 'bold',
+                transition: 'all 0.3s ease'
+              }}
+              onMouseEnter={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.3)'}
+              onMouseLeave={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.2)'}
+            >
               <i className="fa-solid fa-print" style={{ fontSize: '1.2rem', marginRight: '8px' }}></i>
             </button>
+
+            {/* Botón de enviar por correo */}
+            <button
+              onClick={abrirModalEnvio}
+              style={{
+                background: 'rgba(255, 255, 255, 0.2)',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '0.75rem 1rem',
+                color: 'white',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                fontSize: '0.9rem',
+                fontWeight: 'bold',
+                transition: 'all 0.3s ease'
+              }}
+              onMouseEnter={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.3)'}
+              onMouseLeave={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.2)'}
+            >
+              <i className="fa-solid fa-envelope"></i>
+              Enviar
+            </button>
+
+            {/* Botón de cerrar */}
+            <button
+              onClick={onClose}
+              style={{
+                background: 'rgba(255, 255, 255, 0.2)',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '0.75rem',
+                color: 'white',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                fontSize: '1.2rem',
+                transition: 'all 0.3s ease'
+              }}
+              onMouseEnter={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.3)'}
+              onMouseLeave={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.2)'}
+            >
+              <i className="fa-solid fa-times"></i>
+            </button>
           </div>
         </div>
 
-        {/* Contenido PDF debajo */}
-        <div
-          className="pdf-cotizacion"
-          id="pdf-remision-block"
-          style={{ 
-            background: '#fff', 
-            padding: '1.5rem', 
-            borderRadius: '8px', 
-            boxShadow: '0 2px 8px rgba(0,0,0,0.08)', 
-            marginTop: '0.5rem', 
-            userSelect: 'none', 
-            WebkitUserSelect: 'none', 
-            MozUserSelect: 'none', 
-            msUserSelect: 'none', 
-            fontSize: '0.9rem',
-            maxHeight: '85vh',
-            overflowY: 'auto'
-          }}
-          onCopy={e => e.preventDefault()}
-        >
-          <div className="cotizacion-encabezado">
-            <h2 style={{ color: '#2563eb', fontWeight: 'bold', fontSize: '1.5rem', margin: '0 0 0.5rem 0' }}>REMISIÓN</h2>
-          </div>
+        {/* Contenido scrolleable */}
+        <div style={{
+          flex: 1,
+          overflow: 'auto',
+          padding: '2rem',
+          backgroundColor: '#f8f9fa'
+        }}>
 
-          {/* Información de envío */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', fontSize: '0.8rem', marginBottom: '0.75rem' }}>
-            <div style={{ flex: 1 }}>
-              <h4 style={{ color: '#374151', marginBottom: '0.3rem', fontSize: '0.85rem' }}>ENTREGAR A:</h4>
-              <div style={{ backgroundColor: '#f9fafb', padding: '0.5rem', borderRadius: '4px', border: '1px solid #e5e7eb' }}>
-                <p style={{ fontWeight: 'bold', marginBottom: '0.15rem', fontSize: '0.8rem' }}>
-                  {datos.cliente?.nombre || 'Cliente no especificado'}
-                </p>
-                <p style={{ marginBottom: '0.15rem', fontSize: '0.75rem' }}>
-                  {datos.cliente?.direccion || 'Dirección no especificada'}
-                </p>
-                <p style={{ marginBottom: '0.15rem', fontSize: '0.75rem' }}>
-                  {datos.cliente?.ciudad || 'Ciudad no especificada'}
-                </p>
-                <p style={{ marginBottom: '0.15rem', fontSize: '0.75rem' }}>
-                  Tel: {datos.cliente?.telefono || 'No especificado'}
-                </p>
-                <p style={{ fontSize: '0.75rem' }}>
-                  {datos.cliente?.correo || 'Sin correo'}
-                </p>
+        {/* Contenido scrolleable */}
+        <div style={{
+          flex: 1,
+          overflow: 'auto',
+          padding: '2rem',
+          backgroundColor: '#f8f9fa'
+        }}>
+          {/* Contenido de la remisión */}
+          <div
+            className="pdf-remision"
+            id="pdf-remision-block"
+            style={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              background: '#fff', 
+              padding: '2rem', 
+              borderRadius: '10px', 
+              boxShadow: '0 2px 8px rgba(0,0,0,0.08)', 
+              marginTop: '1rem',
+              userSelect: 'none',
+              WebkitUserSelect: 'none',
+              MozUserSelect: 'none',
+              msUserSelect: 'none'
+            }}
+            onCopy={e => e.preventDefault()}
+            onSelectStart={e => e.preventDefault()}
+          >
+            <div className="header" style={{
+              textAlign: 'center',
+              color: 'white',
+              marginBottom: '2rem',
+              padding: '1.5rem',
+              background: 'linear-gradient(135deg, #059669, #065f46)',
+              borderRadius: '8px',
+              fontSize: '1.8rem',
+              fontWeight: 'bold'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem' }}>
+                <i className="fa-solid fa-truck" style={{ fontSize: '2rem' }}></i>
+                <div>
+                  <div>REMISIÓN</div>
+                  <div style={{ fontSize: '1rem', fontWeight: 'normal', marginTop: '0.5rem' }}>
+                    N° {numeroRemision}
+                  </div>
+                </div>
               </div>
             </div>
-            
-            <div style={{ flex: 1, marginLeft: '1rem' }}>
-              <h4 style={{ color: '#374151', marginBottom: '0.3rem', fontSize: '0.85rem' }}>REMITE:</h4>
-              <div style={{ backgroundColor: '#f9fafb', padding: '0.5rem', borderRadius: '4px', border: '1px solid #e5e7eb' }}>
-                <p style={{ fontWeight: 'bold', marginBottom: '0.15rem', fontSize: '0.8rem' }}>{datos.empresa?.nombre || 'PANGEA'}</p>
-                <p style={{ marginBottom: '0.15rem', fontSize: '0.75rem' }}>{datos.empresa?.direccion || ''}</p>
-                <p style={{ marginBottom: '0.15rem', fontSize: '0.75rem' }}>Responsable: {usuario.firstName || ''} {usuario.surname || ''}</p>
-                <p style={{ marginBottom: '0.15rem', color: '#6b7280', fontSize: '0.75rem' }}>
-                  Ref. Pedido: {datos.numeroPedido || datos.codigo || 'N/A'}
-                </p>
-                {(datos.numeroCotizacion || datos.cotizacion?.numero) && (
-                  <p style={{ marginBottom: '0.15rem', color: '#6b7280', fontSize: '0.75rem' }}>
-                    Ref. Cotización: {datos.numeroCotizacion || datos.cotizacion?.numero}
+
+            {/* Información del cliente y empresa */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '2rem',
+              marginBottom: '2rem'
+            }}>
+              <div>
+                <h3 style={{ 
+                  borderBottom: '3px solid #059669', 
+                  paddingBottom: '0.5rem', 
+                  color: '#059669',
+                  fontSize: '1.2rem',
+                  fontWeight: 'bold',
+                  marginBottom: '1rem'
+                }}>
+                  Entregar a:
+                </h3>
+                <div style={{ lineHeight: '1.8' }}>
+                  <p><strong>Cliente:</strong> {datosConDefaults.cliente?.nombre || 'Cliente no especificado'}</p>
+                  <p><strong>Documento:</strong> {datosConDefaults.cliente?.documentoIdentidad || datosConDefaults.cliente?.cedula || datosConDefaults.cliente?.nit || 'N/A'}</p>
+                  <p><strong>Dirección:</strong> {datosConDefaults.cliente?.direccion || 'Dirección no especificada'}</p>
+                  <p><strong>Ciudad:</strong> {datosConDefaults.cliente?.ciudad || 'Ciudad no especificada'}</p>
+                  <p><strong>Teléfono:</strong> {datosConDefaults.cliente?.telefono || 'No especificado'}</p>
+                  <p><strong>Email:</strong> {datosConDefaults.cliente?.correo || 'Sin correo'}</p>
+                </div>
+              </div>
+
+              <div>
+                <h3 style={{ 
+                  borderBottom: '3px solid #059669', 
+                  paddingBottom: '0.5rem', 
+                  color: '#059669',
+                  fontSize: '1.2rem',
+                  fontWeight: 'bold',
+                  marginBottom: '1rem'
+                }}>
+                  Remite:
+                </h3>
+                <div style={{ lineHeight: '1.8' }}>
+                  <p><strong>Empresa:</strong> {datosConDefaults.empresa?.nombre || 'JLA GLOBAL COMPANY'}</p>
+                  <p><strong>Dirección:</strong> {datosConDefaults.empresa?.direccion || 'Cl. 21 # 5 - 52 C19, Chía, Cundinamarca'}</p>
+                  <p><strong>Responsable:</strong> {usuario.firstName || ''} {usuario.surname || ''}</p>
+                  <p><strong>Ref. Pedido:</strong> {datosConDefaults.codigoPedido || 'N/A'}</p>
+                  <p><strong>Ref. Cotización:</strong> {datosConDefaults.codigoCotizacion || 'N/A'}</p>
+                  <p><strong>Fecha Remisión:</strong> {datosConDefaults.fechaRemision ? new Date(datosConDefaults.fechaRemision).toLocaleDateString('es-ES') : 'N/A'}</p>
+                  <p><strong>Estado:</strong> 
+                    <span style={{
+                      background: datosConDefaults.estado === 'activa' ? '#059669' : datosConDefaults.estado === 'cancelada' ? '#dc2626' : '#6b7280',
+                      color: 'white',
+                      padding: '4px 12px',
+                      borderRadius: '15px',
+                      fontSize: '0.9rem',
+                      marginLeft: '0.5rem'
+                    }}>
+                      {datosConDefaults.estado?.toUpperCase() || 'ACTIVA'}
+                    </span>
                   </p>
-                )}
+                  {datosConDefaults.fechaEntrega && (
+                    <p><strong>Fecha Entrega:</strong> {new Date(datosConDefaults.fechaEntrega).toLocaleDateString('es-ES')}</p>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
 
-          <hr />
-
-          {/* Información del envío */}
-          {datos.observacion && (
-            <div style={{ marginBottom: '0.75rem' }}>
-              <h4 style={{ color: '#374151', fontSize: '0.85rem', marginBottom: '0.3rem' }}>Observaciones:</h4>
-              <div style={{ backgroundColor: '#fffbeb', padding: '0.5rem', borderRadius: '4px', border: '1px solid #fed7aa' }}>
-                <p style={{ margin: 0, fontSize: '0.75rem' }}>{datos.observacion}</p>
+            {/* Observaciones */}
+            {datos.observacion && (
+              <div style={{ marginBottom: '2rem' }}>
+                <h3 style={{ 
+                  borderBottom: '3px solid #059669', 
+                  paddingBottom: '0.5rem', 
+                  color: '#059669',
+                  fontSize: '1.2rem',
+                  fontWeight: 'bold',
+                  marginBottom: '1rem'
+                }}>
+                  Observaciones
+                </h3>
+                <div style={{
+                  background: '#ecfdf5',
+                  padding: '1rem',
+                  borderRadius: '8px',
+                  borderLeft: '4px solid #059669',
+                  lineHeight: '1.6'
+                }}>
+                  {datos.observacion}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Tabla de productos */}
-          <table className="tabla-cotizacion" style={{ fontSize: '0.8rem', width: '100%', marginBottom: '1rem' }}>
-              <thead>
-              <tr style={{ backgroundColor: '#f3f4f6' }}>
-                <th style={{ textAlign: 'left', padding: '0.6rem', fontSize: '0.8rem' }}>Cant.</th>
-                <th style={{ textAlign: 'left', padding: '0.6rem', fontSize: '0.8rem' }}>Producto</th>
-                <th style={{ textAlign: 'left', padding: '0.6rem', fontSize: '0.8rem' }}>Descripción</th>
-                <th style={{ textAlign: 'right', padding: '0.6rem', fontSize: '0.8rem' }}>Valor Unit.</th>
-                <th style={{ textAlign: 'right', padding: '0.6rem', fontSize: '0.8rem' }}>Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {datos.productos && datos.productos.length > 0 ? datos.productos.map((p, idx) => {
-                console.log('Producto en remisión:', p); // Debug
-                return (
-                  <tr key={idx} style={{ borderBottom: '1px solid #e5e7eb' }}>
-                    <td style={{ padding: '0.6rem', fontWeight: 'bold', fontSize: '0.8rem' }}>
-                      {p.cantidad || 0}
+            {/* Tabla de productos */}
+            <div style={{ marginBottom: '2rem' }}>
+              <h3 style={{ 
+                borderBottom: '3px solid #059669', 
+                paddingBottom: '0.5rem', 
+                color: '#059669',
+                fontSize: '1.2rem',
+                fontWeight: 'bold',
+                marginBottom: '1rem'
+              }}>
+                Productos Entregados
+              </h3>
+              <table className="tabla-cotizacion" style={{
+                width: '100%',
+                borderCollapse: 'collapse',
+                marginTop: '1rem',
+                borderRadius: '8px',
+                overflow: 'hidden',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+              }}>
+                <thead>
+                  <tr style={{ background: 'linear-gradient(135deg, #059669, #065f46)', color: 'white' }}>
+                    <th style={{ padding: '1rem', textAlign: 'center', fontWeight: 'bold' }}>Cant.</th>
+                    <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 'bold' }}>Producto</th>
+                    <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 'bold' }}>Descripción</th>
+                    <th style={{ padding: '1rem', textAlign: 'right', fontWeight: 'bold' }}>Valor Unit.</th>
+                    <th style={{ padding: '1rem', textAlign: 'right', fontWeight: 'bold' }}>Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {datosConDefaults.productos && datosConDefaults.productos.length > 0 ? datosConDefaults.productos.map((p, idx) => (
+                    <tr key={idx} style={{ 
+                      borderBottom: '1px solid #eee',
+                      backgroundColor: idx % 2 === 0 ? '#fafafa' : 'white'
+                    }}>
+                      <td style={{ padding: '1rem', textAlign: 'center', fontWeight: 'bold' }}>
+                        {p.cantidad || 0}
+                      </td>
+                      <td style={{ padding: '1rem' }}>
+                        <div style={{ fontWeight: 'bold', color: '#333' }}>
+                          {p.nombre || 'Producto sin nombre'}
+                        </div>
+                        {p.codigo && (
+                          <div style={{ fontSize: '0.85rem', color: '#666', marginTop: '4px' }}>
+                            Código: {p.codigo}
+                          </div>
+                        )}
+                      </td>
+                      <td style={{ padding: '1rem', color: '#666' }}>
+                        {p.descripcion || 'Sin descripción'}
+                      </td>
+                      <td style={{ padding: '1rem', textAlign: 'right' }}>
+                        S/. {(p.precioUnitario || 0).toLocaleString('es-ES')}
+                      </td>
+                      <td style={{ padding: '1rem', textAlign: 'right', fontWeight: 'bold' }}>
+                        S/. {(p.total || (p.cantidad * p.precioUnitario) || 0).toLocaleString('es-ES')}
+                      </td>
+                    </tr>
+                  )) : (
+                    <tr>
+                      <td colSpan={5} style={{ padding: '1rem', textAlign: 'center', color: '#666' }}>
+                        No hay productos disponibles
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+                <tfoot>
+                  <tr style={{ 
+                    background: 'linear-gradient(135deg, #ecfdf5, #d1fae5)', 
+                    borderTop: '2px solid #059669' 
+                  }}>
+                    <td colSpan="4" style={{ 
+                      padding: '1rem', 
+                      textAlign: 'right', 
+                      fontWeight: 'bold', 
+                      fontSize: '1.1rem',
+                      color: '#059669'
+                    }}>
+                      TOTAL A ENTREGAR:
                     </td>
-                    <td style={{ padding: '0.6rem', fontSize: '0.8rem' }}>
-                      {p.product?.name || p.producto?.name || p.nombre || 'Producto sin nombre'}
-                    </td>
-                    <td style={{ padding: '0.6rem', fontSize: '0.8rem', color: '#6b7280' }}>
-                      {p.product?.description || p.descripcion || 'Sin descripción'}
-                    </td>
-                    <td style={{ padding: '0.6rem', textAlign: 'right', fontSize: '0.8rem' }}>
-                      ${(p.valorUnitario || p.precioUnitario || p.product?.price || 0).toLocaleString('es-CO')}
-                    </td>
-                    <td style={{ padding: '0.6rem', textAlign: 'right', fontWeight: 'bold', fontSize: '0.8rem' }}>
-                      ${(() => {
-                        const cantidad = parseFloat(p.cantidad) || 0;
-                        const precio = parseFloat(p.valorUnitario || p.precioUnitario || p.product?.price) || 0;
-                        return (cantidad * precio).toLocaleString('es-CO');
-                      })()}
+                    <td style={{ 
+                      padding: '1rem', 
+                      textAlign: 'right', 
+                      fontWeight: 'bold', 
+                      fontSize: '1.3rem',
+                      color: '#059669'
+                    }}>
+                      S/. {datosConDefaults.total || (datosConDefaults.productos && datosConDefaults.productos.length > 0 ? datosConDefaults.productos
+                        .reduce((acc, p) => {
+                          const cantidad = parseFloat(p.cantidad) || 0;
+                          const precio = parseFloat(p.precioUnitario || p.valorUnitario || p.product?.price) || 0;
+                          return acc + (cantidad * precio);
+                        }, 0)
+                        .toLocaleString('es-ES') : '0')}
                     </td>
                   </tr>
-                );
-              }) : (
-                <tr>
-                  <td colSpan={5} style={{ padding: '1rem', textAlign: 'center', fontSize: '0.8rem', color: '#6b7280' }}>
-                    No hay productos disponibles
-                  </td>
-                </tr>
-              )}
-            </tbody>
-            <tfoot>
-              <tr style={{ backgroundColor: '#f9fafb', fontWeight: 'bold' }}>
-                <td colSpan={4} style={{ padding: '0.75rem', textAlign: 'right', fontSize: '0.9rem' }}>
-                  TOTAL A ENTREGAR:
-                </td>
-                <td style={{ padding: '0.75rem', textAlign: 'right', fontSize: '1rem', color: '#059669' }}>
-                  ${datos.productos && datos.productos.length > 0 ? datos.productos
-                    .reduce((acc, p) => {
-                      const cantidad = parseFloat(p.cantidad) || 0;
-                      const precio = parseFloat(p.valorUnitario || p.precioUnitario || p.product?.price) || 0;
-                      return acc + (cantidad * precio);
-                    }, 0)
-                    .toLocaleString('es-CO') : '0'}
-                </td>
-              </tr>
-            </tfoot>
-          </table>
+                </tfoot>
+              </table>
+            </div>
 
-          {/* Sección de firmas */}
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            marginTop: '1rem', 
-            paddingTop: '0.75rem',
-            borderTop: '1px solid #e5e7eb'
-          }}>
-            <div style={{ textAlign: 'center', flex: 1 }}>
-              <div style={{ borderTop: '1px solid #374151', marginTop: '1.5rem', paddingTop: '0.3rem' }}>
-                <p style={{ fontSize: '0.7rem', color: '#6b7280', margin: 0 }}>ENTREGADO POR:</p>
-                <p style={{ fontSize: '0.65rem', color: '#6b7280', margin: 0 }}>
-                </p>
+            {/* Información adicional de la remisión */}
+            {(datosConDefaults.observaciones || datosConDefaults.fechaEntrega) && (
+              <div style={{ 
+                marginTop: '2rem',
+                padding: '1.5rem',
+                background: 'linear-gradient(135deg, #f0fdf4, #ecfdf5)',
+                borderRadius: '8px',
+                border: '1px solid #10b981'
+              }}>
+                <h4 style={{ color: '#059669', marginBottom: '1rem', fontSize: '1.1rem', fontWeight: 'bold' }}>
+                  Información Adicional
+                </h4>
+                <div style={{ lineHeight: '1.6' }}>
+                  {datosConDefaults.fechaEntrega && (
+                    <p><strong>Fecha Entrega:</strong> {new Date(datosConDefaults.fechaEntrega).toLocaleDateString('es-ES')}</p>
+                  )}
+                  {datosConDefaults.observaciones && (
+                    <div>
+                      <strong>Observaciones:</strong>
+                      <div style={{ 
+                        marginTop: '0.5rem', 
+                        padding: '1rem', 
+                        background: 'white', 
+                        borderRadius: '6px',
+                        border: '1px solid #d1d5db',
+                        whiteSpace: 'pre-wrap'
+                      }}>
+                        {datosConDefaults.observaciones}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Sección de firmas */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '3rem',
+              marginTop: '3rem',
+              paddingTop: '2rem',
+              borderTop: '1px solid #e5e7eb'
+            }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ borderTop: '2px solid #374151', marginTop: '3rem', paddingTop: '0.5rem' }}>
+                  <p style={{ fontSize: '0.9rem', color: '#6b7280', margin: 0, fontWeight: 'bold' }}>ENTREGADO POR:</p>
+                </div>
+              </div>
+              
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ borderTop: '2px solid #374151', marginTop: '3rem', paddingTop: '0.5rem' }}>
+                  <p style={{ fontSize: '0.9rem', color: '#6b7280', margin: 0, fontWeight: 'bold' }}>RECIBIDO POR:</p>
+                </div>
               </div>
             </div>
-            
-            <div style={{ textAlign: 'center', flex: 1, marginLeft: '1rem' }}>
-              <div style={{ borderTop: '1px solid #374151', marginTop: '1.5rem', paddingTop: '0.3rem' }}>
-                <p style={{ fontSize: '0.7rem', color: '#6b7280', margin: 0 }}>RECIBIDO POR:</p>
-                <p style={{ fontSize: '0.65rem', color: '#6b7280', margin: 0 }}>
-                </p>
+
+            {/* Términos y condiciones */}
+            <div style={{ 
+              marginTop: '2rem', 
+              padding: '1.5rem', 
+              background: 'linear-gradient(135deg, #f8f9fa, #e9ecef)', 
+              borderRadius: '8px', 
+              borderTop: '3px solid #059669'
+            }}>
+              <h5 style={{ fontSize: '1rem', color: '#059669', marginBottom: '0.8rem', fontWeight: 'bold' }}>TÉRMINOS Y CONDICIONES:</h5>
+              <ul style={{ fontSize: '0.9rem', color: '#6b7280', margin: 0, paddingLeft: '1.5rem', lineHeight: '1.5' }}>
+                <li>El cliente debe verificar la mercancía al momento de la entrega</li>
+                <li>Los reclamos por daños o faltantes deben realizarse en el momento de la entrega</li>
+                <li>Una vez firmada la remisión, se da por aceptada la mercancía en perfectas condiciones</li>
+              </ul>
+            </div>
+
+            {/* Footer */}
+            <div style={{
+              marginTop: '3rem',
+              padding: '1.5rem',
+              background: 'linear-gradient(135deg, #f8f9fa, #e9ecef)',
+              borderRadius: '8px',
+              textAlign: 'center',
+              borderTop: '3px solid #059669'
+            }}>
+              <div style={{ 
+                fontSize: '1.1rem', 
+                fontWeight: 'bold', 
+                color: '#059669',
+                marginBottom: '0.5rem'
+              }}>
+                JLA GLOBAL COMPANY
+              </div>
+              <div style={{ fontSize: '0.9rem', color: '#666' }}>
+                Gracias por su preferencia • Remisión de entrega
               </div>
             </div>
-          </div>
-
-          {/* Términos y condiciones */}
-          <div style={{ 
-            marginTop: '1rem', 
-            padding: '0.75rem', 
-            backgroundColor: '#f8fafc', 
-            borderRadius: '6px', 
-            border: '1px solid #e2e8f0'
-          }}>
-            <h5 style={{ fontSize: '0.8rem', color: '#374151', marginBottom: '0.4rem' }}>TÉRMINOS Y CONDICIONES:</h5>
-            <ul style={{ fontSize: '0.7rem', color: '#6b7280', margin: 0, paddingLeft: '1rem', lineHeight: '1.3' }}>
-              <li>El cliente debe verificar la mercancía al momento de la entrega</li>
-              <li>Los reclamos por daños o faltantes deben realizarse en el momento de la entrega</li>
-              <li>Una vez firmada la remisión, se da por aceptada la mercancía en perfectas condiciones</li>
-            </ul>
           </div>
         </div>
+        </div>
+
+        {/* Modal para enviar por correo */}
+        {showEnviarModal && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000
+          }}>
+            <div style={{
+              backgroundColor: 'white',
+              padding: '2rem',
+              borderRadius: '10px',
+              maxWidth: '600px',
+              width: '90%',
+              maxHeight: '80vh',
+              overflow: 'auto'
+            }}>
+              <h3 style={{ marginBottom: '1rem', color: '#059669' }}>
+                <i className="fa-solid fa-envelope" style={{ marginRight: '0.5rem' }}></i>
+                Enviar Remisión por Correo
+              </h3>
+              
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                  Correo del destinatario:
+                </label>
+                <input
+                  type="email"
+                  value={correo}
+                  onChange={(e) => setCorreo(e.target.value)}
+                  placeholder="ejemplo@correo.com"
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid #ddd',
+                    borderRadius: '6px',
+                    fontSize: '1rem'
+                  }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                  Asunto:
+                </label>
+                <input
+                  type="text"
+                  value={asunto}
+                  onChange={(e) => setAsunto(e.target.value)}
+                  placeholder="Asunto del correo"
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid #ddd',
+                    borderRadius: '6px',
+                    fontSize: '1rem'
+                  }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                  Mensaje:
+                </label>
+                <textarea
+                  value={mensaje}
+                  onChange={(e) => setMensaje(e.target.value)}
+                  placeholder="Escriba un mensaje personalizado..."
+                  rows="8"
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid #ddd',
+                    borderRadius: '6px',
+                    fontSize: '1rem',
+                    resize: 'vertical',
+                    fontFamily: 'monospace'
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+                <button
+                  onClick={() => setShowEnviarModal(false)}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    border: '1px solid #ddd',
+                    borderRadius: '6px',
+                    backgroundColor: 'white',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={enviarRemisionPorCorreo}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    border: 'none',
+                    borderRadius: '6px',
+                    backgroundColor: '#059669',
+                    color: 'white',
+                    cursor: 'pointer',
+                    fontWeight: 'bold'
+                  }}
+                >
+                  <i className="fa-solid fa-envelope" style={{ marginRight: '0.5rem' }}></i>
+                  Enviar Remisión
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
-
-      {showEnviarModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
-          <div className="modal-cotizacion" style={{ maxWidth: 500, maxHeight: '90vh', overflow: 'auto' }}>
-            <button className="close-modal" onClick={() => setShowEnviarModal(false)}>×</button>
-            <h3 style={{ textAlign: 'center', marginBottom: '1rem', color: '#333' }}>
-              📧 Enviar Remisión por Correo
-            </h3>
-            
-            {/* Información de la remisión */}
-            <div style={{ backgroundColor: '#f8f9fa', padding: '10px', borderRadius: '5px', marginBottom: '1rem', fontSize: '14px' }}>
-              <strong>Remisión:</strong> {datos?.numeroRemision}<br/>
-              <strong>Cliente:</strong> {datos?.cliente?.nombre}<br/>
-              <strong>Total:</strong> ${datos?.total?.toLocaleString('es-ES')}
-            </div>
-
-            <div style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-                📬 Correo destinatario:
-              </label>
-              <input 
-                type="email" 
-                className="cuadroTexto" 
-                value={correo} 
-                onChange={e => setCorreo(e.target.value)} 
-                style={{ width: '100%' }}
-                placeholder="correo@ejemplo.com"
-              />
-            </div>
-            
-            <div style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-                📝 Asunto:
-              </label>
-              <input 
-                type="text" 
-                className="cuadroTexto" 
-                value={asunto} 
-                onChange={e => setAsunto(e.target.value)} 
-                style={{ width: '100%' }}
-              />
-            </div>
-            
-            <div style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-                💬 Mensaje:
-              </label>
-              <textarea 
-                className="cuadroTexto" 
-                value={mensaje} 
-                onChange={e => setMensaje(e.target.value)} 
-                style={{ width: '100%', minHeight: '120px', resize: 'vertical' }}
-                placeholder="Escriba aquí el mensaje para el cliente..."
-              />
-            </div>
-            
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button 
-                className="btn-enviar-modal" 
-                style={{ flex: 1, backgroundColor: '#28a745', color: 'white', border: 'none', padding: '10px', borderRadius: '5px', cursor: 'pointer' }} 
-                onClick={enviarRemisionPorCorreo}
-              >
-                📧 Enviar Remisión
-              </button>
-              <button 
-                className="btn-cancelar-modal" 
-                style={{ flex: 1, backgroundColor: '#6c757d', color: 'white', border: 'none', padding: '10px', borderRadius: '5px', cursor: 'pointer' }} 
-                onClick={() => setShowEnviarModal(false)}
-              >
-                ❌ Cancelar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
-}
+};

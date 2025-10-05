@@ -12,6 +12,46 @@ import ReactDOM from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import '../cotizaciones-modal.css';
 
+// CSS para diseño avanzado
+const advancedStyles = `
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .cotizaciones-container * {
+    box-sizing: border-box;
+  }
+  
+  .fade-in-up {
+    animation: fadeInUp 0.6s ease-out;
+  }
+  
+  .glassmorphism {
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+  }
+`;
+
+// Inyectar estilos una sola vez
+if (!document.querySelector('#cotizaciones-advanced-styles')) {
+  const styleSheet = document.createElement('style');
+  styleSheet.id = 'cotizaciones-advanced-styles';
+  styleSheet.textContent = advancedStyles;
+  document.head.appendChild(styleSheet);
+}
+
 export default function ListaDeCotizaciones() {
   const [cotizaciones, setCotizaciones] = useState([]);
   const [productos, setProductos] = useState([]);
@@ -561,84 +601,437 @@ export default function ListaDeCotizaciones() {
 
 
   return (
-    <div>
+    <div className="cotizaciones-container">
       <Fijo />
       <div className="content">
         <NavVentas />
         <div className="contenido-modulo">
-          <div className='encabezado-modulo'>
-            <div>
-              <h3 className='titulo-profesional'>Lista de cotizaciones</h3>
-              {/* BOTONES EXPORTAR */}
-              <button
-                onClick={() => exportToExcel(cotizaciones)}
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '0.45rem 0.9rem', border: '1.5px solid #16a34a', borderRadius: '8px', background: 'transparent', color: '#16a34a',
-                  fontSize: '14px', fontWeight: '500', cursor: 'pointer', transition: 'all 0.3s ease'
-                }}
-              >
-                <i className="fa-solid fa-file-excel" style={{ color: 'inherit', fontSize: '16px' }}></i>
-                <span>Exportar a Excel</span>
-              </button>
+          {/* Encabezado profesional del módulo */}
+          <div style={{
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            borderRadius: '15px',
+            padding: '25px 30px',
+            marginBottom: '30px',
+            boxShadow: '0 10px 30px rgba(102, 126, 234, 0.3)',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            <div style={{
+              position: 'absolute',
+              top: '-50%',
+              right: '-10%',
+              width: '200px',
+              height: '200px',
+              background: 'rgba(255,255,255,0.1)',
+              borderRadius: '50%',
+              pointerEvents: 'none'
+            }}></div>
+            <div style={{
+              position: 'absolute',
+              bottom: '-30%',
+              left: '-5%',
+              width: '150px',
+              height: '150px',
+              background: 'rgba(255,255,255,0.08)',
+              borderRadius: '50%',
+              pointerEvents: 'none'
+            }}></div>
+            
+            <div style={{ position: 'relative', zIndex: 2 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
+                <div>
+                  <h3 style={{
+                    color: 'white',
+                    margin: '0 0 8px 0',
+                    fontSize: '2rem',
+                    fontWeight: '700',
+                    letterSpacing: '-0.5px'
+                  }}>
+                    <i className="fa-solid fa-file-invoice" style={{ marginRight: '12px', fontSize: '1.8rem' }}></i>
+                    Lista de Cotizaciones
+                  </h3>
+                  <p style={{
+                    color: 'rgba(255,255,255,0.9)',
+                    margin: 0,
+                    fontSize: '1.1rem',
+                    fontWeight: '400'
+                  }}>
+                    Gestión completa de cotizaciones comerciales
+                  </p>
+                </div>
+                
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                  <button
+                    onClick={() => exportToExcel(cotizaciones)}
+                    style={{
+                      display: 'inline-flex', 
+                      alignItems: 'center', 
+                      gap: '8px', 
+                      padding: '12px 20px', 
+                      border: '2px solid rgba(255,255,255,0.3)', 
+                      borderRadius: '12px', 
+                      background: 'rgba(255,255,255,0.2)', 
+                      color: 'white',
+                      fontSize: '14px', 
+                      fontWeight: '600', 
+                      cursor: 'pointer', 
+                      transition: 'all 0.3s ease',
+                      backdropFilter: 'blur(10px)'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.background = 'rgba(255,255,255,0.3)';
+                      e.target.style.transform = 'translateY(-2px)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.background = 'rgba(255,255,255,0.2)';
+                      e.target.style.transform = 'translateY(0)';
+                    }}
+                  >
+                    <i className="fa-solid fa-file-excel" style={{ fontSize: '16px' }}></i>
+                    <span>Exportar Excel</span>
+                  </button>
 
-              <button
-                onClick={exportarPDF}
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '0.45rem 0.9rem', border: '1.5px solid #dc2626', borderRadius: '8px', background: 'transparent', color: '#dc2626',
-                  fontSize: '14px', fontWeight: '500', cursor: 'pointer', transition: 'all 0.3s ease'
-                }}
-              >
-                <i className="fa-solid fa-file-pdf" style={{ color: 'inherit', fontSize: '16px' }}></i>
-                <span>Exportar a PDF</span>
-              </button>
-
-
+                  <button
+                    onClick={exportarPDF}
+                    style={{
+                      display: 'inline-flex', 
+                      alignItems: 'center', 
+                      gap: '8px', 
+                      padding: '12px 20px', 
+                      border: '2px solid rgba(255,255,255,0.3)', 
+                      borderRadius: '12px', 
+                      background: 'rgba(255,255,255,0.2)', 
+                      color: 'white',
+                      fontSize: '14px', 
+                      fontWeight: '600', 
+                      cursor: 'pointer', 
+                      transition: 'all 0.3s ease',
+                      backdropFilter: 'blur(10px)'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.background = 'rgba(255,255,255,0.3)';
+                      e.target.style.transform = 'translateY(-2px)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.background = 'rgba(255,255,255,0.2)';
+                      e.target.style.transform = 'translateY(0)';
+                    }}
+                  >
+                    <i className="fa-solid fa-file-pdf" style={{ fontSize: '16px' }}></i>
+                    <span>Exportar PDF</span>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
-          <div className="filtros-tabla">
-            <div className="filtro-grupo">
 
-              <label>Fecha:</label>
-              <input type="date" className="filtro-input" value={filtroFecha} onChange={(e) => setFiltroFecha(e.target.value)} />
+          {/* Panel de filtros avanzado */}
+          <div style={{
+            background: 'white',
+            borderRadius: '16px',
+            padding: '25px',
+            marginBottom: '30px',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+            border: '1px solid #e5e7eb'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{
+                  background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                  borderRadius: '12px',
+                  padding: '10px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <i className="fa-solid fa-filter" style={{ color: 'white', fontSize: '16px' }}></i>
+                </div>
+                <h4 style={{ margin: 0, color: '#1f2937', fontSize: '1.3rem', fontWeight: '600' }}>
+                  Filtros y Controles
+                </h4>
+              </div>
+              
+              <div style={{
+                background: '#f8fafc',
+                padding: '8px 16px',
+                borderRadius: '20px',
+                border: '1px solid #e2e8f0',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <i className="fa-solid fa-info-circle" style={{ color: '#3b82f6', fontSize: '14px' }}></i>
+                <span style={{ fontSize: '14px', color: '#475569', fontWeight: '500' }}>
+                  {cotizacionesFiltradas.length} cotización{cotizacionesFiltradas.length !== 1 ? 'es' : ''} encontrada{cotizacionesFiltradas.length !== 1 ? 's' : ''}
+                </span>
+              </div>
             </div>
-            &nbsp;&nbsp;
-            <div className="filtro-grupo">
-              <label>Cliente:</label>
-              <input type="text" className="filtro-input" placeholder="Buscar cliente..." value={filtroCliente} onChange={(e) => setFiltroCliente(e.target.value)} />
-            </div>
-            &nbsp;&nbsp;
-            <div className="filtro-grupo"><br></br>
-              <label>Enviado:</label>
-              <select className="filtro-select" value={filtroEnviado} onChange={(e) => setFiltroEnviado(e.target.value)}>
-                <option value="">Todos</option>
-                <option value="Si">Sí</option>
-                <option value="No">No</option>
-              </select>
+            
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+              gap: '20px',
+              alignItems: 'end'
+            }}>
+              <div>
+                <label style={{ 
+                  display: 'block', 
+                  marginBottom: '8px', 
+                  color: '#374151', 
+                  fontSize: '14px', 
+                  fontWeight: '600' 
+                }}>
+                  <i className="fa-solid fa-calendar" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                  Fecha:
+                </label>
+                <input 
+                  type="date" 
+                  value={filtroFecha} 
+                  onChange={(e) => setFiltroFecha(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    border: '2px solid #e5e7eb',
+                    borderRadius: '10px',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    background: 'white',
+                    color: '#374151',
+                    transition: 'all 0.3s ease'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = '#6366f1'}
+                  onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
+                />
+              </div>
+              
+              <div>
+                <label style={{ 
+                  display: 'block', 
+                  marginBottom: '8px', 
+                  color: '#374151', 
+                  fontSize: '14px', 
+                  fontWeight: '600' 
+                }}>
+                  <i className="fa-solid fa-user" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                  Cliente:
+                </label>
+                <input 
+                  type="text" 
+                  placeholder="Buscar cliente..." 
+                  value={filtroCliente} 
+                  onChange={(e) => setFiltroCliente(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    border: '2px solid #e5e7eb',
+                    borderRadius: '10px',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    background: 'white',
+                    color: '#374151',
+                    transition: 'all 0.3s ease'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = '#6366f1'}
+                  onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
+                />
+              </div>
+              
+              <div>
+                <label style={{ 
+                  display: 'block', 
+                  marginBottom: '8px', 
+                  color: '#374151', 
+                  fontSize: '14px', 
+                  fontWeight: '600' 
+                }}>
+                  <i className="fa-solid fa-envelope" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                  Estado de envío:
+                </label>
+                <select 
+                  value={filtroEnviado} 
+                  onChange={(e) => setFiltroEnviado(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    border: '2px solid #e5e7eb',
+                    borderRadius: '10px',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    background: 'white',
+                    color: '#374151',
+                    transition: 'all 0.3s ease',
+                    cursor: 'pointer'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = '#6366f1'}
+                  onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
+                >
+                  <option value="">📋 Todos</option>
+                  <option value="Si">✅ Enviados</option>
+                  <option value="No">❌ No enviados</option>
+                </select>
+              </div>
             </div>
           </div>
 
 
-          <div className="container-tabla">
-            <div className="table-container">
-              <table id='tabla_cotizaciones'>
+          {/* Tabla de cotizaciones mejorada */}
+          <div style={{
+            background: 'white',
+            borderRadius: '16px',
+            overflow: 'hidden',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+            border: '1px solid #e5e7eb'
+          }}>
+            <div style={{
+              background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)',
+              padding: '20px 25px',
+              borderBottom: '1px solid #e5e7eb',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: '15px'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{
+                  background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                  borderRadius: '12px',
+                  padding: '10px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <i className="fa-solid fa-list" style={{ color: 'white', fontSize: '16px' }}></i>
+                </div>
+                <div>
+                  <h4 style={{ margin: 0, color: '#1f2937', fontSize: '1.3rem', fontWeight: '600' }}>
+                    Cotizaciones Registradas
+                  </h4>
+                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px' }}>
+                    Total: {cotizacionesFiltradas.length} cotización{cotizacionesFiltradas.length !== 1 ? 'es' : ''}
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div style={{ overflow: 'auto' }}>
+              <table style={{
+                width: '100%',
+                borderCollapse: 'collapse',
+                fontSize: '14px'
+              }} id='tabla_cotizaciones'>
                 <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Código de cotización</th>
-                    <th>Fecha elaboración</th>
-                    <th>Cliente</th>
-                    <th>Enviado por correo</th>
-                    <th>Estado</th>
-                    <th>Acciones</th>
+                  <tr style={{ 
+                    background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)',
+                    borderBottom: '2px solid #e5e7eb'
+                  }}>
+                    <th style={{ 
+                      padding: '16px 12px', 
+                      textAlign: 'left', 
+                      fontWeight: '600', 
+                      color: '#374151',
+                      fontSize: '13px',
+                      letterSpacing: '0.5px'
+                    }}>
+                      <i className="fa-solid fa-hashtag" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      #
+                    </th>
+                    <th style={{ 
+                      padding: '16px 12px', 
+                      textAlign: 'left', 
+                      fontWeight: '600', 
+                      color: '#374151',
+                      fontSize: '13px',
+                      letterSpacing: '0.5px'
+                    }}>
+                      <i className="fa-solid fa-code" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      CÓDIGO COTIZACIÓN
+                    </th>
+                    <th style={{ 
+                      padding: '16px 12px', 
+                      textAlign: 'left', 
+                      fontWeight: '600', 
+                      color: '#374151',
+                      fontSize: '13px',
+                      letterSpacing: '0.5px'
+                    }}>
+                      <i className="fa-solid fa-calendar" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      FECHA ELABORACIÓN
+                    </th>
+                    <th style={{ 
+                      padding: '16px 12px', 
+                      textAlign: 'left', 
+                      fontWeight: '600', 
+                      color: '#374151',
+                      fontSize: '13px',
+                      letterSpacing: '0.5px'
+                    }}>
+                      <i className="fa-solid fa-user" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      CLIENTE
+                    </th>
+                    <th style={{ 
+                      padding: '16px 12px', 
+                      textAlign: 'center', 
+                      fontWeight: '600', 
+                      color: '#374151',
+                      fontSize: '13px',
+                      letterSpacing: '0.5px'
+                    }}>
+                      <i className="fa-solid fa-envelope" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      ENVIADO
+                    </th>
+                    <th style={{ 
+                      padding: '16px 12px', 
+                      textAlign: 'center', 
+                      fontWeight: '600', 
+                      color: '#374151',
+                      fontSize: '13px',
+                      letterSpacing: '0.5px'
+                    }}>
+                      <i className="fa-solid fa-flag" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      ESTADO
+                    </th>
+                    <th style={{ 
+                      padding: '16px 12px', 
+                      textAlign: 'center', 
+                      fontWeight: '600', 
+                      color: '#374151',
+                      fontSize: '13px',
+                      letterSpacing: '0.5px'
+                    }}>
+                      <i className="fa-solid fa-cogs" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      ACCIONES
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {currentItems.map((cot, index) => (
-                    <tr key={cot._id} className={highlightId === cot._id ? (blinkOn ? 'row-blink' : 'row-blink-off') : ''}>
-                      <td style={{ padding: '0.6rem', fontWeight: '600' }}>{(currentPage - 1) * itemsPerPage + index + 1}</td>
-                      <td>
+                    <tr key={cot._id} 
+                        className={highlightId === cot._id ? (blinkOn ? 'row-blink' : 'row-blink-off') : ''}
+                        style={{
+                          borderBottom: '1px solid #f3f4f6',
+                          transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = '#f8fafc';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'transparent';
+                        }}
+                    >
+                      <td style={{ padding: '16px 12px', fontWeight: '600', color: '#4b5563' }}>
+                        {(currentPage - 1) * itemsPerPage + index + 1}
+                      </td>
+                      <td style={{ padding: '16px 12px' }}>
                         <a
-                          style={{ cursor: 'pointer', color: '#007bff', textDecoration: 'underline' }}
+                          style={{ 
+                            cursor: 'pointer', 
+                            color: '#3b82f6', 
+                            textDecoration: 'none',
+                            fontWeight: '600',
+                            fontSize: '14px',
+                            transition: 'color 0.2s ease'
+                          }}
                           onClick={async () => {
                             try {
                               const token = localStorage.getItem('token');
@@ -654,84 +1047,175 @@ export default function ListaDeCotizaciones() {
                               Swal.fire('Error', 'No se pudo cargar la cotización completa.', 'error');
                             }
                           }}
+                          onMouseEnter={(e) => e.target.style.color = '#1e40af'}
+                          onMouseLeave={(e) => e.target.style.color = '#3b82f6'}
                         >
                           {cot.codigo}
                         </a>
                       </td>
-                      <td>{new Date(cot.fecha).toLocaleDateString()}</td>
-                      <td>{cot.cliente?.nombre || 'Sin nombre'}</td>
-                      <td>{cot.enviadoCorreo ? 'Sí' : 'No'}</td>
-                      <td>
+                      <td style={{ padding: '16px 12px', color: '#4b5563', fontWeight: '500' }}>
+                        {new Date(cot.fecha).toLocaleDateString('es-ES')}
+                      </td>
+                      <td style={{ padding: '16px 12px' }}>
+                        <div style={{ fontWeight: '600', color: '#1f2937' }}>
+                          {cot.cliente?.nombre || 'Sin nombre'}
+                        </div>
+                      </td>
+                      <td style={{ padding: '16px 12px', textAlign: 'center' }}>
+                        {cot.enviadoCorreo ? (
+                          <span style={{
+                            background: '#dcfce7',
+                            color: '#16a34a',
+                            padding: '6px 12px',
+                            borderRadius: '20px',
+                            fontSize: '12px',
+                            fontWeight: '600',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px'
+                          }}>
+                            <i className="fa-solid fa-check"></i>
+                            SÍ
+                          </span>
+                        ) : (
+                          <span style={{
+                            background: '#fef2f2',
+                            color: '#dc2626',
+                            padding: '6px 12px',
+                            borderRadius: '20px',
+                            fontSize: '12px',
+                            fontWeight: '600',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px'
+                          }}>
+                            <i className="fa-solid fa-times"></i>
+                            NO
+                          </span>
+                        )}
+                      </td>
+                      <td style={{ padding: '16px 12px', textAlign: 'center' }}>
                         {cot.agendada ? (
                           <span style={{
-                            backgroundColor: '#28a745',
+                            backgroundColor: '#16a34a',
                             color: 'white',
-                            padding: '4px 8px',
-                            borderRadius: '12px',
-                            fontSize: '12px',
-                            fontWeight: 'bold'
+                            padding: '8px 12px',
+                            borderRadius: '20px',
+                            fontSize: '11px',
+                            fontWeight: '700',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.5px'
                           }}>
+                            <i className="fa-solid fa-calendar-check" style={{ fontSize: '10px' }}></i>
                             AGENDADA
                           </span>
                         ) : (
                           <span style={{
-                            backgroundColor: '#17a2b8',
+                            backgroundColor: '#0ea5e9',
                             color: 'white',
-                            padding: '4px 8px',
-                            borderRadius: '12px',
-                            fontSize: '12px',
-                            fontWeight: 'bold'
+                            padding: '8px 12px',
+                            borderRadius: '20px',
+                            fontSize: '11px',
+                            fontWeight: '700',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.5px'
                           }}>
+                            <i className="fa-solid fa-clock" style={{ fontSize: '10px' }}></i>
                             PENDIENTE
                           </span>
                         )}
                       </td>
-                      <td>
-                        {isDeletable(cot) && (
-                          <button className='btnTransparente' onClick={() => intentarEliminarCotizacion(cot._id)}>
-                            <i className="fa-solid fa-trash fa-xl" style={{ color: '#dc3545' }} title='Eliminar cotización' />
-                          </button>
-                        )}
-                        {!isAgendada(cot.agendada) && (
-                          <button
-                            className='btnTransparente'
-                            onClick={async () => {
-                              try {
-                                const token = localStorage.getItem('token');
-                                const res = await fetch(`http://localhost:5000/api/cotizaciones/${cot._id}`, {
-                                  headers: { 'Authorization': `Bearer ${token}` }
-                                });
-                                if (!res.ok) throw new Error('No se pudo obtener la cotización');
-                                const data = await res.json();
-                                const cotizacionCompleta = data.data || data;
-                                setCotizacionSeleccionada(cotizacionCompleta);
-                                setModoEdicion(true);
-                              } catch (err) {
-                                Swal.fire('Error', 'No se pudo cargar la cotización completa.', 'error');
-                              }
-                            }}
-                          >
-                            <i className="fa-solid fa-pen-to-square" title='Editar cotización'></i>
-                          </button>
-                        )}
+                      <td style={{ padding: '16px 12px', textAlign: 'center' }}>
+                        <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
+                          {isDeletable(cot) && (
+                            <button 
+                              onClick={() => intentarEliminarCotizacion(cot._id)}
+                              title="Eliminar cotización"
+                              style={{
+                                background: 'linear-gradient(135deg, #fef2f2, #fee2e2)',
+                                color: '#dc2626',
+                                border: 'none',
+                                borderRadius: '8px',
+                                padding: '8px 10px',
+                                cursor: 'pointer',
+                                fontSize: '12px',
+                                fontWeight: '600',
+                                transition: 'all 0.2s ease',
+                                boxShadow: '0 2px 4px rgba(220, 38, 38, 0.2)'
+                              }}
+                              onMouseEnter={(e) => {
+                                e.target.style.transform = 'translateY(-2px)';
+                                e.target.style.boxShadow = '0 4px 8px rgba(220, 38, 38, 0.3)';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.target.style.transform = 'translateY(0)';
+                                e.target.style.boxShadow = '0 2px 4px rgba(220, 38, 38, 0.2)';
+                              }}
+                            >
+                              <i className="fa-solid fa-trash"></i>
+                            </button>
+                          )}
+                          
+                          {!isAgendada(cot.agendada) && (
+                            <button
+                              onClick={async () => {
+                                try {
+                                  const token = localStorage.getItem('token');
+                                  const res = await fetch(`http://localhost:5000/api/cotizaciones/${cot._id}`, {
+                                    headers: { 'Authorization': `Bearer ${token}` }
+                                  });
+                                  if (!res.ok) throw new Error('No se pudo obtener la cotización');
+                                  const data = await res.json();
+                                  const cotizacionCompleta = data.data || data;
+                                  setCotizacionSeleccionada(cotizacionCompleta);
+                                  setModoEdicion(true);
+                                } catch (err) {
+                                  Swal.fire('Error', 'No se pudo cargar la cotización completa.', 'error');
+                                }
+                              }}
+                              title="Editar cotización"
+                              style={{
+                                background: 'linear-gradient(135deg, #dbeafe, #bfdbfe)',
+                                color: '#1e40af',
+                                border: 'none',
+                                borderRadius: '8px',
+                                padding: '8px 10px',
+                                cursor: 'pointer',
+                                fontSize: '12px',
+                                fontWeight: '600',
+                                transition: 'all 0.2s ease',
+                                boxShadow: '0 2px 4px rgba(30, 64, 175, 0.2)'
+                              }}
+                              onMouseEnter={(e) => {
+                                e.target.style.transform = 'translateY(-2px)';
+                                e.target.style.boxShadow = '0 4px 8px rgba(30, 64, 175, 0.3)';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.target.style.transform = 'translateY(0)';
+                                e.target.style.boxShadow = '0 2px 4px rgba(30, 64, 175, 0.2)';
+                              }}
+                            >
+                              <i className="fa-solid fa-pen-to-square"></i>
+                            </button>
+                          )}
 
-
-                        {!isAgendada(cot.agendada) && (
-                          <button
-                            className='btnTransparente'
-                            style={{
-                              opacity: 1,
-                              cursor: 'pointer'
-                            }}
-                            onClick={async () => {
-                              try {
-                                const token = localStorage.getItem('token');
-                                // Obtener cotización completa para asegurar productos y cliente
-                                const res = await fetch(`http://localhost:5000/api/cotizaciones/${cot._id}`, {
-                                  headers: { 'Authorization': `Bearer ${token}` }
-                                });
-                                if (!res.ok) throw new Error('No se pudo obtener la cotización');
-                                const data = await res.json();
+                          {!isAgendada(cot.agendada) && (
+                            <button
+                              onClick={async () => {
+                                try {
+                                  const token = localStorage.getItem('token');
+                                  // Obtener cotización completa para asegurar productos y cliente
+                                  const res = await fetch(`http://localhost:5000/api/cotizaciones/${cot._id}`, {
+                                    headers: { 'Authorization': `Bearer ${token}` }
+                                  });
+                                  if (!res.ok) throw new Error('No se pudo obtener la cotización');
+                                  const data = await res.json();
                                 const cotizacion = data.data || data;
 
                                 const confirm = await Swal.fire({
@@ -825,37 +1309,124 @@ export default function ListaDeCotizaciones() {
                                 Swal.fire('Error', error.message || 'Hubo un problema al agendar la cotización', 'error');
                               }
                             }}
+                            title="Agendar como pedido"
+                            style={{
+                              background: 'linear-gradient(135deg, #dcfce7, #bbf7d0)',
+                              color: '#16a34a',
+                              border: 'none',
+                              borderRadius: '8px',
+                              padding: '8px 10px',
+                              cursor: 'pointer',
+                              fontSize: '12px',
+                              fontWeight: '600',
+                              transition: 'all 0.2s ease',
+                              boxShadow: '0 2px 4px rgba(22, 163, 74, 0.2)'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.target.style.transform = 'translateY(-2px)';
+                              e.target.style.boxShadow = '0 4px 8px rgba(22, 163, 74, 0.3)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.target.style.transform = 'translateY(0)';
+                              e.target.style.boxShadow = '0 2px 4px rgba(22, 163, 74, 0.2)';
+                            }}
                           >
-                            <i
-                              className="fa-solid fa-calendar-plus"
-                              style={{
-                                color: '#28a745'
-                              }}
-                              title={"Agendar venta"}
-                            />
+                            <i className="fa-solid fa-calendar-plus"></i>
                           </button>
-                        )}
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
-                  {cotizaciones.length === 0 && <tr><td colSpan="6">No hay cotizaciones disponibles</td></tr>}
+                  
+                  {cotizacionesFiltradas.length === 0 && (
+                    <tr>
+                      <td colSpan="7" style={{ textAlign: 'center', padding: '80px 20px' }}>
+                        <div style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          gap: '20px'
+                        }}>
+                          <div style={{
+                            background: 'linear-gradient(135deg, #f3f4f6, #e5e7eb)',
+                            borderRadius: '50%',
+                            padding: '25px',
+                            marginBottom: '10px'
+                          }}>
+                            <i className="fa-solid fa-file-invoice" style={{ 
+                              fontSize: '3.5rem', 
+                              color: '#9ca3af'
+                            }}></i>
+                          </div>
+                          <div style={{ textAlign: 'center' }}>
+                            <h5 style={{ 
+                              color: '#6b7280', 
+                              margin: '0 0 12px 0',
+                              fontSize: '1.2rem',
+                              fontWeight: '600'
+                            }}>
+                              No hay cotizaciones disponibles
+                            </h5>
+                            <p style={{ 
+                              color: '#9ca3af', 
+                              margin: 0, 
+                              fontSize: '14px',
+                              lineHeight: '1.5'
+                            }}>
+                              No se encontraron cotizaciones con los filtros aplicados
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
-
               </table>
-
             </div>
-            {/* PAGINACIÓN */}
-            <div className="pagination">
-              {Array.from({ length: totalPages }, (_, i) => (
-                <button
-                  key={i + 1}
-                  onClick={() => paginate(i + 1)}
-                  className={currentPage === i + 1 ? 'active-page' : ''}
-                >
-                  {i + 1}
-                </button>
-              ))}
-            </div>
+            
+            {/* Paginación mejorada */}
+            {totalPages > 1 && (
+              <div style={{
+                padding: '20px 25px',
+                borderTop: '1px solid #e5e7eb',
+                display: 'flex',
+                justifyContent: 'center',
+                gap: '8px'
+              }}>
+                {Array.from({ length: totalPages }, (_, i) => (
+                  <button
+                    key={i + 1}
+                    onClick={() => paginate(i + 1)}
+                    style={{
+                      padding: '8px 16px',
+                      border: currentPage === i + 1 ? '2px solid #6366f1' : '2px solid #e5e7eb',
+                      borderRadius: '8px',
+                      background: currentPage === i + 1 ? '#6366f1' : 'white',
+                      color: currentPage === i + 1 ? 'white' : '#4b5563',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (currentPage !== i + 1) {
+                        e.target.style.borderColor = '#6366f1';
+                        e.target.style.color = '#6366f1';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (currentPage !== i + 1) {
+                        e.target.style.borderColor = '#e5e7eb';
+                        e.target.style.color = '#4b5563';
+                      }
+                    }}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>

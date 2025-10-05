@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 
-
-export default function FormatoCotizacion({ datos, onClose, onEmailSent }) {
+export default function CotizacionPreview({ datos, onClose, onEmailSent }) {
   const navigate = useNavigate();
   // Obtener usuario logueado
   const usuario = JSON.parse(localStorage.getItem('user') || '{}');
@@ -14,19 +13,32 @@ export default function FormatoCotizacion({ datos, onClose, onEmailSent }) {
   const [asunto, setAsunto] = useState('');
   const [mensaje, setMensaje] = useState('');
 
-  // Función para abrir modal con datos actualizados
-  const abrirModalEnvio = () => {
-    // Calcular total dinámicamente si no existe
-    const totalCalculado = datos?.productos?.reduce((total, producto) => {
+  // Función para formatear fecha
+  const formatDate = (fecha) => {
+    if (!fecha) return 'No especificada';
+    const date = new Date(fecha);
+    return date.toLocaleDateString('es-ES', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+  };
+
+  // Función para calcular total
+  const calcularTotal = () => {
+    if (!datos?.productos) return 0;
+    return datos.productos.reduce((total, producto) => {
       const subtotal = Number(producto.subtotal) || 0;
       return total + subtotal;
-    }, 0) || 0;
+    }, 0);
+  };
+
+  // Función para abrir modal con datos actualizados
+  const abrirModalEnvio = () => {
+    const totalFinal = datos?.total || calcularTotal();
     
-    const totalFinal = datos?.total || totalCalculado;
-    
-    // Actualizar datos autocompletados cada vez que se abre el modal
     setCorreo(datos?.cliente?.correo || '');
-    setAsunto(`Cotización ${datos?.codigo || ''} - ${datos?.cliente?.nombre || 'Cliente'} | ${process.env.REACT_APP_COMPANY_NAME || 'Pangea Sistemas'}`);
+    setAsunto(`Cotización ${datos?.codigo || ''} - ${datos?.cliente?.nombre || 'Cliente'} | ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}`);
     setMensaje(
       `Estimado/a ${datos?.cliente?.nombre || 'cliente'},
 
@@ -43,7 +55,7 @@ Esperamos se encuentre muy bien. Adjunto encontrará la cotización solicitada c
 • Estado actual: ${datos?.estado || 'Pendiente'}
 • Validez de la oferta: ${datos?.validez || '15 días'}
 • Total de productos: ${datos?.productos?.length || 0} artículos
-• TOTAL GENERAL: $${totalFinal.toLocaleString('es-ES')}
+• TOTAL GENERAL: S/. ${totalFinal.toLocaleString('es-ES')}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ${datos?.descripcion ? `📝 DESCRIPCIÓN:
@@ -62,8 +74,8 @@ ${usuario?.firstName || usuario?.nombre || 'Equipo de ventas'} ${usuario?.surnam
 📧 Correo: ${usuario.email}` : ''}${usuario?.telefono ? `
 📞 Teléfono: ${usuario.telefono}` : ''}
 
-${process.env.REACT_APP_COMPANY_NAME || 'Pangea Sistemas'}
-🌐 Soluciones tecnológicas integrales`
+${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
+🌐 Productos de calidad`
     );
     setShowEnviarModal(true);
   };
@@ -90,7 +102,8 @@ ${process.env.REACT_APP_COMPANY_NAME || 'Pangea Sistemas'}
         Swal.fire({
           icon: 'success',
           title: 'Correo enviado',
-          text: 'La cotización ha sido enviada exitosamente'
+          text: 'La cotización ha sido enviada exitosamente',
+          confirmButtonColor: '#2563eb'
         });
         setShowEnviarModal(false);
         
@@ -111,7 +124,8 @@ ${process.env.REACT_APP_COMPANY_NAME || 'Pangea Sistemas'}
       Swal.fire({
         icon: 'error',
         title: 'Error',
-        text: 'No se pudo enviar el correo'
+        text: 'No se pudo enviar el correo',
+        confirmButtonColor: '#2563eb'
       });
     }
   };
@@ -120,25 +134,207 @@ ${process.env.REACT_APP_COMPANY_NAME || 'Pangea Sistemas'}
   const remisionarCotizacion = async () => {
     try {
       const { value: formValues } = await Swal.fire({
-        title: 'Remisionar Cotización',
+        title: '<i class="fa-solid fa-file-invoice" style="color: #2563eb; margin-right: 12px;"></i>Remisionar Cotización',
         html: `
-          <div style="text-align: left;">
-            <label for="fechaEntrega">Fecha de entrega:</label>
-            <input type="date" id="fechaEntrega" class="swal2-input" value="${new Date().toISOString().split('T')[0]}">
-            <label for="observaciones">Observaciones:</label>
-            <textarea id="observaciones" class="swal2-textarea" placeholder="Observaciones adicionales..."></textarea>
+          <div style="text-align: left; padding: 20px; background: linear-gradient(135deg, #f8fafc, #e2e8f0); border-radius: 12px; margin: 20px 0;">
+            
+            <!-- Información de la cotización -->
+            <div style="background: white; padding: 16px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #2563eb;">
+              <h4 style="margin: 0 0 12px 0; color: #2563eb; font-size: 16px;">
+                <i class="fa-solid fa-info-circle"></i> Información de la Cotización
+              </h4>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 14px;">
+                <p style="margin: 4px 0;"><strong>Código:</strong> ${datos?.codigo || 'N/A'}</p>
+                <p style="margin: 4px 0;"><strong>Cliente:</strong> ${datos?.cliente?.nombre || 'N/A'}</p>
+                <p style="margin: 4px 0;"><strong>Productos:</strong> ${datos?.productos?.length || 0} items</p>
+                <p style="margin: 4px 0;"><strong>Total:</strong> S/. ${(datos?.total || 0).toLocaleString('es-ES')}</p>
+              </div>
+            </div>
+            
+            <!-- Formulario -->
+            <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+              
+              <!-- Fecha de entrega -->
+              <div style="margin-bottom: 20px;">
+                <label for="fechaEntrega" style="display: block; margin-bottom: 8px; font-weight: bold; color: #374151; font-size: 14px;">
+                  <i class="fa-solid fa-truck" style="color: #059669; margin-right: 8px;"></i>
+                  Fecha de Entrega <span style="color: #ef4444;">*</span>
+                </label>
+                <input 
+                  type="date" 
+                  id="fechaEntrega" 
+                  value="${new Date().toISOString().split('T')[0]}" 
+                  style="
+                    width: 100%; 
+                    padding: 12px 16px; 
+                    border: 2px solid #e5e7eb; 
+                    border-radius: 8px; 
+                    font-size: 14px;
+                    transition: all 0.3s ease;
+                    background: #f9fafb;
+                  "
+                  onfocus="this.style.borderColor='#2563eb'; this.style.background='white';"
+                  onblur="this.style.borderColor='#e5e7eb'; this.style.background='#f9fafb';"
+                >
+                <small style="color: #6b7280; font-size: 12px; margin-top: 4px; display: block;">
+                  Fecha en que se realizó/realizará la entrega de los productos
+                </small>
+              </div>
+              
+              <!-- Observaciones -->
+              <div style="margin-bottom: 16px;">
+                <label for="observaciones" style="display: block; margin-bottom: 8px; font-weight: bold; color: #374151; font-size: 14px;">
+                  <i class="fa-solid fa-comment-dots" style="color: #8b5cf6; margin-right: 8px;"></i>
+                  Observaciones
+                </label>
+                <textarea 
+                  id="observaciones" 
+                  placeholder="Ingrese observaciones adicionales para el pedido y la remisión..."
+                  rows="4"
+                  style="
+                    width: 100%; 
+                    padding: 12px 16px; 
+                    border: 2px solid #e5e7eb; 
+                    border-radius: 8px; 
+                    font-size: 14px;
+                    resize: vertical;
+                    min-height: 100px;
+                    font-family: inherit;
+                    transition: all 0.3s ease;
+                    background: #f9fafb;
+                  "
+                  onfocus="this.style.borderColor='#2563eb'; this.style.background='white';"
+                  onblur="this.style.borderColor='#e5e7eb'; this.style.background='#f9fafb';"
+                ></textarea>
+                <small style="color: #6b7280; font-size: 12px; margin-top: 4px; display: block;">
+                  Estas observaciones aparecerán tanto en el pedido como en la remisión
+                </small>
+              </div>
+              
+              <!-- Información importante -->
+              <div style="background: linear-gradient(135deg, #fef3c7, #fde68a); padding: 16px; border-radius: 8px; border-left: 4px solid #f59e0b; margin-top: 20px;">
+                <h5 style="margin: 0 0 8px 0; color: #92400e; font-size: 14px;">
+                  <i class="fa-solid fa-lightbulb"></i> ¿Qué se creará?
+                </h5>
+                <ul style="margin: 0; padding-left: 20px; color: #92400e; font-size: 13px; line-height: 1.6;">
+                  <li><strong>📋 Pedido:</strong> Se agregará a la lista de pedidos con estado "Entregado"</li>
+                  <li><strong>🚚 Remisión:</strong> Se creará el documento de entrega en remisiones</li>
+                  <li><strong>📄 Cotización:</strong> Se marcará como "Remisionado"</li>
+                </ul>
+              </div>
+              
+            </div>
           </div>
         `,
+        icon: null,
+        showCancelButton: true,
+        confirmButtonText: '<i class="fa-solid fa-truck" style="margin-right: 8px;"></i>Entregar y Remisionar',
+        cancelButtonText: '<i class="fa-solid fa-times" style="margin-right: 8px;"></i>Cancelar',
+        confirmButtonColor: '#2563eb',
+        cancelButtonColor: '#6b7280',
+        width: '600px',
+        background: '#ffffff',
+        customClass: {
+          container: 'swal-remision-container',
+          popup: 'swal-remision-popup',
+          title: 'swal-remision-title',
+          confirmButton: 'swal-remision-confirm',
+          cancelButton: 'swal-remision-cancel'
+        },
+        didOpen: () => {
+          // Agregar estilos personalizados
+          const style = document.createElement('style');
+          style.textContent = `
+            .swal-remision-container {
+              backdrop-filter: blur(4px);
+            }
+            .swal-remision-popup {
+              border-radius: 16px !important;
+              box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+            }
+            .swal-remision-title {
+              font-size: 24px !important;
+              font-weight: 600 !important;
+              color: #1e293b !important;
+              margin-bottom: 8px !important;
+            }
+            .swal-remision-confirm {
+              border-radius: 8px !important;
+              padding: 12px 24px !important;
+              font-weight: 600 !important;
+              font-size: 14px !important;
+              transition: all 0.3s ease !important;
+              box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3) !important;
+            }
+            .swal-remision-confirm:hover {
+              transform: translateY(-1px) !important;
+              box-shadow: 0 6px 12px -1px rgba(37, 99, 235, 0.4) !important;
+            }
+            .swal-remision-cancel {
+              border-radius: 8px !important;
+              padding: 12px 24px !important;
+              font-weight: 600 !important;
+              font-size: 14px !important;
+              transition: all 0.3s ease !important;
+            }
+            .swal-remision-cancel:hover {
+              background-color: #4b5563 !important;
+            }
+          `;
+          document.head.appendChild(style);
+        },
         focusConfirm: false,
         preConfirm: () => {
+          const fechaEntrega = document.getElementById('fechaEntrega').value;
+          const observaciones = document.getElementById('observaciones').value;
+          
+          if (!fechaEntrega) {
+            Swal.showValidationMessage(`
+              <div style="text-align: left; color: #dc2626;">
+                <i class="fa-solid fa-exclamation-circle"></i> 
+                <strong>La fecha de entrega es requerida</strong>
+                <br><small>Por favor seleccione una fecha para continuar</small>
+              </div>
+            `);
+            return false;
+          }
+          
+          // Validar que la fecha no sea anterior a hoy
+          const fechaSeleccionada = new Date(fechaEntrega);
+          const hoy = new Date();
+          hoy.setHours(0, 0, 0, 0);
+          
+          if (fechaSeleccionada < hoy) {
+            Swal.showValidationMessage(`
+              <div style="text-align: left; color: #dc2626;">
+                <i class="fa-solid fa-calendar-xmark"></i> 
+                <strong>La fecha de entrega no puede ser anterior a hoy</strong>
+                <br><small>Por favor seleccione una fecha válida</small>
+              </div>
+            `);
+            return false;
+          }
+          
           return {
-            fechaEntrega: document.getElementById('fechaEntrega').value,
-            observaciones: document.getElementById('observaciones').value
+            fechaEntrega: fechaEntrega,
+            observaciones: observaciones.trim()
           }
         }
       });
 
       if (formValues) {
+        // Mostrar loading
+        Swal.fire({
+          title: 'Procesando...',
+          text: 'Convirtiendo cotización a pedido',
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          showConfirmButton: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+
         const token = localStorage.getItem('token');
         const response = await fetch(`http://localhost:5000/api/cotizaciones/${datos._id}/remisionar`, {
           method: 'POST',
@@ -153,380 +349,644 @@ ${process.env.REACT_APP_COMPANY_NAME || 'Pangea Sistemas'}
           })
         });
 
+        const result = await response.json();
+
         if (response.ok) {
           Swal.fire({
             icon: 'success',
-            title: 'Cotización remisionada',
-            text: 'La cotización ha sido convertida a pedido exitosamente'
+            title: '¡Cotización Remisionada!',
+            html: `
+              <div style="text-align: left; background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 15px 0;">
+                <h4 style="color: #2563eb; margin-bottom: 15px;">
+                  <i class="fa-solid fa-check-circle"></i> Documentos Creados Exitosamente
+                </h4>
+                
+                <div style="background: #10b981; color: white; padding: 12px; border-radius: 6px; margin-bottom: 12px;">
+                  <strong><i class="fa-solid fa-file-invoice"></i> Pedido:</strong> ${result.numeroPedido}
+                </div>
+                
+                <div style="background: #3b82f6; color: white; padding: 12px; border-radius: 6px; margin-bottom: 15px;">
+                  <strong><i class="fa-solid fa-truck"></i> Remisión:</strong> ${result.numeroRemision}
+                </div>
+                
+                <p><strong>Cliente:</strong> ${datos?.cliente?.nombre}</p>
+                <p><strong>Fecha de Entrega:</strong> ${new Date(formValues.fechaEntrega).toLocaleDateString('es-ES')}</p>
+                <p><strong>Estado Pedido:</strong> <span style="background: #059669; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px;">ENTREGADO</span></p>
+                <p><strong>Estado Remisión:</strong> <span style="background: #3b82f6; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px;">ACTIVA</span></p>
+                ${formValues.observaciones ? `<p><strong>Observaciones:</strong> ${formValues.observaciones}</p>` : ''}
+              </div>
+            `,
+            showDenyButton: true,
+            showCancelButton: true,
+            confirmButtonText: '<i class="fa-solid fa-file-invoice"></i> Ver Pedidos',
+            denyButtonText: '<i class="fa-solid fa-truck"></i> Ver Remisiones',
+            cancelButtonText: 'Cerrar',
+            confirmButtonColor: '#10b981',
+            denyButtonColor: '#3b82f6'
+          }).then((result) => {
+            if (result.isConfirmed) {
+              navigate('/PedidosEntregados'); // Asume que existe esta ruta 
+            } else if (result.isDenied) {
+              navigate('/ListaDeRemisiones'); // Asume que existe esta ruta
+            }
           });
+          
           onClose();
         } else {
-          throw new Error('Error al remisionar');
+          throw new Error(result.message || 'Error al remisionar');
         }
       }
     } catch (error) {
       console.error('Error:', error);
       Swal.fire({
         icon: 'error',
-        title: 'Error',
-        text: 'No se pudo remisionar la cotización'
+        title: 'Error al Remisionar',
+        text: error.message || 'No se pudo convertir la cotización a pedido',
+        confirmButtonColor: '#dc2626'
       });
     }
   };
 
-
-
-  // Obtener lista de productos para mostrar el nombre
-  const productosLista = datos.productosLista || [];
-
-  // Usar datos de la cotización (traídos del backend) para empresa si existen
-  // Ejemplo: datos.empresa = { nombre, direccion }
-  console.log("productosLista:", productosLista);
-
   return (
-
-
-    <div className="modal-cotizacion-overlay" style={{ alignItems: 'flex-start', paddingTop: '50px', overflow: 'auto' }}>
-      <div className="modal-cotizacion" style={{ maxWidth: '95vw', maxHeight: 'none', width: '900px', height: 'auto', marginBottom: '50px' }}>
-        <button className="close-modal" onClick={onClose}>×</button>
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <span className='modal-title'>
-            {datos.tipo === 'pedido' ? 'Pedido Agendado' : (datos.codigo ? datos.codigo : '')}
-          </span>
-          <div className="botones-cotizacion" style={{ display: 'flex', gap: '18px', justifyContent: 'center', marginBottom: '1rem' }}>
+    <div className="modal-cotizacion-overlay" style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.8)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 1000,
+      padding: '1rem'
+    }}>
+      <div style={{
+        backgroundColor: 'white',
+        borderRadius: '15px',
+        padding: '0',
+        maxWidth: '95vw',
+        maxHeight: '95vh',
+        width: '1000px',
+        display: 'flex',
+        flexDirection: 'column',
+        boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+        overflow: 'hidden'
+      }}>
+        {/* Header del modal */}
+        <div style={{
+          background: 'linear-gradient(135deg, #2563eb, #1d4ed8)',
+          color: 'white',
+          padding: '1.5rem 2rem',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <i className="fa-solid fa-file-lines" style={{ fontSize: '1.8rem' }}></i>
+            <div>
+              <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 'bold' }}>
+                Vista Previa - Cotización
+              </h2>
+              <p style={{ margin: 0, opacity: 0.9, fontSize: '0.95rem' }}>
+                N° {datos.codigo || 'Sin código'}
+              </p>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            {/* Botón de editar */}
             {datos.tipo !== 'pedido' && (
-              <button className="btn-cotizacion moderno" title="Editar" onClick={() => { onClose(); navigate('/RegistrarCotizacion', { state: { datos } }); }}>
-                <i className="fa-solid fa-pen" style={{ fontSize: '1.2rem', marginRight: '8px' }}></i>
+              <button
+                onClick={() => { onClose(); navigate('/RegistrarCotizacion', { state: { datos } }); }}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.2)',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '0.75rem 1rem',
+                  color: 'white',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  fontSize: '0.9rem',
+                  fontWeight: 'bold',
+                  transition: 'all 0.3s ease'
+                }}
+                onMouseEnter={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.3)'}
+                onMouseLeave={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.2)'}
+              >
+                <i className="fa-solid fa-pen"></i>
                 Editar
               </button>
             )}
+
+            {/* Botón de remisionar */}
             {datos.tipo !== 'pedido' && (
-              <button className="btn-cotizacion moderno" title="Remisionar" onClick={remisionarCotizacion}>
-                <i className="fa-solid fa-file-invoice" style={{ fontSize: '1.2rem', marginRight: '8px' }}></i>
+              <button
+                onClick={remisionarCotizacion}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.2)',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '0.75rem 1rem',
+                  color: 'white',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  fontSize: '0.9rem',
+                  fontWeight: 'bold',
+                  transition: 'all 0.3s ease'
+                }}
+                onMouseEnter={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.3)'}
+                onMouseLeave={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.2)'}
+              >
+                <i className="fa-solid fa-file-invoice"></i>
                 Remisionar
               </button>
             )}
-            <button className="btn-cotizacion moderno" title="Enviar" onClick={abrirModalEnvio}>
-              <i className="fa-solid fa-envelope" style={{ fontSize: '1rem', color: '#EA4335', marginRight: '6px' }}></i>
-              Enviar
-            </button>
-            <button className="btn-cotizacion moderno" title="Imprimir" onClick={() => {
-              // Método seguro de impresión sin manipular DOM
-              const printContent = document.getElementById('pdf-cotizacion-block');
-              const newWindow = window.open('', '_blank');
-              newWindow.document.write(`
-                <html>
-                  <head>
-                    <title>Cotización</title>
-                    <style>
-                      body { font-family: Arial, sans-serif; margin: 20px; }
-                      table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-                      th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-                      th { background-color: #f2f2f2; }
-                      .header { text-align: center; margin-bottom: 30px; }
-                      .info-section { margin: 20px 0; }
-                      .signature-section { margin-top: 50px; }
-                    </style>
-                  </head>
-                  <body>
-                    ${printContent.innerHTML}
-                  </body>
-                </html>
-              `);
-              newWindow.document.close();
-              newWindow.focus();
-              newWindow.print();
-              newWindow.close();
-            }}>
+
+            {/* Botón de imprimir */}
+            <button
+              onClick={() => {
+                const printContent = document.querySelector('.pdf-cotizacion');
+                const newWindow = window.open('', '_blank');
+                newWindow.document.write(`
+                  <html>
+                    <head>
+                      <title>Cotización - ${datos.codigo}</title>
+                      <style>
+                        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+                        .header { text-align: center; margin-bottom: 30px; padding: 20px; background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; border-radius: 10px; }
+                        .info-section { margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; }
+                        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+                        th { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; font-weight: bold; }
+                        .total-row { background: #dbeafe; font-weight: bold; }
+                        .status-badge { background: #2563eb; color: white; padding: 8px 16px; border-radius: 20px; display: inline-block; }
+                      </style>
+                    </head>
+                    <body>
+                      ${printContent.innerHTML}
+                    </body>
+                  </html>
+                `);
+                newWindow.document.close();
+                newWindow.focus();
+                newWindow.print();
+                newWindow.close();
+              }}
+              style={{
+                background: 'rgba(255, 255, 255, 0.2)',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '0.75rem',
+                color: 'white',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                fontSize: '0.9rem',
+                fontWeight: 'bold',
+                transition: 'all 0.3s ease'
+              }}
+              onMouseEnter={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.3)'}
+              onMouseLeave={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.2)'}
+            >
               <i className="fa-solid fa-print" style={{ fontSize: '1.2rem', marginRight: '8px' }}></i>
             </button>
+
+            {/* Botón de enviar por correo */}
+            <button
+              onClick={abrirModalEnvio}
+              style={{
+                background: 'rgba(255, 255, 255, 0.2)',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '0.75rem 1rem',
+                color: 'white',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                fontSize: '0.9rem',
+                fontWeight: 'bold',
+                transition: 'all 0.3s ease'
+              }}
+              onMouseEnter={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.3)'}
+              onMouseLeave={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.2)'}
+            >
+              <i className="fa-solid fa-envelope"></i>
+              Enviar
+            </button>
+
+            {/* Botón de cerrar */}
+            <button
+              onClick={onClose}
+              style={{
+                background: 'rgba(255, 255, 255, 0.2)',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '0.75rem',
+                color: 'white',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                fontSize: '1.2rem',
+                transition: 'all 0.3s ease'
+              }}
+              onMouseEnter={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.3)'}
+              onMouseLeave={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.2)'}
+            >
+              <i className="fa-solid fa-times"></i>
+            </button>
           </div>
         </div>
 
-        {/* Contenido PDF debajo */}
-        <div
-          className="pdf-cotizacion"
-          id="pdf-cotizacion-block"
-
-          style={{ 
-            background: '#fff', 
-            padding: '1.5rem', 
-            borderRadius: '8px', 
-            boxShadow: '0 2px 8px rgba(0,0,0,0.08)', 
-            marginTop: '0.5rem', 
-            userSelect: 'none', 
-            WebkitUserSelect: 'none', 
-            MozUserSelect: 'none', 
-            msUserSelect: 'none', 
-            fontSize: '0.9rem',
-            maxHeight: '85vh',
-            overflowY: 'auto'
-          }}
-          onCopy={e => e.preventDefault()}
-        >
-          <div className="cotizacion-encabezado">
-            <h2 style={{ color: '#2563eb', fontWeight: 'bold', fontSize: '1.5rem', margin: '0 0 0.5rem 0' }}>
-              {datos.tipo === 'pedido' ? 'PEDIDO AGENDADO' : 'COTIZACIÓN'}
-            </h2>
-          </div>
-          {/* Información del cliente y empresa */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', fontSize: '0.8rem', marginBottom: '0.75rem' }}>
-            <div style={{ flex: 1 }}>
-              <h4 style={{ color: '#374151', marginBottom: '0.3rem', fontSize: '0.85rem' }}>
-                {datos.tipo === 'pedido' ? 'ENTREGAR A:' : 'CLIENTE:'}
-              </h4>
-              <div style={{ backgroundColor: '#f9fafb', padding: '0.5rem', borderRadius: '4px', border: '1px solid #e5e7eb' }}>
-                <p style={{ fontWeight: 'bold', marginBottom: '0.15rem', fontSize: '0.8rem' }}>
-                  {datos.cliente?.nombre || 'Cliente no especificado'}
-                </p>
-                <p style={{ marginBottom: '0.15rem', fontSize: '0.75rem' }}>
-                  {datos.cliente?.direccion || 'Dirección no especificada'}
-                </p>
-                <p style={{ marginBottom: '0.15rem', fontSize: '0.75rem' }}>
-                  {datos.cliente?.ciudad || 'Ciudad no especificada'}
-                </p>
-                <p style={{ marginBottom: '0.15rem', fontSize: '0.75rem' }}>
-                  Tel: {datos.cliente?.telefono || 'No especificado'}
-                </p>
-                <p style={{ fontSize: '0.75rem' }}>
-                  {datos.cliente?.correo || 'Sin correo'}
-                </p>
-              </div>
-            </div>
-            
-            <div style={{ flex: 1, marginLeft: '1rem' }}>
-              <h4 style={{ color: '#374151', marginBottom: '0.3rem', fontSize: '0.85rem' }}>
-                {datos.tipo === 'pedido' ? 'REMITE:' : 'EMPRESA:'}
-              </h4>
-              <div style={{ backgroundColor: '#f9fafb', padding: '0.5rem', borderRadius: '4px', border: '1px solid #e5e7eb' }}>
-                <p style={{ fontWeight: 'bold', marginBottom: '0.15rem', fontSize: '0.8rem' }}>
-                  {datos.empresa?.nombre || 'PANGEA'}
-                </p>
-                <p style={{ marginBottom: '0.15rem', fontSize: '0.75rem' }}>
-                  {datos.empresa?.direccion || ''}
-                </p>
-                <p style={{ marginBottom: '0.15rem', fontSize: '0.75rem' }}>
-                  Responsable: {usuario.firstName || ''} {usuario.surname || ''}
-                </p>
-                {datos.codigo && (
-                  <p style={{ marginBottom: '0.15rem', color: '#6b7280', fontSize: '0.75rem' }}>
-                    Ref. {datos.tipo === 'pedido' ? 'Pedido' : 'Cotización'}: {datos.codigo}
-                  </p>
-                )}
-                {datos.fechaEntrega && (
-                  <p style={{ marginBottom: '0.15rem', color: '#6b7280', fontSize: '0.75rem' }}>
-                    F. Entrega: {new Date(datos.fechaEntrega).toLocaleDateString('es-ES')}
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-          <hr />
-          {/* Descripción */}
-          {datos.descripcion && (
-            <div style={{ marginBottom: '0.75rem' }}>
-              <h4 style={{ color: '#374151', fontSize: '0.85rem', marginBottom: '0.3rem' }}>
-                {datos.tipo === 'pedido' ? 'Descripción del pedido:' : 'Descripción de la cotización:'}
-              </h4>
-              <div style={{ backgroundColor: '#fffbeb', padding: '0.5rem', borderRadius: '4px', border: '1px solid #fed7aa' }}>
-                <div style={{ margin: 0, fontSize: '0.75rem' }} dangerouslySetInnerHTML={{ __html: datos.descripcion }} />
-              </div>
-              {datos.tipo === 'pedido' && datos.estadoPedido && (
-                <div style={{ marginTop: '0.5rem' }}>
-                  <span style={{ fontSize: '0.75rem', fontWeight: 'bold' }}>Estado del pedido: </span>
-                  <span style={{ 
-                    backgroundColor: datos.estadoPedido === 'pendiente' ? '#fef3c7' : 
-                                   datos.estadoPedido === 'completado' ? '#d4edda' : '#f8d7da',
-                    color: datos.estadoPedido === 'pendiente' ? '#f59e0b' : 
-                           datos.estadoPedido === 'completado' ? '#155724' : '#721c24',
-                    padding: '0.25rem 0.5rem',
-                    borderRadius: '4px',
-                    fontSize: '0.75rem',
-                    fontWeight: 'bold'
-                  }}>
-                    {datos.estadoPedido.charAt(0).toUpperCase() + datos.estadoPedido.slice(1)}
-                  </span>
-                </div>
-              )}
-            </div>
-          )}
-          {/* Tabla de productos */}
-          <table className="tabla-cotizacion" style={{ fontSize: '0.8rem', width: '100%', marginBottom: '1rem' }}>
-            <thead>
-              <tr style={{ backgroundColor: '#f3f4f6' }}>
-                <th style={{ textAlign: 'left', padding: '0.6rem', fontSize: '0.8rem' }}>Cant.</th>
-                <th style={{ textAlign: 'left', padding: '0.6rem', fontSize: '0.8rem' }}>Producto</th>
-                <th style={{ textAlign: 'left', padding: '0.6rem', fontSize: '0.8rem' }}>Descripción</th>
-                <th style={{ textAlign: 'right', padding: '0.6rem', fontSize: '0.8rem' }}>Valor Unit.</th>
-                <th style={{ textAlign: 'right', padding: '0.6rem', fontSize: '0.8rem' }}>% Desc.</th>
-                <th style={{ textAlign: 'right', padding: '0.6rem', fontSize: '0.8rem' }}>Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {datos.productos && datos.productos.length > 0 ? datos.productos.map((p, idx) => (
-                <tr key={idx} style={{ borderBottom: '1px solid #e5e7eb' }}>
-                  <td style={{ padding: '0.6rem', fontWeight: 'bold', fontSize: '0.8rem' }}>
-                    {p.cantidad || 0}
-                  </td>
-                  <td style={{ padding: '0.6rem', fontSize: '0.8rem' }}>
-                    {p.producto?.name || p.nombre || 'Producto sin nombre'}
-                  </td>
-                  <td style={{ padding: '0.6rem', fontSize: '0.8rem', color: '#6b7280' }}>
-                    {p.producto?.description || p.descripcion || 'Sin descripción'}
-                  </td>
-                  <td style={{ padding: '0.6rem', textAlign: 'right', fontSize: '0.8rem' }}>
-                    ${(p.valorUnitario || 0).toLocaleString('es-CO')}
-                  </td>
-                  <td style={{ padding: '0.6rem', textAlign: 'right', fontSize: '0.8rem' }}>
-                    {p.descuento || 0}%
-                  </td>
-                  <td style={{ padding: '0.6rem', textAlign: 'right', fontWeight: 'bold', fontSize: '0.8rem' }}>
-                    ${(() => {
-                      const cantidad = parseFloat(p.cantidad) || 0;
-                      const valorUnitario = parseFloat(p.valorUnitario) || 0;
-                      const descuento = parseFloat(p.descuento) || 0;
-                      const subtotal = cantidad * valorUnitario * (1 - descuento / 100);
-
-                      return subtotal.toLocaleString('es-CO');
-                    })()}
-                  </td>
-                </tr>
-              )) : (
-                <tr>
-                  <td colSpan={6} style={{ padding: '1rem', textAlign: 'center', fontSize: '0.8rem', color: '#6b7280' }}>
-                    No hay productos disponibles
-                  </td>
-                </tr>
-              )}
-            </tbody>
-            <tfoot>
-              <tr style={{ backgroundColor: '#f9fafb', fontWeight: 'bold' }}>
-                <td colSpan={5} style={{ padding: '0.75rem', textAlign: 'right', fontSize: '0.9rem' }}>
-                  TOTAL {datos.tipo === 'pedido' ? 'PEDIDO' : 'COTIZACIÓN'}:
-                </td>
-                <td style={{ padding: '0.75rem', textAlign: 'right', fontSize: '1rem', color: '#059669' }}>
-                  ${datos.productos && datos.productos.length > 0 ? datos.productos
-                    .reduce((acc, p) => {
-                      const cantidad = parseFloat(p.cantidad) || 0;
-                      const valorUnitario = parseFloat(p.valorUnitario) || 0;
-                      const descuento = parseFloat(p.descuento) || 0;
-                      const subtotal = cantidad * valorUnitario * (1 - descuento / 100);
-                      return acc + subtotal;
-                    }, 0)
-                    .toLocaleString('es-CO') : '0'}
-                </td>
-              </tr>
-            </tfoot>
-          </table>
-          {/* Condiciones de pago */}
-          {datos.condicionesPago && (
-            <div style={{ marginBottom: '0.75rem' }}>
-              <h4 style={{ color: '#374151', fontSize: '0.85rem', marginBottom: '0.3rem' }}>Condiciones de pago:</h4>
-              <div style={{ backgroundColor: '#f0f9ff', padding: '0.5rem', borderRadius: '4px', border: '1px solid #bfdbfe' }}>
-                <div style={{ margin: 0, fontSize: '0.75rem' }} dangerouslySetInnerHTML={{ __html: datos.condicionesPago }} />
-              </div>
-            </div>
-          )}
-
-          {/* Validez de cotización */}
-          {datos.tipo !== 'pedido' && (
-            <div style={{ 
-              marginTop: '1rem', 
-              padding: '0.75rem', 
-              backgroundColor: '#f8fafc', 
-              borderRadius: '6px', 
-              border: '1px solid #e2e8f0'
+        {/* Contenido scrolleable */}
+        <div style={{
+          flex: 1,
+          overflow: 'auto',
+          padding: '2rem',
+          backgroundColor: '#f8f9fa'
+        }}>
+          {/* Contenido de la cotización */}
+          <div
+            className="pdf-cotizacion"
+            id="pdf-cotizacion-block"
+            style={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              background: '#fff', 
+              padding: '2rem', 
+              borderRadius: '10px', 
+              boxShadow: '0 2px 8px rgba(0,0,0,0.08)', 
+              marginTop: '1rem',
+              userSelect: 'none',
+              WebkitUserSelect: 'none',
+              MozUserSelect: 'none',
+              msUserSelect: 'none'
+            }}
+            onCopy={e => e.preventDefault()}
+            onSelectStart={e => e.preventDefault()}
+          >
+            <div className="header" style={{
+              textAlign: 'center',
+              color: 'white',
+              marginBottom: '2rem',
+              padding: '1.5rem',
+              background: 'linear-gradient(135deg, #2563eb, #1d4ed8)',
+              borderRadius: '8px',
+              fontSize: '1.8rem',
+              fontWeight: 'bold'
             }}>
-              <p style={{ fontSize: '0.75rem', color: '#6b7280', margin: 0, textAlign: 'center', fontStyle: 'italic' }}>
-                Cotización válida por 15 días
-              </p>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem' }}>
+                <i className="fa-solid fa-file-lines" style={{ fontSize: '2rem' }}></i>
+                <div>
+                  <div>COTIZACIÓN</div>
+                  <div style={{ fontSize: '1rem', fontWeight: 'normal', marginTop: '0.5rem' }}>
+                    N° {datos?.codigo}
+                  </div>
+                </div>
+              </div>
             </div>
-          )}
-          {/* Mostrar cotización relacionada cuando exista */}
-          {datos.cotizacionCodigo && (
-            <div style={{ marginTop: '1rem', textAlign: 'right', fontSize: '0.85rem', color: '#374151' }}>
-              <strong>Cotización relacionada: </strong>
-              <span style={{ color: '#2563eb' }}>#{datos.cotizacionCodigo}</span>
+
+            {/* Información del cliente y empresa */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '2rem',
+              marginBottom: '2rem'
+            }}>
+              <div>
+                <h3 style={{ 
+                  borderBottom: '3px solid #2563eb', 
+                  paddingBottom: '0.5rem', 
+                  color: '#2563eb',
+                  fontSize: '1.2rem',
+                  fontWeight: 'bold',
+                  marginBottom: '1rem'
+                }}>
+                  Información del Cliente
+                </h3>
+                <div style={{ lineHeight: '1.8' }}>
+                  <p><strong>Cliente:</strong> {datos?.cliente?.nombre}</p>
+                  <p><strong>Teléfono:</strong> {datos?.cliente?.telefono}</p>
+                  <p><strong>Email:</strong> {datos?.cliente?.correo}</p>
+                  <p><strong>Dirección:</strong> {datos?.cliente?.direccion}</p>
+                  <p><strong>Ciudad:</strong> {datos?.cliente?.ciudad}</p>
+                </div>
+              </div>
+
+              <div>
+                <h3 style={{ 
+                  borderBottom: '3px solid #2563eb', 
+                  paddingBottom: '0.5rem', 
+                  color: '#2563eb',
+                  fontSize: '1.2rem',
+                  fontWeight: 'bold',
+                  marginBottom: '1rem'
+                }}>
+                  Detalles de la Cotización
+                </h3>
+                <div style={{ lineHeight: '1.8' }}>
+                  <p><strong>Fecha de Emisión:</strong> {formatDate(datos?.fecha)}</p>
+                  <p><strong>Fecha de Vencimiento:</strong> {formatDate(datos?.fechaVencimiento)}</p>
+                  <p><strong>Validez:</strong> {datos?.validez || '15 días'}</p>
+                  <p><strong>Estado:</strong> 
+                    <span style={{
+                      background: '#2563eb',
+                      color: 'white',
+                      padding: '4px 12px',
+                      borderRadius: '15px',
+                      fontSize: '0.9rem',
+                      marginLeft: '0.5rem'
+                    }}>
+                      {datos?.estado || 'Pendiente'}
+                    </span>
+                  </p>
+                </div>
+              </div>
             </div>
-          )}
+
+            {/* Descripción si existe */}
+            {datos?.descripcion && (
+              <div style={{ marginBottom: '2rem' }}>
+                <h3 style={{ 
+                  borderBottom: '3px solid #2563eb', 
+                  paddingBottom: '0.5rem', 
+                  color: '#2563eb',
+                  fontSize: '1.2rem',
+                  fontWeight: 'bold',
+                  marginBottom: '1rem'
+                }}>
+                  Descripción
+                </h3>
+                <div style={{
+                  background: '#eff6ff',
+                  padding: '1rem',
+                  borderRadius: '8px',
+                  borderLeft: '4px solid #2563eb',
+                  lineHeight: '1.6'
+                }}>
+                  {datos.descripcion}
+                </div>
+              </div>
+            )}
+
+            {/* Tabla de productos */}
+            <div style={{ marginBottom: '2rem' }}>
+              <h3 style={{ 
+                borderBottom: '3px solid #2563eb', 
+                paddingBottom: '0.5rem', 
+                color: '#2563eb',
+                fontSize: '1.2rem',
+                fontWeight: 'bold',
+                marginBottom: '1rem'
+              }}>
+                Productos Cotizados
+              </h3>
+              <table className="tabla-cotizacion" style={{
+                width: '100%',
+                borderCollapse: 'collapse',
+                marginTop: '1rem',
+                borderRadius: '8px',
+                overflow: 'hidden',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+              }}>
+                <thead>
+                  <tr style={{ background: 'linear-gradient(135deg, #2563eb, #1d4ed8)', color: 'white' }}>
+                    <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 'bold' }}>Producto</th>
+                    <th style={{ padding: '1rem', textAlign: 'center', fontWeight: 'bold' }}>Cantidad</th>
+                    <th style={{ padding: '1rem', textAlign: 'right', fontWeight: 'bold' }}>Precio Unit.</th>
+                    <th style={{ padding: '1rem', textAlign: 'right', fontWeight: 'bold' }}>Subtotal</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {datos?.productos && datos.productos.map((producto, index) => (
+                    <tr key={index} style={{ 
+                      borderBottom: '1px solid #eee',
+                      backgroundColor: index % 2 === 0 ? '#fafafa' : 'white'
+                    }}>
+                      <td style={{ padding: '1rem' }}>
+                        <div style={{ fontWeight: 'bold', color: '#333' }}>
+                          {producto.producto?.name || producto.product?.nombre || producto.nombre || 'Producto sin nombre'}
+                        </div>
+                        {(producto.producto?.categoria || producto.product?.categoria) && (
+                          <div style={{ fontSize: '0.9rem', color: '#666', marginTop: '0.25rem' }}>
+                            {producto.producto.categoria || producto.product.categoria}
+                          </div>
+                        )}
+                      </td>
+                      <td style={{ padding: '1rem', textAlign: 'center', fontWeight: 'bold' }}>
+                        {producto.cantidad}
+                      </td>
+                      <td style={{ padding: '1rem', textAlign: 'right' }}>
+                        S/. {parseFloat(producto.valorUnitario || producto.precioUnitario || 0).toFixed(2)}
+                      </td>
+                      <td style={{ padding: '1rem', textAlign: 'right', fontWeight: 'bold' }}>
+                        S/. {parseFloat(producto.subtotal || 0).toFixed(2)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr style={{ 
+                    background: 'linear-gradient(135deg, #eff6ff, #dbeafe)', 
+                    borderTop: '2px solid #2563eb' 
+                  }}>
+                    <td colSpan="3" style={{ 
+                      padding: '1rem', 
+                      textAlign: 'right', 
+                      fontWeight: 'bold', 
+                      fontSize: '1.1rem',
+                      color: '#2563eb'
+                    }}>
+                      TOTAL:
+                    </td>
+                    <td style={{ 
+                      padding: '1rem', 
+                      textAlign: 'right', 
+                      fontWeight: 'bold', 
+                      fontSize: '1.3rem',
+                      color: '#2563eb'
+                    }}>
+                      S/. {(datos?.total || calcularTotal()).toFixed(2)}
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+
+            {/* Condiciones de pago */}
+            {datos?.condicionesPago && (
+              <div style={{ marginBottom: '2rem' }}>
+                <h3 style={{ 
+                  borderBottom: '3px solid #2563eb', 
+                  paddingBottom: '0.5rem', 
+                  color: '#2563eb',
+                  fontSize: '1.2rem',
+                  fontWeight: 'bold',
+                  marginBottom: '1rem'
+                }}>
+                  Condiciones de Pago
+                </h3>
+                <div style={{
+                  background: '#eff6ff',
+                  padding: '1rem',
+                  borderRadius: '8px',
+                  borderLeft: '4px solid #2563eb',
+                  lineHeight: '1.6'
+                }}>
+                  {datos.condicionesPago}
+                </div>
+              </div>
+            )}
+
+            {/* Footer */}
+            <div style={{
+              marginTop: '3rem',
+              padding: '1.5rem',
+              background: 'linear-gradient(135deg, #f8f9fa, #e9ecef)',
+              borderRadius: '8px',
+              textAlign: 'center',
+              borderTop: '3px solid #2563eb'
+            }}>
+              <div style={{ 
+                fontSize: '1.1rem', 
+                fontWeight: 'bold', 
+                color: '#2563eb',
+                marginBottom: '0.5rem'
+              }}>
+                JLA Global Company
+              </div>
+              <div style={{ fontSize: '0.9rem', color: '#666' }}>
+                Gracias por su preferencia • Cotización válida por {datos?.validez || '15 días'}
+              </div>
+            </div>
+          </div>
         </div>
 
-      </div>
-
-      {showEnviarModal && (
-          <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
-            <div className="modal-cotizacion" style={{ maxWidth: 500, maxHeight: '90vh', overflow: 'auto' }}>
-              <button className="close-modal" onClick={() => setShowEnviarModal(false)}>×</button>
-              <h3 style={{ textAlign: 'center', marginBottom: '1rem', color: '#333' }}>
-                📧 Enviar Cotización por Correo
+        {/* Modal para enviar por correo */}
+        {showEnviarModal && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000
+          }}>
+            <div style={{
+              backgroundColor: 'white',
+              padding: '2rem',
+              borderRadius: '10px',
+              maxWidth: '600px',
+              width: '90%',
+              maxHeight: '80vh',
+              overflow: 'auto'
+            }}>
+              <h3 style={{ marginBottom: '1rem', color: '#2563eb' }}>
+                <i className="fa-solid fa-envelope" style={{ marginRight: '0.5rem' }}></i>
+                Enviar Cotización por Correo
               </h3>
               
-              {/* Información de la cotización */}
-              <div style={{ backgroundColor: '#f8f9fa', padding: '10px', borderRadius: '5px', marginBottom: '1rem', fontSize: '14px' }}>
-                <strong>Cotización:</strong> {datos?.codigo}<br/>
-                <strong>Cliente:</strong> {datos?.cliente?.nombre}<br/>
-                <strong>Total:</strong> ${datos?.total?.toLocaleString('es-ES')}
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                  Correo del destinatario:
+                </label>
+                <input
+                  type="email"
+                  value={correo}
+                  onChange={(e) => setCorreo(e.target.value)}
+                  placeholder="ejemplo@correo.com"
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid #ddd',
+                    borderRadius: '6px',
+                    fontSize: '1rem'
+                  }}
+                />
               </div>
 
               <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-                  📬 Correo destinatario:
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                  Asunto:
                 </label>
-                <input 
-                  type="email" 
-                  className="cuadroTexto" 
-                  value={correo} 
-                  onChange={e => setCorreo(e.target.value)} 
-                  style={{ width: '100%' }}
-                  placeholder="correo@ejemplo.com"
+                <input
+                  type="text"
+                  value={asunto}
+                  onChange={(e) => setAsunto(e.target.value)}
+                  placeholder="Asunto del correo"
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid #ddd',
+                    borderRadius: '6px',
+                    fontSize: '1rem'
+                  }}
                 />
               </div>
-              
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-                  📝 Asunto:
+
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                  Mensaje:
                 </label>
-                <input 
-                  type="text" 
-                  className="cuadroTexto" 
-                  value={asunto} 
-                  onChange={e => setAsunto(e.target.value)} 
-                  style={{ width: '100%' }}
+                <textarea
+                  value={mensaje}
+                  onChange={(e) => setMensaje(e.target.value)}
+                  placeholder="Escriba un mensaje personalizado..."
+                  rows="8"
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid #ddd',
+                    borderRadius: '6px',
+                    fontSize: '1rem',
+                    resize: 'vertical',
+                    fontFamily: 'monospace'
+                  }}
                 />
               </div>
-              
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-                  💬 Mensaje:
-                </label>
-                <textarea 
-                  className="cuadroTexto" 
-                  value={mensaje} 
-                  onChange={e => setMensaje(e.target.value)} 
-                  style={{ width: '100%', minHeight: '120px', resize: 'vertical' }}
-                  placeholder="Escriba aquí el mensaje para el cliente..."
-                />
-              </div>
-              
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <button 
-                  className="btn-enviar-modal" 
-                  style={{ flex: 1, backgroundColor: '#28a745', color: 'white', border: 'none', padding: '10px', borderRadius: '5px', cursor: 'pointer' }} 
-                  onClick={enviarPorCorreo}
-                >
-                  📧 Enviar Correo
-                </button>
-                <button 
-                  className="btn-cancelar-modal" 
-                  style={{ flex: 1, backgroundColor: '#6c757d', color: 'white', border: 'none', padding: '10px', borderRadius: '5px', cursor: 'pointer' }} 
+
+              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+                <button
                   onClick={() => setShowEnviarModal(false)}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    border: '1px solid #ddd',
+                    borderRadius: '6px',
+                    backgroundColor: 'white',
+                    cursor: 'pointer'
+                  }}
                 >
-                  ❌ Cancelar
+                  Cancelar
+                </button>
+                <button
+                  onClick={enviarPorCorreo}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    border: 'none',
+                    borderRadius: '6px',
+                    backgroundColor: '#2563eb',
+                    color: 'white',
+                    cursor: 'pointer',
+                    fontWeight: 'bold'
+                  }}
+                >
+                  <i className="fa-solid fa-envelope" style={{ marginRight: '0.5rem' }}></i>
+                  Enviar Cotización
                 </button>
               </div>
             </div>
           </div>
         )}
+      </div>
     </div>
   );
 }

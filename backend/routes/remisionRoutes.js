@@ -11,6 +11,27 @@ router.get('/',
   remisionController.getAllRemisiones
 );
 
+// 🆕 Debug endpoint - obtener lista simple de IDs de remisiones
+router.get('/debug/ids',
+  verifyToken,
+  checkPermission('remisiones.ver'),
+  async (req, res) => {
+    try {
+      const remisiones = await require('../models/Remision').find({}, '_id numeroRemision estado').limit(10);
+      res.json({
+        total: remisiones.length,
+        remisiones: remisiones.map(r => ({
+          id: r._id,
+          numero: r.numeroRemision,
+          estado: r.estado
+        }))
+      });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+);
+
 // Obtener estadísticas de remisiones
 router.get('/estadisticas',
   verifyToken,
@@ -39,6 +60,13 @@ router.post('/probar-gmail',
   remisionController.probarGmail
 );
 
+// 🆕 Crear remisión desde un pedido
+router.post('/crear-desde-pedido/:pedidoId',
+  verifyToken,
+  checkPermission('remisiones.crear'),
+  remisionController.crearRemisionDesdePedido
+);
+
 // Obtener una remisión por ID
 router.get('/:id',
   verifyToken,
@@ -49,7 +77,7 @@ router.get('/:id',
 // Enviar remisión por correo
 router.post('/:id/enviar-correo',
   verifyToken,
-  checkPermission('remisiones.crear'),
+  checkPermission('remisiones.enviar'),
   remisionController.enviarRemisionPorCorreo
 );
 

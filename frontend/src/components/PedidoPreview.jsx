@@ -1,15 +1,131 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
 import './FormatoCotizacion.css';
 
-export default function FormatoCotizacion({ datos, onClose }) {
+export default function FormatoCotizacion({ datos, onClose, onEmailSent }) {
   const navigate = useNavigate();
   // Obtener usuario logueado
   const usuario = JSON.parse(localStorage.getItem('user') || '{}');
   const [showEnviarModal, setShowEnviarModal] = useState(false);
+  
+  // Función para verificar si el HTML está vacío o contiene solo etiquetas vacías
+  const isEmptyHTML = (html) => {
+    if (!html || html.trim() === '') return true;
+    // Remover etiquetas HTML y verificar si queda contenido
+    const textContent = html.replace(/<[^>]*>/g, '').trim();
+    return textContent === '';
+  };
+  
+  // Estados para el formulario de envío de correo
   const [correo, setCorreo] = useState('');
   const [asunto, setAsunto] = useState('');
   const [mensaje, setMensaje] = useState('');
+
+  // Función para abrir modal con datos actualizados
+  const abrirModalEnvio = () => {
+    // Calcular total dinámicamente si no existe
+    const totalCalculado = datos?.productos?.reduce((total, producto) => {
+      const cantidad = parseFloat(producto.cantidad) || 0;
+      const valorUnitario = parseFloat(producto.valorUnitario) || 0;
+      const descuento = parseFloat(producto.descuento) || 0;
+      const subtotal = cantidad * valorUnitario * (1 - descuento / 100);
+      return total + subtotal;
+    }, 0) || 0;
+    
+    const totalFinal = datos?.total || totalCalculado;
+    
+    // Actualizar datos autocompletados cada vez que se abre el modal
+    setCorreo(datos?.cliente?.correo || '');
+    setAsunto(`Pedido Agendado ${datos?.numeroPedido || datos?.codigo || ''} - ${datos?.cliente?.nombre || 'Cliente'} | ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}`);
+    setMensaje(
+      `Estimado/a ${datos?.cliente?.nombre || 'cliente'},
+
+Esperamos se encuentre muy bien. Adjunto encontrará la información del pedido agendado:
+
+📋 DETALLES DEL PEDIDO:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Número de pedido: ${datos?.numeroPedido || datos?.codigo || 'N/A'}
+• Fecha de emisión: ${datos?.fecha ? new Date(datos.fecha).toLocaleDateString('es-ES') : 'N/A'}
+• Fecha de entrega programada: ${datos?.fechaEntrega ? new Date(datos.fechaEntrega).toLocaleDateString('es-ES') : 'N/A'}
+• Cliente: ${datos?.cliente?.nombre || 'N/A'}
+• Correo: ${datos?.cliente?.correo || 'N/A'}
+• Teléfono: ${datos?.cliente?.telefono || 'N/A'}
+• Ciudad: ${datos?.cliente?.ciudad || 'N/A'}
+• Estado actual: ${datos?.estado || 'Agendado'}
+• Total de productos: ${datos?.productos?.length || 0} artículos
+• TOTAL PEDIDO: $${totalFinal.toLocaleString('es-ES')}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+${datos?.descripcion ? `📝 DESCRIPCIÓN:
+${datos.descripcion}
+
+` : ''}${datos?.condicionesPago ? `💳 CONDICIONES DE PAGO:
+${datos.condicionesPago}
+
+` : ''}Su pedido ha sido programado y se encuentra en proceso de preparación. Le notificaremos cuando esté listo para entrega.
+
+¡Gracias por confiar en nosotros!
+
+Saludos cordiales,
+
+${usuario?.firstName || usuario?.nombre || 'Equipo de ventas'} ${usuario?.surname || ''}${usuario?.email ? `
+📧 Correo: ${usuario.email}` : ''}${usuario?.telefono ? `
+📞 Teléfono: ${usuario.telefono}` : ''}
+
+${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
+🌐 Soluciones tecnológicas integrales`
+    );
+    setShowEnviarModal(true);
+  };
+
+  // Función para enviar por correo
+  const enviarPorCorreo = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:5000/api/pedidos/${datos._id}/enviar-correo`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          pedidoId: datos._id,
+          correoDestino: correo,
+          asunto: asunto,
+          mensaje: mensaje
+        })
+      });
+
+      if (response.ok) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Correo enviado',
+          text: 'El pedido ha sido enviado exitosamente'
+        });
+        setShowEnviarModal(false);
+        
+        // Actualizar el estado local para reflejar que fue enviado
+        if (datos) {
+          datos.enviadoCorreo = true;
+        }
+        
+        // Llamar al callback para actualizar el componente padre
+        if (onEmailSent) {
+          onEmailSent(datos._id);
+        }
+      } else {
+        throw new Error('Error al enviar correo');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'No se pudo enviar el correo'
+      });
+    }
+  };
 
 
 
@@ -36,7 +152,7 @@ export default function FormatoCotizacion({ datos, onClose }) {
               <i className="fa-solid fa-file-invoice" style={{ fontSize: '1.2rem', marginRight: '8px' }}></i>
               Remisionar
             </button>
-            <button className="btn-cotizacion moderno" title="Enviar" onClick={() => setShowEnviarModal(true)}>
+            <button className="btn-cotizacion moderno" title="Enviar" onClick={abrirModalEnvio}>
               <i className="fa-solid fa-envelope" style={{ fontSize: '1rem', color: '#EA4335', marginRight: '6px' }}></i>
               Enviar
             </button>
@@ -103,11 +219,15 @@ export default function FormatoCotizacion({ datos, onClose }) {
             </div>
           </div>
           <hr />
-          <div className="descripcion-cotizacion">
-            <h4>Descripción cotización</h4>
-            <div dangerouslySetInnerHTML={{ __html: datos.descripcion }} />
-          </div>
-          <hr />
+          {!isEmptyHTML(datos.descripcion) && (
+            <>
+              <div className="descripcion-cotizacion">
+                <h4>Descripción cotización</h4>
+                <div dangerouslySetInnerHTML={{ __html: datos.descripcion }} />
+              </div>
+              <hr />
+            </>
+          )}
           <table className="tabla-cotizacion">
             <thead>
               <tr>
@@ -159,11 +279,15 @@ export default function FormatoCotizacion({ datos, onClose }) {
             </tbody>
           </table>
           <hr />
-          <div className="condiciones-pago">
-            <h4>Condiciones de pago</h4>
-            <div dangerouslySetInnerHTML={{ __html: datos.condicionesPago }} />
-          </div>
-          <br />
+          {!isEmptyHTML(datos.condicionesPago) && (
+            <>
+              <div className="condiciones-pago">
+                <h4>Condiciones de pago</h4>
+                <div dangerouslySetInnerHTML={{ __html: datos.condicionesPago }} />
+              </div>
+              <br />
+            </>
+          )}
           <div>Cotizacion valida por 15 dias</div>
         </div>
 
@@ -171,22 +295,81 @@ export default function FormatoCotizacion({ datos, onClose }) {
 
       {showEnviarModal && (
           <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
-            <div className="modal-cotizacion" style={{ maxWidth: 400 }}>
+            <div className="modal-cotizacion" style={{ maxWidth: 500, maxHeight: '90vh', overflow: 'auto' }}>
               <button className="close-modal" onClick={() => setShowEnviarModal(false)}>×</button>
-              <h3 style={{ textAlign: 'center', marginBottom: '1rem' }}>Enviar cotización</h3>
-              <div style={{ marginBottom: '1rem' }}>
-                <label>Correo destinatario:</label>
-                <input type="email" className="cuadroTexto" value={correo} onChange={e => setCorreo(e.target.value)} style={{ width: '100%' }} />
+              <h3 style={{ textAlign: 'center', marginBottom: '1rem', color: '#333' }}>
+                📧 Enviar Pedido por Correo
+              </h3>
+              
+              {/* Información del pedido */}
+              <div style={{ backgroundColor: '#f8f9fa', padding: '10px', borderRadius: '5px', marginBottom: '1rem', fontSize: '14px' }}>
+                <strong>Pedido:</strong> {datos?.numeroPedido || datos?.codigo}<br/>
+                <strong>Cliente:</strong> {datos?.cliente?.nombre}<br/>
+                <strong>Total:</strong> ${datos?.productos?.reduce((acc, p) => {
+                  const cantidad = parseFloat(p.cantidad) || 0;
+                  const valorUnitario = parseFloat(p.valorUnitario) || 0;
+                  const descuento = parseFloat(p.descuento) || 0;
+                  const subtotal = cantidad * valorUnitario * (1 - descuento / 100);
+                  return acc + subtotal;
+                }, 0)?.toLocaleString('es-ES') || '0'}
               </div>
+
               <div style={{ marginBottom: '1rem' }}>
-                <label>Asunto:</label>
-                <input type="text" className="cuadroTexto" value={asunto} onChange={e => setAsunto(e.target.value)} style={{ width: '100%' }} />
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                  📬 Correo destinatario:
+                </label>
+                <input 
+                  type="email" 
+                  className="cuadroTexto" 
+                  value={correo} 
+                  onChange={e => setCorreo(e.target.value)} 
+                  style={{ width: '100%' }}
+                  placeholder="correo@ejemplo.com"
+                />
               </div>
+              
               <div style={{ marginBottom: '1rem' }}>
-                <label>Mensaje:</label>
-                <textarea className="cuadroTexto" value={mensaje} onChange={e => setMensaje(e.target.value)} style={{ width: '100%', minHeight: '80px' }} />
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                  📝 Asunto:
+                </label>
+                <input 
+                  type="text" 
+                  className="cuadroTexto" 
+                  value={asunto} 
+                  onChange={e => setAsunto(e.target.value)} 
+                  style={{ width: '100%' }}
+                />
               </div>
-              <button className="btn-enviar-modal" style={{ width: '100%' }} onClick={() => { }}>Enviar</button>
+              
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                  💬 Mensaje:
+                </label>
+                <textarea 
+                  className="cuadroTexto" 
+                  value={mensaje} 
+                  onChange={e => setMensaje(e.target.value)} 
+                  style={{ width: '100%', minHeight: '120px', resize: 'vertical' }}
+                  placeholder="Escriba aquí el mensaje para el cliente..."
+                />
+              </div>
+              
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button 
+                  className="btn-enviar-modal" 
+                  style={{ flex: 1, backgroundColor: '#28a745', color: 'white', border: 'none', padding: '10px', borderRadius: '5px', cursor: 'pointer' }} 
+                  onClick={enviarPorCorreo}
+                >
+                  📧 Enviar Correo
+                </button>
+                <button 
+                  className="btn-cancelar-modal" 
+                  style={{ flex: 1, backgroundColor: '#6c757d', color: 'white', border: 'none', padding: '10px', borderRadius: '5px', cursor: 'pointer' }} 
+                  onClick={() => setShowEnviarModal(false)}
+                >
+                  ❌ Cancelar
+                </button>
+              </div>
             </div>
           </div>
         )}

@@ -26,7 +26,7 @@ export default function ContenedorModuloProductos() {
         <br/>
         <div className="flex flex-wrap gap-6 mt-4" style={{ display: "grid", gap: "16px", justifyContent: "center", gridTemplateColumns: "repeat(auto-fit, minmax(140px, max-content))", margin: "0" }}>
           {puedeVerCategorias && (
-            <Link to="/categorias">
+            <Link to="/ListaDeCategorias">
               <button className="flex flex-col items-center justify-center w-28 h-28 p-4 rounded-xl bg-gray-800 text-yellow-400 shadow-md hover:scale-105 hover:bg-yellow-500 hover:text-black transition duration-300" style={{ width: "140px", height: "140px", gap: "6px", borderRadius: "15px"}}>
                 <img
                   src="https://cdn-icons-png.flaticon.com/128/10522/10522934.png"

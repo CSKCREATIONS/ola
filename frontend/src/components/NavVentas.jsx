@@ -48,7 +48,6 @@ export default function NavVentas() {
 
     { path: "/PedidosCancelados", label: "Pedidos cancelados", visible: puedeVerPedidosCancelados },
 
-    { path: "/PedidosDevueltos", label: "Pedidos devueltos", visible: puedeVerPedidosDevueltos },
     
     { path: "/ListaDeRemisiones", label: "Lista de remisiones", visible: puedeVerRemisiones },
     
@@ -61,7 +60,6 @@ export default function NavVentas() {
     puedeVerVentasAgendadas,
     puedeVerPedidosEntregados,
     puedeVerPedidosCancelados,
-    puedeVerPedidosDevueltos,
     puedeVerListaDeVentas,
     puedeVerListaDeClientes,
     puedeVerProspectos,
