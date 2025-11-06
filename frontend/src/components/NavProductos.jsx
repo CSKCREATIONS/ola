@@ -33,7 +33,7 @@ export default function NavUsuarios() {
                 location.pathname === '/ListaDeCategorias' ? 'nav-item active' : 'nav-item'
               }
             >
-              Lista de Categorias
+              Categorias
             </Link>
           )}
 
@@ -44,7 +44,7 @@ export default function NavUsuarios() {
                 location.pathname === '/Subcategorias' ? 'nav-item active' : 'nav-item'
               }
             >
-              Lista de Subcategorias
+              Subcategorias
             </Link>
           )}
 
@@ -65,7 +65,7 @@ export default function NavUsuarios() {
                 location.pathname === '/ReporteProductos' ? 'nav-item active' : 'nav-item'
               }
             >
-              Reportes de Productos
+              Reportes
             </Link>
           )}
         </nav>

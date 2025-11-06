@@ -670,10 +670,10 @@ const GestionSubcategorias = () => {
                 </div>
                 <div>
                   <h2 style={{ margin: '0 0 8px 0', fontSize: '2rem', fontWeight: '700' }}>
-                    Gestión de Subcategorías
+                    Subcategorías
                   </h2>
                   <p style={{ margin: 0, fontSize: '1.1rem', opacity: 0.9 }}>
-                    Clasificación detallada de productos por subcategorías
+                    Aquí podrá gestionar todas las subcategorías de productos
                   </p>
                 </div>
               </div>

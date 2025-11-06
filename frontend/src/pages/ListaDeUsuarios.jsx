@@ -520,7 +520,7 @@ export default function ListaDeUsuarios() {
                       Gestión de Usuarios
                     </h2>
                     <p style={{ margin: 0, fontSize: '1.1rem', opacity: 0.9 }}>
-                      Administra y supervisa todos los usuarios del sistema
+                      Administre y supervise todos los usuarios del sistema
                     </p>
                   </div>
                 </div>
@@ -696,7 +696,7 @@ export default function ListaDeUsuarios() {
                     {todosLosUsuarios.filter(u => u.enabled).length}
                   </h3>
                   <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
-                    Usuarios Activos
+                    Activos
                   </p>
                 </div>
               </div>
@@ -734,7 +734,7 @@ export default function ListaDeUsuarios() {
                     {todosLosUsuarios.filter(u => !u.enabled).length}
                   </h3>
                   <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
-                    Usuarios Inactivos
+                    Inactivos
                   </p>
                 </div>
               </div>
@@ -977,9 +977,7 @@ export default function ListaDeUsuarios() {
             
             <div style={{ overflow: 'auto' }}>
               <table style={{
-                width: '100%',
-                borderCollapse: 'collapse',
-                fontSize: '14px'
+                width: '100%'
               }} id='tabla_lista_usuarios'>
                 <thead>
                   <tr style={{ 
@@ -1005,7 +1003,7 @@ export default function ListaDeUsuarios() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-user" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      <i className="fa-solid fa-user" style={{ marginRight: '6px'  }}></i>
                       NOMBRE COMPLETO
                     </th>
                     <th style={{ 
@@ -1016,7 +1014,7 @@ export default function ListaDeUsuarios() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-shield-alt" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      <i className="fa-solid fa-shield-alt" style={{ marginRight: '6px', }}></i>
                       ROL
                     </th>
                     <th style={{ 
