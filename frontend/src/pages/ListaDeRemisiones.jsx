@@ -4,6 +4,7 @@ import NavVentas from '../components/NavVentas';
 import EncabezadoModulo from '../components/EncabezadoModulo';
 import RemisionPreview from '../components/RemisionPreview';
 import Swal from 'sweetalert2';
+import api from '../api/axiosConfig';
 import * as XLSX from 'xlsx';
 
 // CSS para animaciones y efectos avanzados
@@ -76,27 +77,11 @@ export default function ListaDeRemisiones() {
   const cargarRemisiones = async (estado = 'todas') => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      const url = `http://localhost:5000/api/remisiones?estado=${estado}&limite=100`;
-      
-      const response = await fetch(url, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setRemisiones(data.remisiones || []);
-      } else {
-        console.error('Error al cargar remisiones:', response.statusText);
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'No se pudieron cargar las remisiones'
-        });
-      }
+      const res = await api.get(`/api/remisiones?estado=${estado}&limite=100`);
+      const data = res.data || res;
+      const listaRemisiones = data.remisiones || data.data || [];
+      const remisionesOrdenadas = (Array.isArray(listaRemisiones) ? listaRemisiones : []).sort((a, b) => new Date(b.createdAt || b.fechaCreacion) - new Date(a.createdAt || a.fechaCreacion));
+      setRemisiones(remisionesOrdenadas);
     } catch (error) {
       console.error('Error:', error);
       Swal.fire({
@@ -112,18 +97,9 @@ export default function ListaDeRemisiones() {
   // Cargar estadísticas
   const cargarEstadisticas = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/remisiones/estadisticas', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setEstadisticas(data);
-      }
+      const res = await api.get('/api/remisiones/estadisticas');
+      const data = res.data || res;
+      setEstadisticas(data);
     } catch (error) {
       console.error('Error al cargar estadísticas:', error);
     }
@@ -148,17 +124,8 @@ export default function ListaDeRemisiones() {
 
       if (!isConfirmed) return;
 
-      const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/remisiones/${remisionId}/estado`, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ estado: nuevoEstado })
-      });
-
-      if (response.ok) {
+      const response = await api.patch(`/api/remisiones/${remisionId}/estado`, { estado: nuevoEstado });
+      if (response.status >= 200 && response.status < 300) {
         Swal.fire({
           icon: 'success',
           title: 'Estado actualizado',
@@ -185,24 +152,10 @@ export default function ListaDeRemisiones() {
     try {
       console.log('🔍 Obteniendo detalles de remisión:', remision._id);
       
-      const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/remisiones/${remision._id}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (response.ok) {
-        const remisionCompleta = await response.json();
-        console.log('📦 Remisión completa obtenida:', remisionCompleta);
-        setRemisionSeleccionada(remisionCompleta);
-        setMostrarModalDetalles(true);
-      } else {
-        console.error('Error al obtener detalles de remisión');
-        // Fallback: usar los datos de la lista
-        setRemisionSeleccionada(remision);
-        setMostrarModalDetalles(true);
-      }
+      const res = await api.get(`/api/remisiones/${remision._id}`);
+      const remisionCompleta = res.data || res;
+      setRemisionSeleccionada(remisionCompleta);
+      setMostrarModalDetalles(true);
     } catch (error) {
       console.error('Error al obtener remisión:', error);
       // Fallback: usar los datos de la lista
@@ -235,16 +188,8 @@ export default function ListaDeRemisiones() {
 
       if (!isConfirmed) return;
 
-      const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/remisiones/${remisionId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.ok) {
+      const res = await api.delete(`/api/remisiones/${remisionId}`);
+      if (res.status >= 200 && res.status < 300) {
         Swal.fire({
           icon: 'success',
           title: 'Remisión eliminada',

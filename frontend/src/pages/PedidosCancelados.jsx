@@ -8,6 +8,7 @@ import jsPDF from 'jspdf';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import Swal from 'sweetalert2';
+import api from '../api/axiosConfig';
 
 /* Estilos CSS avanzados para Pedidos Cancelados */
 const pedidosCanceladosStyles = `
@@ -217,19 +218,12 @@ export default function PedidosCancelados() {
 
   const cargarPedidosCancelados = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/pedidos?populate=true', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        const cancelados = data.filter(pedido => pedido.estado === 'cancelado');
-        setPedidosCancelados(cancelados);
-      } else {
-        console.error('Error al cargar pedidos cancelados');
-        Swal.fire('Error', 'No se pudieron cargar los pedidos cancelados', 'error');
-      }
+      const res = await api.get('/api/pedidos?populate=true');
+      const data = res.data || res;
+      const arr = Array.isArray(data) ? data : data.data || [];
+      const cancelados = arr.filter(pedido => pedido.estado === 'cancelado');
+      const canceladosOrdenados = cancelados.sort((a, b) => new Date(b.createdAt || b.fechaCreacion) - new Date(a.createdAt || a.fechaCreacion));
+      setPedidosCancelados(canceladosOrdenados);
     } catch (error) {
       console.error('Error:', error);
       Swal.fire('Error', 'Error de conexión', 'error');
@@ -281,18 +275,10 @@ export default function PedidosCancelados() {
 
   const verDetallesCancelado = async (pedidoId) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/pedidos/${pedidoId}?populate=true`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      if (response.ok) {
-        const pedidoCompleto = await response.json();
-        setDatosCancelado(pedidoCompleto);
-        setMostrarCancelado(true);
-      } else {
-        Swal.fire('Error', 'No se pudo cargar la información del pedido', 'error');
-      }
+      const res = await api.get(`/api/pedidos/${pedidoId}?populate=true`);
+      const pedidoCompleto = res.data || res;
+      setDatosCancelado(pedidoCompleto);
+      setMostrarCancelado(true);
     } catch (error) {
       console.error('Error:', error);
       Swal.fire('Error', 'Error al cargar detalles del pedido', 'error');

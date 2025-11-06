@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import api from '../api/axiosConfig';
 
 export default function RecuperarContraseña() {
   const navigate = useNavigate();
@@ -13,13 +14,8 @@ export default function RecuperarContraseña() {
     e.preventDefault();
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/recover-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      });
-
-      const data = await response.json();
+      const response = await api.post('/api/auth/recover-password', { email });
+      const data = response.data;
 
       if (data.success) {
         Swal.fire({

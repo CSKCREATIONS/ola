@@ -11,8 +11,18 @@ const nodemailer = require('nodemailer');
 const sgMail = require('@sendgrid/mail');
 const PDFService = require('../services/pdfService');
 
-// Configurar SendGrid
-sgMail.setApiKey(process.env.SENDGRID_API_KEY || '');
+// Configurar SendGrid de forma segura para no bloquear el arranque
+try {
+  const apiKey = process.env.SENDGRID_API_KEY;
+  if (apiKey && apiKey.startsWith('SG.')) {
+    sgMail.setApiKey(apiKey);
+    console.log('✉️  SendGrid listo (pedidos)');
+  } else {
+    console.log('✉️  SendGrid no configurado (pedidos): se omitirá hasta el envío');
+  }
+} catch (e) {
+  console.warn('⚠️  No se pudo inicializar SendGrid (pedidos). Continuando sin correo:', e.message);
+}
 
 // Configurar Gmail transporter
 const createGmailTransporter = () => {

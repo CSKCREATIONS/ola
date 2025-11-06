@@ -3,8 +3,12 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const morgan = require('morgan');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const mongoSanitize = require('express-mongo-sanitize');
 const config = require('./config');
 const {MongoClient , ObjectId} =  require ('mongodb');
+const dbConfig = require('./config/db.js');
 
 //Importar Rutas
 const authRoutes = require('./routes/authRoutes');
@@ -24,24 +28,116 @@ const ordenCompraRoutes = require('./routes/ordenCompraRoutes');
 const remisionRoutes = require('./routes/remisionRoutes');
 
 
-const mongoClient = new MongoClient(process.env.MONGODB_URI);
-(async()=>{
-    await mongoClient.connect();
-    app.set('mongoDB',mongoClient.db());
-    console.log('Conexion directa a mongoDB establecida');
-})();
 const app = express();
 
-//Middleware
-app.use(cors());
+// Usar analizador de query simple para reducir superficie de ataque
+app.set('query parser', 'simple');
+
+// Request ID simple para correlación de logs
+app.use((req, res, next) => {
+    req.id = (Date.now().toString(36) + Math.random().toString(36).slice(2, 10)).toUpperCase();
+    res.setHeader('X-Request-Id', req.id);
+    next();
+});
+// Conexión directa a Mongo con fallback a localhost en desarrollo
+const tryConnectMongoClient = async (primaryUrl) => {
+    let url = primaryUrl;
+    console.log('MongoClient URI:', url);
+    const client = new MongoClient(url);
+    try {
+        await client.connect();
+        return client;
+    } catch (error) {
+        console.error('❌ Error conectando a MongoDB:', error);
+        if (process.env.NODE_ENV !== 'production') {
+            const fallback = 'mongodb://localhost:27017/pangea';
+            console.log('↩️  Intentando fallback local:', fallback);
+            const clientFallback = new MongoClient(fallback);
+            await clientFallback.connect();
+            return clientFallback;
+        }
+        throw error;
+    }
+};
+
+(async () => {
+    try {
+        const mongoClient = await tryConnectMongoClient(dbConfig.url);
+        app.set('mongoDB', mongoClient.db());
+        console.log('✔ Conexión directa a MongoDB establecida');
+    } catch (error) {
+        console.error('❌ No fue posible establecer conexión directa a MongoDB');
+    }
+})();
+
+// Seguridad básica y utilidades
+app.use(helmet());
+
+// CORS configurable por entorno: CORS_ORIGINS=orig1,orig2
+const allowedOrigins = (process.env.CORS_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
+app.use(cors({
+    origin: allowedOrigins.length ? allowedOrigins : true,
+    credentials: allowedOrigins.length ? true : false,
+}));
+
+// Nota Express 5: req.query es de solo lectura; evitamos asignar directamente para no romper
+// Sanitización manual: body y params in-place; query en copia segura req.sanitizedQuery
+
+// Rate limiting para /api/*
+const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 1000, // ajustar según necesidades
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+app.use('/api', apiLimiter);
+
+// Logging
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));
 
-//Conexion a mongo
-mongoose.connect(process.env.MONGODB_URI)
-.then(() => console.log('OK MongoDB conectado'))
-.catch(err => console.error('X error de mongoDB',err));
+// Sanitización para Mongo (custom para Express 5)
+app.use((req, res, next) => {
+    try {
+        if (req.body) req.body = mongoSanitize.sanitize(req.body);
+        if (req.params) req.params = mongoSanitize.sanitize(req.params);
+        if (req.query) req.sanitizedQuery = mongoSanitize.sanitize({ ...req.query });
+    } catch (e) {
+        console.warn('mongoSanitize middleware warning:', e.message);
+    }
+    next();
+});
+
+// Conexion a mongo
+console.log('MongoDB URI:', dbConfig.url);
+const connectMongoose = async (primaryUrl) => {
+    try {
+        await mongoose.connect(primaryUrl);
+        console.log('✔ Mongoose conectado a MongoDB');
+    } catch (err) {
+        console.error('❌ Error de conexión con Mongoose:', err);
+        if (process.env.NODE_ENV !== 'production') {
+            const fallback = 'mongodb://localhost:27017/pangea';
+            console.log('↩️  Mongoose intentando fallback local:', fallback);
+            await mongoose.connect(fallback);
+            console.log('✔ Mongoose conectado con fallback local');
+        } else {
+            throw err;
+        }
+    }
+};
+connectMongoose(dbConfig.url);
+
+// Endpoints de salud
+app.get('/health', (req, res) => {
+    res.json({ status: 'ok', time: new Date().toISOString() });
+});
+app.get('/ready', (req, res) => {
+    const state = mongoose.connection.readyState; // 1 conectado
+    const ready = state === 1;
+    res.status(ready ? 200 : 503).json({ ready, state });
+});
 
 //rutas
 app.use('/api/auth', authRoutes);
@@ -59,6 +155,25 @@ app.use('/api/pedidos', pedidosRoutes);
 app.use('/api/reportes', reportesRoutes);
 app.use('/api/ordenes-compra', ordenCompraRoutes);
 app.use('/api/remisiones', remisionRoutes);
+
+// 404 para rutas no encontradas
+app.use((req, res, next) => {
+    res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Ruta no encontrada' } });
+});
+
+// Manejador de errores centralizado
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+    console.error('❌ Error:', { id: req.id, message: err.message, stack: err.stack });
+    const status = err.status || 500;
+    res.status(status).json({
+        error: {
+            code: err.code || 'INTERNAL_ERROR',
+            message: err.message || 'Error interno del servidor',
+            traceId: req.id,
+        }
+    });
+});
 
 //Inicio del servidor
 const PORT = process.env.PORT || 5000;

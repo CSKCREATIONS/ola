@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { Editor } from "@tinymce/tinymce-react";
 import React, { useRef, useState, useEffect } from 'react';
 import { transform } from 'lodash';
+import api from '../api/axiosConfig';
 
 export default function RegistrarCotizacion() {
   const navigate = useNavigate();
@@ -17,15 +18,16 @@ export default function RegistrarCotizacion() {
   const [notificacion, setNotificacion] = useState(null);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const loadProducts = async () => {
+      try {
+        const res = await api.get('/api/products');
+        setProductos(res.data.data || res.data || []);
+      } catch (err) {
+        console.error('Error al cargar productos:', err);
+      }
+    };
 
-    fetch('http://localhost:5000/api/products', {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-      .then(res => res.json())
-      .then(data => setProductos(data.data || []))
-      .catch(err => console.error('Error al cargar productos:', err));
-
+    loadProducts();
   }, []);
 
   useEffect(() => {
@@ -217,30 +219,18 @@ export default function RegistrarCotizacion() {
     }
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/cotizaciones', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify(datosCotizacion)
-      });
+      const response = await api.post('/api/cotizaciones', datosCotizacion);
+      const result = response.data;
 
-      const result = await response.json();
-
-      if (!response.ok) {
+      if (response.status < 200 || response.status >= 300) {
         Swal.fire('Error', result.message || 'No se pudo guardar la cotización.', 'error');
         return;
       }
 
       // MARCAR: check if client with this email exists; if not, create as prospect
       try {
-        const token = localStorage.getItem('token');
-        const clientesRes = await fetch('http://localhost:5000/api/clientes', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        const clientes = await clientesRes.json();
+        const clientesRes = await api.get('/api/clientes');
+        const clientes = clientesRes.data;
         const existe = Array.isArray(clientes) && clientes.some(c => (c.correo || '').toLowerCase() === correo.toLowerCase());
         if (!existe) {
           // crear prospecto (esCliente: false)
@@ -253,20 +243,11 @@ export default function RegistrarCotizacion() {
             esCliente: false
           };
 
-          const createRes = await fetch('http://localhost:5000/api/clientes', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`
-            },
-            body: JSON.stringify(nuevoCliente)
-          });
-
-          if (createRes.ok) {
+          const createRes = await api.post('/api/clientes', nuevoCliente);
+          if (createRes.status >= 200 && createRes.status < 300) {
             Swal.fire('Prospecto creado', 'El correo no existía en la base de datos y se creó como prospecto.', 'success');
           } else {
-            const err = await createRes.json();
-            console.warn('No se pudo crear prospecto:', err);
+            console.warn('No se pudo crear prospecto:', createRes.data);
           }
         }
       } catch (err) {

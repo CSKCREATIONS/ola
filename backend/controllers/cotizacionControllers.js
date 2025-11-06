@@ -8,8 +8,18 @@ const PDFService = require('../services/pdfService');
 
 const { validationResult } = require('express-validator');
 
-// Configurar SendGrid
-sgMail.setApiKey(process.env.SENDGRID_API_KEY || '');
+// Configurar SendGrid de forma segura para no bloquear el arranque
+try {
+  const apiKey = process.env.SENDGRID_API_KEY;
+  if (apiKey && apiKey.startsWith('SG.')) {
+    sgMail.setApiKey(apiKey);
+    console.log('✉️  SendGrid listo (cotizaciones)');
+  } else {
+    console.log('✉️  SendGrid no configurado (cotizaciones): se omitirá hasta el envío');
+  }
+} catch (e) {
+  console.warn('⚠️  No se pudo inicializar SendGrid (cotizaciones). Continuando sin correo:', e.message);
+}
 
 // Configurar Gmail transporter
 const createGmailTransporter = () => {

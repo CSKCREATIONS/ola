@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
+import api from '../api/axiosConfig';
 import '../App.css';
 import Fijo from '../components/Fijo';
 import NavProductos from '../components/NavProductos';
 
-const API_URL = 'http://localhost:5000/api/subcategories';
-const CATEGORY_API_URL = 'http://localhost:5000/api/categories';
-const token = localStorage.getItem('token');
+const API_URL = '/api/subcategories';
+const CATEGORY_API_URL = '/api/categories';
 
 /* Estilos CSS avanzados para Subcategorías */
 const subcategoriasStyles = `
@@ -535,11 +535,8 @@ const GestionSubcategorias = () => {
 
   const loadSubcategorias = async () => {
     try {
-      const res = await fetch(API_URL, {
-        headers: { 'x-access-token': token }
-      });
-
-      const result = await res.json();
+      const res = await api.get(API_URL);
+      const result = res.data;
       const data = result.subcategories || result.data || result || [];
       setSubcategorias(Array.isArray(data) ? data : []);
     } catch (err) {
@@ -549,11 +546,8 @@ const GestionSubcategorias = () => {
 
   const loadCategorias = async () => {
     try {
-      const res = await fetch(CATEGORY_API_URL, {
-        headers: { 'x-access-token': token }
-      });
-
-      const result = await res.json();
+      const res = await api.get(CATEGORY_API_URL);
+      const result = res.data;
       const data = result.categories || result.data || result || [];
       const activas = Array.isArray(data) ? data.filter(cat => cat.activo) : [];
       setCategorias(activas);
@@ -567,16 +561,12 @@ const GestionSubcategorias = () => {
     const method = id ? 'PUT' : 'POST';
 
     try {
-      const res = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          'x-access-token': token
-        },
-        body: JSON.stringify({ name, description, category: categoryId })
-      });
+      let res;
+      if (method === 'POST') res = await api.post(API_URL, { name, description, category: categoryId });
+      else res = await api.put(url.replace(API_URL, '/api/subcategories'), { name, description, category: categoryId });
 
-      if (!res.ok) throw new Error('Error al guardar');
+      const ok = res.status >= 200 && res.status < 300;
+      if (!ok) throw new Error('Error al guardar');
       Swal.fire('Éxito', id ? 'Subcategoría actualizada' : 'Subcategoría creada', 'success');
       setModalVisible(false);
       loadSubcategorias();
@@ -605,19 +595,10 @@ const GestionSubcategorias = () => {
     if (!confirm.isConfirmed) return;
 
     try {
-      const res = await fetch(
-        `${API_URL}/${id}/${activar ? 'activate' : 'deactivate'}`,
-        {
-          method: 'PATCH',
-          headers: { 'x-access-token': localStorage.getItem('token') }
-        }
-      );
-
-      const data = await res.json();
-
-      if (!res.ok) {
+      const res = await api.patch(`${API_URL}/${id}/${activar ? 'activate' : 'deactivate'}`);
+      const data = res.data;
+      if (res.status < 200 || res.status >= 300) {
         if (res.status === 400 && data && data.message) {
-          // Mostrar mensaje del servidor (por ejemplo: categoría padre desactivada)
           await Swal.fire('Acción no permitida', data.message, 'error');
           return;
         }
@@ -641,19 +622,14 @@ const GestionSubcategorias = () => {
   const handleToggleWithParentCheck = async (subcatId, wantToActivate) => {
     try {
       // Obtener la subcategoría para conocer su categoría padre
-      const subRes = await fetch(`${API_URL}/${subcatId}`, {
-        headers: { 'x-access-token': token }
-      });
-
-      const subData = await subRes.json();
+      const subRes = await api.get(`${API_URL}/${subcatId}`);
+      const subData = subRes.data;
       const parentCategoryId = subData?.data?.category?._id || subData?.category?._id || subData?.data?.category;
 
       if (wantToActivate && parentCategoryId) {
         // Consultar la categoría padre
-        const catRes = await fetch(`${CATEGORY_API_URL}/${parentCategoryId}`, {
-          headers: { 'x-access-token': token }
-        });
-        const catData = await catRes.json();
+        const catRes = await api.get(`${CATEGORY_API_URL}/${parentCategoryId}`);
+        const catData = catRes.data;
 
         const categoria = catData?.data || catData;
         if (catRes.ok && categoria && categoria.activo === false) {

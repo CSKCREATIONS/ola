@@ -6,7 +6,7 @@ import {
   CheckCircleOutlined,
   StopOutlined,
 } from "@ant-design/icons";
-import axios from "axios";
+import api from '../api/axiosConfig';
 import {
   PieChart,
   Pie,
@@ -35,8 +35,8 @@ const Reportes = () => {
   useEffect(() => {
     const fetchEstadisticas = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/reportes/estadisticas-productos");
-        setEstadisticas(res.data.data || {});
+        const res = await api.get('/api/reportes/estadisticas-productos');
+        setEstadisticas(res.data?.data || res.data || {});
       } catch (error) {
         console.error("Error al obtener estadísticas de productos:", error);
       }
@@ -44,8 +44,8 @@ const Reportes = () => {
 
     const fetchProductosPorCategoria = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/reportes/productos-por-categoria");
-        setProductosPorCategoria(res.data.data || []);
+        const res = await api.get('/api/reportes/productos-por-categoria');
+        setProductosPorCategoria(res.data?.data || res.data || []);
       } catch (error) {
         console.error("Error al obtener productos por categoría:", error);
       }
@@ -53,8 +53,8 @@ const Reportes = () => {
 
     const fetchProductosPorEstado = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/reportes/productos-por-estado");
-        setProductosPorEstado(res.data.data || []);
+        const res = await api.get('/api/reportes/productos-por-estado');
+        setProductosPorEstado(res.data?.data || res.data || []);
       } catch (error) {
         console.error("Error al obtener productos por estado:", error);
       }

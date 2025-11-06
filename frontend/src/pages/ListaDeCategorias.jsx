@@ -3,9 +3,10 @@ import Swal from 'sweetalert2';
 import '../App.css';
 import Fijo from '../components/Fijo';
 import NavProductos from '../components/NavProductos'
+import api from '../api/axiosConfig';
 
-const API_URL = 'http://localhost:5000/api/categories';
-const token = localStorage.getItem('token');
+// Base endpoint used in this page
+const API_URL = '/api/categories';
 
 /* Estilos CSS avanzados para Categorías */
 const categoriasStyles = `
@@ -200,6 +201,9 @@ const CategoriaModal = ({ categoria, onClose, onSave }) => {
   const [name, setName] = useState(categoria ? categoria.name : '');
   const [description, setDescription] = useState(categoria ? categoria.description : '');
 
+  console.log('🔍 CategoriaModal - categoria recibida:', categoria);
+  console.log('🔍 CategoriaModal - categoria._id:', categoria?._id);
+
   const handleSubmit = async (e) => {
     
     e.preventDefault();
@@ -210,15 +214,13 @@ const CategoriaModal = ({ categoria, onClose, onSave }) => {
     }
 
     try {
-      const resCheck = await fetch(API_URL, {
-        headers: { 'x-access-token': token }
-      });
-      const resultCheck = await resCheck.json();
+      const resCheck = await api.get('/api/categories');
+      const resultCheck = resCheck.data || resCheck;
       const categories = resultCheck.categories || resultCheck.data || resultCheck;
 
       const nombreRepetido = categories.some(cat =>
         cat.name.toLowerCase() === name.toLowerCase() &&
-        cat._id !== categoria?.id
+        cat._id !== categoria?._id
       );
 
       if (nombreRepetido) {
@@ -226,7 +228,7 @@ const CategoriaModal = ({ categoria, onClose, onSave }) => {
         return;
       }
 
-      onSave({ id: categoria?.id, name, description });
+      onSave({ id: categoria?._id, name, description });
     } catch (err) {
       Swal.fire('Error', err.message, 'error');
     }
@@ -490,21 +492,26 @@ const ListaDeCategorias = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [categoriaEditando, setCategoriaEditando] = useState(null);
 
+  // Paginación
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentCategorias = categorias.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(categorias.length / itemsPerPage);
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
   useEffect(() => {
     loadCategories();
   }, []);
 
   const loadCategories = async () => {
     try {
-      const res = await fetch(API_URL, {
-        headers: { 'x-access-token': token }
-      });
-      
-      if (!res.ok) throw new Error('Error al cargar categorías');
-      
-      const result = await res.json();
+      const res = await api.get('/api/categories');
+      const result = res.data || res;
       const categoriesData = result.categories || result.data || result;
-      setCategorias(Array.isArray(categoriesData) ? categoriesData : []);
+      const categoriasOrdenadas = (Array.isArray(categoriesData) ? categoriesData : []).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      setCategorias(categoriasOrdenadas);
     } catch (err) {
       console.error('Error loading categories:', err);
       Swal.fire('Error', err.message, 'error');
@@ -513,28 +520,26 @@ const ListaDeCategorias = () => {
 
   const handleSave = async (categoriaData) => {
     try {
+      console.log('📝 handleSave - categoriaData:', categoriaData);
       const method = categoriaData.id ? 'PUT' : 'POST';
       const url = categoriaData.id ? `${API_URL}/${categoriaData.id}` : API_URL;
       
-      const res = await fetch(url, {
+      console.log('📝 Method:', method, 'URL:', url);
+      
+      const res = await api({
+        url,
         method,
-        headers: {
-          'Content-Type': 'application/json',
-          'x-access-token': token
-        },
-        body: JSON.stringify({ 
-          name: categoriaData.name, 
-          description: categoriaData.description 
-        })
+        data: { name: categoriaData.name, description: categoriaData.description }
       });
-
-      if (!res.ok) throw new Error('Error al guardar categoría');
+      
+      console.log('✅ Respuesta del servidor:', res.data);
       
       Swal.fire('Éxito', `Categoría ${categoriaData.id ? 'actualizada' : 'creada'} correctamente`, 'success');
       setModalVisible(false);
       setCategoriaEditando(null);
       loadCategories();
     } catch (err) {
+      console.error('❌ Error en handleSave:', err);
       Swal.fire('Error', err.message, 'error');
     }
   };
@@ -552,12 +557,8 @@ const ListaDeCategorias = () => {
     if (!confirm.isConfirmed) return;
 
     try {
-      const res = await fetch(`${API_URL}/${id}`, {
-        method: 'DELETE',
-        headers: { 'x-access-token': token }
-      });
-
-      if (!res.ok) throw new Error('No se pudo eliminar la categoría');
+      const res = await api.delete(`/api/categories/${id}`);
+      if (!(res.status >= 200 && res.status < 300)) throw new Error('No se pudo eliminar la categoría');
       Swal.fire('Eliminado', 'Categoría eliminada correctamente', 'success');
       loadCategories();
     } catch (err) {
@@ -578,16 +579,8 @@ const ListaDeCategorias = () => {
   if (!confirm.isConfirmed) return;
 
   try {
-    const res = await fetch(`${API_URL}/${id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-access-token': token
-      },
-      body: JSON.stringify({ activo: activar })
-    });
-
-    if (!res.ok) throw new Error('No se pudo actualizar el estado');
+    const res = await api.put(`/api/categories/${id}`, { activo: activar });
+    if (!(res.status >= 200 && res.status < 300)) throw new Error('No se pudo actualizar el estado');
 
     Swal.fire(
       activar ? 'Activada' : 'Desactivada',
@@ -604,6 +597,11 @@ const ListaDeCategorias = () => {
 const handleEdit = (categoria) => {
   setCategoriaEditando(categoria);
   setModalVisible(true);
+};
+
+const handleCloseModal = () => {
+  setModalVisible(false);
+  setCategoriaEditando(null);
 };
 
   return (
@@ -748,10 +746,10 @@ const handleEdit = (categoria) => {
                       </td>
                     </tr>
                   ) : (
-                    categorias.map((cat, index) => (
+                    currentCategorias.map((cat, index) => (
                       <tr key={cat._id}>
                         <td style={{ fontWeight: '500', color: '#6b7280' }}>
-                          {index + 1}
+                          {indexOfFirstItem + index + 1}
                         </td>
                         <td style={{ fontWeight: '600', color: '#1f2937' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -798,13 +796,56 @@ const handleEdit = (categoria) => {
                 </tbody>
               </table>
             </div>
+
+            {/* Paginación */}
+            {totalPages > 1 && (
+              <div style={{
+                padding: '20px 25px',
+                borderTop: '1px solid #e5e7eb',
+                display: 'flex',
+                justifyContent: 'center',
+                gap: '8px'
+              }}>
+                {Array.from({ length: totalPages }, (_, i) => (
+                  <button
+                    key={i + 1}
+                    onClick={() => paginate(i + 1)}
+                    style={{
+                      padding: '8px 16px',
+                      border: currentPage === i + 1 ? '2px solid #6366f1' : '2px solid #e5e7eb',
+                      borderRadius: '8px',
+                      background: currentPage === i + 1 ? '#6366f1' : 'white',
+                      color: currentPage === i + 1 ? 'white' : '#4b5563',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (currentPage !== i + 1) {
+                        e.target.style.borderColor = '#6366f1';
+                        e.target.style.color = '#6366f1';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (currentPage !== i + 1) {
+                        e.target.style.borderColor = '#e5e7eb';
+                        e.target.style.color = '#4b5563';
+                      }
+                    }}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
         {modalVisible && (
           <CategoriaModal
             categoria={categoriaEditando}
-            onClose={() => setModalVisible(false)}
+            onClose={handleCloseModal}
             onSave={handleSave}
           />
         )}

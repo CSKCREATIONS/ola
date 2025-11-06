@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
 import '../App.css'; // Asegúrate de crear este archivo
+import api from '../api/axiosConfig';
 
 export default function CambiarContrasena() {
   const [newPassword, setNewPassword] = useState('');
@@ -20,24 +21,10 @@ export default function CambiarContrasena() {
       const token = localStorage.getItem('token');
 
       // Cambiar contraseña
-      await fetch(`http://localhost:5000/api/users/change-password`, {
-
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token
-        },
-        body: JSON.stringify({ newPassword })
-      });
+      await api.patch('/api/users/change-password', { newPassword });
 
       // Confirmar que ya no necesita cambiarla
-      await fetch(`/api/users/${user._id}/confirm-password-change`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token
-        }
-      });
+      await api.patch(`/api/users/${user._id}/confirm-password-change`);
 
       Swal.fire('Éxito', 'Contraseña actualizada', 'success');
       navigate('/Home');

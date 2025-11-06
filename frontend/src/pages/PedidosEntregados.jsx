@@ -8,6 +8,7 @@ import jsPDF from 'jspdf';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import Swal from 'sweetalert2';
+import api from '../api/axiosConfig';
 
 /* Estilos CSS avanzados para Pedidos Entregados */
 const pedidosEntregadosStyles = `
@@ -217,19 +218,12 @@ export default function PedidosEntregados() {
 
   const cargarPedidosEntregados = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/pedidos?populate=true', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        const entregados = data.filter(pedido => pedido.estado === 'entregado');
-        setPedidosEntregados(entregados);
-      } else {
-        console.error('Error al cargar pedidos entregados');
-        Swal.fire('Error', 'No se pudieron cargar los pedidos entregados', 'error');
-      }
+      const res = await api.get('/api/pedidos?populate=true');
+      const data = res.data || res;
+      const arr = Array.isArray(data) ? data : data.data || [];
+      const entregados = arr.filter(pedido => pedido.estado === 'entregado');
+      const entregadosOrdenados = entregados.sort((a, b) => new Date(b.createdAt || b.fechaCreacion) - new Date(a.createdAt || a.fechaCreacion));
+      setPedidosEntregados(entregadosOrdenados);
     } catch (error) {
       console.error('Error:', error);
       Swal.fire('Error', 'Error de conexión', 'error');
@@ -253,50 +247,37 @@ export default function PedidosEntregados() {
         }
       });
 
-      const response = await fetch(`http://localhost:5000/api/remisiones/crear-desde-pedido/${pedidoId}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      const res = await api.post(`/api/remisiones/crear-desde-pedido/${pedidoId}`);
+      const result = res.data || res;
 
-      const result = await response.json();
+      Swal.close();
 
-      if (response.ok) {
-        Swal.close();
-        
-        if (result.existente) {
-          // Ya existe una remisión
-          Swal.fire({
-            icon: 'info',
-            title: 'Remisión existente',
-            text: `Ya existe la remisión ${result.remision.numeroRemision} para este pedido`,
-            confirmButtonText: 'Ver remisión'
-          }).then((result) => {
-            if (result.isConfirmed) {
-              // Mostrar la remisión existente
-              setDatosRemision(result.remision);
-              setShowRemisionModal(true);
-            }
-          });
-        } else {
-          // Remisión creada exitosamente
-          Swal.fire({
-            icon: 'success',
-            title: 'Remisión creada',
-            text: `Se ha creado la remisión ${result.remision.numeroRemision}`,
-            confirmButtonText: 'Ver remisión'
-          }).then((swalResult) => {
-            if (swalResult.isConfirmed) {
-              // Mostrar la nueva remisión
-              setDatosRemision(result.remision);
-              setShowRemisionModal(true);
-            }
-          });
-        }
+      if (result.existente) {
+        // Ya existe una remisión
+        Swal.fire({
+          icon: 'info',
+          title: 'Remisión existente',
+          text: `Ya existe la remisión ${result.remision?.numeroRemision || ''} para este pedido`,
+          confirmButtonText: 'Ver remisión'
+        }).then((r) => {
+          if (r.isConfirmed) {
+            setDatosRemision(result.remision);
+            setShowRemisionModal(true);
+          }
+        });
       } else {
-        throw new Error(result.message || 'Error al crear remisión');
+        // Remisión creada exitosamente
+        Swal.fire({
+          icon: 'success',
+          title: 'Remisión creada',
+          text: `Se ha creado la remisión ${result.remision?.numeroRemision || ''}`,
+          confirmButtonText: 'Ver remisión'
+        }).then((swalResult) => {
+          if (swalResult.isConfirmed) {
+            setDatosRemision(result.remision);
+            setShowRemisionModal(true);
+          }
+        });
       }
 
     } catch (error) {

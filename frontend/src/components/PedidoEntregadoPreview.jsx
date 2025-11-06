@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './FormatoCotizacion.css';
+import api from '../api/axiosConfig';
 
 export default function PedidoEntregadoPreview({ datos, onClose }) {
   const navigate = useNavigate();
@@ -16,23 +17,15 @@ export default function PedidoEntregadoPreview({ datos, onClose }) {
 
   const enviarCorreo = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/enviar-correo-pedido', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          correo,
-          asunto,
-          mensaje,
-          pedidoId: datos._id,
-          tipo: 'entregado'
-        })
+      const response = await api.post('/api/enviar-correo-pedido', {
+        correo,
+        asunto,
+        mensaje,
+        pedidoId: datos._id,
+        tipo: 'entregado'
       });
 
-      if (response.ok) {
+      if (response && response.status >= 200 && response.status < 300) {
         alert('Correo enviado exitosamente');
         setShowEnviarModal(false);
       } else {

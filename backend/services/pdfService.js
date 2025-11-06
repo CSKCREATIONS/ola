@@ -881,6 +881,262 @@ class PDFService {
     </html>
     `;
   }
+
+  // Generar PDF de compra
+  async generarPDFCompra(compra) {
+    try {
+      const html = this.generarHTMLCompra(compra);
+      
+      const file = {
+        content: html
+      };
+
+      const pdfBuffer = await htmlPdf.generatePdf(file, this.options);
+      
+      return {
+        buffer: pdfBuffer,
+        filename: `Compra_${compra.numeroOrden || compra._id}.pdf`,
+        contentType: 'application/pdf'
+      };
+    } catch (error) {
+      console.error('❌ Error generando PDF de compra:', error);
+      throw error;
+    }
+  }
+
+  // Generar HTML para compra
+  generarHTMLCompra(compra) {
+    const fechaCompra = compra.fecha || compra.fechaCompra;
+    const fechaFormateada = fechaCompra ? new Date(fechaCompra).toLocaleDateString('es-ES', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    }) : 'N/A';
+
+    const totalCalculado = compra.productos?.reduce((total, producto) => {
+      const subtotal = Number(producto.cantidad * producto.precioUnitario) || 0;
+      return total + subtotal;
+    }, 0) || 0;
+
+    const totalFinal = Number(compra.total) || totalCalculado;
+    const subtotalFinal = Number(compra.subtotal) || totalCalculado;
+    const impuestosFinal = Number(compra.impuestos) || 0;
+
+    return `
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Compra ${compra.numeroOrden}</title>
+      <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+          line-height: 1.6; 
+          color: #333; 
+          background-color: #ffffff;
+          padding: 20px;
+        }
+        .container { 
+          max-width: 800px; 
+          margin: 0 auto; 
+          background: white; 
+        }
+        .header { 
+          background: linear-gradient(135deg, #27ae60, #229954); 
+          color: white; 
+          padding: 30px; 
+          text-align: center; 
+          margin-bottom: 30px;
+        }
+        .header h1 { 
+          font-size: 28px; 
+          margin-bottom: 10px; 
+          font-weight: 700; 
+        }
+        .header p { 
+          font-size: 16px; 
+          opacity: 0.9; 
+        }
+        .info-section {
+          margin-bottom: 25px;
+          padding: 20px;
+          background: #f8f9fa;
+          border-left: 4px solid #27ae60;
+          border-radius: 5px;
+        }
+        .info-section h3 { 
+          color: #27ae60; 
+          margin-bottom: 12px; 
+          font-size: 16px;
+          font-weight: 600;
+        }
+        .info-section p { 
+          margin-bottom: 8px; 
+          color: #555; 
+          font-size: 14px;
+        }
+        .info-section strong { 
+          color: #333;
+          font-weight: 600;
+        }
+        .products-section { 
+          margin: 30px 0; 
+        }
+        .products-title { 
+          background: #27ae60; 
+          color: white; 
+          padding: 15px; 
+          margin-bottom: 0; 
+          font-size: 18px;
+          font-weight: 600;
+        }
+        .products-table { 
+          width: 100%; 
+          border-collapse: collapse; 
+          background: white; 
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+        }
+        .products-table thead { 
+          background: #27ae60; 
+          color: white; 
+        }
+        .products-table thead th { 
+          padding: 12px; 
+          text-align: left; 
+          font-weight: 600;
+          font-size: 14px;
+        }
+        .products-table tbody tr { 
+          border-bottom: 1px solid #eee; 
+        }
+        .products-table tbody td { 
+          padding: 12px; 
+          font-size: 14px;
+        }
+        .products-table tbody tr:hover {
+          background: #f8f9fa;
+        }
+        .total-section { 
+          background: #f8f9fa; 
+          padding: 20px; 
+          border-radius: 5px; 
+          margin-top: 30px; 
+        }
+        .total-row { 
+          display: flex; 
+          justify-content: space-between; 
+          padding: 10px 0; 
+          border-bottom: 1px solid #dee2e6; 
+          font-size: 14px;
+        }
+        .total-row.final { 
+          border-bottom: none; 
+          font-size: 18px; 
+          font-weight: bold; 
+          color: #27ae60; 
+          margin-top: 10px; 
+          padding-top: 15px; 
+          border-top: 2px solid #27ae60; 
+        }
+        .observaciones {
+          background: #fff3cd;
+          border-left: 4px solid #ffc107;
+          padding: 15px;
+          border-radius: 5px;
+          margin-top: 20px;
+        }
+        .footer { 
+          text-align: center; 
+          padding: 20px; 
+          color: #6c757d; 
+          font-size: 12px;
+          margin-top: 30px;
+          border-top: 1px solid #dee2e6;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>COMPRA CONFIRMADA</h1>
+          <p>N° ${compra.numeroOrden || 'N/A'}</p>
+        </div>
+
+        <div class="info-section">
+          <h3>📋 Información General</h3>
+          <p><strong>Número de Orden:</strong> ${compra.numeroOrden || 'N/A'}</p>
+          <p><strong>Fecha:</strong> ${fechaFormateada}</p>
+          <p><strong>Estado:</strong> ${compra.estado || 'Confirmada'}</p>
+        </div>
+
+        <div class="info-section">
+          <h3>🏢 Información del Proveedor</h3>
+          <p><strong>Nombre:</strong> ${compra.proveedor?.nombre || 'No especificado'}</p>
+          ${compra.proveedor?.email ? `<p><strong>Email:</strong> ${compra.proveedor.email}</p>` : ''}
+          ${compra.proveedor?.telefono ? `<p><strong>Teléfono:</strong> ${compra.proveedor.telefono}</p>` : ''}
+        </div>
+
+        <div class="products-section">
+          <h2 class="products-title">📦 Detalle de Productos</h2>
+          <table class="products-table">
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th style="text-align: center;">Cantidad</th>
+                <th style="text-align: right;">Precio Unitario</th>
+                <th style="text-align: right;">Subtotal</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${compra.productos?.map(p => {
+                const subtotal = p.cantidad * p.precioUnitario;
+                return `
+                  <tr>
+                    <td>${p.producto?.name || 'N/A'}</td>
+                    <td style="text-align: center; font-weight: 600;">${p.cantidad}</td>
+                    <td style="text-align: right;">$${Number(p.precioUnitario || 0).toLocaleString('es-CO', { minimumFractionDigits: 2 })}</td>
+                    <td style="text-align: right; font-weight: 600;">$${Number(subtotal || 0).toLocaleString('es-CO', { minimumFractionDigits: 2 })}</td>
+                  </tr>
+                `;
+              }).join('') || '<tr><td colspan="4" style="text-align: center; padding: 20px;">No hay productos</td></tr>'}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="total-section">
+          <div class="total-row">
+            <span><strong>Subtotal:</strong></span>
+            <span>$${subtotalFinal.toLocaleString('es-CO', { minimumFractionDigits: 2 })}</span>
+          </div>
+          <div class="total-row">
+            <span><strong>Impuestos (IVA):</strong></span>
+            <span>$${impuestosFinal.toLocaleString('es-CO', { minimumFractionDigits: 2 })}</span>
+          </div>
+          <div class="total-row final">
+            <span>TOTAL:</span>
+            <span>$${totalFinal.toLocaleString('es-CO', { minimumFractionDigits: 2 })}</span>
+          </div>
+        </div>
+
+        ${compra.observaciones ? `
+          <div class="observaciones">
+            <strong>📝 Observaciones:</strong><br>
+            ${compra.observaciones}
+          </div>
+        ` : ''}
+
+        <div class="footer">
+          <p><strong>JLA Global Company</strong></p>
+          <p>Documento generado automáticamente</p>
+          <p>© ${new Date().getFullYear()} JLA Global Company. Todos los derechos reservados.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+    `;
+  }
 }
 
 module.exports = PDFService;

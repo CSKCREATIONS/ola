@@ -7,7 +7,7 @@ import {
   ShoppingOutlined,
   UserAddOutlined,
 } from "@ant-design/icons";
-import axios from "axios";
+import api from '../api/axiosConfig';
 import {
   PieChart,
   Pie,
@@ -38,8 +38,8 @@ const ReportesProveedores = () => {
   useEffect(() => {
     const fetchEstadisticas = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/reportes/estadisticas-proveedores");
-        setEstadisticas(res.data.data || {});
+  const res = await api.get('/api/reportes/estadisticas-proveedores');
+  setEstadisticas(res.data?.data || res.data || {});
       } catch (error) {
         console.error("Error al obtener estadísticas de proveedores:", error);
       }
@@ -47,8 +47,8 @@ const ReportesProveedores = () => {
 
     const fetchProveedoresPorPais = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/reportes/proveedores-por-pais");
-        setProveedoresPorPais(res.data.data || []);
+  const res = await api.get('/api/reportes/proveedores-por-pais');
+  setProveedoresPorPais(res.data?.data || res.data || []);
       } catch (error) {
         console.error("Error al obtener proveedores por país:", error);
       }
@@ -56,8 +56,8 @@ const ReportesProveedores = () => {
 
     const fetchProveedoresPorEstado = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/reportes/proveedores-por-estado");
-        setProveedoresPorEstado(res.data.data || []);
+  const res = await api.get('/api/reportes/proveedores-por-estado');
+  setProveedoresPorEstado(res.data?.data || res.data || []);
       } catch (error) {
         console.error("Error al obtener proveedores por estado:", error);
       }
@@ -65,8 +65,8 @@ const ReportesProveedores = () => {
 
     const fetchProductosProveedor = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/reportes/productos-por-proveedor");
-        setProductosProveedor(res.data.data || []);
+  const res = await api.get('/api/reportes/productos-por-proveedor');
+  setProductosProveedor(res.data?.data || res.data || []);
       } catch (error) {
         console.error("Error al obtener productos por proveedor:", error);
       }
@@ -74,8 +74,8 @@ const ReportesProveedores = () => {
 
     const fetchProveedoresRecientes = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/reportes/proveedores-recientes");
-        setProveedoresRecientes(res.data.data || []);
+  const res = await api.get('/api/reportes/proveedores-recientes');
+  setProveedoresRecientes(res.data?.data || res.data || []);
       } catch (error) {
         console.error("Error al obtener proveedores recientes:", error);
       }

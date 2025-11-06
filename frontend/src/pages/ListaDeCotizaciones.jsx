@@ -5,6 +5,7 @@ import NavVentas from '../components/NavVentas';
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import Swal from 'sweetalert2';
+import api from '../api/axiosConfig';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import CotizacionPreview from '../components/CotizacionPreview';
@@ -115,53 +116,18 @@ export default function ListaDeCotizaciones() {
 
     const fetchData = async () => {
       try {
-        // Fetch cotizaciones with better error handling
-        const cotRes = await fetch('http://localhost:5000/api/cotizaciones', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
+        const cotRes = await api.get('/api/cotizaciones');
+        const cotData = cotRes.data || [];
 
-        let cotData = [];
-        if (cotRes.ok) {
-          try {
-            cotData = await cotRes.json();
-            if (!Array.isArray(cotData)) {
-              console.warn('Cotizaciones data is not an array:', cotData);
-              cotData = [];
-            }
-          } catch (parseError) {
-            console.error('Error parsing cotizaciones JSON:', parseError);
-            cotData = [];
-          }
-        } else {
-          console.error('Error fetching cotizaciones:', cotRes.status, cotRes.statusText);
-          if (cotRes.status === 400) {
-            Swal.fire('Advertencia', 'Hay algunos datos corruptos en las cotizaciones. Se mostrarán las cotizaciones válidas.', 'warning');
-          }
-        }
+        const prodRes = await api.get('/api/products');
+        const prodData = prodRes.data?.data || prodRes.data || [];
 
-        // Fetch products
-        const prodRes = await fetch('http://localhost:5000/api/products', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        let prodData = [];
-        if (prodRes.ok) {
-          try {
-            const prodResponse = await prodRes.json();
-            prodData = Array.isArray(prodResponse.data) ? prodResponse.data : [];
-          } catch (parseError) {
-            console.error('Error parsing products JSON:', parseError);
-            prodData = [];
-          }
-        }
-
-        setCotizaciones(cotData);
-        setProductos(prodData);
-
+        const cotizacionesOrdenadas = (Array.isArray(cotData) ? cotData : []).sort((a, b) => new Date(b.createdAt || b.fechaCreacion) - new Date(a.createdAt || a.fechaCreacion));
+        setCotizaciones(cotizacionesOrdenadas);
+        setProductos(Array.isArray(prodData) ? prodData : []);
       } catch (err) {
         console.error('Error in fetchData:', err);
         Swal.fire('Error', 'No se pudieron cargar algunos datos. La aplicación funcionará con datos limitados.', 'warning');
-        // Set empty arrays to prevent crashes
         setCotizaciones([]);
         setProductos([]);
       }
@@ -209,26 +175,15 @@ export default function ListaDeCotizaciones() {
       if (result.isConfirmed) {
         (async () => {
           try {
-            const token = localStorage.getItem('token');
-            const res = await fetch(`http://localhost:5000/api/cotizaciones/${id}`, {
-              method: 'DELETE',
-              headers: {
-                'Authorization': `Bearer ${token}`
-              }
-            });
-
-            if (!res.ok) {
-              const text = await res.text().catch(() => null);
-              console.error('Error deleting cotizacion:', res.status, text);
-              return Swal.fire('Error', text || 'No se pudo eliminar la cotización.', 'error');
-            }
+            await api.delete(`/api/cotizaciones/${id}`);
 
             // Si el backend confirma la eliminación, actualizar estado local
             setCotizaciones(prev => prev.filter(c => c._id !== id));
             Swal.fire('Perfecto', 'Se ha eliminado la cotización.', 'success');
           } catch (err) {
             console.error('Error deleting cotizacion:', err);
-            Swal.fire('Error', 'No se pudo eliminar la cotización.', 'error');
+            const msg = err?.response?.data?.message || err?.response?.data || err.message;
+            Swal.fire('Error', msg || 'No se pudo eliminar la cotización.', 'error');
           }
         })();
       }
@@ -241,16 +196,8 @@ export default function ListaDeCotizaciones() {
       const token = localStorage.getItem('token');
       if (!token) return Swal.fire('Error', 'Sesión expirada. Vuelve a iniciar sesión.', 'warning');
 
-      const res = await fetch(`http://localhost:5000/api/cotizaciones/${id}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (!res.ok) {
-        const text = await res.text().catch(() => null);
-        console.error('Error fetching cotizacion for delete check:', res.status, text);
-        return Swal.fire('Error', 'No se pudo verificar la cotización antes de eliminar.', 'error');
-      }
-
-      const data = await res.json();
+      const res = await api.get(`/api/cotizaciones/${id}`);
+      const data = res.data || res;
       const cot = data.data || data;
 
       // Determinar fecha base: preferir createdAt, si no existe usar fecha
@@ -300,26 +247,14 @@ export default function ListaDeCotizaciones() {
         }))
       };
 
-      const res = await fetch(`http://localhost:5000/api/cotizaciones/${cotizacionSeleccionada._id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(cotizacionConSubtotales)
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || 'Error al guardar los cambios');
-      }
-
-      const cotizacionActualizada = await res.json();
+      const res = await api.put(`/api/cotizaciones/${cotizacionSeleccionada._id}`, cotizacionConSubtotales);
+      const cotizacionActualizada = res.data || res;
 
       // Actualizar la lista local
+      const updatedData = cotizacionActualizada.data || cotizacionActualizada;
       const nuevasCotizaciones = cotizaciones.map(c =>
         c._id === cotizacionSeleccionada._id ? {
-          ...cotizacionActualizada.data || cotizacionActualizada,
+          ...updatedData,
           ...cotizacionConSubtotales
         } : c
       );
@@ -560,9 +495,8 @@ export default function ListaDeCotizaciones() {
 
   const abrirEdicion = async (cotizacion) => {
     try {
-      // Obtener la cotización completa con sus productos
-      const response = await fetch(`http://localhost:5000/api/cotizaciones/${cotizacion._id}`);
-      const cotizacionCompleta = await response.json();
+      const response = await api.get(`/api/cotizaciones/${cotizacion._id}`);
+      const cotizacionCompleta = response.data || response;
 
       // Si no tiene productos inicializados, crear array vacío
       if (!cotizacionCompleta.productos) {
@@ -1034,16 +968,13 @@ export default function ListaDeCotizaciones() {
                           }}
                           onClick={async () => {
                             try {
-                              const token = localStorage.getItem('token');
-                              const res = await fetch(`http://localhost:5000/api/cotizaciones/${cot._id}`, {
-                                headers: { 'Authorization': `Bearer ${token}` }
-                              });
-                              if (!res.ok) throw new Error('No se pudo obtener la cotización');
-                              const data = await res.json();
+                              const res = await api.get(`/api/cotizaciones/${cot._id}`);
+                              const data = res.data || res;
                               const cotizacionCompleta = data.data || data;
                               setCotizacionSeleccionada(cotizacionCompleta);
                               setMostrarPreview(true);
                             } catch (err) {
+                              console.error('Error loading cotizacion:', err);
                               Swal.fire('Error', 'No se pudo cargar la cotización completa.', 'error');
                             }
                           }}
@@ -1166,16 +1097,13 @@ export default function ListaDeCotizaciones() {
                             <button
                               onClick={async () => {
                                 try {
-                                  const token = localStorage.getItem('token');
-                                  const res = await fetch(`http://localhost:5000/api/cotizaciones/${cot._id}`, {
-                                    headers: { 'Authorization': `Bearer ${token}` }
-                                  });
-                                  if (!res.ok) throw new Error('No se pudo obtener la cotización');
-                                  const data = await res.json();
+                                  const res = await api.get(`/api/cotizaciones/${cot._id}`);
+                                  const data = res.data || res;
                                   const cotizacionCompleta = data.data || data;
                                   setCotizacionSeleccionada(cotizacionCompleta);
                                   setModoEdicion(true);
                                 } catch (err) {
+                                  console.error('Error loading cotizacion for edit:', err);
                                   Swal.fire('Error', 'No se pudo cargar la cotización completa.', 'error');
                                 }
                               }}
@@ -1209,14 +1137,10 @@ export default function ListaDeCotizaciones() {
                             <button
                               onClick={async () => {
                                 try {
-                                  const token = localStorage.getItem('token');
                                   // Obtener cotización completa para asegurar productos y cliente
-                                  const res = await fetch(`http://localhost:5000/api/cotizaciones/${cot._id}`, {
-                                    headers: { 'Authorization': `Bearer ${token}` }
-                                  });
-                                  if (!res.ok) throw new Error('No se pudo obtener la cotización');
-                                  const data = await res.json();
-                                const cotizacion = data.data || data;
+                                  const res = await api.get(`/api/cotizaciones/${cot._id}`);
+                                  const data = res.data || res;
+                                  const cotizacion = data.data || data;
 
                                 const confirm = await Swal.fire({
                                   title: `¿Agendar la cotización '${cotizacion.codigo}' como pedido?`,
@@ -1274,28 +1198,14 @@ export default function ListaDeCotizaciones() {
 
                                 const fechaEntrega = new Date(fechaSeleccionada).toISOString();
 
-                                const crearRes = await fetch('http://localhost:5000/api/pedidos', {
-                                  method: 'POST',
-                                  headers: {
-                                    'Content-Type': 'application/json',
-                                    'Authorization': `Bearer ${token}`
-                                  },
-                                  body: JSON.stringify({
-                                    cliente: clienteId,
-                                    productos: productosPedido,
-                                    fechaEntrega,
-                                    observacion: `Agendado desde cotización ${cotizacion.codigo}`,
-                                    cotizacionReferenciada: cotizacion._id,
-                                    cotizacionCodigo: cotizacion.codigo
-                                  })
+                                const crearRes = await api.post('/api/pedidos', {
+                                  cliente: clienteId,
+                                  productos: productosPedido,
+                                  fechaEntrega,
+                                  observacion: `Agendado desde cotización ${cotizacion.codigo}`,
+                                  cotizacionReferenciada: cotizacion._id,
+                                  cotizacionCodigo: cotizacion.codigo
                                 });
-
-                                if (!crearRes.ok) {
-                                  const errText = await crearRes.text();
-                                  throw new Error(errText || 'No se pudo agendar el pedido');
-                                }
-
-                                await crearRes.json();
 
                                 // Actualizar el estado local de la cotización
                                 setCotizaciones(prev => prev.map(c =>

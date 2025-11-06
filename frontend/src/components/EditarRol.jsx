@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { closeModal } from "../funciones/animaciones";
 import Swal from "sweetalert2";
+import api from '../api/axiosConfig';
 
 export default function EditarRol({ rol }) {
    const [nombreRol, setNombreRol] = useState('');
@@ -107,7 +108,6 @@ export default function EditarRol({ rol }) {
    }, [rol]);
 
    useEffect(() => {
-      // Cuando los permisos cambian (después del primer useEffect), revisamos si debe mostrarse el submenú
       if (tienePermisosUsuarios()) {
          setMostrarUsuarios(true);
       } else {
@@ -130,22 +130,18 @@ export default function EditarRol({ rol }) {
       }
    }, [permisos]);
 
-   // Manejo de cambios en checkboxes
    const togglePermiso = (permiso) => {
       setPermisos(prev => {
          const yaIncluido = prev.includes(permiso);
 
-         // Si se desactiva 'usuarios.ver', también quitamos los hijos
          if (permiso === 'usuarios.ver' && yaIncluido) {
             return prev.filter(p => p !== 'usuarios.ver' && !permisosUsuarios.includes(p));
          }
 
-         // Si se desactiva 'roles.ver', también quitamos los hijos de roles
          if (permiso === 'roles.ver' && yaIncluido) {
             return prev.filter(p => p !== 'roles.ver' && !permisosRoles.includes(p));
          }
 
-         // Normal toggle
          return yaIncluido
             ? prev.filter(p => p !== permiso)
             : [...prev, permiso];
@@ -155,13 +151,12 @@ export default function EditarRol({ rol }) {
    const toggleGrupoPermisos = (grupoPermisos) => {
       const todosMarcados = grupoPermisos.every(p => permisos.includes(p));
       if (todosMarcados) {
-         // Si todos ya están marcados → los quitamos
          setPermisos(prev => prev.filter(p => !grupoPermisos.includes(p)));
       } else {
-         // Si hay al menos uno sin marcar → los agregamos todos
          setPermisos(prev => [...new Set([...prev, ...grupoPermisos])]);
       }
    };
+
    const handleSubmit = async (e) => {
       e.preventDefault();
 
@@ -174,22 +169,14 @@ export default function EditarRol({ rol }) {
       }
 
       try {
-         const token = localStorage.getItem('token');
-         const res = await fetch(`http://localhost:5000/api/roles/${rol._id}`, {
-            method: 'PATCH',
-            headers: {
-               'Content-Type': 'application/json',
-               'x-access-token': token
-            },
-            body: JSON.stringify({
-               name: nombreRol,
-               permissions: permisos
-            })
+         const res = await api.patch(`/api/roles/${rol._id}`, {
+            name: nombreRol,
+            permissions: permisos
          });
 
-         const data = await res.json();
+         const data = res.data || res;
 
-         if (res.ok && data.success) {
+         if (res.status >= 200 && res.status < 300 && data.success) {
             Swal.fire('Éxito', 'Rol actualizado correctamente', 'success');
             closeModal('edit-role-modal');
          } else {
@@ -200,539 +187,786 @@ export default function EditarRol({ rol }) {
          console.error('[EditarRol]', error);
          Swal.fire('Error', 'Error del servidor al actualizar el rol', 'error');
       }
-
-
    };
+
+   const checkboxLabelStyle = {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.5rem',
+      padding: '0.5rem',
+      cursor: 'pointer',
+      borderRadius: '6px',
+      transition: 'background 0.2s ease'
+   };
+
+   const checkboxStyle = {
+      width: '18px',
+      height: '18px',
+      cursor: 'pointer',
+      accentColor: '#8b5cf6'
+   };
+
    return (
-      <form class="modal" id="edit-role-modal" onSubmit={handleSubmit}>
-         <h3>Editar rol</h3>
-         <br />
-         <label>Nombre de rol</label>
-         <input className='entrada' type="text" style={{ marginLeft: '1.5rem' }} value={nombreRol} onChange={(e) => setNombreRol(e.target.value)} /><br /><br />
-         <label >Módulos con acceso</label>
-         <br />
-         <br />
-         <div class="checkbox-group">
-            <input
-               value="usuarios"
-               type="checkbox"
-               checked={mostrarUsuarios}
-               onChange={(e) => {
-                  const isChecked = e.target.checked;
-                  setMostrarUsuarios(isChecked);
-
-                  if (!isChecked) {
-                     // Filtra los permisos eliminando los relacionados con usuarios y roles
-                     setPermisos(prev =>
-                        prev.filter(p =>
-                           !p.startsWith('usuarios.') && !p.startsWith('roles.')
-                        )
-                     );
-                  }
-               }}
-
-            /> Usuarios
-
-
-            <input value="compras" type="checkbox"
-               checked={mostrarCompras}
-               onChange={(e) => {
-                  const isChecked = e.target.checked;
-                  setMostrarCompras(isChecked);
-               }} /> Compras
-            <input value="productos" type="checkbox" /> Productos
-            <input value="ventas" type="checkbox" 
-            checked={mostrarVentas}
-               onChange={(e) => {
-                  const isChecked = e.target.checked;
-                  setMostrarVentas(isChecked);
-               }}
-               /> Ventas
-         </div>
-         <br />
-         {mostrarUsuarios && (
-            <div className="section" id='permisos-usuarios'>
-               <h4>Permisos módulo usuarios</h4>
-               <br />
-               <div class="permissions">
-                  <div className="group">
-                     <label>
-                        <input
-                           style={{ marginRight: '0.5rem', marginBottom: '.5rem' }}
-                           type="checkbox"
-                           checked={permisos.includes('usuarios.ver')}
-                           onChange={() => togglePermiso('usuarios.ver')}
-                        />
-                        Lista de usuarios
-                     </label>
-
-                     <br />
-
+      <div 
+         id="edit-role-modal"
+         style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.6)',
+            display: 'none',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            backdropFilter: 'blur(4px)',
+            padding: '1rem'
+         }}
+         onClick={(e) => {
+            if (e.target.id === 'edit-role-modal') {
+               closeModal('edit-role-modal');
+            }
+         }}
+      >
+         <form 
+            onSubmit={handleSubmit}
+            style={{
+               backgroundColor: 'white',
+               borderRadius: '20px',
+               maxWidth: '1200px',
+               width: '95%',
+               maxHeight: '95vh',
+               overflow: 'hidden',
+               boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+               display: 'flex',
+               flexDirection: 'column'
+            }}
+         >
+            {/* Header */}
+            <div style={{
+               background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+               color: 'white',
+               padding: '2rem',
+               borderRadius: '20px 20px 0 0'
+            }}>
+               <h3 style={{ 
+                  margin: 0, 
+                  fontSize: '1.5rem', 
+                  fontWeight: '600',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.75rem'
+               }}>
+                  <div style={{
+                     width: '50px',
+                     height: '50px',
+                     borderRadius: '12px',
+                     background: 'rgba(255, 255, 255, 0.2)',
+                     display: 'flex',
+                     alignItems: 'center',
+                     justifyContent: 'center'
+                  }}>
+                     <i className="fa-solid fa-shield-alt" style={{ fontSize: '1.5rem' }}></i>
                   </div>
-                  <div className="group">
-                     <label>
-                        <input
-                           style={{ marginRight: '0.5rem', marginBottom: '.5rem' }}
-                           type="checkbox"
-                           checked={permisos.includes('roles.ver')}
-                           onChange={() => togglePermiso('roles.ver')}
-                        />
-                        Roles y permisos
-                     </label>
-                     <br />
-                  </div>
-                  <br />
+                  Editar Rol
+               </h3>
+               <p style={{ 
+                  margin: '0.5rem 0 0 4rem', 
+                  opacity: 0.9, 
+                  fontSize: '0.95rem' 
+               }}>
+                  Modificar permisos y configuración del rol
+               </p>
+            </div>
 
+            {/* Contenido scrolleable */}
+            <div style={{ 
+               flex: 1,
+               overflowY: 'auto',
+               padding: '2rem',
+               backgroundColor: '#f8fafc'
+            }}>
+               {/* Nombre del Rol */}
+               <div style={{
+                  background: 'white',
+                  padding: '1.5rem',
+                  borderRadius: '12px',
+                  marginBottom: '1.5rem',
+                  border: '1px solid #e2e8f0',
+                  borderLeft: '4px solid #8b5cf6'
+               }}>
+                  <label style={{
+                     display: 'flex',
+                     alignItems: 'center',
+                     gap: '0.5rem',
+                     marginBottom: '0.75rem',
+                     fontWeight: '600',
+                     color: '#374151',
+                     fontSize: '0.95rem'
+                  }}>
+                     <i className="fa-solid fa-tag" style={{ color: '#8b5cf6' }}></i>
+                     Nombre del Rol
+                     <span style={{ color: '#ef4444' }}>*</span>
+                  </label>
+                  <input 
+                     type="text" 
+                     value={nombreRol} 
+                     onChange={(e) => setNombreRol(e.target.value)}
+                     required
+                     style={{
+                        width: '100%',
+                        padding: '0.875rem 1rem',
+                        border: '2px solid #e5e7eb',
+                        borderRadius: '10px',
+                        fontSize: '0.95rem',
+                        transition: 'all 0.3s ease',
+                        boxSizing: 'border-box'
+                     }}
+                     onFocus={(e) => {
+                        e.target.style.borderColor = '#8b5cf6';
+                        e.target.style.boxShadow = '0 0 0 3px rgba(139, 92, 246, 0.1)';
+                     }}
+                     onBlur={(e) => {
+                        e.target.style.borderColor = '#e5e7eb';
+                        e.target.style.boxShadow = 'none';
+                     }}
+                  />
                </div>
-               <br />
-               {mostrarListaUsuarios && (
-                  <div className="form-group-rol" id="lista-usuarios">
-                     <label>Permisos para lista de usuarios</label>
-                     <div className="radio-options">
+
+               {/* Selección de Módulos */}
+               <div style={{
+                  background: 'white',
+                  padding: '1.5rem',
+                  borderRadius: '12px',
+                  marginBottom: '1.5rem',
+                  border: '1px solid #e2e8f0'
+               }}>
+                  <h4 style={{
+                     margin: '0 0 1rem 0',
+                     color: '#1e293b',
+                     fontSize: '1.05rem',
+                     fontWeight: '600'
+                  }}>
+                     <i className="fa-solid fa-cubes" style={{ marginRight: '0.5rem', color: '#8b5cf6' }}></i>
+                     Módulos con Acceso
+                  </h4>
+                  <div style={{
+                     display: 'grid',
+                     gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                     gap: '1rem'
+                  }}>
+                     <label style={checkboxLabelStyle}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                     >
                         <input
                            type="checkbox"
-                           checked={permisos.includes('usuarios.crear')}
-                           onChange={() => togglePermiso('usuarios.crear')}
-                        /> Crear usuarios
+                           checked={mostrarUsuarios}
+                           onChange={(e) => {
+                              const isChecked = e.target.checked;
+                              setMostrarUsuarios(isChecked);
+                              if (!isChecked) {
+                                 setPermisos(prev =>
+                                    prev.filter(p =>
+                                       !p.startsWith('usuarios.') && !p.startsWith('roles.')
+                                    )
+                                 );
+                              }
+                           }}
+                           style={checkboxStyle}
+                        />
+                        <i className="fa-solid fa-users" style={{ color: '#3b82f6' }}></i>
+                        <span style={{ fontWeight: '500' }}>Usuarios</span>
+                     </label>
 
+                     <label style={checkboxLabelStyle}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                     >
                         <input
                            type="checkbox"
-                           checked={permisos.includes('usuarios.editar')}
-                           onChange={() => togglePermiso('usuarios.editar')}
-                        /> Editar usuarios
+                           checked={mostrarCompras}
+                           onChange={(e) => setMostrarCompras(e.target.checked)}
+                           style={checkboxStyle}
+                        />
+                        <i className="fa-solid fa-shopping-cart" style={{ color: '#10b981' }}></i>
+                        <span style={{ fontWeight: '500' }}>Compras</span>
+                     </label>
 
+                     <label style={checkboxLabelStyle}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                     >
                         <input
                            type="checkbox"
-                           checked={permisos.includes('usuarios.inhabilitar')}
-                           onChange={() => togglePermiso('usuarios.inhabilitar')}
-                        /> Habilitar / Inhabilitar
+                           checked={mostrarProductos}
+                           onChange={(e) => setMostrarProductos(e.target.checked)}
+                           style={checkboxStyle}
+                        />
+                        <i className="fa-solid fa-box" style={{ color: '#f59e0b' }}></i>
+                        <span style={{ fontWeight: '500' }}>Productos</span>
+                     </label>
 
+                     <label style={checkboxLabelStyle}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                     >
                         <input
                            type="checkbox"
-                           checked={permisos.includes('usuarios.eliminar')}
-                           onChange={() => togglePermiso('usuarios.eliminar')}
-                        /> Eliminar usuarios
+                           checked={mostrarVentas}
+                           onChange={(e) => setMostrarVentas(e.target.checked)}
+                           style={checkboxStyle}
+                        />
+                        <i className="fa-solid fa-chart-line" style={{ color: '#ec4899' }}></i>
+                        <span style={{ fontWeight: '500' }}>Ventas</span>
+                     </label>
+                  </div>
+               </div>
 
-                        <input
-                           type="radio"
-                           name="usersListPermissions"
-                           onClick={() => toggleGrupoPermisos(permisosUsuarios)}
-                           checked={permisosUsuarios.every(p => permisos.includes(p))}
-                        /> Todos los permisos
+               {/* Módulo Usuarios */}
+               {mostrarUsuarios && (
+                  <div style={{
+                     background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(59, 130, 246, 0.1))',
+                     padding: '1.5rem',
+                     borderRadius: '12px',
+                     marginBottom: '1.5rem',
+                     border: '2px solid #3b82f6',
+                     borderLeft: '6px solid #3b82f6'
+                  }}>
+                     <h4 style={{
+                        margin: '0 0 1.25rem 0',
+                        color: '#1e40af',
+                        fontSize: '1.1rem',
+                        fontWeight: '600',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem'
+                     }}>
+                        <i className="fa-solid fa-users"></i>
+                        Permisos Módulo Usuarios
+                     </h4>
+
+                     <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+                        gap: '1rem',
+                        marginBottom: '1rem'
+                     }}>
+                        <label style={checkboxLabelStyle}
+                           onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.7)'}
+                           onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                        >
+                           <input
+                              type="checkbox"
+                              checked={permisos.includes('usuarios.ver')}
+                              onChange={() => togglePermiso('usuarios.ver')}
+                              style={checkboxStyle}
+                           />
+                           <span style={{ fontWeight: '500' }}>Lista de usuarios</span>
+                        </label>
+
+                        <label style={checkboxLabelStyle}
+                           onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.7)'}
+                           onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                        >
+                           <input
+                              type="checkbox"
+                              checked={permisos.includes('roles.ver')}
+                              onChange={() => togglePermiso('roles.ver')}
+                              style={checkboxStyle}
+                           />
+                           <span style={{ fontWeight: '500' }}>Roles y permisos</span>
+                        </label>
+                     </div>
+
+                     {mostrarListaUsuarios && (
+                        <div style={{
+                           backgroundColor: 'white',
+                           padding: '1.25rem',
+                           borderRadius: '10px',
+                           marginTop: '1rem',
+                           border: '1px solid #dbeafe'
+                        }}>
+                           <p style={{
+                              margin: '0 0 1rem 0',
+                              fontWeight: '600',
+                              color: '#1e40af',
+                              fontSize: '0.95rem'
+                           }}>
+                              Permisos para Lista de Usuarios
+                           </p>
+                           <div style={{
+                              display: 'grid',
+                              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                              gap: '0.75rem'
+                           }}>
+                              {[
+                                 { key: 'usuarios.crear', label: 'Crear usuarios' },
+                                 { key: 'usuarios.editar', label: 'Editar usuarios' },
+                                 { key: 'usuarios.inhabilitar', label: 'Habilitar / Inhabilitar' },
+                                 { key: 'usuarios.eliminar', label: 'Eliminar usuarios' }
+                              ].map(p => (
+                                 <label key={p.key} style={checkboxLabelStyle}
+                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'}
+                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                 >
+                                    <input
+                                       type="checkbox"
+                                       checked={permisos.includes(p.key)}
+                                       onChange={() => togglePermiso(p.key)}
+                                       style={checkboxStyle}
+                                    />
+                                    <span>{p.label}</span>
+                                 </label>
+                              ))}
+                              <label style={{
+                                 ...checkboxLabelStyle,
+                                 backgroundColor: '#eff6ff',
+                                 border: '2px solid #3b82f6',
+                                 fontWeight: '600'
+                              }}>
+                                 <input
+                                    type="radio"
+                                    name="usersListPermissions"
+                                    onClick={() => toggleGrupoPermisos(permisosUsuarios)}
+                                    checked={permisosUsuarios.every(p => permisos.includes(p))}
+                                    style={{ ...checkboxStyle, accentColor: '#3b82f6' }}
+                                 />
+                                 <span>Todos los permisos</span>
+                              </label>
+                           </div>
+                        </div>
+                     )}
+
+                     {mostrarListaRoles && (
+                        <div style={{
+                           backgroundColor: 'white',
+                           padding: '1.25rem',
+                           borderRadius: '10px',
+                           marginTop: '1rem',
+                           border: '1px solid #dbeafe'
+                        }}>
+                           <p style={{
+                              margin: '0 0 1rem 0',
+                              fontWeight: '600',
+                              color: '#1e40af',
+                              fontSize: '0.95rem'
+                           }}>
+                              Permisos para Roles y Permisos
+                           </p>
+                           <div style={{
+                              display: 'grid',
+                              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                              gap: '0.75rem'
+                           }}>
+                              {[
+                                 { key: 'roles.crear', label: 'Crear roles' },
+                                 { key: 'roles.editar', label: 'Editar roles' },
+                                 { key: 'roles.inhabilitar', label: 'Habilitar / Inhabilitar' }
+                              ].map(p => (
+                                 <label key={p.key} style={checkboxLabelStyle}
+                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'}
+                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                 >
+                                    <input
+                                       type="checkbox"
+                                       checked={permisos.includes(p.key)}
+                                       onChange={() => togglePermiso(p.key)}
+                                       style={checkboxStyle}
+                                    />
+                                    <span>{p.label}</span>
+                                 </label>
+                              ))}
+                              <label style={{
+                                 ...checkboxLabelStyle,
+                                 backgroundColor: '#eff6ff',
+                                 border: '2px solid #3b82f6',
+                                 fontWeight: '600'
+                              }}>
+                                 <input
+                                    type="radio"
+                                    name="rolesPermissions"
+                                    onClick={() => toggleGrupoPermisos(permisosRoles)}
+                                    checked={permisosRoles.every(p => permisos.includes(p))}
+                                    style={{ ...checkboxStyle, accentColor: '#3b82f6' }}
+                                 />
+                                 <span>Todos los permisos</span>
+                              </label>
+                           </div>
+                        </div>
+                     )}
+                  </div>
+               )}
+
+               {/* Módulo Compras */}
+               {mostrarCompras && (
+                  <div style={{
+                     background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(16, 185, 129, 0.1))',
+                     padding: '1.5rem',
+                     borderRadius: '12px',
+                     marginBottom: '1.5rem',
+                     border: '2px solid #10b981',
+                     borderLeft: '6px solid #10b981'
+                  }}>
+                     <h4 style={{
+                        margin: '0 0 1.25rem 0',
+                        color: '#065f46',
+                        fontSize: '1.1rem',
+                        fontWeight: '600',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem'
+                     }}>
+                        <i className="fa-solid fa-shopping-cart"></i>
+                        Permisos Módulo Compras
+                     </h4>
+
+                     <div style={{
+                        backgroundColor: 'white',
+                        padding: '1.25rem',
+                        borderRadius: '10px',
+                        border: '1px solid #d1fae5'
+                     }}>
+                        <div style={{
+                           display: 'grid',
+                           gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                           gap: '0.75rem'
+                        }}>
+                           {[
+                              { key: 'hcompras.ver', label: 'Historial de compras' },
+                              { key: 'compras.crear', label: 'Registrar compras' },
+                              { key: 'proveedores.ver', label: 'Catálogo de proveedores' },
+                              { key: 'proveedores.crear', label: 'Crear proveedores' },
+                              { key: 'proveedores.editar', label: 'Editar proveedores' },
+                              { key: 'proveedores.inactivar', label: 'Inactivar proveedores' },
+                              { key: 'proveedores.activar', label: 'Activar proveedores' },
+                              { key: 'ordenesCompra.ver', label: 'Ver órdenes de compra' },
+                              { key: 'ordenes.generar', label: 'Generar órdenes' },
+                              { key: 'ordenes.editar', label: 'Editar órdenes' },
+                              { key: 'ordenes.eliminar', label: 'Eliminar órdenes' },
+                              { key: 'ordenes.aprobar', label: 'Aprobar órdenes' },
+                              { key: 'reportesCompras.ver', label: 'Ver reportes' }
+                           ].map(p => (
+                              <label key={p.key} style={checkboxLabelStyle}
+                                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'}
+                                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                              >
+                                 <input
+                                    type="checkbox"
+                                    checked={permisos.includes(p.key)}
+                                    onChange={() => togglePermiso(p.key)}
+                                    style={checkboxStyle}
+                                 />
+                                 <span>{p.label}</span>
+                              </label>
+                           ))}
+                           <label style={{
+                              ...checkboxLabelStyle,
+                              backgroundColor: '#d1fae5',
+                              border: '2px solid #10b981',
+                              fontWeight: '600'
+                           }}>
+                              <input
+                                 type="radio"
+                                 name="comprasPermissions"
+                                 onClick={() => toggleGrupoPermisos(permisosCompras)}
+                                 checked={permisosCompras.every(p => permisos.includes(p))}
+                                 style={{ ...checkboxStyle, accentColor: '#10b981' }}
+                              />
+                              <span>Todos los permisos</span>
+                           </label>
+                        </div>
                      </div>
                   </div>
                )}
 
-               {mostrarListaRoles && (
-                  <div class="form-group-rol" id='roles-y-permisos'>
-                     <label>Permisos para roles y permisos</label>
-                     <div className="radio-options">
-                        <input
-                           type="checkbox"
-                           checked={permisos.includes('roles.crear')}
-                           onChange={() => togglePermiso('roles.crear')}
-                        /> Crear roles
+               {/* Módulo Productos */}
+               {mostrarProductos && (
+                  <div style={{
+                     background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.05), rgba(245, 158, 11, 0.1))',
+                     padding: '1.5rem',
+                     borderRadius: '12px',
+                     marginBottom: '1.5rem',
+                     border: '2px solid #f59e0b',
+                     borderLeft: '6px solid #f59e0b'
+                  }}>
+                     <h4 style={{
+                        margin: '0 0 1.25rem 0',
+                        color: '#92400e',
+                        fontSize: '1.1rem',
+                        fontWeight: '600',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem'
+                     }}>
+                        <i className="fa-solid fa-box"></i>
+                        Permisos Módulo Productos
+                     </h4>
 
-                        <input
-                           type="checkbox"
-                           checked={permisos.includes('roles.editar')}
-                           onChange={() => togglePermiso('roles.editar')}
-                        /> Editar roles
+                     <div style={{
+                        backgroundColor: 'white',
+                        padding: '1.25rem',
+                        borderRadius: '10px',
+                        border: '1px solid #fef3c7'
+                     }}>
+                        <div style={{
+                           display: 'grid',
+                           gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                           gap: '0.75rem',
+                           marginBottom: '1rem'
+                        }}>
+                           {[
+                              { key: 'productos.ver', label: 'Lista de productos' },
+                              { key: 'categorias.ver', label: 'Ver categorías' },
+                              { key: 'categorias.crear', label: 'Crear categorías' },
+                              { key: 'categorias.editar', label: 'Editar categorías' },
+                              { key: 'categorias.inactivar', label: 'Inactivar categorías' },
+                              { key: 'subcategorias.ver', label: 'Ver subcategorías' },
+                              { key: 'subcategorias.crear', label: 'Crear subcategorías' },
+                              { key: 'subcategorias.editar', label: 'Editar subcategorías' },
+                              { key: 'subcategorias.inactivar', label: 'Inactivar subcategorías' },
+                              { key: 'reportesProductos.ver', label: 'Reportes' }
+                           ].map(p => (
+                              <label key={p.key} style={checkboxLabelStyle}
+                                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'}
+                                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                              >
+                                 <input
+                                    type="checkbox"
+                                    checked={permisos.includes(p.key)}
+                                    onChange={() => togglePermiso(p.key)}
+                                    style={checkboxStyle}
+                                 />
+                                 <span>{p.label}</span>
+                              </label>
+                           ))}
+                        </div>
 
-                        <input
-                           type="checkbox"
-                           checked={permisos.includes('roles.inhabilitar')}
-                           onChange={() => togglePermiso('roles.inhabilitar')}
-                        /> Habilitar / Inhabilitar
-
-                        <input
-                           type="radio"
-                           name="rolesPermissions"
-                           onClick={() => toggleGrupoPermisos(permisosRoles)}
-                           checked={permisosRoles.every(p => permisos.includes(p))}
-                        /> Todos los permisos
+                        <div style={{
+                           borderTop: '2px solid #fef3c7',
+                           paddingTop: '1rem'
+                        }}>
+                           <p style={{
+                              margin: '0 0 0.75rem 0',
+                              fontWeight: '600',
+                              color: '#92400e',
+                              fontSize: '0.95rem'
+                           }}>
+                              Permisos para Lista de Productos
+                           </p>
+                           <div style={{
+                              display: 'grid',
+                              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                              gap: '0.75rem'
+                           }}>
+                              {[
+                                 { key: 'productos.crear', label: 'Agregar Productos' },
+                                 { key: 'productos.editar', label: 'Editar productos' },
+                                 { key: 'productos.inactivar', label: 'Activar/Inactivar' }
+                              ].map(p => (
+                                 <label key={p.key} style={checkboxLabelStyle}
+                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'}
+                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                 >
+                                    <input
+                                       type="checkbox"
+                                       checked={permisos.includes(p.key)}
+                                       onChange={() => togglePermiso(p.key)}
+                                       style={checkboxStyle}
+                                    />
+                                    <span>{p.label}</span>
+                                 </label>
+                              ))}
+                              <label style={{
+                                 ...checkboxLabelStyle,
+                                 backgroundColor: '#fef3c7',
+                                 border: '2px solid #f59e0b',
+                                 fontWeight: '600'
+                              }}>
+                                 <input
+                                    type="radio"
+                                    name="productosPermissions"
+                                    onClick={() => toggleGrupoPermisos(permisosProductos)}
+                                    checked={permisosProductos.every(p => permisos.includes(p))}
+                                    style={{ ...checkboxStyle, accentColor: '#f59e0b' }}
+                                 />
+                                 <span>Todos los permisos</span>
+                              </label>
+                           </div>
+                        </div>
                      </div>
                   </div>
                )}
 
+               {/* Módulo Ventas */}
+               {mostrarVentas && (
+                  <div style={{
+                     background: 'linear-gradient(135deg, rgba(236, 72, 153, 0.05), rgba(236, 72, 153, 0.1))',
+                     padding: '1.5rem',
+                     borderRadius: '12px',
+                     marginBottom: '1.5rem',
+                     border: '2px solid #ec4899',
+                     borderLeft: '6px solid #ec4899'
+                  }}>
+                     <h4 style={{
+                        margin: '0 0 1.25rem 0',
+                        color: '#9f1239',
+                        fontSize: '1.1rem',
+                        fontWeight: '600',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem'
+                     }}>
+                        <i className="fa-solid fa-chart-line"></i>
+                        Permisos Módulo Ventas
+                     </h4>
+
+                     <div style={{
+                        backgroundColor: 'white',
+                        padding: '1.25rem',
+                        borderRadius: '10px',
+                        border: '1px solid #fce7f3'
+                     }}>
+                        <div style={{
+                           display: 'grid',
+                           gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                           gap: '0.75rem'
+                        }}>
+                           {[
+                              { key: 'ventas.crear', label: 'Crear ventas' },
+                              { key: 'listaDeVentas.ver', label: 'Lista de ventas' },
+                              { key: 'pedidos.ver', label: 'Ver pedidos' },
+                              { key: 'pedidos.remisionar', label: 'Remisionar pedidos' },
+                              { key: 'pedidos.enviar', label: 'Enviar pedidos' },
+                              { key: 'pedidosAgendados.ver', label: 'Pedidos agendados' },
+                              { key: 'pedidosDespachados.ver', label: 'Pedidos despachados' },
+                              { key: 'pedidosEntregados.ver', label: 'Pedidos entregados' },
+                              { key: 'pedidosCancelados.ver', label: 'Pedidos cancelados' },
+                              { key: 'pedidosDevueltos.ver', label: 'Pedidos devueltos' },
+                              { key: 'cotizaciones.ver', label: 'Ver cotizaciones' },
+                              { key: 'cotizaciones.crear', label: 'Crear cotizaciones' },
+                              { key: 'cotizaciones.editar', label: 'Editar cotizaciones' },
+                              { key: 'cotizaciones.eliminar', label: 'Eliminar cotizaciones' },
+                              { key: 'cotizaciones.enviar', label: 'Enviar cotizaciones' },
+                              { key: 'cotizaciones.remisionar', label: 'Remisionar cotizaciones' },
+                              { key: 'remisiones.ver', label: 'Ver remisiones' },
+                              { key: 'remisiones.crear', label: 'Crear remisiones' },
+                              { key: 'remisiones.editar', label: 'Editar remisiones' },
+                              { key: 'remisiones.eliminar', label: 'Eliminar remisiones' },
+                              { key: 'remisiones.enviar', label: 'Enviar remisiones' },
+                              { key: 'clientes.ver', label: 'Ver clientes' },
+                              { key: 'clientes.crear', label: 'Crear clientes' },
+                              { key: 'clientes.editar', label: 'Editar clientes' },
+                              { key: 'clientes.inactivar', label: 'Inactivar clientes' },
+                              { key: 'prospectos.ver', label: 'Ver prospectos' },
+                              { key: 'reportesVentas.ver', label: 'Reportes de ventas' }
+                           ].map(p => (
+                              <label key={p.key} style={checkboxLabelStyle}
+                                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'}
+                                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                              >
+                                 <input
+                                    type="checkbox"
+                                    checked={permisos.includes(p.key)}
+                                    onChange={() => togglePermiso(p.key)}
+                                    style={checkboxStyle}
+                                 />
+                                 <span>{p.label}</span>
+                              </label>
+                           ))}
+                           <label style={{
+                              ...checkboxLabelStyle,
+                              backgroundColor: '#fce7f3',
+                              border: '2px solid #ec4899',
+                              fontWeight: '600'
+                           }}>
+                              <input
+                                 type="radio"
+                                 name="ventasPermissions"
+                                 onClick={() => toggleGrupoPermisos(permisosVentas)}
+                                 checked={permisosVentas.every(p => permisos.includes(p))}
+                                 style={{ ...checkboxStyle, accentColor: '#ec4899' }}
+                              />
+                              <span>Todos los permisos</span>
+                           </label>
+                        </div>
+                     </div>
+                  </div>
+               )}
             </div>
-         )}
 
-         {mostrarCompras && (
-            <div className="section" id='permisos-compras'>
-               <h4>Permisos módulo compras</h4>
-               <br />
-               <div class="permissions">
-                  <div className="group">
-                     <label>
-                        <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" name="hcompras" checked={permisos.includes('hcompras.ver')}
-                           onChange={() => togglePermiso('hcompras.ver')} />
-                        Historial de compras
-                     </label>
-                     <br />
-                     <label>
-                        <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('compras.crear')} onChange={() => togglePermiso('compras.crear')} />
-                        Registrar compras
-                     </label>
-                     <br />
-                     <label>
-                        <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('proveedores.ver')} onChange={() => togglePermiso('proveedores.ver')} />
-                        Catálogo de proveedores
-                     </label>
-                     <br />
-                     <label>
-                        <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('proveedores.crear')} onChange={() => togglePermiso('proveedores.crear')} />
-                        Crear proveedores
-                     </label>
-                     <br />
-                     <label>
-                        <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('proveedores.editar')} onChange={() => togglePermiso('proveedores.editar')} />
-                        Editar proveedores
-                     </label>
-                     <br />
-                     <label>
-                        <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('proveedores.inactivar')} onChange={() => togglePermiso('proveedores.inactivar')} />
-                        Inactivar proveedores
-                     </label>
-                     <br />
-                     <label>
-                        <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('proveedores.activar')} onChange={() => togglePermiso('proveedores.activar')} />
-                        Activar proveedores
-                     </label>
-                  </div>
-                  <div className="group">
-                     <label>
-                        <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('ordenesCompra.ver')} onChange={() => togglePermiso('ordenesCompra.ver')} />
-                        Ver órdenes de compra
-                     </label>
-                     <br />
-                     <label>
-                        <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('ordenes.generar')} onChange={() => togglePermiso('ordenes.generar')} />
-                        Generar órdenes
-                     </label>
-                     <br />
-                     <label>
-                        <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('ordenes.editar')} onChange={() => togglePermiso('ordenes.editar')} />
-                        Editar órdenes
-                     </label>
-                     <br />
-                     <label>
-                        <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('ordenes.eliminar')} onChange={() => togglePermiso('ordenes.eliminar')} />
-                        Eliminar órdenes
-                     </label>
-                     <br />
-                     <label>
-                        <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('ordenes.aprobar')} onChange={() => togglePermiso('ordenes.aprobar')} />
-                        Aprobar órdenes
-                     </label>
-                     <br />
-                     <label>
-                        <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('reportesCompras.ver')} onChange={() => togglePermiso('reportesCompras.ver')} />
-                        Ver reportes
-                     </label>
-                     <br />
-                     <label>
-                        <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="radio" name="comprasPermissions"
-                           onClick={() => toggleGrupoPermisos(permisosCompras)}
-                           checked={permisosCompras.every(p => permisos.includes(p))} />
-                        Todos los permisos
-                     </label>
-                  </div>
-               </div>
-               <br />
-
+            {/* Footer con botones */}
+            <div style={{ 
+               display: 'flex', 
+               gap: '1rem', 
+               justifyContent: 'flex-end',
+               padding: '2rem',
+               borderTop: '2px solid #e5e7eb',
+               backgroundColor: 'white',
+               borderRadius: '0 0 20px 20px'
+            }}>
+               <button 
+                  type="button" 
+                  onClick={() => closeModal('edit-role-modal')}
+                  style={{
+                     padding: '0.875rem 1.5rem',
+                     border: '2px solid #e5e7eb',
+                     borderRadius: '10px',
+                     backgroundColor: 'white',
+                     color: '#374151',
+                     cursor: 'pointer',
+                     fontWeight: '600',
+                     fontSize: '0.95rem',
+                     transition: 'all 0.3s ease',
+                     display: 'flex',
+                     alignItems: 'center',
+                     gap: '0.5rem'
+                  }}
+                  onMouseEnter={(e) => {
+                     e.target.style.backgroundColor = '#f3f4f6';
+                     e.target.style.borderColor = '#d1d5db';
+                  }}
+                  onMouseLeave={(e) => {
+                     e.target.style.backgroundColor = 'white';
+                     e.target.style.borderColor = '#e5e7eb';
+                  }}
+               >
+                  <i className="fa-solid fa-times"></i>
+                  Cancelar
+               </button>
+               
+               <button 
+                  type="submit"
+                  style={{
+                     padding: '0.875rem 1.5rem',
+                     border: 'none',
+                     borderRadius: '10px',
+                     background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+                     color: 'white',
+                     cursor: 'pointer',
+                     fontWeight: '600',
+                     fontSize: '0.95rem',
+                     transition: 'all 0.3s ease',
+                     display: 'flex',
+                     alignItems: 'center',
+                     gap: '0.5rem',
+                     boxShadow: '0 4px 6px -1px rgba(139, 92, 246, 0.3)'
+                  }}
+                  onMouseEnter={(e) => {
+                     e.target.style.transform = 'translateY(-1px)';
+                     e.target.style.boxShadow = '0 6px 12px -1px rgba(139, 92, 246, 0.4)';
+                  }}
+                  onMouseLeave={(e) => {
+                     e.target.style.transform = 'translateY(0)';
+                     e.target.style.boxShadow = '0 4px 6px -1px rgba(139, 92, 246, 0.3)';
+                  }}
+               >
+                  <i className="fa-solid fa-save"></i>
+                  Guardar Cambios
+               </button>
             </div>
-         )}
-         {mostrarProductos && (
-            <div className="section" id='permisos-productos'>
-               <h4>Permisos módulo productos</h4>
-               <br />
-               <div class="permissions">
-                  <div className="group">
-                     <label>
-                        <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('productos.ver')} onChange={() => togglePermiso('productos.ver')} />
-                        Lista de productos
-                     </label>
-                     <br />
-                     <label>
-                        <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('categorias.ver')} onChange={() => togglePermiso('categorias.ver')} />
-                        Ver categorías
-                     </label>
-                     <br />
-                     <label>
-                        <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('categorias.crear')} onChange={() => togglePermiso('categorias.crear')} />
-                        Crear categorías
-                     </label>
-                     <br />
-                     <label>
-                        <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('categorias.editar')} onChange={() => togglePermiso('categorias.editar')} />
-                        Editar categorías
-                     </label>
-                     <br />
-                     <label>
-                        <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('categorias.inactivar')} onChange={() => togglePermiso('categorias.inactivar')} />
-                        Inactivar categorías
-                     </label>
-                  </div>
-                  <div className="group">
-                     <label>
-                        <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('subcategorias.ver')} onChange={() => togglePermiso('subcategorias.ver')} />
-                        Ver subcategorías
-                     </label>
-                     <br />
-                     <label>
-                        <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('subcategorias.crear')} onChange={() => togglePermiso('subcategorias.crear')} />
-                        Crear subcategorías
-                     </label>
-                     <br />
-                     <label>
-                        <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('subcategorias.editar')} onChange={() => togglePermiso('subcategorias.editar')} />
-                        Editar subcategorías
-                     </label>
-                     <br />
-                     <label>
-                        <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('subcategorias.inactivar')} onChange={() => togglePermiso('subcategorias.inactivar')} />
-                        Inactivar subcategorías
-                     </label>
-                     <br />
-                     <label>
-                        <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('reportesProductos.ver')} onChange={() => togglePermiso('reportesProductos.ver')} />
-                        Reportes
-                     </label>
-                     <br />
-                     <label>
-                        <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="radio" name="productosPermissions"
-                           onClick={() => toggleGrupoPermisos(permisosProductos)}
-                           checked={permisosProductos.every(p => permisos.includes(p))} />
-                        Todos los permisos
-                     </label>
-                  </div>
-               </div>
-               <br />
-
-               <div class="form-group-rol " id="lista-productos">
-                  <label>Permisos para lista de productos</label>
-                  <div className="radio-options">
-                     <input
-                        type="checkbox"
-                        checked={permisos.includes('productos.crear')}
-                        onChange={() => togglePermiso('productos.crear')}
-                     /> Agregar Productos
-
-                     <input
-                        type="checkbox"
-                        checked={permisos.includes('productos.editar')}
-                        onChange={() => togglePermiso('productos.editar')}
-                     /> Editar productos
-
-                     <input
-                        type="checkbox"
-                        checked={permisos.includes('productos.inactivar')}
-                        onChange={() => togglePermiso('productos.inactivar')}
-                     /> Activar/Inactivar
-
-                     <input
-                        type="radio"
-                     /> Todos los permisos
-                  </div>
-               </div>
-            </div>
-         )}
-
-         {mostrarVentas && (
-            <div className="section" id='permisos-ventas'>
-               <h4>Permisos módulo ventas</h4>
-               <br />
-               <div class="permissions">
-                  <div className="group">
-                     <label>
-                        <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('ventas.crear')}
-                           onChange={() => togglePermiso('ventas.crear')} />
-                        Crear ventas
-                     </label>
-                     <br />
-                     <label>
-                        <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('listaDeVentas.ver')}
-                           onChange={() => togglePermiso('listaDeVentas.ver')} />
-                        Lista de ventas
-                     </label>
-                     <br />
-                     <label>
-                        <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('pedidos.ver')}
-                           onChange={() => togglePermiso('pedidos.ver')} />
-                        Ver pedidos
-                     </label>
-                     <br />
-                     <label>
-                        <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('pedidos.remisionar')}
-                           onChange={() => togglePermiso('pedidos.remisionar')} />
-                        Remisionar pedidos
-                     </label>
-                     <br />
-                     <label>
-                        <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('pedidos.enviar')}
-                           onChange={() => togglePermiso('pedidos.enviar')} />
-                        Enviar pedidos
-                     </label>
-                     <br />
-                     <label>
-                        <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('pedidosAgendados.ver')}
-                           onChange={() => togglePermiso('pedidosAgendados.ver')} />
-                        Pedidos agendados
-                     </label>
-                     <br />
-                     <label>
-                        <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('pedidosDespachados.ver')}
-                           onChange={() => togglePermiso('pedidosDespachados.ver')} />
-                        Pedidos despachados
-                     </label>
-                     <br />
-                     <label>
-                        <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('pedidosEntregados.ver')}
-                           onChange={() => togglePermiso('pedidosEntregados.ver')} />
-                        Pedidos entregados
-                     </label>
-                     <br />
-                     <label>
-                        <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('pedidosCancelados.ver')}
-                           onChange={() => togglePermiso('pedidosCancelados.ver')} />
-                        Pedidos cancelados
-                     </label>
-                     <br />
-                     <label>
-                        <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('pedidosDevueltos.ver')}
-                           onChange={() => togglePermiso('pedidosDevueltos.ver')} />
-                        Pedidos devueltos
-                     </label>
-                  </div>
-                  <div className="group">
-                     <label>
-                        <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('cotizaciones.ver')}
-                           onChange={() => togglePermiso('cotizaciones.ver')} />
-                        Ver cotizaciones
-                     </label>
-                     <br />
-                     <label>
-                        <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('cotizaciones.crear')}
-                           onChange={() => togglePermiso('cotizaciones.crear')} />
-                        Crear cotizaciones
-                     </label>
-                     <br />
-                     <label>
-                        <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('cotizaciones.editar')}
-                           onChange={() => togglePermiso('cotizaciones.editar')} />
-                        Editar cotizaciones
-                     </label>
-                     <br />
-                     <label>
-                        <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('cotizaciones.eliminar')}
-                           onChange={() => togglePermiso('cotizaciones.eliminar')} />
-                        Eliminar cotizaciones
-                     </label>
-                     <br />
-                     <label>
-                        <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('cotizaciones.enviar')}
-                           onChange={() => togglePermiso('cotizaciones.enviar')} />
-                        Enviar cotizaciones
-                     </label>
-                     <br />
-                     <label>
-                        <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('cotizaciones.remisionar')}
-                           onChange={() => togglePermiso('cotizaciones.remisionar')} />
-                        Remisionar cotizaciones
-                     </label>
-                     <br />
-                     <label>
-                        <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('remisiones.ver')}
-                           onChange={() => togglePermiso('remisiones.ver')} />
-                        Ver remisiones
-                     </label>
-                     <br />
-                     <label>
-                        <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('remisiones.crear')}
-                           onChange={() => togglePermiso('remisiones.crear')} />
-                        Crear remisiones
-                     </label>
-                     <br />
-                     <label>
-                        <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('remisiones.editar')}
-                           onChange={() => togglePermiso('remisiones.editar')} />
-                        Editar remisiones
-                     </label>
-                     <br />
-                     <label>
-                        <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('remisiones.eliminar')}
-                           onChange={() => togglePermiso('remisiones.eliminar')} />
-                        Eliminar remisiones
-                     </label>
-                     <br />
-                     <label>
-                        <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('remisiones.enviar')}
-                           onChange={() => togglePermiso('remisiones.enviar')} />
-                        Enviar remisiones
-                     </label>
-                     <br />
-                     <label>
-                        <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('clientes.ver')}
-                           onChange={() => togglePermiso('clientes.ver')}/>
-                        Ver clientes
-                     </label>
-                     <br />
-                     <label>
-                        <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('clientes.crear')}
-                           onChange={() => togglePermiso('clientes.crear')}/>
-                        Crear clientes
-                     </label>
-                     <br />
-                     <label>
-                        <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('clientes.editar')}
-                           onChange={() => togglePermiso('clientes.editar')}/>
-                        Editar clientes
-                     </label>
-                     <br />
-                     <label>
-                        <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('clientes.inactivar')}
-                           onChange={() => togglePermiso('clientes.inactivar')}/>
-                        Inactivar clientes
-                     </label>
-                     <br />
-                     <label>
-                        <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('prospectos.ver')}
-                           onChange={() => togglePermiso('prospectos.ver')}/>
-                        Ver prospectos
-                     </label>
-                     <br />
-                     <label>
-                        <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('reportesVentas.ver')}
-                           onChange={() => togglePermiso('reportesVentas.ver')}/>
-                        Reportes de ventas
-                     </label>
-                     <br />
-                     <label>
-                        <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="radio" name="ventasPermissions"
-                           onClick={() => toggleGrupoPermisos(permisosVentas)}
-                           checked={permisosVentas.every(p => permisos.includes(p))} />
-                        Todos los permisos
-                     </label>
-                  </div>
-               </div>
-               <br />
-            </div>
-         )}
-
-
-
-
-         <div className="buttons">
-            <button type="button" onClick={() => closeModal('edit-role-modal')} className="btn btn-primary-cancel">
-               Cancelar
-            </button>
-            <button type="submit" className="btn btn-primary-env">
-               Guardar cambios
-            </button>
-         </div>
-
-
-      </form>
-   )
+         </form>
+      </div>
+   );
 }

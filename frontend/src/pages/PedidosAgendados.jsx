@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import Fijo from '../components/Fijo';
 import NavVentas from '../components/NavVentas';
 import Swal from 'sweetalert2';
+import api from '../api/axiosConfig';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import * as XLSX from 'xlsx';
@@ -257,34 +258,27 @@ export default function PedidosAgendados() {
   const totalPages = Math.ceil(pedidos.length / itemsPerPage);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-
-    // Cargar pedidos agendados
-    fetch('http://localhost:5000/api/pedidos?populate=true', {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-      .then(res => res.json())
-      .then(data => {
-        console.log('🔍 Datos recibidos de la API:', data);
-        console.log('📊 Total de pedidos:', data.length);
-        
-        const agendados = data.filter(p => p.estado === 'agendado');
-        console.log('📅 Pedidos agendados encontrados:', agendados.length);
-        console.log('📋 Pedidos agendados:', agendados);
-        
-        setPedidos(agendados);
-      })
-      .catch(err => {
+    const fetchAll = async () => {
+      try {
+        const pedidosRes = await api.get('/api/pedidos?populate=true');
+        const pedidosData = pedidosRes.data || pedidosRes;
+        const agendados = (Array.isArray(pedidosData) ? pedidosData : pedidosData.data || []).filter(p => p.estado === 'agendado');
+        const agendadosOrdenados = agendados.sort((a, b) => new Date(b.createdAt || b.fechaCreacion) - new Date(a.createdAt || a.fechaCreacion));
+        setPedidos(agendadosOrdenados);
+      } catch (err) {
         console.error('❌ Error al cargar pedidos agendados:', err);
-      });
+      }
 
-    // Cargar datos de clientes y productos
-    fetch('http://localhost:5000/api/clientes', {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-      .then(res => res.json())
-      .then(data => setDatos(data))
-      .catch(err => console.error('Error al cargar clientes:', err));
+      try {
+        const clientesRes = await api.get('/api/clientes');
+        const clientesData = clientesRes.data || clientesRes;
+        setDatos(clientesData.data || clientesData || []);
+      } catch (err) {
+        console.error('Error al cargar clientes:', err);
+      }
+    };
+
+    fetchAll();
   }, []);
 
   const exportarPDF = () => {
@@ -342,14 +336,9 @@ export default function PedidosAgendados() {
     if (!confirm.isConfirmed) return;
 
     try {
-      const res = await fetch(`http://localhost:5000/api/pedidos/${id}/cancelar`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
-      });
-
-      const result = await res.json();
-
-      if (res.ok) {
+      const res = await api.patch(`/api/pedidos/${id}/cancelar`, { });
+      const result = res.data || res;
+      if (res.status >= 200 && res.status < 300) {
         Swal.fire('Cancelado', 'El pedido ha sido cancelado', 'success');
         setPedidos(prev => prev.filter(p => p._id !== id));
       } else {
@@ -378,15 +367,9 @@ export default function PedidosAgendados() {
     if (!confirm.isConfirmed) return;
     
     try {
-      const res = await fetch(`http://localhost:5000/api/pedidos/${id}/estado`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ estado: 'entregado' })
-      });
-
-      const result = await res.json().catch(() => ({}));
-
-      if (res.ok) {
+      const res = await api.patch(`/api/pedidos/${id}/estado`, { estado: 'entregado' });
+      const result = res.data || res;
+      if (res.status >= 200 && res.status < 300) {
         setPedidos(prev => prev.filter(p => p._id !== id));
         await Swal.fire({
           title: '¡Entregado!', 
@@ -422,12 +405,8 @@ export default function PedidosAgendados() {
     if (!result.isConfirmed) return;
 
     try {
-      const res = await fetch(`http://localhost:5000/api/pedidos/${id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      if (res.ok) {
+      const res = await api.delete(`/api/pedidos/${id}`);
+      if (res.status >= 200 && res.status < 300) {
         setPedidos(prev => prev.filter(p => p._id !== id));
         Swal.fire('Eliminado', 'El pedido ha sido eliminado', 'success');
       } else {
@@ -658,21 +637,17 @@ export default function PedidosAgendados() {
                                 fontWeight: 'bold'
                               }}
                               onClick={async () => {
-                                try {
-                                  const token = localStorage.getItem('token');
-                                  const res = await fetch(`http://localhost:5000/api/pedidos/${pedido._id}?populate=true`, {
-                                    headers: { 'Authorization': `Bearer ${token}` }
-                                  });
-                                  if (res.ok) {
-                                    const pedidoCompleto = await res.json();
-                                    setCotizacionPreview(pedidoCompleto);
-                                  } else {
-                                    Swal.fire('Error', 'No se pudo cargar la información del pedido.', 'error');
-                                  }
-                                } catch (error) {
-                                  Swal.fire('Error', 'No se pudo cargar la información del pedido.', 'error');
-                                }
-                              }}
+                                    try {
+                                      const res = await api.get(`/api/pedidos/${pedido._id}?populate=true`);
+                                      // normalize response shape
+                                      const data = res.data || res;
+                                      const pedidoCompleto = data.data || data;
+                                      setCotizacionPreview(pedidoCompleto);
+                                    } catch (error) {
+                                      console.error('Error loading pedido:', error);
+                                      Swal.fire('Error', 'No se pudo cargar la información del pedido.', 'error');
+                                    }
+                                  }}
                               title="Clic para ver información del pedido"
                             >
                               {pedido.numeroPedido}

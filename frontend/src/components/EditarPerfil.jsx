@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
-import { closeModal, toggleSubMenu } from '../funciones/animaciones';
+import { closeModal } from '../funciones/animaciones';
+import api from '../api/axiosConfig';
 import { useNavigate } from 'react-router-dom';
 
 export default function EditarPerfil() {
   const [form, setForm] = useState({});
   const [passwords, setPasswords] = useState({ new: '', confirm: '' });
+  const [mostrarCambiarPassword, setMostrarCambiarPassword] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -37,8 +39,6 @@ export default function EditarPerfil() {
     const token = localStorage.getItem('token');
     const user = JSON.parse(localStorage.getItem('user'));
 
-
-    // Validar contraseña si aplica
     if (passwords.new || passwords.confirm) {
       if (passwords.new !== passwords.confirm) {
         return Swal.fire('Error', 'Las contraseñas no coinciden', 'error');
@@ -49,33 +49,15 @@ export default function EditarPerfil() {
     }
 
     try {
-      // 1. Actualizar perfil
-      const res = await fetch('http://localhost:5000/api/users/me', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-access-token': token
-        },
-        body: JSON.stringify(form)
-      });
+      const res = await api.patch('/api/users/me', form);
+      const resData = res.data || res;
+      if (!(res.status >= 200 && res.status < 300)) throw new Error(resData.message || 'Error al actualizar perfil');
 
-      if (!res.ok) throw new Error('Error al actualizar perfil');
-
-      // 2. Si hay cambio de contraseña
       if (passwords.new) {
-        const resPass = await fetch('http://localhost:5000/api/users/change-password', {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-access-token': token
-          },
-          body: JSON.stringify({ newPassword: passwords.new })
-        });
+        const resPass = await api.patch('/api/users/change-password', { newPassword: passwords.new });
+        const data = resPass.data || resPass;
+        if (!(resPass.status >= 200 && resPass.status < 300)) throw new Error(data.message || 'Error al cambiar la contraseña');
 
-        const data = await resPass.json();
-        if (!resPass.ok) throw new Error(data.message || 'Error al cambiar la contraseña');
-
-        // Contraseña cambiada -> cerrar sesión
         localStorage.removeItem('token');
         localStorage.removeItem('user');
 
@@ -85,19 +67,16 @@ export default function EditarPerfil() {
           text: 'Debes iniciar sesión nuevamente',
           confirmButtonText: 'OK'
         }).then(() => {
-
           navigate('/');
-
         });
 
-        return; // Detener ejecución para no mostrar el otro Swal
+        return;
       }
 
-      // 3. Actualizar localStorage y vista si NO se cambió la contraseña
       const updatedUser = {
         ...user,
         ...form,
-        role: user.role // no cambia
+        role: user.role
       };
 
       localStorage.setItem('user', JSON.stringify(updatedUser));
@@ -106,86 +85,507 @@ export default function EditarPerfil() {
       Swal.fire('Éxito', 'Perfil actualizado correctamente', 'success');
       closeModal('editar-perfil');
       setPasswords({ new: '', confirm: '' });
+      setMostrarCambiarPassword(false);
 
     } catch (err) {
       Swal.fire('Error', err.message, 'error');
     }
   };
 
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      const modal = document.getElementById('editar-perfil');
-      const content = modal?.querySelector('.modal-content');
+  const inputStyle = {
+    width: '100%',
+    padding: '0.875rem 1rem',
+    border: '2px solid #e5e7eb',
+    borderRadius: '10px',
+    fontSize: '0.95rem',
+    transition: 'all 0.3s ease',
+    backgroundColor: '#ffffff',
+    fontFamily: 'inherit',
+    boxSizing: 'border-box'
+  };
 
-      if (modal && content && !content.contains(e.target) && modal.style.display !== 'none') {
-        closeModal('editar-perfil');
-      }
-    };
-
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  const labelStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    marginBottom: '0.5rem',
+    fontWeight: '600',
+    color: '#374151',
+    fontSize: '0.95rem'
+  };
 
   return (
-    <form className="modal" id="editar-perfil" onSubmit={guardarCambios}>
+    <div 
+      id="editar-perfil"
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+        display: 'none',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1000,
+        backdropFilter: 'blur(4px)',
+        padding: '1rem'
+      }}
+      onClick={(e) => {
+        if (e.target.id === 'editar-perfil') {
+          closeModal('editar-perfil');
+        }
+      }}
+    >
+      <form 
+        onSubmit={guardarCambios}
+        style={{
+          backgroundColor: 'white',
+          borderRadius: '20px',
+          maxWidth: '900px',
+          width: '95%',
+          maxHeight: '95vh',
+          overflow: 'hidden',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+          display: 'flex',
+          flexDirection: 'column'
+        }}
+      >
+        {/* Header del modal */}
+        <div style={{
+          background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
+          color: 'white',
+          padding: '2rem',
+          borderRadius: '20px 20px 0 0'
+        }}>
+          <h3 style={{ 
+            margin: 0, 
+            fontSize: '1.5rem', 
+            fontWeight: '600',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem'
+          }}>
+            <div style={{
+              width: '50px',
+              height: '50px',
+              borderRadius: '12px',
+              background: 'rgba(255, 255, 255, 0.2)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <i className="fa-solid fa-user-circle" style={{ fontSize: '1.5rem' }}></i>
+            </div>
+            Editar Mi Perfil
+          </h3>
+          <p style={{ 
+            margin: '0.5rem 0 0 4rem', 
+            opacity: 0.9, 
+            fontSize: '0.95rem' 
+          }}>
+            Actualiza tu información personal
+          </p>
+        </div>
 
-      <div className="modal-content">
-        <div className="form-group">
-          <label>Primer nombre</label>
-          <input className='entrada' type="text" name="firstName" value={form.firstName || ''} onChange={handleChange} />
-        </div>
-        <div className="form-group">
-          <label>Segundo nombre</label>
-          <input className='entrada' type="text" name="secondName" value={form.secondName || ''} onChange={handleChange} />
-        </div>
-        <div className="form-group">
-          <label>Primer apellido</label>
-          <input className='entrada' type="text" name="surname" value={form.surname || ''} onChange={handleChange} />
-        </div>
-        <div className="form-group">
-          <label>Segundo apellido</label>
-          <input className='entrada' type="text" name="secondSurname" value={form.secondSurname || ''} onChange={handleChange} />
-        </div>
-        <div className="form-group">
-          <label>Correo</label>
-          <input className='entrada' type="email" name="email" value={form.email || ''} onChange={handleChange} />
-        </div>
-        <div className="form-group">
-          <label>Nombre de usuario</label>
-          <input className='entrada' type="text" name="username" value={form.username || ''} onChange={handleChange} />
-        </div>
-        <div className="form-group">
-          <label>Rol</label>
-          <input className='entrada' type="text" value={form.role || ''} readOnly disabled />
+        {/* Contenido scrolleable */}
+        <div style={{ 
+          flex: 1,
+          overflowY: 'auto',
+          padding: '2rem',
+          backgroundColor: '#f8fafc'
+        }}>
+          {/* Información Personal */}
+          <div style={{
+            background: 'white',
+            padding: '1.5rem',
+            borderRadius: '12px',
+            marginBottom: '1.5rem',
+            border: '1px solid #e2e8f0',
+            borderLeft: '4px solid #6366f1'
+          }}>
+            <h4 style={{
+              margin: '0 0 1.5rem 0',
+              color: '#1e293b',
+              fontSize: '1.05rem',
+              fontWeight: '600',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}>
+              <i className="fa-solid fa-id-card" style={{ color: '#6366f1' }}></i>
+              Información Personal
+            </h4>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+              gap: '1rem'
+            }}>
+              <div>
+                <label style={labelStyle}>
+                  <i className="fa-solid fa-user" style={{ color: '#6366f1', fontSize: '0.875rem' }}></i>
+                  Primer nombre
+                </label>
+                <input 
+                  type="text" 
+                  name="firstName" 
+                  value={form.firstName || ''} 
+                  onChange={handleChange}
+                  style={inputStyle}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#6366f1';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(99, 102, 241, 0.1)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#e5e7eb';
+                    e.target.style.boxShadow = 'none';
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={labelStyle}>
+                  <i className="fa-solid fa-user" style={{ color: '#6366f1', fontSize: '0.875rem' }}></i>
+                  Segundo nombre
+                </label>
+                <input 
+                  type="text" 
+                  name="secondName" 
+                  value={form.secondName || ''} 
+                  onChange={handleChange}
+                  style={inputStyle}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#6366f1';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(99, 102, 241, 0.1)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#e5e7eb';
+                    e.target.style.boxShadow = 'none';
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={labelStyle}>
+                  <i className="fa-solid fa-user" style={{ color: '#6366f1', fontSize: '0.875rem' }}></i>
+                  Primer apellido
+                </label>
+                <input 
+                  type="text" 
+                  name="surname" 
+                  value={form.surname || ''} 
+                  onChange={handleChange}
+                  style={inputStyle}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#6366f1';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(99, 102, 241, 0.1)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#e5e7eb';
+                    e.target.style.boxShadow = 'none';
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={labelStyle}>
+                  <i className="fa-solid fa-user" style={{ color: '#6366f1', fontSize: '0.875rem' }}></i>
+                  Segundo apellido
+                </label>
+                <input 
+                  type="text" 
+                  name="secondSurname" 
+                  value={form.secondSurname || ''} 
+                  onChange={handleChange}
+                  style={inputStyle}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#6366f1';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(99, 102, 241, 0.1)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#e5e7eb';
+                    e.target.style.boxShadow = 'none';
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Información de Cuenta */}
+          <div style={{
+            background: 'white',
+            padding: '1.5rem',
+            borderRadius: '12px',
+            marginBottom: '1.5rem',
+            border: '1px solid #e2e8f0',
+            borderLeft: '4px solid #10b981'
+          }}>
+            <h4 style={{
+              margin: '0 0 1.5rem 0',
+              color: '#1e293b',
+              fontSize: '1.05rem',
+              fontWeight: '600',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}>
+              <i className="fa-solid fa-key" style={{ color: '#10b981' }}></i>
+              Información de Cuenta
+            </h4>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+              gap: '1rem'
+            }}>
+              <div>
+                <label style={labelStyle}>
+                  <i className="fa-solid fa-envelope" style={{ color: '#10b981', fontSize: '0.875rem' }}></i>
+                  Correo electrónico
+                </label>
+                <input 
+                  type="email" 
+                  name="email" 
+                  value={form.email || ''} 
+                  onChange={handleChange}
+                  style={inputStyle}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#10b981';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#e5e7eb';
+                    e.target.style.boxShadow = 'none';
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={labelStyle}>
+                  <i className="fa-solid fa-at" style={{ color: '#10b981', fontSize: '0.875rem' }}></i>
+                  Nombre de usuario
+                </label>
+                <input 
+                  type="text" 
+                  name="username" 
+                  value={form.username || ''} 
+                  onChange={handleChange}
+                  style={inputStyle}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#10b981';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#e5e7eb';
+                    e.target.style.boxShadow = 'none';
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={labelStyle}>
+                  <i className="fa-solid fa-shield-alt" style={{ color: '#10b981', fontSize: '0.875rem' }}></i>
+                  Rol asignado
+                </label>
+                <input 
+                  type="text" 
+                  value={form.role || ''} 
+                  readOnly 
+                  disabled
+                  style={{
+                    ...inputStyle,
+                    backgroundColor: '#f3f4f6',
+                    cursor: 'not-allowed',
+                    color: '#6b7280'
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Cambiar contraseña */}
+          <div style={{
+            background: 'white',
+            padding: '1.5rem',
+            borderRadius: '12px',
+            border: '1px solid #e2e8f0',
+            borderLeft: '4px solid #f59e0b'
+          }}>
+            <div 
+              onClick={() => setMostrarCambiarPassword(!mostrarCambiarPassword)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                cursor: 'pointer',
+                marginBottom: mostrarCambiarPassword ? '1.5rem' : 0
+              }}
+            >
+              <h4 style={{
+                margin: 0,
+                color: '#1e293b',
+                fontSize: '1.05rem',
+                fontWeight: '600',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}>
+                <i className="fa-solid fa-lock" style={{ color: '#f59e0b' }}></i>
+                Cambiar Contraseña
+              </h4>
+              <i className={`fa-solid fa-chevron-${mostrarCambiarPassword ? 'up' : 'down'}`} 
+                 style={{ color: '#6b7280' }}></i>
+            </div>
+
+            {mostrarCambiarPassword && (
+              <div>
+                <div style={{
+                  backgroundColor: '#fef3c7',
+                  padding: '1rem',
+                  borderRadius: '8px',
+                  marginBottom: '1rem',
+                  border: '1px solid #fde68a'
+                }}>
+                  <p style={{ 
+                    margin: 0, 
+                    fontSize: '0.875rem', 
+                    color: '#92400e',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem'
+                  }}>
+                    <i className="fa-solid fa-info-circle"></i>
+                    Al cambiar tu contraseña, deberás iniciar sesión nuevamente
+                  </p>
+                </div>
+                
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+                  gap: '1rem'
+                }}>
+                  <div>
+                    <label style={labelStyle}>
+                      <i className="fa-solid fa-key" style={{ color: '#f59e0b', fontSize: '0.875rem' }}></i>
+                      Nueva contraseña
+                    </label>
+                    <input
+                      type="password"
+                      name="new"
+                      value={passwords.new}
+                      onChange={handlePasswordChange}
+                      placeholder="Mínimo 6 caracteres"
+                      style={inputStyle}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = '#f59e0b';
+                        e.target.style.boxShadow = '0 0 0 3px rgba(245, 158, 11, 0.1)';
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = '#e5e7eb';
+                        e.target.style.boxShadow = 'none';
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>
+                      <i className="fa-solid fa-check" style={{ color: '#f59e0b', fontSize: '0.875rem' }}></i>
+                      Confirmar contraseña
+                    </label>
+                    <input
+                      type="password"
+                      name="confirm"
+                      value={passwords.confirm}
+                      onChange={handlePasswordChange}
+                      placeholder="Repite la contraseña"
+                      style={inputStyle}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = '#f59e0b';
+                        e.target.style.boxShadow = '0 0 0 3px rgba(245, 158, 11, 0.1)';
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = '#e5e7eb';
+                        e.target.style.boxShadow = 'none';
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
-        <div className="buttons">
-          <button className='btn btn-secondary' type='button' onClick={() => toggleSubMenu('changePassword')}>
-            Cambiar contraseña
+        {/* Footer con botones */}
+        <div style={{ 
+          display: 'flex', 
+          gap: '1rem', 
+          justifyContent: 'flex-end',
+          padding: '2rem',
+          borderTop: '2px solid #e5e7eb',
+          backgroundColor: 'white',
+          borderRadius: '0 0 20px 20px'
+        }}>
+          <button 
+            type="button" 
+            onClick={() => closeModal('editar-perfil')}
+            style={{
+              padding: '0.875rem 1.5rem',
+              border: '2px solid #e5e7eb',
+              borderRadius: '10px',
+              backgroundColor: 'white',
+              color: '#374151',
+              cursor: 'pointer',
+              fontWeight: '600',
+              fontSize: '0.95rem',
+              transition: 'all 0.3s ease',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.backgroundColor = '#f3f4f6';
+              e.target.style.borderColor = '#d1d5db';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.backgroundColor = 'white';
+              e.target.style.borderColor = '#e5e7eb';
+            }}
+          >
+            <i className="fa-solid fa-times"></i>
+            Cancelar
           </button>
-        </div>
-
-        <div className='dropdown' id='changePassword' style={{ border: '1px solid #ccc', padding: '0.5rem', marginTop: '1rem' }}>
-          <div className="form-group">
-            <label>Nueva contraseña</label>
-            <input className='entrada' type="password" name="new" value={passwords.new} onChange={handlePasswordChange} />
-          </div>
-          <div className="form-group">
-            <label>Confirmar nueva contraseña</label>
-            <input className='entrada' type="password" name="confirm" value={passwords.confirm} onChange={handlePasswordChange} />
-          </div>
-        </div>
-
-        <div className="buttons">
-          <button className="btn btn-secondary" type='button' onClick={() => closeModal('editar-perfil')}>Cancelar</button>
-          <button type="submit" className="btn btn-primary">
+          
+          <button 
+            type="submit"
+            style={{
+              padding: '0.875rem 1.5rem',
+              border: 'none',
+              borderRadius: '10px',
+              background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
+              color: 'white',
+              cursor: 'pointer',
+              fontWeight: '600',
+              fontSize: '0.95rem',
+              transition: 'all 0.3s ease',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              boxShadow: '0 4px 6px -1px rgba(99, 102, 241, 0.3)'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.transform = 'translateY(-1px)';
+              e.target.style.boxShadow = '0 6px 12px -1px rgba(99, 102, 241, 0.4)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.transform = 'translateY(0)';
+              e.target.style.boxShadow = '0 4px 6px -1px rgba(99, 102, 241, 0.3)';
+            }}
+          >
+            <i className="fa-solid fa-save"></i>
             Guardar Cambios
           </button>
-
         </div>
-      </div>
-
-    </form>
+      </form>
+    </div>
   );
 }

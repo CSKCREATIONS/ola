@@ -3,8 +3,18 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const config = require('../config/auth.config');
 const sgMail = require('@sendgrid/mail');
-
-sgMail.setApiKey('');
+// Configurar SendGrid de forma segura para no bloquear el arranque
+try {
+  const apiKey = process.env.SENDGRID_API_KEY;
+  if (apiKey && apiKey.startsWith('SG.')) {
+    sgMail.setApiKey(apiKey);
+    console.log('✉️  SendGrid listo (auth)');
+  } else {
+    console.log('✉️  SendGrid no configurado (auth): se omitirá hasta el envío');
+  }
+} catch (e) {
+  console.warn('⚠️  No se pudo inicializar SendGrid (auth). Continuando sin correo:', e.message);
+}
 
 
 // Función para verificar permisos

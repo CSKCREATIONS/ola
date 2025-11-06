@@ -51,17 +51,17 @@ const exportToExcel = () => {
 
   useEffect(() => {
   const token = localStorage.getItem('token');
-  fetch('http://localhost:3000/api/ventas', {
-    headers: {
-      'Authorization': `Bearer ${token}`
-    }
-  })
-    .then(res => res.json())
-    .then(data => {
-      console.log('✅ Ventas recibidas:', data); // <-- Agrega esto
-      setVentas(data);
-    })
-    .catch(err => console.error('Error al cargar ventas:', err));
+    const cargarVentasInicial = async () => {
+      try {
+        const res = await api.get('/api/ventas');
+        console.log('✅ Ventas recibidas:', res.data);
+        setVentas(res.data);
+      } catch (err) {
+        console.error('Error al cargar ventas:', err);
+      }
+    };
+
+    cargarVentasInicial();
 }, []);
 
 
@@ -86,12 +86,14 @@ const exportToExcel = () => {
 
   const cargarVentas = () => {
   const token = localStorage.getItem('token');
-  fetch('http://localhost:3000/api/ventas', {
-    headers: { 'Authorization': `Bearer ${token}` }
-  })
-    .then(res => res.json())
-    .then(data => setVentas(data))
-    .catch(err => console.error('Error al cargar ventas:', err));
+    const cargarVentas = async () => {
+      try {
+        const res = await api.get('/api/ventas');
+        setVentas(res.data);
+      } catch (err) {
+        console.error('Error al cargar ventas:', err);
+      }
+    };
 };
 
 useEffect(() => {

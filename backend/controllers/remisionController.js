@@ -288,12 +288,19 @@ exports.enviarRemisionPorCorreo = async (req, res) => {
       // Continuar sin PDF si hay error
     }
 
-    // Configurar SendGrid si está disponible
-    if (process.env.SENDGRID_API_KEY) {
-      console.log('🔧 Configurando SendGrid con API Key:', process.env.SENDGRID_API_KEY.substring(0, 20) + '...');
-      sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+    // Configurar SendGrid si está disponible y la API key es válida
+    const sgKey = process.env.SENDGRID_API_KEY;
+    if (sgKey && sgKey.startsWith('SG.')) {
+      console.log('🔧 SendGrid configurado (API key presente)');
+      try {
+        sgMail.setApiKey(sgKey);
+      } catch (e) {
+        console.warn('⚠️ No se pudo configurar SendGrid:', e.message);
+      }
+    } else if (sgKey) {
+      console.log('⚠️ SENDGRID_API_KEY presente pero inválida (no inicia con "SG.")');
     } else {
-      console.log('⚠️ SENDGRID_API_KEY no encontrada');
+      console.log('⚠️ SENDGRID_API_KEY no configurada');
     }
 
     // Generar contenido HTML de la remisión
@@ -746,10 +753,10 @@ exports.enviarRemisionPorCorreo = async (req, res) => {
     }
 
     // Si Gmail falló, intentar con SendGrid
-    if (!emailSent && process.env.SENDGRID_API_KEY) {
+  if (!emailSent && process.env.SENDGRID_API_KEY && process.env.SENDGRID_API_KEY.startsWith('SG.')) {
       try {
-        console.log('🔄 Intentando envío con SendGrid...');
-        const fromEmail = process.env.FROM_EMAIL || process.env.SENDGRID_FROM_EMAIL;
+  console.log('🔄 Intentando envío con SendGrid...');
+  const fromEmail = process.env.FROM_EMAIL || process.env.SENDGRID_FROM_EMAIL;
         console.log('📧 FROM_EMAIL:', fromEmail);
         console.log('📬 Email de destino:', correoDestino);
         
@@ -758,7 +765,7 @@ exports.enviarRemisionPorCorreo = async (req, res) => {
           throw new Error('FROM_EMAIL/SENDGRID_FROM_EMAIL no está configurado para SendGrid');
         }
 
-        await sgMail.send({
+  await sgMail.send({
           to: correoDestino,
           from: fromEmail,
           subject: asunto,
@@ -796,8 +803,8 @@ exports.enviarRemisionPorCorreo = async (req, res) => {
         
         lastError = error;
       }
-    } else if (!emailSent) {
-      console.log('⚠️ SendGrid no configurado (falta SENDGRID_API_KEY)');
+  } else if (!emailSent) {
+  console.log('⚠️ SendGrid no configurado correctamente (falta SENDGRID_API_KEY o formato inválido)');
     }
 
     if (emailSent) {
@@ -914,11 +921,12 @@ exports.probarGmail = async (req, res) => {
 // Probar configuración de SendGrid
 exports.probarSendGrid = async (req, res) => {
   try {
-    if (!process.env.SENDGRID_API_KEY) {
-      return res.status(400).json({ message: 'SENDGRID_API_KEY no configurada' });
+    const sgKey = process.env.SENDGRID_API_KEY;
+    if (!sgKey || !sgKey.startsWith('SG.')) {
+      return res.status(400).json({ message: 'SENDGRID_API_KEY no configurada o inválida' });
     }
 
-    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+    sgMail.setApiKey(sgKey);
     
     const testEmail = {
       to: 'test@example.com', // Email de prueba
@@ -928,7 +936,7 @@ exports.probarSendGrid = async (req, res) => {
     };
 
     console.log('🧪 Probando SendGrid con configuración:', {
-      apiKey: process.env.SENDGRID_API_KEY.substring(0, 20) + '...',
+      apiKey: 'SG.***',
       fromEmail: testEmail.from,
       toEmail: testEmail.to
     });

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { registerModalUsuario } from "../funciones/modalController";
 import Swal from "sweetalert2";
+import api from '../api/axiosConfig';
 
 export default function AgregarUsuario() {
   const [isVisible, setIsVisible] = useState(false);
@@ -13,6 +14,7 @@ export default function AgregarUsuario() {
   const [rolesDisponibles, setRolesDisponibles] = useState([]);
   const [rolesSeleccionados, setRolesSeleccionados] = useState([]);
   const [cargandoRoles, setCargandoRoles] = useState(true);
+  const [rolesForbidden, setRolesForbidden] = useState(false);
 
   // Función para cerrar el modal
   const closeModal = () => {
@@ -41,7 +43,6 @@ export default function AgregarUsuario() {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    
     console.log('🔍 AgregarUsuario: Iniciando carga de roles...');
     console.log('🔑 Token disponible:', !!token);
 
@@ -54,37 +55,47 @@ export default function AgregarUsuario() {
 
     setCargandoRoles(true);
 
-    fetch('http://localhost:5000/api/roles', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-access-token': token
-      }
-    })
-      .then(res => {
-        console.log('📤 Respuesta del servidor roles - Status:', res.status);
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+    (async () => {
+      try {
+        // Check cached user permissions to avoid unauthorized /api/roles calls
+        const rawUser = localStorage.getItem('user');
+        let permisos = [];
+        try {
+          const parsed = rawUser ? JSON.parse(rawUser) : null;
+          permisos = parsed && parsed.permissions ? parsed.permissions : [];
+        } catch (e) {
+          console.warn('⚠️ AgregarUsuario: no se pudo parsear localStorage.user', e);
         }
-        return res.json();
-      })
-      .then(data => {
-        console.log('📋 Respuesta del servidor roles:', data);
-        if (data.success && Array.isArray(data.roles)) {
-          console.log('✅ Roles cargados correctamente:', data.roles.length);
-          setRolesDisponibles(data.roles);
-        } else {
-          console.error('❌ Formato de respuesta inesperado:', data);
-          setRolesDisponibles([]);
+
+        // Attempt to fetch roles even if permisos doesn't include roles.ver. The server
+        // may still return them (e.g., admin token) or return 403. We'll handle 403
+        // gracefully and surface a message to the user.
+        try {
+          const res = await api.get('/api/roles');
+          const data = res.data || res;
+          const roles = Array.isArray(data) ? data : (data.roles || data.data || []);
+          console.log('📋 Respuesta del servidor roles:', roles);
+          setRolesDisponibles(roles);
+          setRolesForbidden(false);
+        } catch (err) {
+          // If the server forbids access, show a friendly message instead of noisy errors
+          if (err && err.response && err.response.status === 403) {
+            console.debug('403 al obtener /api/roles — el usuario no tiene permiso para ver roles');
+            setRolesDisponibles([]);
+            setRolesForbidden(true);
+          } else {
+            console.error('❌ Error al cargar roles:', err);
+            setRolesDisponibles([]);
+            setRolesForbidden(false);
+          }
         }
-      })
-      .catch(err => {
-        console.error('❌ Error al cargar roles:', err);
+      } catch (err) {
+        console.error('❌ Error al cargar roles (outer):', err);
         setRolesDisponibles([]);
-      })
-      .finally(() => {
+      } finally {
         setCargandoRoles(false);
-      });
+      }
+    })();
   }, []);
 
   //genera password automaticamente
@@ -127,18 +138,9 @@ export default function AgregarUsuario() {
     };
 
     try {
-      const res = await fetch('http://localhost:5000/api/users', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-access-token': token
-        },
-        body: JSON.stringify(usuario)
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
+      const res = await api.post('/api/users', usuario);
+      const data = res.data || res;
+      if (res.status >= 200 && res.status < 300) {
         console.log('Password generada: ', nuevaPassword)
         Swal.fire({
           title: 'Usuario creado correctamente',
@@ -550,10 +552,17 @@ export default function AgregarUsuario() {
                         Cargando roles...
                       </span>
                     ) : rolesDisponibles.length === 0 ? (
-                      <span style={{ color: '#ef4444' }}>
-                        <i className="fa-solid fa-exclamation-triangle" style={{ marginRight: '0.5rem' }}></i>
-                        No se encontraron roles. Verifica tu conexión o permisos.
-                      </span>
+                      rolesForbidden ? (
+                        <span style={{ color: '#ef4444' }}>
+                          <i className="fa-solid fa-lock" style={{ marginRight: '0.5rem' }}></i>
+                          No tienes permiso para ver la lista de roles.
+                        </span>
+                      ) : (
+                        <span style={{ color: '#ef4444' }}>
+                          <i className="fa-solid fa-exclamation-triangle" style={{ marginRight: '0.5rem' }}></i>
+                          No se encontraron roles. Verifica tu conexión o permisos.
+                        </span>
+                      )
                     ) : (
                       <span style={{ color: '#10b981' }}>
                         <i className="fa-solid fa-check-circle" style={{ marginRight: '0.5rem' }}></i>

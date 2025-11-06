@@ -5,6 +5,7 @@ import NavUsuarios from '../components/NavUsuarios'
 import AgregarRol from '../components/AgregarRol';
 import { openModal } from '../funciones/animaciones';
 import Swal from 'sweetalert2';
+import api from '../api/axiosConfig';
 import EditarRol from '../components/EditarRol';
 
 // CSS inyectado para diseño avanzado
@@ -175,24 +176,12 @@ export default function RolesYPermisos() {
 
     if (!confirmResult.isConfirmed) return;
 
-    const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`http://localhost:5000/api/roles/${id}/toggle-enabled`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-access-token': token
-        },
-        body: JSON.stringify({ enabled: nuevoEstado })
-      });
+      const res = await api.patch(`/api/roles/${id}/toggle-enabled`, { enabled: nuevoEstado });
 
-      if (!res.ok) throw new Error('Error al cambiar estado del rol');
+      const data = res.data;
 
-      const data = await res.json();
-
-      setRoles(prev =>
-        prev.map(r => (r._id === id ? { ...r, enabled: nuevoEstado } : r))
-      );
+      setRoles(prev => prev.map(r => (r._id === id ? { ...r, enabled: nuevoEstado } : r)));
 
       Swal.fire({
         icon: 'success',
@@ -221,33 +210,45 @@ export default function RolesYPermisos() {
 
 
   useEffect(() => {
-    const usuario = JSON.parse(localStorage.getItem('user'));
-    if (usuario && usuario.permissions) {
-      setPuedeEditarRol(usuario.permissions.includes('roles.editar'));
-      setpuedeInhabilitarRol(usuario.permissions.includes('roles.inhabilitar'))
-      setPuedeCrearRol(usuario.permissions.includes('roles.crear'));
-    }
-
-    const token = localStorage.getItem('token');
-
-
-    // Petición al backend para obtener los roles
-    fetch('http://localhost:5000/api/roles', {
-      headers: {
-        'Content-Type': 'application/json',
-        'x-access-token': token
+    const init = async () => {
+      const usuario = JSON.parse(localStorage.getItem('user'));
+      console.log('👤 Usuario en localStorage:', usuario);
+      console.log('🔑 Permisos del usuario:', usuario?.permissions);
+      if (usuario && usuario.permissions) {
+        const tieneEditarRol = usuario.permissions.includes('roles.editar');
+        const tieneInhabilitarRol = usuario.permissions.includes('roles.inhabilitar');
+        const tieneCrearRol = usuario.permissions.includes('roles.crear');
+        console.log('✅ Puede editar rol:', tieneEditarRol);
+        console.log('✅ Puede inhabilitar rol:', tieneInhabilitarRol);
+        console.log('✅ Puede crear rol:', tieneCrearRol);
+        setPuedeEditarRol(tieneEditarRol);
+        setpuedeInhabilitarRol(tieneInhabilitarRol);
+        setPuedeCrearRol(tieneCrearRol);
       }
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          setRoles(data.roles);
-        } else {
-          console.error('Error cargando roles');
-        }
-      })
-      .catch(err => console.error('Error:', err));
 
+      try {
+        console.log('🔍 RolesYPermisos: Iniciando carga de roles...');
+        const res = await api.get('/api/roles');
+        console.log('📋 RolesYPermisos: Respuesta del servidor:', res);
+        const data = res.data;
+        console.log('📋 RolesYPermisos: data.success =', data.success, 'data.roles =', data.roles);
+        if (data.success) {
+          const rolesOrdenados = data.roles.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+          setRoles(rolesOrdenados);
+          console.log('✅ RolesYPermisos: Roles cargados correctamente:', data.roles.length);
+        } else {
+          console.error('❌ RolesYPermisos: Error cargando roles - data.success es false');
+        }
+      } catch (err) {
+        console.error('❌ RolesYPermisos: Error al cargar roles:', err);
+        if (err.response) {
+          console.error('❌ RolesYPermisos: Status:', err.response.status);
+          console.error('❌ RolesYPermisos: Data:', err.response.data);
+        }
+      }
+    };
+
+    init();
   }, [navigate]);
 
 
@@ -601,26 +602,30 @@ export default function RolesYPermisos() {
                         <button
                           onClick={() => mostrarPermisos(rol)}
                           style={{
-                            background: 'linear-gradient(135deg, #fef3c7, #fde68a)',
-                            color: '#d97706',
+                            background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                            color: 'white',
                             border: 'none',
                             borderRadius: '8px',
-                            padding: '8px 16px',
+                            padding: '8px 12px',
                             cursor: 'pointer',
-                            fontSize: '12px',
+                            fontSize: '13px',
                             fontWeight: '600',
                             transition: 'all 0.2s ease',
-                            boxShadow: '0 2px 4px rgba(217, 119, 6, 0.2)'
+                            boxShadow: '0 2px 4px rgba(245, 158, 11, 0.3)',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px'
                           }}
                           onMouseEnter={(e) => {
                             e.target.style.transform = 'translateY(-2px)';
-                            e.target.style.boxShadow = '0 4px 8px rgba(217, 119, 6, 0.3)';
+                            e.target.style.boxShadow = '0 4px 8px rgba(245, 158, 11, 0.4)';
                           }}
                           onMouseLeave={(e) => {
                             e.target.style.transform = 'translateY(0)';
-                            e.target.style.boxShadow = '0 2px 4px rgba(217, 119, 6, 0.2)';
+                            e.target.style.boxShadow = '0 2px 4px rgba(245, 158, 11, 0.3)';
                           }}
                         >
+                          <i className="fa-solid fa-key"></i>
                           Ver permisos
                         </button>
                       </td>
@@ -657,37 +662,43 @@ export default function RolesYPermisos() {
                         </label>
                       </td>
                       <td style={{ padding: '16px 12px', textAlign: 'center' }}>
-                        {puedeEditarRol && (
-                          <button
-                            onClick={() => {
-                              setRolSeleccionado(rol);
-                              openModal('edit-role-modal');
-                            }}
-                            title="Editar rol"
-                            style={{
-                              background: 'linear-gradient(135deg, #dbeafe, #bfdbfe)',
-                              color: '#1e40af',
-                              border: 'none',
-                              borderRadius: '8px',
-                              padding: '8px 10px',
-                              cursor: 'pointer',
-                              fontSize: '12px',
-                              fontWeight: '600',
-                              transition: 'all 0.2s ease',
-                              boxShadow: '0 2px 4px rgba(30, 64, 175, 0.2)'
-                            }}
-                            onMouseEnter={(e) => {
-                              e.target.style.transform = 'translateY(-2px)';
-                              e.target.style.boxShadow = '0 4px 8px rgba(30, 64, 175, 0.3)';
-                            }}
-                            onMouseLeave={(e) => {
-                              e.target.style.transform = 'translateY(0)';
-                              e.target.style.boxShadow = '0 2px 4px rgba(30, 64, 175, 0.2)';
-                            }}
-                          >
-                            <i className="fa-solid fa-pen-to-square"></i>
-                          </button>
-                        )}
+                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                          {puedeEditarRol && (
+                            <button
+                              onClick={() => {
+                                setRolSeleccionado(rol);
+                                openModal('edit-role-modal');
+                              }}
+                              title="Editar rol"
+                              style={{
+                                background: 'linear-gradient(135deg, #3b82f6, #1e40af)',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '8px',
+                                padding: '8px 12px',
+                                cursor: 'pointer',
+                                fontSize: '13px',
+                                fontWeight: '600',
+                                transition: 'all 0.2s ease',
+                                boxShadow: '0 2px 4px rgba(59, 130, 246, 0.3)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '6px'
+                              }}
+                              onMouseEnter={(e) => {
+                                e.target.style.transform = 'translateY(-2px)';
+                                e.target.style.boxShadow = '0 4px 8px rgba(59, 130, 246, 0.4)';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.target.style.transform = 'translateY(0)';
+                                e.target.style.boxShadow = '0 2px 4px rgba(59, 130, 246, 0.3)';
+                              }}
+                            >
+                              <i className="fa-solid fa-pen-to-square"></i>
+                              Editar
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}

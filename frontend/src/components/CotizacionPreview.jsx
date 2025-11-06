@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import api from '../api/axiosConfig';
 
 export default function CotizacionPreview({ datos, onClose, onEmailSent }) {
   const navigate = useNavigate();
@@ -83,22 +84,14 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
   // Función para enviar por correo
   const enviarPorCorreo = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/cotizaciones/${datos._id}/enviar-correo`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          cotizacionId: datos._id,
-          correoDestino: correo,
-          asunto: asunto,
-          mensaje: mensaje
-        })
+      const res = await api.post(`/api/cotizaciones/${datos._id}/enviar-correo`, {
+        cotizacionId: datos._id,
+        correoDestino: correo,
+        asunto: asunto,
+        mensaje: mensaje
       });
 
-      if (response.ok) {
+      if (res.status >= 200 && res.status < 300) {
         Swal.fire({
           icon: 'success',
           title: 'Correo enviado',
@@ -335,23 +328,15 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
           }
         });
 
-        const token = localStorage.getItem('token');
-        const response = await fetch(`http://localhost:5000/api/cotizaciones/${datos._id}/remisionar`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            cotizacionId: datos._id,
-            fechaEntrega: formValues.fechaEntrega,
-            observaciones: formValues.observaciones
-          })
+        const res = await api.post(`/api/cotizaciones/${datos._id}/remisionar`, {
+          cotizacionId: datos._id,
+          fechaEntrega: formValues.fechaEntrega,
+          observaciones: formValues.observaciones
         });
 
-        const result = await response.json();
+        const result = res.data || res;
 
-        if (response.ok) {
+        if (res.status >= 200 && res.status < 300) {
           Swal.fire({
             icon: 'success',
             title: '¡Cotización Remisionada!',

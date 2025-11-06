@@ -3,6 +3,12 @@ import Swal from 'sweetalert2';
 import '../App.css';
 import Fijo from '../components/Fijo';
 import NavProductos from '../components/NavProductos';
+import api from '../api/axiosConfig';
+
+// API endpoint constants used in this page
+const API_PRODUCTS = '/api/products';
+const API_CATEGORIES = '/api/categories';
+const API_SUBCATEGORIES = '/api/subcategories';
 
 // CSS inyectado para diseño avanzado
 const advancedStyles = `
@@ -179,13 +185,6 @@ if (!document.getElementById('productos-advanced-styles')) {
   styleSheet.textContent = advancedStyles;
   document.head.appendChild(styleSheet);
 }
-
-const API_PRODUCTS = 'http://localhost:3000/api/products';
-const API_CATEGORIES = 'http://localhost:3000/api/categories';
-const API_SUBCATEGORIES = 'http://localhost:3000/api/subcategories';
-const API_PROVEEDORES = 'http://localhost:3000/api/proveedores';
-
-const token = localStorage.getItem('token');
 
 const ProductoModal = ({
   producto,
@@ -805,15 +804,12 @@ const GestionProductos = () => {
     loadSubcategorias();
   }, []);
 
-  useEffect(() => {
+useEffect(() => {
   const fetchProveedores = async () => {
     try {
-      const res = await fetch('http://localhost:3000/api/proveedores/activos', {
-        headers: { 'x-access-token': token }
-      });
-
-      const data = await res.json();
-      setProveedores(data.proveedores); // o como los guardes
+      const res = await api.get('/api/proveedores/activos');
+      const data = res.data || res;
+      setProveedores(data.proveedores || data.data || []);
     } catch (error) {
       console.error('Error al cargar proveedores', error);
     }
@@ -825,10 +821,11 @@ const GestionProductos = () => {
 
   const loadProductos = async () => {
     try {
-      const res = await fetch(API_PRODUCTS, { headers: { 'x-access-token': token } });
-      const result = await res.json();
+      const res = await api.get('/api/products');
+      const result = res.data || res;
       const lista = result.products || result.data || result;
-      setProductos(Array.isArray(lista) ? lista : []);
+      const productosOrdenados = (Array.isArray(lista) ? lista : []).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      setProductos(productosOrdenados);
     } catch (err) {
       Swal.fire('Error', 'No se pudieron cargar los productos', 'error');
     }
@@ -846,22 +843,13 @@ const GestionProductos = () => {
     };
 
     try {
-      const res = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          'x-access-token': token
-        },
-        body: JSON.stringify(dataToSend)
-      });
-
-      if (!res.ok) throw new Error('Error al guardar el producto');
-
+      const res = await api({ url, method, data: dataToSend });
+      if (!(res.status >= 200 && res.status < 300)) throw new Error('Error al guardar el producto');
       Swal.fire('Éxito', 'Producto guardado correctamente', 'success');
       setModalVisible(false);
       loadProductos();
     } catch (err) {
-      Swal.fire('Error', err.message, 'error');
+      Swal.fire('Error', err.message || 'Error al guardar el producto', 'error');
     }
   };
 
@@ -882,16 +870,8 @@ const GestionProductos = () => {
 
         if (subcatId) {
           // Obtener subcategoria para comprobar su estado
-          const subRes = await fetch(`${API_SUBCATEGORIES}/${subcatId}`, {
-            headers: { 'x-access-token': token }
-          });
-
-          if (!subRes.ok) {
-            const err = await subRes.json().catch(() => ({}));
-            return Swal.fire('Error', err.message || 'No se pudo verificar la subcategoría', 'error');
-          }
-
-          const subData = await subRes.json();
+          const subRes = await api.get(`/api/subcategories/${subcatId}`);
+          const subData = subRes.data || subRes;
           const subcategoria = subData.data || subData;
 
           if (subcategoria && subcategoria.activo === false) {
@@ -900,16 +880,8 @@ const GestionProductos = () => {
 
           const parentCatId = subcategoria?.category?._id || subcategoria?.category;
           if (parentCatId) {
-            const catRes = await fetch(`${API_CATEGORIES}/${parentCatId}`, {
-              headers: { 'x-access-token': token }
-            });
-
-            if (!catRes.ok) {
-              const err = await catRes.json().catch(() => ({}));
-              return Swal.fire('Error', err.message || 'No se pudo verificar la categoría padre', 'error');
-            }
-
-            const catData = await catRes.json();
+            const catRes = await api.get(`/api/categories/${parentCatId}`);
+            const catData = catRes.data || catRes;
             const categoria = catData.data || catData;
             if (categoria && categoria.activo === false) {
               return Swal.fire('Acción no permitida', 'No se puede activar el producto porque la categoría padre está desactivada', 'error');
@@ -918,20 +890,13 @@ const GestionProductos = () => {
         }
       }
 
-      const res = await fetch(url, {
-        method: 'PATCH',
-        headers: {
-          'x-access-token': token
-        }
-      });
 
-      const result = await res.json();
-
-      if (res.ok) {
+      const res = await api.put(url);
+      if (res.status >= 200 && res.status < 300) {
         Swal.fire(`Producto ${accion === 'deactivate' ? 'desactivado' : 'activado'} correctamente`, '', 'success');
         loadProductos();
       } else {
-        throw new Error(result.message || `No se pudo ${accion} el producto`);
+        throw new Error(res.data?.message || `No se pudo ${accion} el producto`);
       }
     } catch (error) {
       Swal.fire('Error', error.message || 'Error inesperado', 'error');
@@ -941,17 +906,27 @@ const GestionProductos = () => {
   
 
   const loadCategorias = async () => {
-    const res = await fetch(API_CATEGORIES, { headers: { 'x-access-token': token } });
-    const result = await res.json();
-    const data = result.categories || result.data || result;
-    setCategorias(Array.isArray(data) ? data : []);
+    try {
+      const res = await api.get('/api/categories');
+      const result = res.data || res;
+      const data = result.categories || result.data || result;
+      setCategorias(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('Error loading categories', err);
+      setCategorias([]);
+    }
   };
 
   const loadSubcategorias = async () => {
-    const res = await fetch(API_SUBCATEGORIES, { headers: { 'x-access-token': token } });
-    const result = await res.json();
-    const data = result.subcategories || result.data || result;
-    setSubcategorias(Array.isArray(data) ? data : []);
+    try {
+      const res = await api.get('/api/subcategories');
+      const result = res.data || res;
+      const data = result.subcategories || result.data || result;
+      setSubcategorias(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('Error loading subcategories', err);
+      setSubcategorias([]);
+    }
   };
 
   
@@ -1418,17 +1393,12 @@ const GestionProductos = () => {
                                 const subcatId = prod.subcategory?._id || prod.subcategory;
                                 if (subcatId) {
                                   try {
-                                    const subRes = await fetch(`${API_SUBCATEGORIES}/${subcatId}`, {
-                                      headers: { 'x-access-token': token }
-                                    });
-
-                                    if (!subRes.ok) {
-                                      const err = await subRes.json().catch(() => ({}));
+                                    const subRes = await api.get(`/api/subcategories/${subcatId}`);
+                                    if (!(subRes.status >= 200 && subRes.status < 300)) {
+                                      const err = subRes.data || {};
                                       return Swal.fire('Error', err.message || 'No se pudo verificar la subcategoría', 'error');
                                     }
-
-                                    const subData = await subRes.json();
-                                    const subcategoria = subData.data || subData;
+                                    const subcategoria = subRes.data || subRes;
 
                                     if (subcategoria && subcategoria.activo === false) {
                                       return Swal.fire('Acción no permitida', 'No se puede activar el producto porque su subcategoría está desactivada', 'error');
@@ -1436,17 +1406,12 @@ const GestionProductos = () => {
 
                                     const parentCatId = subcategoria?.category?._id || subcategoria?.category;
                                     if (parentCatId) {
-                                      const catRes = await fetch(`${API_CATEGORIES}/${parentCatId}`, {
-                                        headers: { 'x-access-token': token }
-                                      });
-
-                                      if (!catRes.ok) {
-                                        const err = await catRes.json().catch(() => ({}));
+                                      const catRes = await api.get(`/api/categories/${parentCatId}`);
+                                      if (!(catRes.status >= 200 && catRes.status < 300)) {
+                                        const err = catRes.data || {};
                                         return Swal.fire('Error', err.message || 'No se pudo verificar la categoría padre', 'error');
                                       }
-
-                                      const catData = await catRes.json();
-                                      const categoria = catData.data || catData;
+                                      const categoria = catRes.data || catRes;
                                       if (categoria && categoria.activo === false) {
                                         return Swal.fire('Acción no permitida', 'No se puede activar el producto porque la categoría padre está desactivada', 'error');
                                       }

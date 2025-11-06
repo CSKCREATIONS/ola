@@ -1,5 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
+import api from '../api/axiosConfig';
 import Swal from 'sweetalert2';
 import '../App.css';
 import Fijo from '../components/Fijo';
@@ -77,22 +78,20 @@ export default function ListaDeClientes() {
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    fetch('http://localhost:3000/api/clientes', {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-      .then(async res => {
-        const data = await res.json();
-        if (!res.ok || !Array.isArray(data)) {
-          console.error('Error o respuesta inesperada:', data);
-          return setClientes([]);
-        }
-        setClientes(data);
-      })
-      .catch(err => {
+    const cargarClientes = async () => {
+      try {
+        const res = await api.get('/api/clientes');
+        const data = res.data || res;
+        const lista = Array.isArray(data) ? data : (data.data || []);
+        const listaOrdenada = lista.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        setClientes(listaOrdenada);
+      } catch (err) {
         console.error('Error al cargar clientes:', err);
         setClientes([]);
-      });
+      }
+    };
+
+    cargarClientes();
   }, []);
 
   const handleEliminar = (id) => {
@@ -104,20 +103,16 @@ export default function ListaDeClientes() {
       showCancelButton: true,
       confirmButtonText: 'Sí, eliminar',
       cancelButtonText: 'Cancelar'
-    }).then((result) => {
+    }).then(async (result) => {
       if (result.isConfirmed) {
-        fetch(`http://localhost:3000/api/clientes/${id}`, {
-          method: 'DELETE',
-          headers: { Authorization: `Bearer ${token}` }
-        })
-          .then(() => {
-            setClientes(clientes.filter(c => c._id !== id));
-            Swal.fire('Eliminado', 'Cliente eliminado correctamente.', 'success');
-          })
-          .catch(err => {
-            console.error(err);
-            Swal.fire('Error', 'No se pudo eliminar el cliente.', 'error');
-          });
+        try {
+          await api.delete(`/api/clientes/${id}`);
+          setClientes(clientes.filter(c => c._id !== id));
+          Swal.fire('Eliminado', 'Cliente eliminado correctamente.', 'success');
+        } catch (err) {
+          console.error(err);
+          Swal.fire('Error', 'No se pudo eliminar el cliente.', 'error');
+        }
       }
     });
   };
@@ -125,21 +120,13 @@ export default function ListaDeClientes() {
   const handleGuardar = async (clienteActualizado) => {
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`http://localhost:3000/api/clientes/${clienteActualizado._id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify(clienteActualizado)
-      });
-
-      if (!res.ok) throw new Error('Error al actualizar cliente');
+      const res = await api.put(`/api/clientes/${clienteActualizado._id}`, clienteActualizado);
+      if (!(res.status >= 200 && res.status < 300)) throw new Error('Error al actualizar cliente');
       Swal.fire('Éxito', 'Cliente actualizado correctamente', 'success');
       setMostrarModal(false);
       setClientes(clientes.map(c => c._id === clienteActualizado._id ? clienteActualizado : c));
     } catch (err) {
-      Swal.fire('Error', err.message, 'error');
+      Swal.fire('Error', err.message || 'Error al actualizar cliente', 'error');
     }
   };
 

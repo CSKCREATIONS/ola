@@ -6,6 +6,7 @@ import PedidoDevueltoPreview from '../components/PedidoDevueltoPreview';
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import Swal from 'sweetalert2';
+import api from '../api/axiosConfig';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 
@@ -27,15 +28,8 @@ export default function PedidosDevueltos() {
       console.log('Pedido original:', pedido); // Debug
 
       // Obtener los datos completos del pedido con productos poblados
-      const resPedido = await fetch(`http://localhost:5000/api/pedidos/${pedido._id}?populate=true`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      if (!resPedido.ok) {
-        throw new Error('No se pudo obtener el pedido completo');
-      }
-
-      const pedidoCompleto = await resPedido.json();
+      const resPedido = await api.get(`/api/pedidos/${pedido._id}?populate=true`);
+      const pedidoCompleto = resPedido.data || resPedido;
       console.log('Pedido completo desde API:', pedidoCompleto); // Debug
 
       // Usar los datos del pedido original si la API no devuelve datos completos
@@ -81,20 +75,19 @@ export default function PedidosDevueltos() {
   };
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    fetch('http://localhost:5000/api/pedidos?populate=true', {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    })
-      .then(res => res.json())
-      .then(data => {
-        console.log('Datos de pedidos devueltos:', data); // Debug
-        const devueltos = data.filter(p => p.estado === 'devuelto');
-        console.log('Pedidos devueltos filtrados:', devueltos); // Debug
+    const fetchData = async () => {
+      try {
+        const res = await api.get('/api/pedidos?populate=true');
+        const data = res.data || res;
+        const arr = Array.isArray(data) ? data : data.data || [];
+        const devueltos = arr.filter(p => p.estado === 'devuelto');
         setPedidos(devueltos);
-      })
-      .catch(err => console.error('Error al cargar pedidos devueltos:', err));
+      } catch (err) {
+        console.error('Error al cargar pedidos devueltos:', err);
+      }
+    };
+
+    fetchData();
   }, []);
 
   const ModalProductosCotizacion = ({ visible, onClose, productos, cotizacionId }) => {

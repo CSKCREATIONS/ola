@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import api from '../api/axiosConfig';
 import Swal from 'sweetalert2';
 import '../App.css';
 import Fijo from '../components/Fijo';
@@ -218,17 +219,30 @@ export default function OrdenCompra() {
     productoId: ''
   });
 
+  // Usuario actual
+  const [usuarioActual, setUsuarioActual] = useState('');
+
+  // Paginación
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
   // Función para obtener órdenes de compra
   const fetchOrdenes = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/ordenes-compra', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await res.json();
-      if (data.success) setOrdenes(data.data || data);
+      const res = await api.get('/api/ordenes-compra');
+      const data = res.data || res;
+      if (data.success || Array.isArray(data)) {
+        const ordenesOrdenadas = (data.data || data).sort((a, b) => 
+          new Date(b.createdAt || b.fechaCreacion) - new Date(a.createdAt || a.fechaCreacion)
+        );
+        setOrdenes(ordenesOrdenadas);
+      }
       else Swal.fire('Error', data.message || 'No se pudieron cargar las órdenes', 'error');
-    } catch {
+    } catch (err) {
+      console.error('Error fetchOrdenes:', err);
       Swal.fire('Error', 'No se pudo conectar con el servidor', 'error');
     }
   };
@@ -236,20 +250,10 @@ export default function OrdenCompra() {
   // Función para obtener proveedores
   const fetchProveedores = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/proveedores', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'x-access-token': token
-        }
-      });
-
-      const data = await res.json();
-
-      if (data.success) {
+      const res = await api.get('/api/proveedores');
+      const data = res.data || res;
+      if (data.success || data.proveedores || Array.isArray(data)) {
         setProveedores(data.data || data.proveedores || data);
-      } else if (data.proveedores) {
-        setProveedores(data.proveedores);
       } else {
         console.error('Formato de respuesta inesperado:', data);
       }
@@ -272,18 +276,8 @@ export default function OrdenCompra() {
       const token = localStorage.getItem('token');
 
       // Cargar TODOS los productos
-      const res = await fetch('http://localhost:5000/api/products', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'x-access-token': token
-        }
-      });
-
-      if (!res.ok) {
-        throw new Error(`Error ${res.status}: ${res.statusText}`);
-      }
-
-      const data = await res.json();
+      const res = await api.get('/api/products');
+      const data = res.data || res;
       console.log('Todos los productos cargados:', data);
 
       // Obtener el array de productos (diferentes estructuras posibles)
@@ -352,20 +346,22 @@ export default function OrdenCompra() {
   };
 
   useEffect(() => {
+    // Cargar nombre del usuario desde localStorage
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      const usuario = JSON.parse(storedUser);
+      const nombreCompleto = `${usuario.firstName || ''} ${usuario.surname || ''}`.trim();
+      setUsuarioActual(nombreCompleto);
+    }
+
     fetchOrdenes();
     fetchProveedores();
 
     // Debug: Ver estructura de productos
     const debugProductos = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const res = await fetch('http://localhost:5000/api/products', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'x-access-token': token
-          }
-        });
-        const data = await res.json();
+        const res = await api.get('/api/products');
+        const data = res.data || res;
         console.log('=== ESTRUCTURA DE PRODUCTOS ===', data);
 
         if (data.products && data.products.length > 0) {
@@ -581,6 +577,8 @@ export default function OrdenCompra() {
 
   // Obtener órdenes pendientes para mostrar en la tabla
   const ordenesPendientes = ordenes.filter(orden => orden.estado === 'Pendiente');
+  const currentOrdenes = ordenesPendientes.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(ordenesPendientes.length / itemsPerPage);
 
   const verDetallesOrden = (orden) => {
     setOrdenSeleccionada(orden);
@@ -620,12 +618,8 @@ export default function OrdenCompra() {
     if (!confirm.isConfirmed) return;
 
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/ordenes-compra/${id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await res.json();
+      const res = await api.delete(`/api/ordenes-compra/${id}`);
+      const data = res.data || res;
       if (data.success) {
         Swal.fire('Eliminado', 'La orden ha sido eliminada correctamente', 'success');
         fetchOrdenes();
@@ -633,6 +627,7 @@ export default function OrdenCompra() {
         Swal.fire('Error', data.message || 'No se pudo eliminar', 'error');
       }
     } catch (error) {
+      console.error('Error eliminarOrden:', error);
       Swal.fire('Error', 'No se pudo conectar con el servidor', 'error');
     }
   };
@@ -643,11 +638,8 @@ const verificarStockDisponible = async (productos) => {
     productos.map(async (item) => {
       const productoId = item.productoId || item.producto?._id || item.producto;
       try {
-        const token = localStorage.getItem('token');
-        const res = await fetch(`http://localhost:5000/api/products/${productoId}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await res.json();
+        const res = await api.get(`/api/products/${productoId}`);
+        const data = res.data || res;
         const producto = data.product || data.data || data;
         
         return {
@@ -689,15 +681,8 @@ const verificarStockDisponible = async (productos) => {
       const token = localStorage.getItem('token');
 
       // 1. Completar la orden en el backend (esto actualiza el stock)
-      const resCompletar = await fetch(`http://localhost:5000/api/ordenes-compra/${orden._id}/completar`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      const dataCompletar = await resCompletar.json();
+      const resCompletar = await api.put(`/api/ordenes-compra/${orden._id}/completar`);
+      const dataCompletar = resCompletar.data || resCompletar;
 
       if (!dataCompletar.success) {
         throw new Error(dataCompletar.message || 'No se pudo completar la orden');
@@ -742,7 +727,7 @@ const verificarStockDisponible = async (productos) => {
       productos: [],
       condicionesPago: "Contado",
       estado: 'Pendiente',
-      solicitadoPor: '',
+      solicitadoPor: usuarioActual,
       proveedor: '',
       proveedorId: ''
     });
@@ -908,18 +893,8 @@ const verificarStockDisponible = async (productos) => {
     };
 
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/ordenes-compra', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(ordenCompleta)
-      });
-
-      const data = await res.json();
-
+      const res = await api.post('/api/ordenes-compra', ordenCompleta);
+      const data = res.data || res;
       if (data.success) {
         Swal.fire('¡Éxito!', 'Orden de compra creada correctamente', 'success');
         cerrarModalAgregar();
@@ -928,6 +903,7 @@ const verificarStockDisponible = async (productos) => {
         Swal.fire('Error', data.message || 'No se pudo crear la orden', 'error');
       }
     } catch (error) {
+      console.error('Error guardarOrden:', error);
       Swal.fire('Error', 'No se pudo conectar con el servidor', 'error');
     }
   };
@@ -974,18 +950,8 @@ const verificarStockDisponible = async (productos) => {
 
     try {
       setCargando(true);
-      const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/ordenes-compra/${ordenEditando._id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(ordenActualizada)
-      });
-
-      const data = await res.json();
-
+      const res = await api.put(`/api/ordenes-compra/${ordenEditando._id}`, ordenActualizada);
+      const data = res.data || res;
       if (data.success) {
         Swal.fire('¡Éxito!', 'Orden de compra actualizada correctamente', 'success');
         cerrarModalEditar();
@@ -1491,7 +1457,7 @@ const verificarStockDisponible = async (productos) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {ordenesPendientes.map((orden, index) => (
+                  {currentOrdenes.map((orden, index) => (
                     <tr key={orden._id} 
                         style={{
                           borderBottom: '1px solid #f3f4f6',
@@ -1505,7 +1471,7 @@ const verificarStockDisponible = async (productos) => {
                         }}
                     >
                       <td style={{ padding: '16px 12px', fontWeight: '600', color: '#6366f1' }}>
-                        {index + 1}
+                        {indexOfFirstItem + index + 1}
                       </td>
                       <td style={{ padding: '16px 12px' }}>
                         <button
@@ -1702,6 +1668,49 @@ const verificarStockDisponible = async (productos) => {
                 </tbody>
               </table>
             </div>
+
+            {/* Paginación */}
+            {totalPages > 1 && (
+              <div style={{
+                padding: '20px 25px',
+                borderTop: '1px solid #e5e7eb',
+                display: 'flex',
+                justifyContent: 'center',
+                gap: '8px'
+              }}>
+                {Array.from({ length: totalPages }, (_, i) => (
+                  <button
+                    key={i + 1}
+                    onClick={() => paginate(i + 1)}
+                    style={{
+                      padding: '8px 16px',
+                      border: currentPage === i + 1 ? '2px solid #6366f1' : '2px solid #e5e7eb',
+                      borderRadius: '8px',
+                      background: currentPage === i + 1 ? '#6366f1' : 'white',
+                      color: currentPage === i + 1 ? 'white' : '#4b5563',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (currentPage !== i + 1) {
+                        e.target.style.borderColor = '#6366f1';
+                        e.target.style.color = '#6366f1';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (currentPage !== i + 1) {
+                        e.target.style.borderColor = '#e5e7eb';
+                        e.target.style.color = '#4b5563';
+                      }
+                    }}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Modal para agregar nueva orden */}
@@ -1749,26 +1758,24 @@ const verificarStockDisponible = async (productos) => {
                         <input
                           type="text"
                           value={nuevaOrden.solicitadoPor}
-                          onChange={e => setNuevaOrden({ ...nuevaOrden, solicitadoPor: e.target.value })}
-                          required
+                          disabled
                           className="form-input-profesional"
                           placeholder="Nombre del solicitante"
+                          style={{ backgroundColor: '#f3f4f6', cursor: 'not-allowed' }}
                         />
                         {errores.solicitadoPor && <span style={{ color: '#e74c3c', fontSize: '0.8rem' }}>{errores.solicitadoPor}</span>}
                       </div>
 
                       <div className="form-group-profesional">
                         <label className="form-label-profesional">Condiciones de Pago</label>
-                        <select
+                        <textarea
                           value={nuevaOrden.condicionesPago}
                           onChange={e => setNuevaOrden({ ...nuevaOrden, condicionesPago: e.target.value })}
                           className="form-input-profesional"
-                        >
-                          <option value="Contado">Contado</option>
-                          <option value="Crédito 15 días">Crédito 15 días</option>
-                          <option value="Crédito 30 días">Crédito 30 días</option>
-                          <option value="Crédito 60 días">Crédito 60 días</option>
-                        </select>
+                          rows="3"
+                          placeholder="Describe las condiciones de pago"
+                          style={{ resize: 'vertical', fontFamily: 'inherit' }}
+                        />
                       </div>
                     </div>
                   </div>
@@ -1988,12 +1995,6 @@ const verificarStockDisponible = async (productos) => {
                           </div>
                         </div>
                         <div>
-                          <div style={{ fontSize: '0.9rem', opacity: '0.9' }}>IVA (19%)</div>
-                          <div style={{ fontSize: '1.3rem', fontWeight: 'bold' }}>
-                            ${calcularTotales(nuevaOrden.productos).impuestos.toLocaleString()}
-                          </div>
-                        </div>
-                        <div>
                           <div style={{ fontSize: '0.9rem', opacity: '0.9' }}>Total</div>
                           <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#f39c12' }}>
                             ${calcularTotales(nuevaOrden.productos).total.toLocaleString()}
@@ -2080,26 +2081,24 @@ const verificarStockDisponible = async (productos) => {
                         <input
                           type="text"
                           value={ordenEditando.solicitadoPor}
-                          onChange={e => setOrdenEditando({ ...ordenEditando, solicitadoPor: e.target.value })}
-                          required
+                          disabled
                           className="form-input-profesional"
                           placeholder="Nombre del solicitante"
+                          style={{ backgroundColor: '#f3f4f6', cursor: 'not-allowed' }}
                         />
                         {errores.solicitadoPor && <span style={{ color: '#e74c3c', fontSize: '0.8rem' }}>{errores.solicitadoPor}</span>}
                       </div>
 
                       <div className="form-group-profesional">
                         <label className="form-label-profesional">Condiciones de Pago</label>
-                        <select
+                        <textarea
                           value={ordenEditando.condicionesPago}
                           onChange={e => setOrdenEditando({ ...ordenEditando, condicionesPago: e.target.value })}
                           className="form-input-profesional"
-                        >
-                          <option value="Contado">Contado</option>
-                          <option value="Crédito 15 días">Crédito 15 días</option>
-                          <option value="Crédito 30 días">Crédito 30 días</option>
-                          <option value="Crédito 60 días">Crédito 60 días</option>
-                        </select>
+                          rows="3"
+                          placeholder="Describe las condiciones de pago"
+                          style={{ resize: 'vertical', fontFamily: 'inherit' }}
+                        />
                       </div>
 
                       <div className="form-group-profesional">
@@ -2333,12 +2332,6 @@ const verificarStockDisponible = async (productos) => {
                           <div style={{ fontSize: '0.9rem', opacity: '0.9' }}>Subtotal</div>
                           <div style={{ fontSize: '1.3rem', fontWeight: 'bold' }}>
                             ${calcularTotales(ordenEditando.productos).subtotal.toLocaleString()}
-                          </div>
-                        </div>
-                        <div>
-                          <div style={{ fontSize: '0.9rem', opacity: '0.9' }}>IVA (19%)</div>
-                          <div style={{ fontSize: '1.3rem', fontWeight: 'bold' }}>
-                            ${calcularTotales(ordenEditando.productos).impuestos.toLocaleString()}
                           </div>
                         </div>
                         <div>
@@ -2600,12 +2593,6 @@ const verificarStockDisponible = async (productos) => {
                             <div style={{ fontSize: '0.9rem', color: '#6c757d' }}>Subtotal</div>
                             <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#2c3e50' }}>
                               ${(ordenSeleccionada.subtotal || calcularTotalesOrden(ordenSeleccionada.productos).subtotal).toLocaleString()}
-                            </div>
-                          </div>
-                          <div style={{ textAlign: 'center' }}>
-                            <div style={{ fontSize: '0.9rem', color: '#6c757d' }}>IVA (19%)</div>
-                            <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#2c3e50' }}>
-                              ${(ordenSeleccionada.impuestos || calcularTotalesOrden(ordenSeleccionada.productos).impuestos).toLocaleString()}
                             </div>
                           </div>
                           <div style={{ textAlign: 'center' }}>

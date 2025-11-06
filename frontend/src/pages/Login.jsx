@@ -1,6 +1,7 @@
 // pages/Login.jsx
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import api from '../api/axiosConfig';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -13,13 +14,8 @@ export default function Login() {
     e.preventDefault();
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/signin', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-      });
-
-      const data = await response.json();
+      const res = await api.post('/api/auth/signin', { username, password });
+      const data = res.data;
 
       if (data.success) {
         localStorage.setItem('token', data.token);

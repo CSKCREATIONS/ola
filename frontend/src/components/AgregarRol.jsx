@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { toggleSubMenu } from "../funciones/animaciones";
 import { registerModalRol } from "../funciones/modalController";
 import Swal from "sweetalert2";
+import api from '../api/axiosConfig';
 
 export default function AgregarRol() {
    const [isVisible, setIsVisible] = useState(false);
@@ -138,20 +139,10 @@ export default function AgregarRol() {
       }
 
       try {
-         const token = localStorage.getItem('token');
+         const res = await api.post('/api/roles', { name: nombreRol, permissions: permisos });
+         const data = res.data || res;
 
-         const response = await fetch('/api/roles', {
-            method: 'POST',
-            headers: {
-               'Content-Type': 'application/json',
-               'Authorization': 'Bearer ' + token
-            },
-            body: JSON.stringify({ name: nombreRol, permissions: permisos })
-         });
-
-         const data = await response.json();
-
-         if (data.success) {
+         if (res.status >= 200 && res.status < 300 && data.success) {
             Swal.fire('Éxito', 'Rol creado correctamente', 'success');
             setNombreRol('');
             setPermisos([]);
@@ -470,7 +461,7 @@ export default function AgregarRol() {
                   <div className="section" id='permisos-usuarios'>
                      <h4>Permisos módulo usuarios</h4>
                      <br />
-                     <div class="permissions">
+                     <div className="permissions">
                         <div className="group">
                            <label >
                               <input
@@ -525,9 +516,9 @@ export default function AgregarRol() {
                      </div>
                      <br />
                      {mostrarListaUsuarios && (
-                        <div class="form-group-rol" id='lista-usuarios'>
+                        <div className="form-group-rol" id='lista-usuarios'>
                            <label>Permisos para lista de usuarios</label>
-                           <div class="radio-options">
+                           <div className="radio-options">
                               <input type="checkbox"
                                  checked={permisos.includes('usuarios.crear')}
                                  onChange={() => togglePermiso('usuarios.crear')}
@@ -556,7 +547,7 @@ export default function AgregarRol() {
                      )}
 
                      {mostrarListaRoles && (
-                        <div class="form-group-rol" id='roles-y-permisos'>
+                        <div className="form-group-rol" id='roles-y-permisos'>
                            <label>Permisos para roles y permisos</label>
                            <div className="radio-options">
                               <input
@@ -594,7 +585,7 @@ export default function AgregarRol() {
                   <div className="section" id='permisos-compras'>
                      <h4>Permisos módulo compras</h4>
                      <br />
-                     <div class="permissions">
+                     <div className="permissions">
                         <div className="group">
                            <label>
                               <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" name="hcompras" checked={permisos.includes('hcompras.ver')}
@@ -680,7 +671,7 @@ export default function AgregarRol() {
                   <div className="section" id='permisos-productos'>
                      <h4>Permisos módulo productos</h4>
                      <br />
-                     <div class="permissions">
+                     <div className="permissions">
 
                         <div className="group">
                            <label>
@@ -744,7 +735,7 @@ export default function AgregarRol() {
                      </div>
                      <br />
 
-                     <div class="form-group-rol " id="lista-productos">
+                     <div className="form-group-rol " id="lista-productos">
                         <label>Permisos para lista de productos</label>
                         <div className="radio-options">
                            <input
@@ -778,7 +769,7 @@ export default function AgregarRol() {
                   <div className="section" id='permisos-ventas'>
                      <h4>Permisos módulo ventas</h4>
                      <br />
-                     <div class="permissions">
+                     <div className="permissions">
                         <div className="group">
                            <label>
                               <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('ventas.crear')}

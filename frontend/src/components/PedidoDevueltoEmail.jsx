@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Swal from 'sweetalert2';
+import api from '../api/axiosConfig';
 
 export default function PedidoDevueltoEmail({ datos, onClose, onEmailSent }) {
   // Obtener usuario logueado
@@ -69,22 +70,14 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
   // Función para enviar por correo
   const enviarPorCorreo = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/pedidos/${datos._id}/enviar-devuelto`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          correoDestino: correo,
-          asunto: asunto,
-          mensaje: mensaje,
-          motivoDevolucion: motivoDevolucion
-        })
+      const res = await api.post(`/api/pedidos/${datos._id}/enviar-devuelto`, {
+        correoDestino: correo,
+        asunto: asunto,
+        mensaje: mensaje,
+        motivoDevolucion: motivoDevolucion
       });
 
-      if (response.ok) {
+      if (res.status >= 200 && res.status < 300) {
         Swal.fire({
           icon: 'success',
           title: 'Correo enviado',

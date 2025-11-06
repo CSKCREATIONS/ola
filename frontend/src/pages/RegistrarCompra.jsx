@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import api from '../api/axiosConfig';
 import Swal from 'sweetalert2';
 import '../App.css';
 import Fijo from '../components/Fijo';
@@ -26,23 +27,11 @@ export default function RegistrarCompra() {
   // Función para obtener proveedores
   const fetchProveedores = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/proveedores', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'x-access-token': token
-        }
-      });
-
-      const data = await res.json();
-
-      if (data.success) {
-        setProveedores(data.data || data.proveedores || data);
-      } else if (data.proveedores) {
-        setProveedores(data.proveedores);
-      } else {
-        console.error('Formato de respuesta inesperado:', data);
-      }
+      const res = await api.get('/api/proveedores');
+      const data = res.data;
+      if (data.success) setProveedores(data.data || data.proveedores || data);
+      else if (data.proveedores) setProveedores(data.proveedores);
+      else setProveedores(data || []);
     } catch (error) {
       console.error('Error al cargar proveedores:', error);
     }
@@ -60,18 +49,8 @@ export default function RegistrarCompra() {
       const token = localStorage.getItem('token');
 
       // Cargar TODOS los productos
-      const res = await fetch('http://localhost:5000/api/products', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'x-access-token': token
-        }
-      });
-
-      if (!res.ok) {
-        throw new Error(`Error ${res.status}: ${res.statusText}`);
-      }
-
-      const data = await res.json();
+      const res = await api.get('/api/products');
+      const data = res.data;
 
       // Obtener el array de productos (diferentes estructuras posibles)
       let todosProductos = [];
@@ -275,17 +254,8 @@ export default function RegistrarCompra() {
     };
 
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/compras', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(compraCompleta)
-      });
-
-      const data = await res.json();
+      const res = await api.post('/api/compras', compraCompleta);
+      const data = res.data || res;
 
       if (data.success) {
         Swal.fire('¡Éxito!', 'Compra registrada correctamente', 'success');
@@ -308,6 +278,7 @@ export default function RegistrarCompra() {
         Swal.fire('Error', data.message || 'No se pudo registrar la compra', 'error');
       }
     } catch (error) {
+      console.error('Error guardarCompra:', error);
       Swal.fire('Error', 'No se pudo conectar con el servidor', 'error');
     }
   };

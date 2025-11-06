@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './FormatoCotizacion.css';
+import api from '../api/axiosConfig';
 
 export default function RemisionPreview({ datos, onClose }) {
   const navigate = useNavigate();
@@ -120,22 +121,14 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
   // Función para enviar remisión por correo
   const enviarRemisionPorCorreo = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/remisiones/${datos._id}/enviar-correo`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          remisionId: datos._id,
-          correoDestino: correo,
-          asunto: asunto,
-          mensaje: mensaje
-        })
+      const response = await api.post(`/api/remisiones/${datos._id}/enviar-correo`, {
+        remisionId: datos._id,
+        correoDestino: correo,
+        asunto: asunto,
+        mensaje: mensaje
       });
 
-      if (response.ok) {
+      if (response && response.status >= 200 && response.status < 300) {
         const Swal = (await import('sweetalert2')).default;
         Swal.fire({
           icon: 'success',

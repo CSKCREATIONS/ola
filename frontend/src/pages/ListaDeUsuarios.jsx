@@ -5,6 +5,7 @@ import NavUsuarios from '../components/NavUsuarios'
 import { openModal } from '../funciones/animaciones'
 import EditarUsuario from '../components/EditarUsuario'
 import Swal from 'sweetalert2';
+import api from '../api/axiosConfig';
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import * as XLSX from 'xlsx';
@@ -343,18 +344,13 @@ export default function ListaDeUsuarios() {
 
   const fetchUsuarios = async () => {
     try {
-      const token = localStorage.getItem('token');
-
-      const response = await fetch('http://localhost:5000/api/users', {
-        headers: {
-          'x-access-token': token
-        }
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        setTodosLosUsuarios(data.data);
+      const response = await api.get('/api/users');
+      const data = response.data || response;
+      if (data.success || Array.isArray(data)) {
+        const usuariosOrdenados = (data.data || data).sort((a, b) => 
+          new Date(b.createdAt) - new Date(a.createdAt)
+        );
+        setTodosLosUsuarios(usuariosOrdenados);
       } else {
         console.error('Error al obtener usuarios:', data.message);
       }
@@ -423,20 +419,10 @@ export default function ListaDeUsuarios() {
 
     if (confirmacion.isConfirmed) {
       try {
-        const token = localStorage.getItem('token');
+        const res = await api.patch(`/api/users/${id}/toggle-enabled`, { enabled: !estadoActual });
+        const data = res.data || res;
 
-        const response = await fetch(`http://localhost:5000/api/users/${id}/toggle-enabled`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-access-token': token
-          },
-          body: JSON.stringify({ enabled: !estadoActual })
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
+        if (data.success || (res.status >= 200 && res.status < 300)) {
           setUsuarios(prev =>
             prev.map(usuario =>
               usuario._id === id ? { ...usuario, enabled: !estadoActual } : usuario
@@ -469,22 +455,12 @@ export default function ListaDeUsuarios() {
       confirmButtonText: 'Sí, eliminar',
       cancelButtonText: 'Cancelar'
     });
-
     if (confirmacion.isConfirmed) {
       try {
-        const token = localStorage.getItem('token');
+        const res = await api.delete(`/api/users/${usuario._id}`);
+        const data = res.data || res;
 
-        const response = await fetch(`http://localhost:5000/api/users/${usuario._id}`, {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-access-token': token
-          }
-        });
-
-        const data = await response.json();
-
-        if (response.ok && data.success) {
+        if (res.status >= 200 && res.status < 300) {
           // Remueve el usuario del estado actual
           setUsuarios(prev => prev.filter(u => u._id !== usuario._id));
           setTodosLosUsuarios(prev => prev.filter(u => u._id !== usuario._id));

@@ -3,6 +3,7 @@ import '../App.css';
 import { Link, useNavigate } from 'react-router-dom';
 import { mostrarMenu, toggleSubMenu, cerrarMenu } from '../funciones/animaciones.js';
 import Swal from 'sweetalert2';
+import api from '../api/axiosConfig';
 
 
 export default function Fijo() {
@@ -38,13 +39,52 @@ export default function Fijo() {
       if (storedUser) {
         const usuario = JSON.parse(storedUser);
 
-        // Si solo se guarda el ID del rol, cargar el rol desde la API
+        // Si solo se guarda el ID o nombre del rol (string), intentar resolverlo
         if (usuario.role && typeof usuario.role === 'string') {
           try {
-            const res = await fetch(`/api/roles/${usuario.role}`);
-            const data = await res.json();
-            if (data.success) {
-              usuario.role = data.role;
+            let roleObj = null;
+            // Determine if the stored role looks like a Mongo ObjectId (24 hex chars)
+            const looksLikeObjectId = /^[0-9a-fA-F]{24}$/.test(String(usuario.role));
+            let forbidden = false;
+
+            // If it looks like an id, try the GET /api/roles/:id endpoint; otherwise skip to listing or keep as string
+            if (looksLikeObjectId) {
+              try {
+                const res = await api.get(`/api/roles/${usuario.role}`);
+                const d = res.data || res;
+                roleObj = d.role || d.data || (Array.isArray(d) ? d[0] : null);
+              } catch (err) {
+                if (err && err.response && err.response.status === 403) {
+                  forbidden = true;
+                  console.debug('No tiene permisos para obtener/listar roles (403). Manteniendo rol como string.');
+                } else if (err && err.response && err.response.status === 404) {
+                  // Not found: the stored string might be a name, not an id. We'll try listing below if allowed.
+                  console.debug('Rol no encontrado por id (404), intentaremos buscar por nombre si está permitido.');
+                } else {
+                  console.debug('Error al obtener role by id:', err && err.response ? { status: err.response.status, data: err.response.data } : err);
+                }
+              }
+            }
+
+            // Only attempt to list roles if we didn't find a roleObj and we have explicit permission
+            // in the stored user to view roles. This avoids unnecessary 403 requests to the backend.
+              if (!roleObj && !forbidden && Array.isArray(usuario.permissions) && usuario.permissions.includes('roles.ver')) {
+              try {
+                const listRes = await api.get('/api/roles');
+                const listData = listRes.data || listRes;
+                const rolesArr = Array.isArray(listData) ? listData : (listData.data || []);
+                roleObj = rolesArr.find(r => r.name === usuario.role || (r.name && r.name.toLowerCase() === String(usuario.role).toLowerCase()));
+              } catch (err) {
+                if (err && err.response) {
+                  console.debug('Error al listar roles:', err.response.status, err.response.data);
+                } else {
+                  console.debug('Error al listar roles:', err);
+                }
+              }
+            }
+
+            if (roleObj) {
+              usuario.role = roleObj;
               localStorage.setItem('user', JSON.stringify(usuario));
             }
           } catch (error) {
@@ -183,14 +223,14 @@ export default function Fijo() {
             {(puedeVerUsuarios || puedeVerRoles) && (
               <nav>
                 <li style={{ padding: "10px 0" }} onClick={() => toggleSubMenu('submenuUsuarios')}>
-                  <i class="fas fa-users"></i> Usuarios
+                  <i className="fas fa-users"></i> Usuarios
                 </li>
                 <ul className="dropdown" id="submenuUsuarios">
                   {puedeVerUsuarios && (
-                    <Link to="/ListaDeUsuarios"><li><i class="fas fa-list"></i> Lista de Usuarios</li></Link>
+                    <Link to="/ListaDeUsuarios"><li><i className="fas fa-list"></i> Lista de Usuarios</li></Link>
                   )}
                   {puedeVerRoles && (
-                    <Link to="/RolesYPermisos"><li><i class="fas fa-user-shield"></i> Roles y permisos</li></Link>
+                    <Link to="/RolesYPermisos"><li><i className="fas fa-user-shield"></i> Roles y permisos</li></Link>
                   )}
                 </ul>
               </nav>
@@ -198,19 +238,19 @@ export default function Fijo() {
 
             {(puedeGenerarOrden || puedeVerHCompras || puedeVerProveedores || puedeVerReportesCompras || puedeVerOrdenes) && (
               <nav>
-                <li style={{ padding: "10px 0" }} onClick={() => toggleSubMenu('submenuCompras')}><i class="fas fa-shopping-cart"></i> Compras</li>
+                <li style={{ padding: "10px 0" }} onClick={() => toggleSubMenu('submenuCompras')}><i className="fas fa-shopping-cart"></i> Compras</li>
                 <ul id="submenuCompras" className="dropdown" >
                   {puedeGenerarOrden && (
-                    <Link as={Link} to="/OrdenCompra"><li><i class="fas fa-history"></i> Ordenes de compra</li></Link>
+                    <Link as={Link} to="/OrdenCompra"><li><i className="fas fa-history"></i> Ordenes de compra</li></Link>
                   )}
                   {puedeVerHCompras && (
-                    <Link as={Link} to="/HistorialCompras"><li><i class="fas fa-history"></i> Historial de compras</li></Link>
+                    <Link as={Link} to="/HistorialCompras"><li><i className="fas fa-history"></i> Historial de compras</li></Link>
                   )}
                   {puedeVerProveedores && (
-                    <Link as={Link} to="/Proveedores"><li><i class="fas fa-truck"></i> Lista de proveedores</li></Link>
+                    <Link as={Link} to="/Proveedores"><li><i className="fas fa-truck"></i> Lista de proveedores</li></Link>
                   )}
                   {puedeVerReportesCompras && (
-                    <Link as={Link} to="/ReporteProveedores"><li> <i class="fas fa-chart-bar"></i> Reportes de compras</li></Link>
+                    <Link as={Link} to="/ReporteProveedores"><li> <i className="fas fa-chart-bar"></i> Reportes de compras</li></Link>
                   )}
                 </ul>
               </nav>
@@ -218,19 +258,19 @@ export default function Fijo() {
 
             {(puedeVerCategorias || puedeVerSubcategorias || puedeVerProductos) && (
               <nav>
-                <li style={{ padding: "10px 0" }} onClick={() => toggleSubMenu('submenuProductos')}><i class="fas fa-boxes"></i> Productos</li>
+                <li style={{ padding: "10px 0" }} onClick={() => toggleSubMenu('submenuProductos')}><i className="fas fa-boxes"></i> Productos</li>
                 <ul id="submenuProductos" className="dropdown">
                   {puedeVerCategorias && (
-                    <Link as={Link} to="/ListaDeCategorias"><li><i class="fas fa-tags"></i> Categorias</li></Link>
+                    <Link as={Link} to="/ListaDeCategorias"><li><i className="fas fa-tags"></i> Categorias</li></Link>
                   )}
                   {puedeVerSubcategorias && (
-                    <Link as={Link} to="/Subcategorias"><li><i class="fas fa-tag"></i> Subcategorias</li></Link>
+                    <Link as={Link} to="/Subcategorias"><li><i className="fas fa-tag"></i> Subcategorias</li></Link>
                   )}
                   {puedeVerProductos && (
-                    <Link as={Link} to="/GestionProductos"><li><i class="fas fa-box"></i> Lista de productos</li></Link>
+                    <Link as={Link} to="/GestionProductos"><li><i className="fas fa-box"></i> Lista de productos</li></Link>
                   )}
                   {puedeVerReportesProductos && (
-                    <Link as={Link} to="/ReporteProductos"><li> <i class="fas fa-chart-bar"></i> Reportes de productos</li></Link>
+                    <Link as={Link} to="/ReporteProductos"><li> <i className="fas fa-chart-bar"></i> Reportes de productos</li></Link>
                   )}
                 </ul>
               </nav>
@@ -240,34 +280,34 @@ export default function Fijo() {
 
             {(puedeRegistrarCotizacion || puedeVerCotizaciones || puedeVerListaDeClientes || puedeVerPedidosCancelados || puedeVerPedidosDevueltos || puedeVerPedidosEntregados || puedeVerProspectos || puedeVerReportesVentas || puedeVerVentasAgendadas) && (
               <nav>
-                <li style={{ padding: "10px 0" }} onClick={() => toggleSubMenu('submenuVentas')}><i class="fas fa-cash-register"></i> Ventas</li>
+                <li style={{ padding: "10px 0" }} onClick={() => toggleSubMenu('submenuVentas')}><i className="fas fa-cash-register"></i> Ventas</li>
                 <ul id="submenuVentas" className="dropdown">
                   {puedeRegistrarCotizacion && (
-                    <Link as={Link} to="/RegistrarCotizacion"><li><i class="fas fa-file-invoice-dollar"></i> Registrar cotizacion</li></Link>
+                    <Link as={Link} to="/RegistrarCotizacion"><li><i className="fas fa-file-invoice-dollar"></i> Registrar cotizacion</li></Link>
                   )}
                   {puedeVerCotizaciones && (
-                    <Link as={Link} to="/ListaDeCotizaciones"><li><i class="fas fa-list-alt"></i> Lista de cotizaciones</li></Link>
+                    <Link as={Link} to="/ListaDeCotizaciones"><li><i className="fas fa-list-alt"></i> Lista de cotizaciones</li></Link>
                   )}
                   {puedeVerVentasAgendadas && (
-                    <Link as={Link} to="/PedidosAgendados"><li><i class="fas fa-calendar-check"></i> Pedidos agendados</li></Link>
+                    <Link as={Link} to="/PedidosAgendados"><li><i className="fas fa-calendar-check"></i> Pedidos agendados</li></Link>
                   )}
                   {puedeVerPedidosEntregados && (
-                    <Link as={Link} to="/PedidosEntregados"><li><i class="fas fa-check-circle"></i> Pedidos entregados</li></Link>
+                    <Link as={Link} to="/PedidosEntregados"><li><i className="fas fa-check-circle"></i> Pedidos entregados</li></Link>
                   )}
                   {puedeVerPedidosCancelados && (
-                    <Link as={Link} to="/PedidosCancelados"><li><i class="fas fa-times-circle"></i> Pedidos cancelados</li></Link>
+                    <Link as={Link} to="/PedidosCancelados"><li><i className="fas fa-times-circle"></i> Pedidos cancelados</li></Link>
                   )}
                   {puedeVerPedidosDevueltos && (
-                    <Link as={Link} to="/PedidosDevueltos"><li><i class="fas fa-undo-alt"></i> Pedidos devueltos</li></Link>
+                    <Link as={Link} to="/PedidosDevueltos"><li><i className="fas fa-undo-alt"></i> Pedidos devueltos</li></Link>
                   )}
                   {puedeVerListaDeClientes && (
-                    <Link as={Link} to="/ListaDeClientes"><li> <i class="fas fa-address-book"></i> Lista de clientes</li></Link>
+                    <Link as={Link} to="/ListaDeClientes"><li> <i className="fas fa-address-book"></i> Lista de clientes</li></Link>
                   )}
                   {puedeVerProspectos && (
-                    <Link as={Link} to="/ProspectosDeClientes"><li><i class="fas fa-user-plus"></i> Prospectos de cliente</li></Link>
+                    <Link as={Link} to="/ProspectosDeClientes"><li><i className="fas fa-user-plus"></i> Prospectos de cliente</li></Link>
                   )}
                   {puedeVerReportesVentas && (
-                    <Link as={Link} to="/ReporteVentas"><li><i class="fas fa-chart-bar"></i> Reportes</li></Link>
+                    <Link as={Link} to="/ReporteVentas"><li><i className="fas fa-chart-bar"></i> Reportes</li></Link>
                   )}
                 </ul>
               </nav>

@@ -1,12 +1,12 @@
 // src/pages/Proveedores.jsx
 import React, { useEffect, useState } from 'react';
+import api from '../api/axiosConfig';
 import Swal from 'sweetalert2';
 import '../App.css';
 import Fijo from '../components/Fijo';
 import NavCompras from '../components/NavCompras';
 
-const API_URL = 'http://localhost:5000/api/proveedores';
-const token = localStorage.getItem('token');
+const API_URL = '/api/proveedores';
 
 /* Estilos CSS avanzados para Proveedores */
 const proveedoresStyles = `
@@ -795,9 +795,11 @@ const GestionProveedores = () => {
 
   const cargarProveedores = async () => {
     try {
-      const res = await fetch(API_URL, { headers: { 'x-access-token': token } });
-      const result = await res.json();
-      setProveedores(result.proveedores || []);
+      const res = await api.get(API_URL);
+      const result = res.data;
+      const listaProveedores = result.proveedores || result.data || [];
+      const proveedoresOrdenados = (Array.isArray(listaProveedores) ? listaProveedores : []).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      setProveedores(proveedoresOrdenados);
     } catch {
       Swal.fire('Error', 'No se pudieron cargar los proveedores', 'error');
     }
@@ -807,14 +809,9 @@ const GestionProveedores = () => {
     const url = proveedor._id ? `${API_URL}/${proveedor._id}` : API_URL;
     const method = proveedor._id ? 'PUT' : 'POST';
     try {
-      const res = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json', 'x-access-token': token },
-        body: JSON.stringify(proveedor)
-      });
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || 'Error al guardar el proveedor');
+      const res = await api({ method, url, data: proveedor });
+      if (res.status < 200 || res.status >= 300) {
+        throw new Error(res.data?.message || 'Error al guardar el proveedor');
       }
       Swal.fire('Éxito', 'Proveedor guardado correctamente', 'success');
       setModalVisible(false);
@@ -833,10 +830,8 @@ const GestionProveedores = () => {
     });
     if (!confirm.isConfirmed) return;
     try {
-      const res = await fetch(`http://localhost:3000/api/proveedores/${id}/${activar ? 'activate' : 'deactivate'}`, {
-        method: 'PATCH', headers: { 'x-access-token': token }
-      });
-      if (!res.ok) throw new Error('Error al cambiar el estado del proveedor');
+      const res = await api.patch(`/api/proveedores/${id}/${activar ? 'activate' : 'deactivate'}`);
+      if (res.status < 200 || res.status >= 300) throw new Error('Error al cambiar el estado del proveedor');
       Swal.fire(activar ? 'Proveedor activado' : 'Proveedor desactivado', '', 'success');
       cargarProveedores();
     } catch (err) { Swal.fire('Error', err.message, 'error'); }

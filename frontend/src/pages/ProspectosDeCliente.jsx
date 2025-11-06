@@ -6,6 +6,7 @@ import jsPDF from "jspdf";
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import React, { useState, useEffect } from 'react';
+import api from '../api/axiosConfig';
 import CotizacionPreview from '../components/CotizacionPreview';
 
 // CSS inyectado para diseño avanzado
@@ -228,52 +229,34 @@ export default function ListaDeClientes() {
   const location = useLocation();
 
   const fetchProspectos = async () => {
-    const token = localStorage.getItem('token');
     try {
-      // avoid cached 304 responses by forcing no-store and adding a cache-buster
-      const url = `http://localhost:5000/api/clientes?esCliente=false&t=${Date.now()}`;
-      const res = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` },
-        cache: 'no-store',
-        method: 'GET'
-      });
-
-      if (!res.ok) {
-        console.error('Error fetching prospectos:', res.status, res.statusText);
-        setProspectos([]);
-        return;
-      }
-
-      const data = await res.json();
+      // Use centralized axios client; add cache-buster param to avoid 304 cached responses
+      const clientesRes = await api.get(`/api/clientes?esCliente=false&t=${Date.now()}`);
+      const data = clientesRes.data;
       // controller returns array of clientes
       const listaProspectos = Array.isArray(data) ? data : (data.data || []);
-      setProspectos(listaProspectos);
+      const prospectosOrdenados = listaProspectos.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      setProspectos(prospectosOrdenados);
 
       // Also fetch cotizaciones once and build a map by client email
       try {
-        const cotRes = await fetch(`http://localhost:5000/api/cotizaciones?t=${Date.now()}`, {
-          headers: { Authorization: `Bearer ${token}` },
-          cache: 'no-store'
+        const cotRes = await api.get(`/api/cotizaciones?t=${Date.now()}`);
+        const cotData = cotRes.data;
+        const cotList = Array.isArray(cotData) ? cotData : (cotData.data || []);
+        const map = {};
+        cotList.forEach(cot => {
+          const email = (cot.cliente?.correo || '').toLowerCase();
+          if (!email) return;
+          if (!map[email]) map[email] = [];
+          if (cot.codigo) map[email].push({ codigo: cot.codigo, id: cot._id });
         });
-        if (cotRes.ok) {
-          const cotData = await cotRes.json();
-          const cotList = Array.isArray(cotData) ? cotData : (cotData.data || []);
-          const map = {};
-          cotList.forEach(cot => {
-            const email = (cot.cliente?.correo || '').toLowerCase();
-            if (!email) return;
-            if (!map[email]) map[email] = [];
-            if (cot.codigo) map[email].push({ codigo: cot.codigo, id: cot._id });
-          });
-          setCotizacionesMap(map);
-        } else {
-          console.warn('No se pudieron cargar cotizaciones para el listado de prospectos');
-        }
+        setCotizacionesMap(map);
       } catch (err) {
         console.error('Error al cargar cotizaciones:', err);
       }
     } catch (err) {
       console.error('Error al cargar prospectos', err);
+      setProspectos([]);
     }
   };
 
@@ -765,19 +748,13 @@ export default function ListaDeClientes() {
                                       onClick={async (e) => {
                                         e.preventDefault();
                                         try {
-                                          const token = localStorage.getItem('token');
-                                          const res = await fetch(`http://localhost:5000/api/cotizaciones/${c.id}`, { 
-                                            headers: { Authorization: `Bearer ${token}` }, 
-                                            cache: 'no-store' 
-                                          });
-                                          if (res.ok) {
-                                            const data = await res.json();
-                                            setCotizacionSeleccionada(data);
-                                            setMostrarPreview(true);
-                                          } else {
-                                            console.warn('No se pudo cargar la cotización');
-                                          }
-                                        } catch (err) { console.error(err); }
+                                          const res = await api.get(`/api/cotizaciones/${c.id}`);
+                                          const data = res.data;
+                                          setCotizacionSeleccionada(data);
+                                          setMostrarPreview(true);
+                                        } catch (err) {
+                                          console.warn('No se pudo cargar la cotización', err);
+                                        }
                                       }} 
                                       className="prospectos-cotizacion-link"
                                     >

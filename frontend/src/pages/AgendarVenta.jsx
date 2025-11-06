@@ -1,6 +1,7 @@
 import Fijo from '../components/Fijo';
 import NavVentas from '../components/NavVentas';
 import React, { useState, useEffect } from 'react';
+import api from '../api/axiosConfig';
 import { useParams, useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 
@@ -14,30 +15,17 @@ export default function AgendarVenta() {
   const [productosCotizacion, setProductosCotizacion] = useState([]);
 
 useEffect(() => {
-  const token = localStorage.getItem('token');
-
   const cargarDatos = async () => {
     try {
       // 1. Obtener cliente
-      const clienteRes = await fetch(`http://localhost:5000/api/clientes/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const clienteData = await clienteRes.json();
+      const clienteRes = await api.get(`/api/clientes/${id}`);
+      const clienteData = clienteRes.data || clienteRes;
       setCliente(clienteData);
 
       // 2. Si no es cliente real, actualizarlo
       if (!clienteData.esCliente) {
-      await fetch(`http://localhost:5000/api/clientes/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ esCliente: true })
-      });
-    }
-
-
+        await api.put(`/api/clientes/${id}`, { esCliente: true });
+      }
     } catch (err) {
       console.error('Error al cargar datos de cliente:', err);
     }
@@ -51,15 +39,18 @@ useEffect(() => {
 const [productosDisponibles, setProductosDisponibles] = useState([]);
 
 useEffect(() => {
-  const token = localStorage.getItem('token');
-  fetch('http://localhost:5000/api/products', {
-    headers: { Authorization: `Bearer ${token}` }
-  })
-    .then(res => res.json())
-    .then(data => {
-      setProductosDisponibles(data.data || []);
-    })
-    .catch(err => console.error('Error al cargar productos:', err));
+  const cargarProductos = async () => {
+    try {
+      const res = await api.get('/api/products');
+      // api may return { data: [...] } or array directly
+      const payload = res.data || res;
+      setProductosDisponibles(payload.data || payload || []);
+    } catch (err) {
+      console.error('Error al cargar productos:', err);
+    }
+  };
+
+  cargarProductos();
 }, []);
 
 
@@ -86,16 +77,8 @@ useEffect(() => {
 
 
   try {
-    const res = await fetch('http://localhost:5000/api/pedidos', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify(pedido)
-    });
-
-    if (res.ok) {
+    const res = await api.post('/api/pedidos', pedido);
+    if (res.status >= 200 && res.status < 300) {
       Swal.fire('Éxito', 'Pedido agendado correctamente', 'success');
       navigate('/PedidosAgendados');
     } else {
@@ -110,48 +93,36 @@ useEffect(() => {
 
 useEffect(() => {
   const fetchUltimaCotizacion = async () => {
-    if (!id || productosDisponibles.length === 0) return; // 👈 Esperar a que los productos estén cargados
+    if (!id || productosDisponibles.length === 0) return; // wait until products loaded
 
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/cotizaciones/ultima?cliente=${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+      const res = await api.get(`/api/cotizaciones/ultima?cliente=${id}`);
+      const cotizacion = res.data || res;
+      console.log('✅ Cotización para cliente:', id, cotizacion);
 
-      if (res.ok) {
-        const cotizacion = await res.json();
-        console.log('✅ Cotización para cliente:', id, cotizacion);
-
-        if (cotizacion?.productos?.length > 0) {
-          const productosConPrecio = cotizacion.productos.map((p) => {
-            const productoInfo = productosDisponibles.find(prod => {
-              const idProducto = typeof p.producto === 'object' ? p.producto._id : p.producto;
-              return prod._id === idProducto;
-            });
-            
-            // Usar el precio de la cotización, no del producto
-            const precioUnitario = p.valorUnitario || productoInfo?.price || 0;
-            
-            return {
-              ...p,
-              valorUnitario: precioUnitario,
-              producto: {
-                ...productoInfo,
-                _id: p.producto
-              }
-            };
+      if (cotizacion?.productos?.length > 0) {
+        const productosConPrecio = cotizacion.productos.map((p) => {
+          const productoInfo = productosDisponibles.find(prod => {
+            const idProducto = typeof p.producto === 'object' ? p.producto._id : p.producto;
+            return prod._id === idProducto;
           });
 
-          setProductosCotizacion(productosConPrecio);
-        } else {
-          setProductosCotizacion([]);
-        }
+          // Use the quotation price, fallback to product price
+          const precioUnitario = p.valorUnitario || productoInfo?.price || 0;
 
+          return {
+            ...p,
+            valorUnitario: precioUnitario,
+            producto: {
+              ...productoInfo,
+              _id: p.producto
+            }
+          };
+        });
+
+        setProductosCotizacion(productosConPrecio);
       } else {
         setProductosCotizacion([]);
-        console.warn('⚠️ No hay cotización para este cliente');
       }
     } catch (error) {
       console.error('❌ Error al traer cotización:', error);
@@ -160,7 +131,7 @@ useEffect(() => {
   };
 
   fetchUltimaCotizacion();
-}, [id, productosDisponibles]); // 👈 Dependencias correctas
+}, [id, productosDisponibles]);
 
 
   return (

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Fijo from '../components/Fijo';
 import NavVentas from '../components/NavVentas';
 import Swal from 'sweetalert2';
+import api from '../api/axiosConfig';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import * as XLSX from 'xlsx';
@@ -20,13 +21,18 @@ export default function PedidosDespachados() {
   };
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    fetch('http://localhost:5000/api/pedidos', {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-      .then(res => res.json())
-      .then(data => setPedidos(data.filter(p => p.estado === 'despachado')))
-      .catch(err => console.error('Error al cargar pedidos:', err));
+    const fetchData = async () => {
+      try {
+        const res = await api.get('/api/pedidos');
+        const data = res.data || res;
+        const arr = Array.isArray(data) ? data : data.data || [];
+        setPedidos(arr.filter(p => p.estado === 'despachado'));
+      } catch (err) {
+        console.error('Error al cargar pedidos:', err);
+      }
+    };
+
+    fetchData();
   }, []);
 
   const exportarPDF = () => {
@@ -78,21 +84,17 @@ export default function PedidosDespachados() {
     if (!confirm.isConfirmed) return;
 
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/pedidos/${pedidoId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ estado: 'entregado' })
-      });
-
-      if (res.ok) {
-        Swal.fire('¡Éxito!', 'Pedido marcado como entregado', 'success');
-        setPedidos(pedidos.filter(p => p._id !== pedidoId));
-      } else {
-        Swal.fire('Error', 'No se pudo actualizar el pedido', 'error');
+      try {
+        const res = await api.put(`/api/pedidos/${pedidoId}`, { estado: 'entregado' });
+        if (res.status >= 200 && res.status < 300) {
+          Swal.fire('¡Éxito!', 'Pedido marcado como entregado', 'success');
+          setPedidos(pedidos.filter(p => p._id !== pedidoId));
+        } else {
+          Swal.fire('Error', 'No se pudo actualizar el pedido', 'error');
+        }
+      } catch (err) {
+        console.error('Error marcarComoEntregado:', err);
+        Swal.fire('Error', 'Error de conexión', 'error');
       }
     } catch (error) {
       Swal.fire('Error', 'Error de conexión', 'error');

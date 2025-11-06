@@ -45,7 +45,7 @@ export function openModal(modalId) {
     // Para modales antiguos que aún usan display
     const targetModal = document.getElementById(modalId);
     if (targetModal) {
-        targetModal.style.display = 'block';
+        targetModal.style.display = 'flex';
         return;
     }
     

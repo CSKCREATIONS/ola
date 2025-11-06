@@ -5,7 +5,8 @@ const {
   obtenerComprasPorProveedor,
   obtenerTodasLasCompras,
   actualizarCompra,
-  eliminarCompra
+  eliminarCompra,
+  enviarCompraPorCorreo
 
 } = require('../controllers/compraController');
 const { verifyToken } = require('../middlewares/authJwt');
@@ -37,6 +38,11 @@ router.put('/:id',
 router.delete('/:id',
   verifyToken,
   eliminarCompra
+);
+
+router.post('/:id/enviar-email',
+  verifyToken,
+  enviarCompraPorCorreo
 );
 
 

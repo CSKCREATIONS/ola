@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import api from '../api/axiosConfig';
 
 export default function PedidoCanceladoPreview({ datos, onClose, onEmailSent }) {
   const navigate = useNavigate();
@@ -82,22 +83,14 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
   // Función para enviar por correo
   const enviarPorCorreo = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/pedidos/${datos._id}/enviar-cancelado`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          pedidoId: datos._id,
-          correoDestino: correo,
-          asunto: asunto,
-          mensaje: mensaje
-        })
+      const response = await api.post(`/api/pedidos/${datos._id}/enviar-cancelado`, {
+        pedidoId: datos._id,
+        correoDestino: correo,
+        asunto: asunto,
+        mensaje: mensaje
       });
 
-      if (response.ok) {
+      if (response && response.status >= 200 && response.status < 300) {
         Swal.fire({
           icon: 'success',
           title: 'Correo enviado',
@@ -105,12 +98,12 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
           confirmButtonColor: '#dc2626'
         });
         setShowEnviarModal(false);
-        
+
         // Actualizar el estado local para reflejar que fue enviado
         if (datos) {
           datos.enviadoCorreo = true;
         }
-        
+
         // Llamar al callback para actualizar el componente padre
         if (onEmailSent) {
           onEmailSent(datos._id);

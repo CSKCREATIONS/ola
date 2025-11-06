@@ -106,8 +106,14 @@ exports.getCategoryById = async (req,res) =>{
 
 exports.updateCategory = async (req, res) =>{
     try{
-        const{name, description} = req.body;
+        const{name, description, activo} = req.body;
         const updateData = {};
+        
+        // Permitir actualizar el estado activo
+        if(activo !== undefined){
+            updateData.activo = activo;
+        }
+        
         if(name){
             updateData.name = name.trim();
             // verificar si el nuevo nombre ya existe
@@ -127,6 +133,7 @@ exports.updateCategory = async (req, res) =>{
         updateData.description = description.trim();
 
         }
+        
         const updatedCategory = await Category.findByIdAndUpdate(
             req.params.id,
             updateData,
@@ -138,6 +145,17 @@ exports.updateCategory = async (req, res) =>{
                 message:'Categoria no encontrada'
             });
         }
+        
+        // Si se está desactivando, desactivar subcategorías y productos
+        if(activo === false){
+            const subcategorias = await Subcategoria.find({ category: req.params.id });
+            
+            for (const sub of subcategorias) {
+              await Subcategoria.findByIdAndUpdate(sub._id, { activo: false });
+              await Products.updateMany({ subcategory: sub._id }, { activo: false });
+            }
+        }
+        
         res.status(200).json({
             success:true,
             message:'Categoria actualizada',
