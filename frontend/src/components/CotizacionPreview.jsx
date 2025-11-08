@@ -767,10 +767,10 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                         {producto.cantidad}
                       </td>
                       <td style={{ padding: '1rem', textAlign: 'right' }}>
-                        S/. {parseFloat(producto.valorUnitario || producto.precioUnitario || 0).toFixed(2)}
+                        S/. {Number.parseFloat(producto.valorUnitario || producto.precioUnitario || 0).toFixed(2)}
                       </td>
                       <td style={{ padding: '1rem', textAlign: 'right', fontWeight: 'bold' }}>
-                        S/. {parseFloat(producto.subtotal || 0).toFixed(2)}
+                        S/. {Number.parseFloat(producto.subtotal || 0).toFixed(2)}
                       </td>
                     </tr>
                   ))}

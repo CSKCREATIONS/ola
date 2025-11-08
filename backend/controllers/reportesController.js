@@ -82,15 +82,15 @@ exports.reporteProductos = async (req, res) => {
 
     // Sanitizar y validar parámetros
     if (minStock) {
-      const minStockNum = parseInt(minStock);
-      if (!isNaN(minStockNum) && minStockNum >= 0) {
+      const minStockNum = Number.parseInt(minStock, 10);
+      if (!Number.isNaN(minStockNum) && minStockNum >= 0) {
         filters.stock = { $gte: minStockNum };
       }
     }
     
     if (maxPrice) {
-      const maxPriceNum = parseFloat(maxPrice);
-      if (!isNaN(maxPriceNum) && maxPriceNum >= 0) {
+      const maxPriceNum = Number.parseFloat(maxPrice);
+      if (!Number.isNaN(maxPriceNum) && maxPriceNum >= 0) {
         filters.price = { $lte: maxPriceNum };
       }
     }
