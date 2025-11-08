@@ -957,14 +957,18 @@ export default function ListaDeCotizaciones() {
                         {(currentPage - 1) * itemsPerPage + index + 1}
                       </td>
                       <td style={{ padding: '16px 12px' }}>
-                        <a
+                        <button
                           style={{ 
                             cursor: 'pointer', 
                             color: '#3b82f6', 
                             textDecoration: 'none',
                             fontWeight: '600',
                             fontSize: '14px',
-                            transition: 'color 0.2s ease'
+                            transition: 'color 0.2s ease',
+                            background: 'none',
+                            border: 'none',
+                            padding: 0,
+                            font: 'inherit'
                           }}
                           onClick={async () => {
                             try {
@@ -982,7 +986,7 @@ export default function ListaDeCotizaciones() {
                           onMouseLeave={(e) => e.target.style.color = '#3b82f6'}
                         >
                           {cot.codigo}
-                        </a>
+                        </button>
                       </td>
                       <td style={{ padding: '16px 12px', color: '#4b5563', fontWeight: '500' }}>
                         {new Date(cot.fecha).toLocaleDateString('es-ES')}
