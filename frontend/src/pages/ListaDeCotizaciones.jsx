@@ -596,7 +596,7 @@ export default function ListaDeCotizaciones() {
                 
                 <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                   <button
-                    onClick={() => exportToExcel(cotizaciones)}
+                    onClick={exportToExcel}
                     style={{
                       display: 'inline-flex', 
                       alignItems: 'center', 

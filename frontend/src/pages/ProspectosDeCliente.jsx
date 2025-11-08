@@ -324,7 +324,7 @@ export default function ListaDeClientes() {
                 </div>
                 <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                   <button
-                    onClick={() => exportToExcel(prospectos)}
+                    onClick={exportToExcel}
                     style={{
                       background: 'rgba(255,255,255,0.2)',
                       border: '2px solid rgba(255,255,255,0.3)',
