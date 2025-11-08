@@ -679,19 +679,20 @@ exports.estadisticasVentas = async (req, res) => {
         $project: {
           mes: {
             $switch: {
+              // eslint-disable-next-line quote-props
               branches: [
-                { case: { $eq: ["$_id", 1] }, "then": "Enero" },
-                { case: { $eq: ["$_id", 2] }, "then": "Febrero" },
-                { case: { $eq: ["$_id", 3] }, "then": "Marzo" },
-                { case: { $eq: ["$_id", 4] }, "then": "Abril" },
-                { case: { $eq: ["$_id", 5] }, "then": "Mayo" },
-                { case: { $eq: ["$_id", 6] }, "then": "Junio" },
-                { case: { $eq: ["$_id", 7] }, "then": "Julio" },
-                { case: { $eq: ["$_id", 8] }, "then": "Agosto" },
-                { case: { $eq: ["$_id", 9] }, "then": "Septiembre" },
-                { case: { $eq: ["$_id", 10] }, "then": "Octubre" },
-                { case: { $eq: ["$_id", 11] }, "then": "Noviembre" },
-                { case: { $eq: ["$_id", 12] }, "then": "Diciembre" }
+                { case: { $eq: ["$_id", 1] }, then: "Enero" },
+                { case: { $eq: ["$_id", 2] }, then: "Febrero" },
+                { case: { $eq: ["$_id", 3] }, then: "Marzo" },
+                { case: { $eq: ["$_id", 4] }, then: "Abril" },
+                { case: { $eq: ["$_id", 5] }, then: "Mayo" },
+                { case: { $eq: ["$_id", 6] }, then: "Junio" },
+                { case: { $eq: ["$_id", 7] }, then: "Julio" },
+                { case: { $eq: ["$_id", 8] }, then: "Agosto" },
+                { case: { $eq: ["$_id", 9] }, then: "Septiembre" },
+                { case: { $eq: ["$_id", 10] }, then: "Octubre" },
+                { case: { $eq: ["$_id", 11] }, then: "Noviembre" },
+                { case: { $eq: ["$_id", 12] }, then: "Diciembre" }
               ],
               default: "Desconocido"
             }
