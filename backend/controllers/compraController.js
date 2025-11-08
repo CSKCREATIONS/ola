@@ -36,26 +36,46 @@ const crearCompra = async (req, res) => {
     }
 
     // Sanitizar y validar datos antes de crear la compra
-    const compraData = {
-      numeroOrden: req.body.numeroOrden,
-      proveedor: req.body.proveedor,
-      solicitadoPor: req.body.solicitadoPor,
-      productos: req.body.productos,
-      subtotal: Number(req.body.subtotal) || 0,
-      impuestos: Number(req.body.impuestos) || 0,
-      total: Number(req.body.total) || 0,
-      observaciones: req.body.observaciones || '',
-      estado: req.body.estado || 'Completada',
-      fecha: req.body.fecha || new Date()
-    };
+    // Asegurar que los campos sean del tipo correcto y no objetos maliciosos
+    const numeroOrden = typeof req.body.numeroOrden === 'string' ? req.body.numeroOrden : '';
+    const proveedor = typeof req.body.proveedor === 'string' ? req.body.proveedor : '';
+    const solicitadoPor = typeof req.body.solicitadoPor === 'string' ? req.body.solicitadoPor : '';
+    const observaciones = typeof req.body.observaciones === 'string' ? req.body.observaciones : '';
+    const estado = typeof req.body.estado === 'string' ? req.body.estado : 'Completada';
+    
+    // Validar que productos sea un array válido
+    const productos = Array.isArray(req.body.productos) ? req.body.productos : [];
+    
+    // Validar números
+    const subtotal = typeof req.body.subtotal === 'number' ? req.body.subtotal : Number(req.body.subtotal) || 0;
+    const impuestos = typeof req.body.impuestos === 'number' ? req.body.impuestos : Number(req.body.impuestos) || 0;
+    const total = typeof req.body.total === 'number' ? req.body.total : Number(req.body.total) || 0;
+    
+    // Validar fecha
+    const fecha = req.body.fecha && !isNaN(new Date(req.body.fecha).getTime()) 
+      ? new Date(req.body.fecha) 
+      : new Date();
 
     // Validaciones básicas
-    if (!compraData.proveedor || !compraData.productos || !Array.isArray(compraData.productos)) {
+    if (!proveedor || productos.length === 0) {
       return res.status(400).json({ 
         success: false, 
-        message: 'Datos incompletos: se requiere proveedor y productos' 
+        message: 'Datos incompletos: se requiere proveedor y al menos un producto' 
       });
     }
+
+    const compraData = {
+      numeroOrden,
+      proveedor,
+      solicitadoPor,
+      productos,
+      subtotal,
+      impuestos,
+      total,
+      observaciones,
+      estado,
+      fecha
+    };
 
     const nuevaCompra = await Compra.create(compraData);
     res.status(201).json({ success: true, data: nuevaCompra });
