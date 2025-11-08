@@ -17,11 +17,12 @@ export default function FormularioConEditor() {
     <div className="container">
       <h3>Formulario con Editor TinyMCE</h3>
       <form onSubmit={handleSubmit}>
-        <label>Nombre del Documento</label>
-        <input type="text" name="nombre" required />
+        <label htmlFor="nombre-documento">Nombre del Documento</label>
+        <input id="nombre-documento" type="text" name="nombre" required />
 
-        <label>Contenido</label>
+        <label htmlFor="contenido">Contenido</label>
         <Editor
+          id="contenido"
           apiKey="otu4s642tv612posr0ne65wrxy2i5kmop915g2gu2zbv5mho"  // Opcional, usa la versión gratuita
           initialValue="<p>Escribe aquí...</p>"
           init={{

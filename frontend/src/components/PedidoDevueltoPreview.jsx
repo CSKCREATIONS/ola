@@ -239,16 +239,16 @@ export default function PedidoDevueltoPreview({ datos, onClose }) {
             <button className="close-modal" onClick={() => setShowEnviarModal(false)}>×</button>
             <h3 style={{ textAlign: 'center', marginBottom: '1rem' }}>Enviar pedido devuelto</h3>
             <div style={{ marginBottom: '1rem' }}>
-              <label>Correo destinatario:</label>
-              <input type="email" className="cuadroTexto" value={correo} onChange={e => setCorreo(e.target.value)} style={{ width: '100%' }} />
+              <label htmlFor="correo-pedido-devuelto">Correo destinatario:</label>
+              <input id="correo-pedido-devuelto" type="email" className="cuadroTexto" value={correo} onChange={e => setCorreo(e.target.value)} style={{ width: '100%' }} />
             </div>
             <div style={{ marginBottom: '1rem' }}>
-              <label>Asunto:</label>
-              <input type="text" className="cuadroTexto" value={asunto} onChange={e => setAsunto(e.target.value)} style={{ width: '100%' }} placeholder={`Pedido Devuelto ${datos.numeroPedido}`} />
+              <label htmlFor="asunto-pedido-devuelto">Asunto:</label>
+              <input id="asunto-pedido-devuelto" type="text" className="cuadroTexto" value={asunto} onChange={e => setAsunto(e.target.value)} style={{ width: '100%' }} placeholder={`Pedido Devuelto ${datos.numeroPedido}`} />
             </div>
             <div style={{ marginBottom: '1rem' }}>
-              <label>Mensaje:</label>
-              <textarea className="cuadroTexto" value={mensaje} onChange={e => setMensaje(e.target.value)} style={{ width: '100%', minHeight: '80px' }} placeholder="Confirmación de devolución de pedido..." />
+              <label htmlFor="mensaje-pedido-devuelto">Mensaje:</label>
+              <textarea id="mensaje-pedido-devuelto" className="cuadroTexto" value={mensaje} onChange={e => setMensaje(e.target.value)} style={{ width: '100%', minHeight: '80px' }} placeholder="Confirmación de devolución de pedido..." />
             </div>
             <button className="btn-enviar-modal" style={{ width: '100%' }} onClick={() => { }}>Enviar</button>
           </div>

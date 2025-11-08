@@ -209,6 +209,8 @@ export default function EditarRol({ rol }) {
    return (
       <div 
          id="edit-role-modal"
+         role="button"
+         tabIndex={0}
          style={{
             position: 'fixed',
             top: 0,
@@ -225,6 +227,12 @@ export default function EditarRol({ rol }) {
          }}
          onClick={(e) => {
             if (e.target.id === 'edit-role-modal') {
+               closeModal('edit-role-modal');
+            }
+         }}
+         onKeyDown={(e) => {
+            if ((e.key === 'Enter' || e.key === ' ') && e.target.id === 'edit-role-modal') {
+               e.preventDefault();
                closeModal('edit-role-modal');
             }
          }}
@@ -296,7 +304,7 @@ export default function EditarRol({ rol }) {
                   border: '1px solid #e2e8f0',
                   borderLeft: '4px solid #8b5cf6'
                }}>
-                  <label style={{
+                  <label htmlFor="nombreRol" style={{
                      display: 'flex',
                      alignItems: 'center',
                      gap: '0.5rem',
@@ -310,6 +318,7 @@ export default function EditarRol({ rol }) {
                      <span style={{ color: '#ef4444' }}>*</span>
                   </label>
                   <input 
+                     id="nombreRol"
                      type="text" 
                      value={nombreRol} 
                      onChange={(e) => setNombreRol(e.target.value)}

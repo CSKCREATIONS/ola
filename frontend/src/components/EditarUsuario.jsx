@@ -155,6 +155,8 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
   return (
     <div 
       id="editUserModal"
+      role="button"
+      tabIndex={0}
       style={{
         position: 'fixed',
         top: 0,
@@ -172,6 +174,12 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
       }}
       onClick={(e) => {
         if (e.target.id === 'editUserModal') {
+          closeModal('editUserModal');
+        }
+      }}
+      onKeyDown={(e) => {
+        if ((e.key === 'Enter' || e.key === ' ') && e.target.id === 'editUserModal') {
+          e.preventDefault();
           closeModal('editUserModal');
         }
       }}
@@ -266,11 +274,12 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
               gap: '1rem'
             }}>
               <div>
-                <label style={labelStyle}>
+                <label htmlFor="firstName-edit" style={labelStyle}>
                   <i className="fa-solid fa-user" style={{ color: '#3b82f6', fontSize: '0.875rem' }}></i>
                   Primer nombre
                 </label>
                 <input 
+                  id="firstName-edit"
                   type="text" 
                   name="firstName" 
                   value={form.firstName} 
@@ -288,13 +297,7 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
               </div>
 
               <div>
-                <label style={labelStyle}>
-                  <i className="fa-solid fa-user" style={{ color: '#3b82f6', fontSize: '0.875rem' }}></i>
-                  Segundo nombre
-                </label>
-                <input 
-                  type="text" 
-                  name="secondName" 
+                <label htmlFor="secondName-edit" style={labelStyle}><i className="fa-solid fa-user" style={{ color: '#3b82f6', fontSize: '0.875rem' }}></i>Segundo nombre</label><input id="secondName-edit" type="text" name="secondName" 
                   value={form.secondName} 
                   onChange={handleChange}
                   style={inputStyle}
@@ -310,11 +313,12 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
               </div>
 
               <div>
-                <label style={labelStyle}>
+                <label htmlFor="surname-edit" style={labelStyle}>
                   <i className="fa-solid fa-user" style={{ color: '#3b82f6', fontSize: '0.875rem' }}></i>
                   Primer apellido
                 </label>
                 <input 
+                  id="surname-edit"
                   type="text" 
                   name="surname" 
                   value={form.surname} 
@@ -332,11 +336,12 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
               </div>
 
               <div>
-                <label style={labelStyle}>
+                <label htmlFor="secondSurname-edit" style={labelStyle}>
                   <i className="fa-solid fa-user" style={{ color: '#3b82f6', fontSize: '0.875rem' }}></i>
                   Segundo apellido
                 </label>
                 <input 
+                  id="secondSurname-edit"
                   type="text" 
                   name="secondSurname" 
                   value={form.secondSurname} 
@@ -383,11 +388,12 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
               gap: '1rem'
             }}>
               <div>
-                <label style={labelStyle}>
+                <label htmlFor="email-edit" style={labelStyle}>
                   <i className="fa-solid fa-envelope" style={{ color: '#10b981', fontSize: '0.875rem' }}></i>
                   Correo electrónico
                 </label>
                 <input 
+                  id="email-edit"
                   type="email" 
                   name="email" 
                   value={form.email} 
@@ -405,11 +411,12 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
               </div>
 
               <div>
-                <label style={labelStyle}>
+                <label htmlFor="username-edit" style={labelStyle}>
                   <i className="fa-solid fa-at" style={{ color: '#10b981', fontSize: '0.875rem' }}></i>
                   Nombre de usuario
                 </label>
                 <input 
+                  id="username-edit"
                   type="text" 
                   name="username" 
                   value={form.username} 
@@ -427,7 +434,7 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
               </div>
 
               <div>
-                <label style={labelStyle}>
+                <label htmlFor="role-edit" style={labelStyle}>
                   <i className="fa-solid fa-shield-alt" style={{ color: '#10b981', fontSize: '0.875rem' }}></i>
                   Rol
                   <span style={{ color: '#ef4444' }}>*</span>
@@ -445,6 +452,7 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
                   </div>
                 ) : (
                   <select 
+                    id="role-edit"
                     name="role" 
                     value={form.role} 
                     onChange={handleChange} 
@@ -510,11 +518,12 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
                 gap: '1rem'
               }}>
                 <div>
-                  <label style={labelStyle}>
+                  <label htmlFor="new-password-edit" style={labelStyle}>
                     <i className="fa-solid fa-key" style={{ color: '#f59e0b', fontSize: '0.875rem' }}></i>
                     Nueva contraseña
                   </label>
                   <input
+                    id="new-password-edit"
                     type="password"
                     name="new"
                     value={passwords.new}
@@ -532,11 +541,12 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
                   />
                 </div>
                 <div>
-                  <label style={labelStyle}>
+                  <label htmlFor="confirm-password-edit" style={labelStyle}>
                     <i className="fa-solid fa-check" style={{ color: '#f59e0b', fontSize: '0.875rem' }}></i>
                     Confirmar contraseña
                   </label>
                   <input
+                    id="confirm-password-edit"
                     type="password"
                     name="confirm"
                     value={passwords.confirm}
@@ -633,3 +643,5 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
     </div>
   );
 }
+
+

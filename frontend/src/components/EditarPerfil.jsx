@@ -117,6 +117,8 @@ export default function EditarPerfil() {
   return (
     <div 
       id="editar-perfil"
+      role="button"
+      tabIndex={0}
       style={{
         position: 'fixed',
         top: 0,
@@ -133,6 +135,12 @@ export default function EditarPerfil() {
       }}
       onClick={(e) => {
         if (e.target.id === 'editar-perfil') {
+          closeModal('editar-perfil');
+        }
+      }}
+      onKeyDown={(e) => {
+        if ((e.key === 'Enter' || e.key === ' ') && e.target.id === 'editar-perfil') {
+          e.preventDefault();
           closeModal('editar-perfil');
         }
       }}
@@ -223,11 +231,7 @@ export default function EditarPerfil() {
               gap: '1rem'
             }}>
               <div>
-                <label style={labelStyle}>
-                  <i className="fa-solid fa-user" style={{ color: '#6366f1', fontSize: '0.875rem' }}></i>
-                  Primer nombre
-                </label>
-                <input 
+                <label htmlFor="firstName" style={labelStyle}><i className="fa-solid fa-user" style={{ color: '#6366f1', fontSize: '0.875rem' }}></i>Primer nombre</label><input id="firstName" 
                   type="text" 
                   name="firstName" 
                   value={form.firstName || ''} 
@@ -245,11 +249,7 @@ export default function EditarPerfil() {
               </div>
 
               <div>
-                <label style={labelStyle}>
-                  <i className="fa-solid fa-user" style={{ color: '#6366f1', fontSize: '0.875rem' }}></i>
-                  Segundo nombre
-                </label>
-                <input 
+                <label htmlFor="secondName" style={labelStyle}><i className="fa-solid fa-user" style={{ color: '#6366f1', fontSize: '0.875rem' }}></i>Segundo nombre</label><input id="secondName" 
                   type="text" 
                   name="secondName" 
                   value={form.secondName || ''} 
@@ -267,11 +267,12 @@ export default function EditarPerfil() {
               </div>
 
               <div>
-                <label style={labelStyle}>
+                <label htmlFor="surname" style={labelStyle}>
                   <i className="fa-solid fa-user" style={{ color: '#6366f1', fontSize: '0.875rem' }}></i>
                   Primer apellido
                 </label>
                 <input 
+                  id="surname"
                   type="text" 
                   name="surname" 
                   value={form.surname || ''} 
@@ -289,14 +290,15 @@ export default function EditarPerfil() {
               </div>
 
               <div>
-                <label style={labelStyle}>
+                <label htmlFor="secondSurname" style={labelStyle}>
                   <i className="fa-solid fa-user" style={{ color: '#6366f1', fontSize: '0.875rem' }}></i>
                   Segundo apellido
                 </label>
                 <input 
+                  id="secondSurname"
                   type="text" 
                   name="secondSurname" 
-                  value={form.secondSurname || ''} 
+                  value={form.secondName || ''} 
                   onChange={handleChange}
                   style={inputStyle}
                   onFocus={(e) => {
@@ -340,11 +342,12 @@ export default function EditarPerfil() {
               gap: '1rem'
             }}>
               <div>
-                <label style={labelStyle}>
+                <label htmlFor="email-perfil" style={labelStyle}>
                   <i className="fa-solid fa-envelope" style={{ color: '#10b981', fontSize: '0.875rem' }}></i>
                   Correo electrónico
                 </label>
                 <input 
+                  id="email-perfil"
                   type="email" 
                   name="email" 
                   value={form.email || ''} 
@@ -362,11 +365,12 @@ export default function EditarPerfil() {
               </div>
 
               <div>
-                <label style={labelStyle}>
+                <label htmlFor="username-perfil" style={labelStyle}>
                   <i className="fa-solid fa-at" style={{ color: '#10b981', fontSize: '0.875rem' }}></i>
                   Nombre de usuario
                 </label>
                 <input 
+                  id="username-perfil"
                   type="text" 
                   name="username" 
                   value={form.username || ''} 
@@ -384,11 +388,12 @@ export default function EditarPerfil() {
               </div>
 
               <div>
-                <label style={labelStyle}>
+                <label htmlFor="role-perfil" style={labelStyle}>
                   <i className="fa-solid fa-shield-alt" style={{ color: '#10b981', fontSize: '0.875rem' }}></i>
                   Rol asignado
                 </label>
                 <input 
+                  id="role-perfil"
                   type="text" 
                   value={form.role || ''} 
                   readOnly 
@@ -466,11 +471,12 @@ export default function EditarPerfil() {
                   gap: '1rem'
                 }}>
                   <div>
-                    <label style={labelStyle}>
+                    <label htmlFor="new-password-perfil" style={labelStyle}>
                       <i className="fa-solid fa-key" style={{ color: '#f59e0b', fontSize: '0.875rem' }}></i>
                       Nueva contraseña
                     </label>
                     <input
+                      id="new-password-perfil"
                       type="password"
                       name="new"
                       value={passwords.new}
@@ -488,11 +494,12 @@ export default function EditarPerfil() {
                     />
                   </div>
                   <div>
-                    <label style={labelStyle}>
+                    <label htmlFor="confirm-password-perfil" style={labelStyle}>
                       <i className="fa-solid fa-check" style={{ color: '#f59e0b', fontSize: '0.875rem' }}></i>
                       Confirmar contraseña
                     </label>
                     <input
+                      id="confirm-password-perfil"
                       type="password"
                       name="confirm"
                       value={passwords.confirm}
@@ -589,3 +596,4 @@ export default function EditarPerfil() {
     </div>
   );
 }
+
