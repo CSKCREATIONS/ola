@@ -27,7 +27,7 @@ export default function PedidoCanceladoPreview({ datos, onClose, onEmailSent }) 
   const calcularTotal = () => {
     if (!datos?.productos) return 0;
     return datos.productos.reduce((total, producto) => {
-      return total + (producto.cantidad * parseFloat(producto.precioUnitario || 0));
+      return total + (producto.cantidad * Number.parseFloat(producto.precioUnitario || 0));
     }, 0);
   };
 
@@ -446,10 +446,10 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                         {producto.cantidad}
                       </td>
                       <td style={{ padding: '1rem', textAlign: 'right' }}>
-                        S/. {parseFloat(producto.precioUnitario || 0).toFixed(2)}
+                        S/. {Number.parseFloat(producto.precioUnitario || 0).toFixed(2)}
                       </td>
                       <td style={{ padding: '1rem', textAlign: 'right', fontWeight: 'bold' }}>
-                        S/. {(producto.cantidad * parseFloat(producto.precioUnitario || 0)).toFixed(2)}
+                        S/. {(producto.cantidad * Number.parseFloat(producto.precioUnitario || 0)).toFixed(2)}
                       </td>
                     </tr>
                   ))}

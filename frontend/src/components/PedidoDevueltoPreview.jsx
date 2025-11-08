@@ -170,8 +170,8 @@ export default function PedidoDevueltoPreview({ datos, onClose }) {
                   </td>
                   <td style={{ padding: '0.6rem', textAlign: 'right', fontWeight: 'bold', fontSize: '0.8rem' }}>
                     ${(() => {
-                      const cantidad = parseFloat(p.cantidad) || 0;
-                      const precio = parseFloat(p.valorUnitario || p.precioUnitario || p.product?.price) || 0;
+                      const cantidad = Number.parseFloat(p.cantidad) || 0;
+                      const precio = Number.parseFloat(p.valorUnitario || p.precioUnitario || p.product?.price) || 0;
                       return (cantidad * precio).toLocaleString('es-CO');
                     })()}
                   </td>
@@ -204,8 +204,8 @@ export default function PedidoDevueltoPreview({ datos, onClose }) {
                 <td style={{ padding: '0.75rem', textAlign: 'right', fontSize: '1rem', color: '#f59e0b' }}>
                   ${datos.productos && datos.productos.length > 0 ? datos.productos
                     .reduce((acc, p) => {
-                      const cantidad = parseFloat(p.cantidad) || 0;
-                      const precio = parseFloat(p.valorUnitario || p.precioUnitario || p.product?.price) || 0;
+                      const cantidad = Number.parseFloat(p.cantidad) || 0;
+                      const precio = Number.parseFloat(p.valorUnitario || p.precioUnitario || p.product?.price) || 0;
                       return acc + (cantidad * precio);
                     }, 0)
                     .toLocaleString('es-CO') : '0'}
