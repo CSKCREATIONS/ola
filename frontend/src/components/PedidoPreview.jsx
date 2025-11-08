@@ -27,9 +27,9 @@ export default function FormatoCotizacion({ datos, onClose, onEmailSent }) {
   const abrirModalEnvio = () => {
     // Calcular total dinámicamente si no existe
     const totalCalculado = datos?.productos?.reduce((total, producto) => {
-      const cantidad = parseFloat(producto.cantidad) || 0;
-      const valorUnitario = parseFloat(producto.valorUnitario) || 0;
-      const descuento = parseFloat(producto.descuento) || 0;
+      const cantidad = Number.parseFloat(producto.cantidad) || 0;
+      const valorUnitario = Number.parseFloat(producto.valorUnitario) || 0;
+      const descuento = Number.parseFloat(producto.descuento) || 0;
       const subtotal = cantidad * valorUnitario * (1 - descuento / 100);
       return total + subtotal;
     }, 0) || 0;
@@ -242,9 +242,9 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                   <td>{p.descuento}</td>
                   <td>{
                     (() => {
-                      const cantidad = parseFloat(p.cantidad) || 0;
-                      const valorUnitario = parseFloat(p.valorUnitario) || 0;
-                      const descuento = parseFloat(p.descuento) || 0;
+                      const cantidad = Number.parseFloat(p.cantidad) || 0;
+                      const valorUnitario = Number.parseFloat(p.valorUnitario) || 0;
+                      const descuento = Number.parseFloat(p.descuento) || 0;
                       const subtotal = cantidad * valorUnitario * (1 - descuento / 100);
                       return subtotal.toFixed(2);
                     })()
@@ -259,9 +259,9 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                   <td style={{ fontWeight: 'bold' }}>
                     {datos.productos
                       .reduce((acc, p) => {
-                        const cantidad = parseFloat(p.cantidad) || 0;
-                        const valorUnitario = parseFloat(p.valorUnitario) || 0;
-                        const descuento = parseFloat(p.descuento) || 0;
+                        const cantidad = Number.parseFloat(p.cantidad) || 0;
+                        const valorUnitario = Number.parseFloat(p.valorUnitario) || 0;
+                        const descuento = Number.parseFloat(p.descuento) || 0;
                         const subtotal = cantidad * valorUnitario * (1 - descuento / 100);
                         return acc + subtotal;
                       }, 0)
@@ -299,9 +299,9 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                 <strong>Pedido:</strong> {datos?.numeroPedido || datos?.codigo}<br/>
                 <strong>Cliente:</strong> {datos?.cliente?.nombre}<br/>
                 <strong>Total:</strong> ${datos?.productos?.reduce((acc, p) => {
-                  const cantidad = parseFloat(p.cantidad) || 0;
-                  const valorUnitario = parseFloat(p.valorUnitario) || 0;
-                  const descuento = parseFloat(p.descuento) || 0;
+                  const cantidad = Number.parseFloat(p.cantidad) || 0;
+                  const valorUnitario = Number.parseFloat(p.valorUnitario) || 0;
+                  const descuento = Number.parseFloat(p.descuento) || 0;
                   const subtotal = cantidad * valorUnitario * (1 - descuento / 100);
                   return acc + subtotal;
                 }, 0)?.toLocaleString('es-ES') || '0'}

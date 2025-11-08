@@ -1167,8 +1167,8 @@ useEffect(() => {
                 <div>
                   <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
                     ${productos.reduce((sum, p) => {
-                      const price = parseFloat(p.price) || 0;
-                      const stock = parseInt(p.stock) || 0;
+                      const price = Number.parseFloat(p.price) || 0;
+                      const stock = Number.parseInt(p.stock) || 0;
                       return sum + (price * stock);
                     }, 0).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                   </h3>
@@ -1213,8 +1213,8 @@ useEffect(() => {
                   <h3 style={{ margin: '0 0 5px 0', fontSize: '1.8rem', fontWeight: '700', color: '#1f2937' }}>
                     ${productos.length > 0 ? 
                       (productos.reduce((sum, p) => {
-                        const price = parseFloat(p.price) || 0;
-                        const stock = parseInt(p.stock) || 0;
+                        const price = Number.parseFloat(p.price) || 0;
+                        const stock = Number.parseInt(p.stock) || 0;
                         return sum + (price * stock);
                       }, 0) / productos.length).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
                       : '0'
@@ -1248,7 +1248,7 @@ useEffect(() => {
                 </div>
                 <div>
                   <h3 style={{ margin: '0 0 5px 0', fontSize: '1.8rem', fontWeight: '700', color: '#1f2937' }}>
-                    {productos.reduce((sum, p) => sum + (parseInt(p.stock) || 0), 0).toLocaleString()}
+                    {productos.reduce((sum, p) => sum + (Number.parseInt(p.stock) || 0), 0).toLocaleString()}
                   </h3>
                   <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
                     Unidades en Stock Total
@@ -1278,7 +1278,7 @@ useEffect(() => {
                 </div>
                 <div>
                   <h3 style={{ margin: '0 0 5px 0', fontSize: '1.8rem', fontWeight: '700', color: '#1f2937' }}>
-                    {productos.filter(p => (parseInt(p.stock) || 0) < 10).length}
+                    {productos.filter(p => (Number.parseInt(p.stock) || 0) < 10).length}
                   </h3>
                   <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
                     Productos con Bajo Stock

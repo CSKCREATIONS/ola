@@ -541,8 +541,8 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                     }}>
                       S/. {datosConDefaults.total || (datosConDefaults.productos && datosConDefaults.productos.length > 0 ? datosConDefaults.productos
                         .reduce((acc, p) => {
-                          const cantidad = parseFloat(p.cantidad) || 0;
-                          const precio = parseFloat(p.precioUnitario || p.valorUnitario || p.product?.price) || 0;
+                          const cantidad = Number.parseFloat(p.cantidad) || 0;
+                          const precio = Number.parseFloat(p.precioUnitario || p.valorUnitario || p.product?.price) || 0;
                           return acc + (cantidad * precio);
                         }, 0)
                         .toLocaleString('es-ES') : '0')}

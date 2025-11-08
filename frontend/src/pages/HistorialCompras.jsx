@@ -1602,7 +1602,7 @@ JLA Global Company</textarea>
                             <input
                               type="number"
                               value={prod.cantidad}
-                              onChange={(e) => actualizarProductoNuevaCompra(index, 'cantidad', parseInt(e.target.value) || 0)}
+                              onChange={(e) => actualizarProductoNuevaCompra(index, 'cantidad', Number.parseInt(e.target.value) || 0)}
                               min="1"
                               style={{
                                 width: '100%',
@@ -1620,7 +1620,7 @@ JLA Global Company</textarea>
                             <input
                               type="number"
                               value={prod.precioUnitario}
-                              onChange={(e) => actualizarProductoNuevaCompra(index, 'precioUnitario', parseFloat(e.target.value) || 0)}
+                              onChange={(e) => actualizarProductoNuevaCompra(index, 'precioUnitario', Number.parseFloat(e.target.value) || 0)}
                               min="0"
                               step="0.01"
                               style={{
