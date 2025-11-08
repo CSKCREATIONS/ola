@@ -418,7 +418,15 @@ export default function EditarPerfil() {
             borderLeft: '4px solid #f59e0b'
           }}>
             <div 
+              role="button"
+              tabIndex={0}
               onClick={() => setMostrarCambiarPassword(!mostrarCambiarPassword)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setMostrarCambiarPassword(!mostrarCambiarPassword);
+                }
+              }}
               style={{
                 display: 'flex',
                 alignItems: 'center',
