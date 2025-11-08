@@ -30,16 +30,16 @@ exports.getAllRemisiones = async (req, res) => {
       .populate('responsable', 'username firstName surname')
       .populate('cotizacionReferencia', 'codigo')
       .sort({ fechaRemision: -1 })
-      .limit(parseInt(limite))
-      .skip((parseInt(pagina) - 1) * parseInt(limite));
+      .limit(Number.parseInt(limite, 10))
+      .skip((Number.parseInt(pagina, 10) - 1) * Number.parseInt(limite, 10));
 
     const total = await Remision.countDocuments(filtro);
 
     res.json({
       remisiones,
       total,
-      pagina: parseInt(pagina),
-      totalPaginas: Math.ceil(total / parseInt(limite))
+      pagina: Number.parseInt(pagina, 10),
+      totalPaginas: Math.ceil(total / Number.parseInt(limite, 10))
     });
   } catch (error) {
     console.error('Error al obtener remisiones:', error);

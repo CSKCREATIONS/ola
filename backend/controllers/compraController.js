@@ -52,7 +52,7 @@ const crearCompra = async (req, res) => {
     const total = typeof req.body.total === 'number' ? req.body.total : Number(req.body.total) || 0;
     
     // Validar fecha
-    const fecha = req.body.fecha && !isNaN(new Date(req.body.fecha).getTime()) 
+    const fecha = req.body.fecha && !Number.isNaN(new Date(req.body.fecha).getTime()) 
       ? new Date(req.body.fecha) 
       : new Date();
 

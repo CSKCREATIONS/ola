@@ -496,14 +496,14 @@ exports.crearRemisionDesdePedido = async (req, res) => {
       if (p.product && typeof p.product === 'object') {
         // Si product está populado
         nombre = p.product.name || 'Producto sin nombre';
-        precio = parseFloat(p.precioUnitario) || parseFloat(p.product.price) || 0;
+        precio = Number.parseFloat(p.precioUnitario) || Number.parseFloat(p.product.price) || 0;
       } else {
         // Si no está populado, usar datos directos
         nombre = `Producto ID: ${p.product}`;
-        precio = parseFloat(p.precioUnitario) || 0;
+        precio = Number.parseFloat(p.precioUnitario) || 0;
       }
 
-      cantidad = parseInt(p.cantidad) || 1;
+      cantidad = Number.parseInt(p.cantidad, 10) || 1;
       const total = cantidad * precio;
 
       console.log(`📦 Producto ${index + 1}:`, {
@@ -518,7 +518,7 @@ exports.crearRemisionDesdePedido = async (req, res) => {
         cantidad: cantidad,
         precioUnitario: precio,
         precio: precio, // Mantener compatibilidad
-        total: parseFloat(total.toFixed(2)),
+        total: Number.parseFloat(total.toFixed(2)),
         descripcion: p.product?.description || '',
         codigo: p.product?._id || p.product || ''
       };
@@ -528,7 +528,7 @@ exports.crearRemisionDesdePedido = async (req, res) => {
 
     // Calcular totales
     const subtotal = productos.reduce((sum, p) => sum + p.total, 0);
-    const totalGeneral = parseFloat(subtotal.toFixed(2));
+    const totalGeneral = Number.parseFloat(subtotal.toFixed(2));
 
     console.log('💰 Cálculos financieros:');
     console.log(`   Subtotal: $${subtotal.toFixed(2)}`);

@@ -96,7 +96,7 @@ exports.createCotizacion = async (req, res) => {
 
     let fechaCotizacion = null;
 
-    if (fecha && !isNaN(new Date(fecha).getTime())) {
+    if (fecha && !Number.isNaN(new Date(fecha).getTime())) {
       fechaCotizacion = new Date(fecha);
     } else {
       fechaCotizacion = new Date(); // si no viene, usa la fecha actual
