@@ -22,7 +22,14 @@ router.get('/cliente/:id',
   validateObjectIdParam('id'),
   async (req, res) => {
     try {
-      const cotizacion = await Cotizacion.findOne({ 'cliente.referencia': req.params.id })
+      // Sanitizar el ID del cliente para prevenir inyección NoSQL
+      const clienteId = typeof req.params.id === 'string' ? req.params.id.trim() : '';
+      
+      if (!clienteId || !clienteId.match(/^[0-9a-fA-F]{24}$/)) {
+        return res.status(400).json({ message: 'ID de cliente inválido' });
+      }
+
+      const cotizacion = await Cotizacion.findOne({ 'cliente.referencia': clienteId })
         .sort({ createdAt: -1 }) // más reciente
         .populate('cliente.referencia', 'nombre correo ciudad telefono esCliente')
         .populate({

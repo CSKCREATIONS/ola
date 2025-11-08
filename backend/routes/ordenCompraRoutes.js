@@ -6,7 +6,8 @@ const {
   obtenerOrden,
   eliminarOrden,
   completarOrden,
-  editarOrden
+  editarOrden,
+  enviarOrdenPorCorreo
 } = require('../controllers/ordenCompraController');
 const { verifyToken } = require('../middlewares/authJwt');
 const { checkPermission } = require('../middlewares/role');
@@ -27,6 +28,8 @@ router.put('/:id', verifyToken, checkPermission('ordenes.editar'), editarOrden);
 
 router.put('/:id/completar', completarOrden);
 
+// Enviar orden por correo
+router.post('/:id/enviar-email', verifyToken, enviarOrdenPorCorreo);
 
 
 module.exports = router;

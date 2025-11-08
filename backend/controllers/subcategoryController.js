@@ -174,13 +174,20 @@ exports.desactivarSubcategoriaYProductos = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const subcategoria = await Subcategory.findByIdAndUpdate(id, { activo: false });
+    // Sanitizar el ID para prevenir inyección NoSQL
+    const subcategoriaId = typeof id === 'string' ? id.trim() : '';
+    
+    if (!subcategoriaId || !subcategoriaId.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ message: 'ID de subcategoría inválido' });
+    }
+
+    const subcategoria = await Subcategory.findByIdAndUpdate(subcategoriaId, { activo: false });
     if (!subcategoria) {
       return res.status(404).json({ message: 'Subcategoría no encontrada' });
     }
 
     // 🔁 Desactivar productos de esta subcategoría
-    const result = await Products.updateMany({ subcategory: id }, { activo: false });
+    const result = await Products.updateMany({ subcategory: subcategoriaId }, { activo: false });
     console.log('Productos desactivados:', result.modifiedCount);
 
     res.status(200).json({ message: 'Subcategoría y productos desactivados correctamente' });

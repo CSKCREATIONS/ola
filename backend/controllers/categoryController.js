@@ -84,7 +84,17 @@ exports.getCategories = async(req, res) =>{
 
 exports.getCategoryById = async (req,res) =>{
     try{
-        const category = await Category.findById(req.params.id);
+        // Sanitizar el ID para prevenir inyección NoSQL
+        const categoryId = typeof req.params.id === 'string' ? req.params.id.trim() : '';
+        
+        if (!categoryId) {
+            return res.status(400).json({
+                success: false,
+                message: 'ID de categoría inválido'
+            });
+        }
+        
+        const category = await Category.findById(categoryId);
         if(!category){
             return res.status(404).json({
                 success: false,
@@ -107,6 +117,17 @@ exports.getCategoryById = async (req,res) =>{
 exports.updateCategory = async (req, res) =>{
     try{
         const{name, description, activo} = req.body;
+        
+        // Sanitizar el ID para prevenir inyección NoSQL
+        const categoryId = typeof req.params.id === 'string' ? req.params.id.trim() : '';
+        
+        if (!categoryId) {
+            return res.status(400).json({
+                success: false,
+                message: 'ID de categoría inválido'
+            });
+        }
+        
         const updateData = {};
         
         // Permitir actualizar el estado activo
@@ -116,12 +137,13 @@ exports.updateCategory = async (req, res) =>{
         
         if(name){
             updateData.name = name.trim();
+            
             // verificar si el nuevo nombre ya existe
             const existing = await Category.findOne({
                 name : updateData.name,
-                _id:{$ne: req.params.id}
-
+                _id:{$ne: categoryId}
             });
+            
             if(existing){
                 return res.status(400).json({
                     success: false,
@@ -135,7 +157,7 @@ exports.updateCategory = async (req, res) =>{
         }
         
         const updatedCategory = await Category.findByIdAndUpdate(
-            req.params.id,
+            categoryId,
             updateData,
             {new:true, runValidators: true}
         );
@@ -148,7 +170,7 @@ exports.updateCategory = async (req, res) =>{
         
         // Si se está desactivando, desactivar subcategorías y productos
         if(activo === false){
-            const subcategorias = await Subcategoria.find({ category: req.params.id });
+            const subcategorias = await Subcategoria.find({ category: categoryId });
             
             for (const sub of subcategorias) {
               await Subcategoria.findByIdAndUpdate(sub._id, { activo: false });
@@ -179,9 +201,19 @@ exports.desactivarCategoriaYRelacionados = async (req, res) => {
   const { id } = req.params;
 
   try {
-    await Category.findByIdAndUpdate(id, { activo: false });
+    // Sanitizar el ID para prevenir inyección NoSQL
+    const categoryId = typeof id === 'string' ? id.trim() : '';
+    
+    if (!categoryId) {
+      return res.status(400).json({
+        success: false,
+        message: 'ID de categoría inválido'
+      });
+    }
 
-    const subcategorias = await Subcategoria.find({ category: id });
+    await Category.findByIdAndUpdate(categoryId, { activo: false });
+
+    const subcategorias = await Subcategoria.find({ category: categoryId });
 
     for (const sub of subcategorias) {
       await Subcategoria.findByIdAndUpdate(sub._id, { activo: false });
@@ -207,7 +239,17 @@ exports.activarCategoriaYRelacionados = async (req, res) => {
     const { id } = req.params;
 
     try {
-        const categoria = await Category.findByIdAndUpdate(id, { activo: true }, { new: true });
+        // Sanitizar el ID para prevenir inyección NoSQL
+        const categoryId = typeof id === 'string' ? id.trim() : '';
+        
+        if (!categoryId) {
+            return res.status(400).json({
+                success: false,
+                message: 'ID de categoría inválido'
+            });
+        }
+
+        const categoria = await Category.findByIdAndUpdate(categoryId, { activo: true }, { new: true });
         if (!categoria) return res.status(404).json({ message: 'Categoría no encontrada' });
 
         // Nota: ya no se activan automáticamente las subcategorías ni los productos asociados.

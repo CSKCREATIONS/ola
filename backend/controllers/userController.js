@@ -70,7 +70,14 @@ exports.createUser = async (req, res) => {
   try {
     const Role = require('../models/Role');
 
-    const role = await Role.findOne({ name: req.body.role });
+    // Sanitizar el nombre del rol para prevenir inyección NoSQL
+    const roleName = typeof req.body.role === 'string' ? req.body.role.trim() : '';
+    
+    if (!roleName) {
+      return res.status(400).json({ success: false, message: 'Nombre de rol inválido' });
+    }
+
+    const role = await Role.findOne({ name: roleName });
     if (!role) {
       return res.status(400).json({ success: false, message: 'Rol no encontrado' });
     }

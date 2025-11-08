@@ -2,6 +2,29 @@
 const OrdenCompra = require('../models/ordenCompra');
 const Compra = require('../models/compras'); // Asegúrate de que la ruta es correcta
 const Producto = require('../models/Products'); // Importar modelo de productos
+const nodemailer = require('nodemailer');
+const PDFService = require('../services/pdfService');
+
+// Configurar Gmail transporter
+const createGmailTransporter = () => {
+  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD || process.env.GMAIL_APP_PASSWORD === 'PENDIENTE_GENERAR') {
+    console.warn('⚠️  Gmail no configurado correctamente');
+    return null;
+  }
+  
+  try {
+    return nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_APP_PASSWORD
+      }
+    });
+  } catch (error) {
+    console.error('❌ Error creando transporter:', error);
+    return null;
+  }
+};
 
 
 // Crear nueva orden
@@ -151,11 +174,357 @@ const editarOrden = async (req, res) => {
   }
 };
 
+// Enviar orden de compra por correo
+const enviarOrdenPorCorreo = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { destinatario, asunto, mensaje } = req.body;
+
+    console.log('🔍 Iniciando envío de correo para orden:', id);
+    console.log('📧 Destinatario:', destinatario);
+
+    if (!destinatario) {
+      return res.status(400).json({ success: false, message: 'Destinatario es requerido' });
+    }
+
+    // Obtener la orden y poblar los productos
+    const orden = await OrdenCompra.findById(id);
+    
+    if (!orden) {
+      return res.status(404).json({ success: false, message: 'Orden de compra no encontrada' });
+    }
+
+    // Poblar los productos manualmente si es necesario
+    if (orden.productos && orden.productos.length > 0) {
+      for (let i = 0; i < orden.productos.length; i++) {
+        if (orden.productos[i].producto && typeof orden.productos[i].producto === 'string') {
+          try {
+            const producto = await Producto.findById(orden.productos[i].producto);
+            if (producto) {
+              orden.productos[i].producto = {
+                _id: producto._id,
+                name: producto.name,
+                description: producto.description
+              };
+            }
+          } catch (err) {
+            console.warn('⚠️ No se pudo poblar el producto:', orden.productos[i].producto);
+          }
+        }
+      }
+    }
+
+    // Crear transporter usando la función helper
+    const transporter = createGmailTransporter();
+    
+    if (!transporter) {
+      return res.status(500).json({ 
+        success: false, 
+        message: 'Servicio de correo no configurado. Verifica las credenciales de Gmail en el archivo .env' 
+      });
+    }
+
+    // Generar HTML profesional de la orden
+    const ordenHTML = generarHTMLOrden(orden, mensaje);
+
+    // Generar PDF de la orden
+    let pdfAttachment = null;
+    try {
+      console.log('📄 Generando PDF de la orden...');
+      const pdfService = new PDFService();
+      const pdfData = await pdfService.generarPDFOrdenCompra(orden);
+      pdfAttachment = {
+        filename: pdfData.filename,
+        content: pdfData.buffer,
+        contentType: pdfData.contentType
+      };
+      console.log('✅ PDF generado exitosamente:', pdfData.filename);
+    } catch (pdfError) {
+      console.error('⚠️ Error generando PDF:', pdfError.message);
+      // Continuar sin PDF si hay error
+    }
+
+    const asuntoFinal = asunto || `Orden de Compra - N° ${orden.numeroOrden || 'N/A'} - JLA Global Company`;
+
+    const mailOptions = {
+      from: `"JLA Global Company" <${process.env.GMAIL_USER || process.env.EMAIL_USER}>`,
+      to: destinatario,
+      subject: asuntoFinal,
+      html: ordenHTML,
+      attachments: pdfAttachment ? [{
+        filename: pdfAttachment.filename,
+        content: pdfAttachment.content,
+        contentType: pdfAttachment.contentType
+      }] : []
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    console.log('✅ Correo enviado exitosamente' + (pdfAttachment ? ' con PDF adjunto' : ''));
+
+    res.status(200).json({ 
+      success: true, 
+      message: '¡Orden de compra enviada por correo exitosamente!' + (pdfAttachment ? ' con PDF adjunto' : ''),
+      details: {
+        destinatario: destinatario,
+        asunto: asuntoFinal,
+        numeroOrden: orden.numeroOrden,
+        pdfAdjunto: !!pdfAttachment,
+        fecha: new Date().toLocaleString('es-CO')
+      }
+    });
+  } catch (error) {
+    console.error('❌ Error al enviar correo:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error al enviar correo', 
+      error: error.message 
+    });
+  }
+};
+
+// Función para generar HTML profesional de la orden
+function generarHTMLOrden(orden, mensajePersonalizado = '') {
+  const totalCalculado = orden.productos.reduce((total, producto) => {
+    const subtotal = Number(producto.cantidad * (producto.valorUnitario || producto.precioUnitario || 0)) || 0;
+    return total + subtotal;
+  }, 0);
+
+  const totalFinal = Number(orden.total) || totalCalculado;
+  const subtotalFinal = Number(orden.subtotal) || totalCalculado;
+
+  // Generar filas de productos
+  const productosHTML = orden.productos.map((p, index) => {
+    const nombreProducto = p.producto?.name || p.nombre || 'Producto no especificado';
+    const descripcionProducto = p.descripcion || p.producto?.description || 'N/A';
+    const valorUnitario = p.valorUnitario || p.precioUnitario || 0;
+    const subtotal = p.cantidad * valorUnitario;
+    
+    return `
+      <tr data-label="Producto ${index + 1}">
+        <td data-label="Producto">
+          <strong>${nombreProducto}</strong><br/>
+          <small style="color: #666;">${descripcionProducto}</small>
+        </td>
+        <td data-label="Cantidad">${p.cantidad}</td>
+        <td data-label="Precio Unit.">$${Number(valorUnitario || 0).toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+        <td data-label="Subtotal">$${Number(subtotal || 0).toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+      </tr>
+    `;
+  }).join('');
+
+  return `
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Orden de Compra ${orden.numeroOrden}</title>
+      <style>
+        body {
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          line-height: 1.6;
+          color: #333;
+          max-width: 800px;
+          margin: 0 auto;
+          padding: 20px;
+          background-color: #f4f4f4;
+        }
+        .email-container {
+          background-color: white;
+          border-radius: 10px;
+          overflow: hidden;
+          box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        .email-header {
+          background: linear-gradient(135deg, #f39c12, #e67e22);
+          color: white;
+          padding: 30px;
+          text-align: center;
+        }
+        .email-header h1 {
+          margin: 0;
+          font-size: 28px;
+          font-weight: bold;
+        }
+        .email-header p {
+          margin: 10px 0 0 0;
+          font-size: 16px;
+          opacity: 0.9;
+        }
+        .email-body {
+          padding: 30px;
+        }
+        .info-section {
+          background: #f8f9fa;
+          padding: 20px;
+          margin-bottom: 25px;
+          border-left: 4px solid #f39c12;
+          border-radius: 5px;
+        }
+        .info-section h3 {
+          color: #f39c12;
+          margin: 0 0 15px 0;
+          font-size: 16px;
+          font-weight: 600;
+          border-bottom: 2px solid #f39c12;
+          padding-bottom: 8px;
+        }
+        .info-section p {
+          margin: 8px 0;
+          color: #555;
+          font-size: 14px;
+        }
+        .info-section strong {
+          color: #333;
+          font-weight: 600;
+          display: inline-block;
+          min-width: 150px;
+        }
+        .mensaje-personalizado {
+          background: #fff3cd;
+          border-left: 4px solid #ffc107;
+          padding: 15px;
+          margin-bottom: 25px;
+          border-radius: 5px;
+        }
+        .mensaje-personalizado p {
+          margin: 0;
+          color: #856404;
+          white-space: pre-wrap;
+        }
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          margin: 20px 0;
+          background: white;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        thead {
+          background: #f39c12;
+          color: white;
+        }
+        thead th {
+          padding: 12px;
+          text-align: left;
+          font-weight: 600;
+        }
+        tbody tr:nth-child(even) {
+          background: #f8f9fa;
+        }
+        tbody td {
+          padding: 12px;
+          border-bottom: 1px solid #e0e0e0;
+        }
+        .total-section {
+          background: #f8f9fa;
+          padding: 20px;
+          border-radius: 8px;
+          margin-top: 20px;
+          border: 2px solid #f39c12;
+        }
+        .total-row {
+          display: flex;
+          justify-content: space-between;
+          padding: 10px 0;
+          border-bottom: 1px solid #dee2e6;
+          font-size: 15px;
+        }
+        .total-row.final {
+          border-bottom: none;
+          font-size: 20px;
+          font-weight: bold;
+          color: #f39c12;
+          margin-top: 15px;
+          padding-top: 15px;
+          border-top: 3px solid #f39c12;
+        }
+        .email-footer {
+          background: #2c3e50;
+          color: white;
+          padding: 20px;
+          text-align: center;
+          font-size: 12px;
+        }
+        .email-footer p {
+          margin: 5px 0;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="email-container">
+        <div class="email-header">
+          <h1>🛒 ORDEN DE COMPRA</h1>
+          <p>N° ${orden.numeroOrden || 'N/A'}</p>
+        </div>
+
+        <div class="email-body">
+          ${mensajePersonalizado ? `
+            <div class="mensaje-personalizado">
+              <p><strong>📝 Mensaje:</strong></p>
+              <p>${mensajePersonalizado}</p>
+            </div>
+          ` : ''}
+
+          <div class="info-section">
+            <h3>📋 Información General</h3>
+            <p><strong>Número de Orden:</strong> ${orden.numeroOrden || 'N/A'}</p>
+            <p><strong>Fecha:</strong> ${new Date(orden.fechaOrden).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+            <p><strong>Estado:</strong> ${orden.estado || 'Pendiente'}</p>
+            <p><strong>Solicitado Por:</strong> ${orden.solicitadoPor || 'No especificado'}</p>
+          </div>
+
+          <div class="info-section">
+            <h3>🏢 Información del Proveedor</h3>
+            <p><strong>Nombre:</strong> ${orden.proveedor || 'No especificado'}</p>
+            <p><strong>Condiciones de Pago:</strong> ${orden.condicionesPago || 'Contado'}</p>
+          </div>
+
+          <h3 style="color: #f39c12; margin-top: 30px;">📦 Detalle de Productos</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th style="text-align: center;">Cantidad</th>
+                <th style="text-align: right;">Precio Unit.</th>
+                <th style="text-align: right;">Subtotal</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${productosHTML}
+            </tbody>
+          </table>
+
+          <div class="total-section">
+            <div class="total-row">
+              <span><strong>Subtotal:</strong></span>
+              <span>$${subtotalFinal.toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+            </div>
+            <div class="total-row final">
+              <span>TOTAL:</span>
+              <span>$${totalFinal.toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="email-footer">
+          <p><strong>JLA Global Company</strong></p>
+          <p>Este es un correo electrónico automático, por favor no responder.</p>
+          <p>Fecha de envío: ${new Date().toLocaleString('es-ES', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+          <p>© ${new Date().getFullYear()} JLA Global Company. Todos los derechos reservados.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
 module.exports = {
   crearOrden,
   listarOrdenes,
   obtenerOrden,
   eliminarOrden,
   completarOrden,
-  editarOrden
+  editarOrden,
+  enviarOrdenPorCorreo
 };

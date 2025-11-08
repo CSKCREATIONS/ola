@@ -80,9 +80,28 @@ exports.reporteProductos = async (req, res) => {
     const { minStock, maxPrice, categoria } = req.query;
     const filters = {};
 
-    if (minStock) filters.stock = { $gte: parseInt(minStock) };
-    if (maxPrice) filters.price = { $lte: parseFloat(maxPrice) };
-    if (categoria) filters.category = categoria;
+    // Sanitizar y validar parámetros
+    if (minStock) {
+      const minStockNum = parseInt(minStock);
+      if (!isNaN(minStockNum) && minStockNum >= 0) {
+        filters.stock = { $gte: minStockNum };
+      }
+    }
+    
+    if (maxPrice) {
+      const maxPriceNum = parseFloat(maxPrice);
+      if (!isNaN(maxPriceNum) && maxPriceNum >= 0) {
+        filters.price = { $lte: maxPriceNum };
+      }
+    }
+    
+    // Sanitizar categoría para prevenir inyección NoSQL
+    if (categoria) {
+      const categoriaSanitizada = typeof categoria === 'string' ? categoria.trim() : '';
+      if (categoriaSanitizada && categoriaSanitizada.match(/^[0-9a-fA-F]{24}$/)) {
+        filters.category = categoriaSanitizada;
+      }
+    }
 
     const productos = await Product.find(filters)
       .populate('category', 'name')

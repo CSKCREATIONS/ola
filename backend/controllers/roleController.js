@@ -13,12 +13,19 @@ exports.createRole = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Permisos deben ser un arreglo' });
     }
 
-    const existing = await Role.findOne({ name });
+    // Sanitizar el nombre del rol para prevenir inyección NoSQL
+    const nameSanitizado = typeof name === 'string' ? name.trim() : '';
+    
+    if (!nameSanitizado) {
+      return res.status(400).json({ success: false, message: 'Nombre de rol inválido' });
+    }
+
+    const existing = await Role.findOne({ name: nameSanitizado });
     if (existing) {
       return res.status(400).json({ success: false, message: 'Rol ya existe' });
     }
 
-    const newRole = new Role({ name, permissions });
+    const newRole = new Role({ name: nameSanitizado, permissions });
     await newRole.save();
 
     res.status(201).json({ success: true, message: 'Rol creado', data: newRole });

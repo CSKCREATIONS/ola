@@ -632,6 +632,30 @@ export default function OrdenCompra() {
     }
   };
 
+  // Función para marcar/desmarcar orden como enviada
+  const toggleEnviado = async (id, estadoActual) => {
+    try {
+      const res = await api.patch(`/api/ordenes-compra/${id}`, {
+        enviado: !estadoActual
+      });
+      const data = res.data || res;
+      if (data.success) {
+        Swal.fire({
+          icon: 'success',
+          title: !estadoActual ? 'Orden marcada como enviada' : 'Orden marcada como no enviada',
+          showConfirmButton: false,
+          timer: 1500
+        });
+        fetchOrdenes();
+      } else {
+        Swal.fire('Error', data.message || 'No se pudo actualizar', 'error');
+      }
+    } catch (error) {
+      console.error('Error toggleEnviado:', error);
+      Swal.fire('Error', 'No se pudo conectar con el servidor', 'error');
+    }
+  };
+
   // Función para verificar stock antes de completar
 const verificarStockDisponible = async (productos) => {
   const verificaciones = await Promise.all(
@@ -859,6 +883,356 @@ const verificarStockDisponible = async (productos) => {
     const impuestos = subtotal * 0.19;
     const total = subtotal + impuestos;
     return { subtotal, impuestos, total };
+  };
+
+  // Función para imprimir orden
+  const imprimirOrden = () => {
+    if (!ordenSeleccionada) {
+      Swal.fire('Error', 'No hay orden seleccionada', 'error');
+      return;
+    }
+
+    const totales = calcularTotalesOrden(ordenSeleccionada.productos || []);
+    const fechaFormateada = ordenSeleccionada.fechaOrden 
+      ? new Date(ordenSeleccionada.fechaOrden).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })
+      : 'N/A';
+
+    const productosHTML = ordenSeleccionada.productos?.map((p, index) => {
+      const nombreProducto = p.producto?.name || p.nombre || 'Producto no especificado';
+      const descripcionProducto = p.descripcion || p.producto?.description || 'N/A';
+      const subtotalProducto = (p.cantidad || 0) * (p.valorUnitario || p.precioUnitario || 0);
+      
+      return `
+        <tr>
+          <td style="text-align: center; padding: 12px; border-bottom: 1px solid #e0e0e0;">${index + 1}</td>
+          <td style="padding: 12px; border-bottom: 1px solid #e0e0e0;">
+            <strong>${nombreProducto}</strong><br/>
+            <small style="color: #666;">${descripcionProducto}</small>
+          </td>
+          <td style="text-align: center; padding: 12px; border-bottom: 1px solid #e0e0e0;">${p.cantidad || 0}</td>
+          <td style="text-align: right; padding: 12px; border-bottom: 1px solid #e0e0e0;">$${Number(p.valorUnitario || p.precioUnitario || 0).toLocaleString()}</td>
+          <td style="text-align: right; padding: 12px; border-bottom: 1px solid #e0e0e0; font-weight: 600;">$${Number(subtotalProducto).toLocaleString()}</td>
+        </tr>
+      `;
+    }).join('') || '<tr><td colspan="5" style="text-align: center; padding: 20px;">No hay productos</td></tr>';
+
+    const win = window.open('', '', 'width=900,height=700');
+    win.document.write(`
+      <!DOCTYPE html>
+      <html lang="es">
+        <head>
+          <meta charset="UTF-8">
+          <title>Orden de Compra - ${ordenSeleccionada.numeroOrden || 'N/A'}</title>
+          <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { 
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+              line-height: 1.6; 
+              color: #333; 
+              padding: 30px;
+              background: #ffffff;
+            }
+            .container { max-width: 800px; margin: 0 auto; }
+            .header { 
+              background: linear-gradient(135deg, #f39c12, #e67e22); 
+              color: white; 
+              padding: 30px; 
+              text-align: center; 
+              border-radius: 10px 10px 0 0;
+              margin-bottom: 0;
+            }
+            .header h1 { font-size: 28px; margin-bottom: 10px; font-weight: 700; }
+            .header p { font-size: 16px; opacity: 0.9; }
+            .content {
+              border: 2px solid #f39c12;
+              border-top: none;
+              border-radius: 0 0 10px 10px;
+              padding: 30px;
+            }
+            .info-section {
+              background: #f8f9fa;
+              padding: 20px;
+              margin-bottom: 25px;
+              border-left: 4px solid #f39c12;
+              border-radius: 5px;
+            }
+            .info-section h3 { 
+              color: #f39c12; 
+              margin-bottom: 15px; 
+              font-size: 16px;
+              font-weight: 600;
+              border-bottom: 2px solid #f39c12;
+              padding-bottom: 8px;
+            }
+            .info-section p { 
+              margin-bottom: 8px; 
+              color: #555; 
+              font-size: 14px;
+              line-height: 1.8;
+            }
+            .info-section strong { 
+              color: #333;
+              font-weight: 600;
+              display: inline-block;
+              min-width: 150px;
+            }
+            .products-section { margin: 30px 0; }
+            .products-title { 
+              background: #f39c12; 
+              color: white; 
+              padding: 15px 20px; 
+              margin-bottom: 0; 
+              font-size: 18px;
+              font-weight: 600;
+            }
+            .products-table { 
+              width: 100%; 
+              border-collapse: collapse; 
+              background: white; 
+              box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+            }
+            .products-table thead { 
+              background: #f39c12; 
+              color: white; 
+            }
+            .products-table thead th { 
+              padding: 12px; 
+              text-align: left; 
+              font-weight: 600;
+              font-size: 14px;
+            }
+            .products-table tbody tr:nth-child(even) {
+              background: #f8f9fa;
+            }
+            .products-table tbody td { 
+              padding: 12px; 
+              font-size: 14px;
+              border-bottom: 1px solid #e0e0e0;
+            }
+            .total-section { 
+              background: #f8f9fa; 
+              padding: 25px; 
+              border-radius: 8px; 
+              margin-top: 30px; 
+              border: 2px solid #f39c12;
+            }
+            .total-row { 
+              display: flex; 
+              justify-content: space-between; 
+              padding: 10px 0; 
+              border-bottom: 1px solid #dee2e6; 
+              font-size: 15px;
+            }
+            .total-row.final { 
+              border-bottom: none; 
+              font-size: 20px; 
+              font-weight: bold; 
+              color: #f39c12; 
+              margin-top: 15px; 
+              padding-top: 15px; 
+              border-top: 3px solid #f39c12; 
+            }
+            .footer { 
+              text-align: center; 
+              padding: 20px; 
+              color: #6c757d; 
+              font-size: 12px;
+              margin-top: 30px;
+              border-top: 2px solid #dee2e6;
+            }
+            @media print {
+              body { padding: 0; }
+              .container { max-width: 100%; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>ORDEN DE COMPRA</h1>
+              <p>N° ${ordenSeleccionada.numeroOrden || 'N/A'}</p>
+            </div>
+
+            <div class="content">
+              <div class="info-section">
+                <h3>📋 Información General</h3>
+                <p><strong>Número de Orden:</strong> ${ordenSeleccionada.numeroOrden || 'N/A'}</p>
+                <p><strong>Fecha:</strong> ${fechaFormateada}</p>
+                <p><strong>Estado:</strong> ${ordenSeleccionada.estado || 'Pendiente'}</p>
+                <p><strong>Solicitado Por:</strong> ${ordenSeleccionada.solicitadoPor || 'No especificado'}</p>
+              </div>
+
+              <div class="info-section">
+                <h3>🏢 Información del Proveedor</h3>
+                <p><strong>Nombre:</strong> ${ordenSeleccionada.proveedor || 'No especificado'}</p>
+                <p><strong>Condiciones de Pago:</strong> ${ordenSeleccionada.condicionesPago || 'Contado'}</p>
+              </div>
+
+              <div class="products-section">
+                <h2 class="products-title">📦 Detalle de Productos</h2>
+                <table class="products-table">
+                  <thead>
+                    <tr>
+                      <th style="width: 50px; text-align: center;">#</th>
+                      <th>Producto</th>
+                      <th style="width: 100px; text-align: center;">Cantidad</th>
+                      <th style="width: 130px; text-align: right;">Precio Unit.</th>
+                      <th style="width: 130px; text-align: right;">Subtotal</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${productosHTML}
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="total-section">
+                <div class="total-row">
+                  <span><strong>Subtotal:</strong></span>
+                  <span>$${totales.subtotal.toLocaleString()}</span>
+                </div>
+                <div class="total-row final">
+                  <span>TOTAL:</span>
+                  <span>$${totales.total.toLocaleString()}</span>
+                </div>
+              </div>
+
+              <div class="footer">
+                <p><strong>JLA Global Company</strong></p>
+                <p>Documento generado el ${new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                <p>© ${new Date().getFullYear()} JLA Global Company. Todos los derechos reservados.</p>
+              </div>
+            </div>
+          </div>
+        </body>
+      </html>
+    `);
+    win.document.close();
+    win.focus();
+    win.print();
+    win.close();
+  };
+
+  // Función para enviar orden por correo
+  const enviarOrdenPorCorreo = async () => {
+    if (!ordenSeleccionada || !ordenSeleccionada._id) {
+      Swal.fire('Error', 'No hay orden seleccionada', 'error');
+      return;
+    }
+
+    const { value: formValues } = await Swal.fire({
+      title: '📧 Enviar Orden por Correo',
+      html: `
+        <div style="text-align: left;">
+          <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">
+            Correo del destinatario:
+          </label>
+          <input 
+            type="email" 
+            id="emailDestino" 
+            class="swal2-input" 
+            placeholder="ejemplo@correo.com" 
+            style="margin: 0 0 20px 0; width: 100%;"
+            required
+          >
+          
+          <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">
+            Asunto:
+          </label>
+          <input 
+            type="text" 
+            id="asuntoEmail" 
+            class="swal2-input" 
+            placeholder="Asunto del correo" 
+            style="margin: 0 0 20px 0; width: 100%;"
+            value="Orden de Compra N° ${ordenSeleccionada.numeroOrden || 'N/A'} - JLA Global Company"
+          >
+          
+          <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">
+            Mensaje:
+          </label>
+          <textarea 
+            id="mensajeEmail" 
+            class="swal2-textarea" 
+            placeholder="Escribe tu mensaje aquí..."
+            style="margin: 0; width: 100%; min-height: 150px; resize: vertical;"
+          >Estimado proveedor,
+
+Adjunto encontrará la Orden de Compra con la siguiente información:
+
+📋 DETALLES DE LA ORDEN:
+
+• Número de Orden: ${ordenSeleccionada.numeroOrden || 'N/A'}
+• Fecha: ${new Date(ordenSeleccionada.fechaOrden).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })}
+• Proveedor: ${ordenSeleccionada.proveedor || 'No especificado'}
+• Productos: ${ordenSeleccionada.productos?.length || 0} items
+
+Quedamos atentos a cualquier duda o consulta.
+
+Cordialmente,
+JLA Global Company</textarea>
+        </div>
+      `,
+      width: '600px',
+      focusConfirm: false,
+      showCancelButton: true,
+      confirmButtonText: '📧 Enviar Orden',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#f39c12',
+      cancelButtonColor: '#6c757d',
+      preConfirm: () => {
+        const email = document.getElementById('emailDestino').value;
+        const asunto = document.getElementById('asuntoEmail').value;
+        const mensaje = document.getElementById('mensajeEmail').value;
+        
+        if (!email) {
+          Swal.showValidationMessage('Por favor ingresa un correo electrónico');
+          return false;
+        }
+        
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+          Swal.showValidationMessage('Por favor ingresa un correo electrónico válido');
+          return false;
+        }
+
+        if (!asunto || asunto.trim() === '') {
+          Swal.showValidationMessage('Por favor ingresa un asunto');
+          return false;
+        }
+        
+        return { email, asunto, mensaje };
+      }
+    });
+
+    if (formValues) {
+      try {
+        Swal.fire({
+          title: 'Enviando...',
+          text: 'Por favor espera',
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+
+        await api.post(`/api/ordenes-compra/${ordenSeleccionada._id}/enviar-email`, {
+          destinatario: formValues.email,
+          asunto: formValues.asunto,
+          mensaje: formValues.mensaje || 'Orden de compra adjunta'
+        });
+        
+        Swal.fire({
+          icon: 'success',
+          title: '¡Enviado!',
+          text: 'La orden de compra ha sido enviada por correo electrónico',
+          confirmButtonColor: '#f39c12'
+        });
+      } catch (error) {
+        console.error('Error al enviar correo:', error);
+        Swal.fire('Error', error.response?.data?.message || 'No se pudo enviar el correo electrónico', 'error');
+      }
+    }
   };
 
   const guardarOrden = async () => {
@@ -1451,6 +1825,17 @@ const verificarStockDisponible = async (productos) => {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
+                      <i className="fa-solid fa-paper-plane" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      ENVIADO
+                    </th>
+                    <th style={{ 
+                      padding: '16px 12px', 
+                      textAlign: 'center', 
+                      fontWeight: '600', 
+                      color: '#374151',
+                      fontSize: '13px',
+                      letterSpacing: '0.5px'
+                    }}>
                       <i className="fa-solid fa-cogs" style={{ marginRight: '6px', color: '#6366f1' }}></i>
                       ACCIONES
                     </th>
@@ -1565,6 +1950,34 @@ const verificarStockDisponible = async (productos) => {
                         )}
                       </td>
                       <td style={{ padding: '16px 12px', textAlign: 'center' }}>
+                        <button
+                          onClick={() => toggleEnviado(orden._id, orden.enviado)}
+                          style={{
+                            background: orden.enviado ? 'linear-gradient(135deg, #dcfce7, #bbf7d0)' : 'linear-gradient(135deg, #fee2e2, #fecaca)',
+                            color: orden.enviado ? '#16a34a' : '#dc2626',
+                            border: 'none',
+                            borderRadius: '8px',
+                            padding: '6px 12px',
+                            cursor: 'pointer',
+                            fontSize: '12px',
+                            fontWeight: '600',
+                            transition: 'all 0.2s ease',
+                            boxShadow: orden.enviado ? '0 2px 4px rgba(22, 163, 74, 0.2)' : '0 2px 4px rgba(220, 38, 38, 0.2)',
+                            minWidth: '50px'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.target.style.transform = 'translateY(-2px)';
+                            e.target.style.boxShadow = orden.enviado ? '0 4px 8px rgba(22, 163, 74, 0.3)' : '0 4px 8px rgba(220, 38, 38, 0.3)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.target.style.transform = 'translateY(0)';
+                            e.target.style.boxShadow = orden.enviado ? '0 2px 4px rgba(22, 163, 74, 0.2)' : '0 2px 4px rgba(220, 38, 38, 0.2)';
+                          }}
+                        >
+                          {orden.enviado ? 'Sí' : 'No'}
+                        </button>
+                      </td>
+                      <td style={{ padding: '16px 12px', textAlign: 'center' }}>
                         <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
                           <button
                             onClick={() => abrirModalEditar(orden)}
@@ -1592,32 +2005,34 @@ const verificarStockDisponible = async (productos) => {
                           >
                             <i className="fa-solid fa-pen-to-square"></i>
                           </button>
-                          <button 
-                            onClick={() => eliminarOrden(orden._id)}
-                            title="Eliminar orden"
-                            style={{
-                              background: 'linear-gradient(135deg, #fee2e2, #fecaca)',
-                              color: '#dc2626',
-                              border: 'none',
-                              borderRadius: '8px',
-                              padding: '8px 10px',
-                              cursor: 'pointer',
-                              fontSize: '12px',
-                              fontWeight: '600',
-                              transition: 'all 0.2s ease',
-                              boxShadow: '0 2px 4px rgba(220, 38, 38, 0.2)'
-                            }}
-                            onMouseEnter={(e) => {
-                              e.target.style.transform = 'translateY(-2px)';
-                              e.target.style.boxShadow = '0 4px 8px rgba(220, 38, 38, 0.3)';
-                            }}
-                            onMouseLeave={(e) => {
-                              e.target.style.transform = 'translateY(0)';
-                              e.target.style.boxShadow = '0 2px 4px rgba(220, 38, 38, 0.2)';
-                            }}
-                          >
-                            <i className="fa-solid fa-trash"></i>
-                          </button>
+                          {!orden.enviado && (
+                            <button 
+                              onClick={() => eliminarOrden(orden._id)}
+                              title="Eliminar orden"
+                              style={{
+                                background: 'linear-gradient(135deg, #fee2e2, #fecaca)',
+                                color: '#dc2626',
+                                border: 'none',
+                                borderRadius: '8px',
+                                padding: '8px 10px',
+                                cursor: 'pointer',
+                                fontSize: '12px',
+                                fontWeight: '600',
+                                transition: 'all 0.2s ease',
+                                boxShadow: '0 2px 4px rgba(220, 38, 38, 0.2)'
+                              }}
+                              onMouseEnter={(e) => {
+                                e.target.style.transform = 'translateY(-2px)';
+                                e.target.style.boxShadow = '0 4px 8px rgba(220, 38, 38, 0.3)';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.target.style.transform = 'translateY(0)';
+                                e.target.style.boxShadow = '0 2px 4px rgba(220, 38, 38, 0.2)';
+                              }}
+                            >
+                              <i className="fa-solid fa-trash"></i>
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -2621,12 +3036,20 @@ const verificarStockDisponible = async (productos) => {
                   </span>
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
                     <button
-                      className="btn btn-primary"
-                      onClick={() => window.print()}
+                      className="btn btn-success"
+                      onClick={imprimirOrden}
                       style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
                     >
                       <i className="fa-solid fa-print"></i>
                       Imprimir
+                    </button>
+                    <button
+                      className="btn btn-warning"
+                      onClick={enviarOrdenPorCorreo}
+                      style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', color: '#fff' }}
+                    >
+                      <i className="fa-solid fa-envelope"></i>
+                      Enviar Correo
                     </button>
                     <button
                       className="btn btn-secondary"
