@@ -387,17 +387,17 @@ export default function ListaDeCotizaciones() {
 
   // Funciones de cálculo mejoradas
   const calcularSubtotalProducto = (producto) => {
-    const cantidad = parseFloat(producto?.cantidad) || 0;
-    const precio = parseFloat(producto?.valorUnitario) || 0;
-    const descuento = parseFloat(producto?.descuento) || 0;
+    const cantidad = Number.parseFloat(producto?.cantidad) || 0;
+    const precio = Number.parseFloat(producto?.valorUnitario) || 0;
+    const descuento = Number.parseFloat(producto?.descuento) || 0;
     return cantidad * precio * (1 - descuento / 100);
   };
 
   const calcularTotalDescuentos = (productos) => {
     return productos?.reduce((acc, p) => {
-      const cantidad = parseFloat(p?.cantidad) || 0;
-      const precio = parseFloat(p?.valorUnitario) || 0;
-      const descuento = parseFloat(p?.descuento) || 0;
+      const cantidad = Number.parseFloat(p?.cantidad) || 0;
+      const precio = Number.parseFloat(p?.valorUnitario) || 0;
+      const descuento = Number.parseFloat(p?.descuento) || 0;
       return acc + (cantidad * precio * descuento / 100);
     }, 0) || 0;
   };
@@ -407,8 +407,8 @@ export default function ListaDeCotizaciones() {
   };
 
   const subtotal = cotizacionSeleccionada?.productos?.reduce((acc, p) => {
-    const cantidad = parseFloat(p?.cantidad) || 0;
-    const precio = parseFloat(p?.valorUnitario) || 0;
+    const cantidad = Number.parseFloat(p?.cantidad) || 0;
+    const precio = Number.parseFloat(p?.valorUnitario) || 0;
     return acc + cantidad * precio;
   }, 0) || 0;
 
@@ -1653,9 +1653,9 @@ export default function ListaDeCotizaciones() {
                         <span>Descuentos aplicados:</span>
                         <span>
                           ${(cotizacionSeleccionada.productos?.reduce((acc, p) => {
-                            const cantidad = parseFloat(p?.cantidad) || 0;
-                            const precio = parseFloat(p?.valorUnitario) || 0;
-                            const descuento = parseFloat(p?.descuento) || 0;
+                            const cantidad = Number.parseFloat(p?.cantidad) || 0;
+                            const precio = Number.parseFloat(p?.valorUnitario) || 0;
+                            const descuento = Number.parseFloat(p?.descuento) || 0;
                             return acc + (cantidad * precio * descuento / 100);
                           }, 0) || 0).toLocaleString('es-CO', { minimumFractionDigits: 2 })}
                         </span>
@@ -1664,9 +1664,9 @@ export default function ListaDeCotizaciones() {
                         <span>Total Final:</span>
                         <strong>
                           ${(cotizacionSeleccionada.productos?.reduce((acc, p) => {
-                            const cantidad = parseFloat(p?.cantidad) || 0;
-                            const precio = parseFloat(p?.valorUnitario) || 0;
-                            const descuento = parseFloat(p?.descuento) || 0;
+                            const cantidad = Number.parseFloat(p?.cantidad) || 0;
+                            const precio = Number.parseFloat(p?.valorUnitario) || 0;
+                            const descuento = Number.parseFloat(p?.descuento) || 0;
                             return acc + (cantidad * precio * (1 - descuento / 100));
                           }, 0) || 0).toLocaleString('es-CO', { minimumFractionDigits: 2 })}
                         </strong>

@@ -89,9 +89,9 @@ export default function RegistrarCotizacion() {
     nuevosProductos[index][name] = value;
 
     // Calcular subtotal y valorTotal
-    const cantidadNum = parseFloat(nuevosProductos[index].cantidad) || 0;
-    const valorNum = parseFloat(nuevosProductos[index].valorUnitario) || 0;
-    const descNum = parseFloat(nuevosProductos[index].descuento) || 0;
+    const cantidadNum = Number.parseFloat(nuevosProductos[index].cantidad) || 0;
+    const valorNum = Number.parseFloat(nuevosProductos[index].valorUnitario) || 0;
+    const descNum = Number.parseFloat(nuevosProductos[index].descuento) || 0;
     const subtotal = cantidadNum * valorNum * (1 - descNum / 100);
     nuevosProductos[index].subtotal = subtotal.toFixed(2);
     nuevosProductos[index].valorTotal = subtotal.toFixed(2);
@@ -196,10 +196,10 @@ export default function RegistrarCotizacion() {
             name: prodObj?.name || ''
           },
           descripcion: p.descripcion,
-          cantidad: parseFloat(p.cantidad || 0),
-          valorUnitario: parseFloat(p.valorUnitario || 0),
-          descuento: parseFloat(p.descuento || 0),
-          subtotal: parseFloat(p.valorTotal || 0)
+          cantidad: Number.parseFloat(p.cantidad || 0),
+          valorUnitario: Number.parseFloat(p.valorUnitario || 0),
+          descuento: Number.parseFloat(p.descuento || 0),
+          subtotal: Number.parseFloat(p.valorTotal || 0)
         };
       }),
       clientePotencial: true,
@@ -1075,7 +1075,7 @@ export default function RegistrarCotizacion() {
                             fontSize: '1.2rem'
                           }}>
                             S/. {productosSeleccionados
-                              .reduce((acc, prod) => acc + (parseFloat(prod.subtotal) || 0), 0)
+                              .reduce((acc, prod) => acc + (Number.parseFloat(prod.subtotal) || 0), 0)
                               .toLocaleString('es-ES', { minimumFractionDigits: 2 })}
                           </td>
                           <td style={{ padding: '1rem 0.75rem' }}></td>
@@ -1134,7 +1134,7 @@ export default function RegistrarCotizacion() {
                       <td style={{ fontWeight: 'bold', textAlign: 'right' }}>Total</td>
                       <td style={{ fontWeight: 'bold' }}>
                         {productosSeleccionados
-                          .reduce((acc, prod) => acc + (parseFloat(prod.subtotal) || 0), 0)
+                          .reduce((acc, prod) => acc + (Number.parseFloat(prod.subtotal) || 0), 0)
                           .toFixed(2)}
                       </td>
                       <td></td>
