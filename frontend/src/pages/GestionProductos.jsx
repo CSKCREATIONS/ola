@@ -339,7 +339,7 @@ const ProductoModal = ({
                 marginBottom: '1.5rem'
               }}>
                 <div>
-                  <label style={{
+                  <label htmlFor="input-producto-nombre" style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.5rem',
@@ -353,6 +353,7 @@ const ProductoModal = ({
                     <span style={{ color: '#ef4444' }}>*</span>
                   </label>
                   <input 
+                    id="input-producto-nombre"
                     name="name" 
                     value={form.name} 
                     onChange={handleChange} 
