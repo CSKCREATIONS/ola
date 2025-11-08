@@ -382,7 +382,7 @@ const ProductoModal = ({
                 </div>
                 
                 <div>
-                  <label style={{
+                  <label htmlFor="input-producto-precio" style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.5rem',
@@ -396,6 +396,7 @@ const ProductoModal = ({
                     <span style={{ color: '#ef4444' }}>*</span>
                   </label>
                   <input 
+                    id="input-producto-precio"
                     type="number" 
                     step="0.01"
                     name="price" 
@@ -432,7 +433,7 @@ const ProductoModal = ({
                 gap: '1.5rem'
               }}>
                 <div>
-                  <label style={{
+                  <label htmlFor="input-producto-descripcion" style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.5rem',
@@ -446,6 +447,7 @@ const ProductoModal = ({
                     <span style={{ color: '#ef4444' }}>*</span>
                   </label>
                   <input 
+                    id="input-producto-descripcion"
                     name="description" 
                     value={form.description} 
                     onChange={handleChange} 
@@ -474,7 +476,7 @@ const ProductoModal = ({
                 </div>
                 
                 <div>
-                  <label style={{
+                  <label htmlFor="input-producto-stock" style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.5rem',
@@ -488,6 +490,7 @@ const ProductoModal = ({
                     <span style={{ color: '#ef4444' }}>*</span>
                   </label>
                   <input 
+                    id="input-producto-stock"
                     type="number" 
                     name="stock" 
                     value={form.stock} 
@@ -546,7 +549,7 @@ const ProductoModal = ({
                 gap: '1.5rem'
               }}>
                 <div>
-                  <label style={{
+                  <label htmlFor="input-producto-categoria" style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.5rem',
@@ -560,6 +563,7 @@ const ProductoModal = ({
                     <span style={{ color: '#ef4444' }}>*</span>
                   </label>
                   <select 
+                    id="input-producto-categoria"
                     name="category" 
                     value={form.category} 
                     onChange={handleChange} 
@@ -592,7 +596,7 @@ const ProductoModal = ({
                 </div>
                 
                 <div>
-                  <label style={{
+                  <label htmlFor="input-producto-subcategoria" style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.5rem',
@@ -606,6 +610,7 @@ const ProductoModal = ({
                     <span style={{ color: '#ef4444' }}>*</span>
                   </label>
                   <select 
+                    id="input-producto-subcategoria"
                     name="subcategory" 
                     value={form.subcategory} 
                     onChange={handleChange} 
@@ -640,7 +645,7 @@ const ProductoModal = ({
                 </div>
                 
                 <div>
-                  <label style={{
+                  <label htmlFor="input-producto-proveedor" style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.5rem',
@@ -654,6 +659,7 @@ const ProductoModal = ({
                     <span style={{ color: '#ef4444' }}>*</span>
                   </label>
                   <select 
+                    id="input-producto-proveedor"
                     name="proveedor" 
                     value={form.proveedor} 
                     onChange={handleChange} 
