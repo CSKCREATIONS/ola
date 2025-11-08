@@ -29,8 +29,6 @@ const verifyTokenFn = async (req, res, next) => {
     req.userRole = user.role.name;
     req.permissions = user.role.permissions || [];
 
-    console.log('[AuthJWT] Permisos asignados:', req.permissions);
-
     next();
   } catch (error) {
     console.error('[AuthJWT] error: ', error.message);

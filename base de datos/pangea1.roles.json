@@ -61,16 +61,20 @@
     "clientes.crear",
     "clientes.editar",
     "clientes.inactivar",
-    "prospectos.ver"
+    "prospectos.ver",
+    "roles.ver",
+    "roles.editar",
+    "roles.crear",
+    "roles.inhabilitar"
   ],
   "enabled": true,
   "createdAt": {
     "$date": "2025-06-24T04:44:02.345Z"
   },
   "updatedAt": {
-    "$date": "2025-10-03T19:54:57.122Z"
+    "$date": "2025-11-04T01:04:56.034Z"
   },
-  "__v": 1,
+  "__v": 2,
   "description": "Acceso completo a todo el sistema"
 },
 {
@@ -196,14 +200,41 @@
     "pedidos.ver",
     "reportesProductos.ver",
     "reportesVentas.ver",
-    "reportesCompras.ver"
+    "reportesCompras.ver",
+    "usuarios.crear",
+    "usuarios.editar",
+    "usuarios.inhabilitar",
+    "usuarios.eliminar",
+    "ventas.crear",
+    "listaDeVentas.ver",
+    "pedidos.remisionar",
+    "pedidos.enviar",
+    "pedidosAgendados.ver",
+    "pedidosDespachados.ver",
+    "pedidosEntregados.ver",
+    "pedidosCancelados.ver",
+    "pedidosDevueltos.ver",
+    "cotizaciones.crear",
+    "cotizaciones.editar",
+    "cotizaciones.eliminar",
+    "cotizaciones.enviar",
+    "cotizaciones.remisionar",
+    "remisiones.ver",
+    "remisiones.crear",
+    "remisiones.editar",
+    "remisiones.eliminar",
+    "remisiones.enviar",
+    "clientes.crear",
+    "clientes.editar",
+    "clientes.inactivar",
+    "prospectos.ver"
   ],
   "enabled": true,
   "createdAt": {
     "$date": "2025-07-08T06:14:34.728Z"
   },
   "updatedAt": {
-    "$date": "2025-10-03T17:35:38.925Z"
+    "$date": "2025-11-04T01:03:23.464Z"
   },
   "__v": 1,
   "description": "Acceso de solo lectura a todos los módulos"
@@ -288,16 +319,17 @@
     "pedidos.ver",
     "reportesProductos.ver",
     "reportesVentas.ver",
-    "reportesCompras.ver"
+    "reportesCompras.ver",
+    "roles.ver"
   ],
   "enabled": true,
   "createdAt": {
     "$date": "2025-10-03T15:59:17.979Z"
   },
   "updatedAt": {
-    "$date": "2025-10-03T17:35:38.925Z"
+    "$date": "2025-11-03T00:50:23.862Z"
   },
-  "__v": 0,
+  "__v": 1,
   "description": "Acceso de solo lectura a todos los módulos"
 },
 {
@@ -367,4 +399,29 @@
   },
   "__v": 0,
   "description": "Gestión de compras y proveedores"
+},
+{
+  "_id": {
+    "$oid": "690958cfb54a591ee7c6dc9b"
+  },
+  "name": "queso",
+  "permissions": [
+    "roles.ver",
+    "roles.crear",
+    "roles.editar",
+    "roles.inhabilitar",
+    "usuarios.ver",
+    "usuarios.crear",
+    "usuarios.editar",
+    "usuarios.inhabilitar",
+    "usuarios.eliminar"
+  ],
+  "enabled": true,
+  "createdAt": {
+    "$date": "2025-11-04T01:37:19.505Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-04T01:37:19.505Z"
+  },
+  "__v": 0
 }]
