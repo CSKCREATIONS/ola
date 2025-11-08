@@ -136,8 +136,9 @@ useEffect(() => {
           </div>
           <div className="filtros-tabla">
             <div className="filtro-grupo">
-              <label>Fecha:</label>
+              <label htmlFor="filtro-fecha-ventas">Fecha:</label>
               <input
+                id="filtro-fecha-ventas"
                 type="date"
                 className="filtro-input"
                 value={filtroFecha}
@@ -146,8 +147,9 @@ useEffect(() => {
             </div>
             &nbsp;&nbsp;
             <div className="filtro-grupo">
-              <label>Cliente:</label>
+              <label htmlFor="filtro-cliente-ventas">Cliente:</label>
               <input
+                id="filtro-cliente-ventas"
                 type="text"
                 className="filtro-input"
                 placeholder="Buscar cliente..."
@@ -157,8 +159,9 @@ useEffect(() => {
             </div>
             &nbsp;&nbsp;
             <div className="filtro-grupo">
-              <label>Estado:</label>
+              <label htmlFor="filtro-estado-ventas">Estado:</label>
               <select
+                id="filtro-estado-ventas"
                 className="filtro-select"
                 value={filtroEstado}
                 onChange={e => setFiltroEstado(e.target.value)}

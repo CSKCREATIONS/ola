@@ -362,10 +362,11 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
             </div>
 
             <div style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+              <label htmlFor="correo-remision-modal" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
                 📬 Correo destinatario:
               </label>
               <input 
+                id="correo-remision-modal"
                 type="email" 
                 className="cuadroTexto" 
                 value={correo} 
@@ -376,10 +377,11 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
             </div>
             
             <div style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+              <label htmlFor="asunto-remision-modal" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
                 📝 Asunto:
               </label>
               <input 
+                id="asunto-remision-modal"
                 type="text" 
                 className="cuadroTexto" 
                 value={asunto} 
@@ -389,10 +391,11 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
             </div>
             
             <div style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+              <label htmlFor="mensaje-remision-modal" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
                 💬 Mensaje:
               </label>
               <textarea 
+                id="mensaje-remision-modal"
                 className="cuadroTexto" 
                 value={mensaje} 
                 onChange={e => setMensaje(e.target.value)} 

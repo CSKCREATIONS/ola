@@ -553,10 +553,10 @@ export default function HistorialCompras() {
       title: '📧 Enviar Compra por Correo',
       html: `
         <div style="text-align: left;">
-          <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">
+          <label htmlFor="input-historial-1" style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">
             Correo del destinatario:
           </label>
-          <input 
+          <input id="input-historial-1" 
             type="email" 
             id="emailDestino" 
             class="swal2-input" 
@@ -566,10 +566,10 @@ export default function HistorialCompras() {
             required
           >
           
-          <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">
+          <label htmlFor="input-historial-2" style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">
             Asunto:
           </label>
-          <input 
+          <input id="input-historial-2" 
             type="text" 
             id="asuntoEmail" 
             class="swal2-input" 
@@ -578,10 +578,10 @@ export default function HistorialCompras() {
             value="Compra Confirmada - N° ${compraSeleccionada.numeroOrden || 'N/A'} - JLA Global Company"
           >
           
-          <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">
+          <label htmlFor="input-historial-3" style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">
             Mensaje:
           </label>
-          <textarea 
+          <textarea id="input-historial-3" 
             id="mensajeEmail" 
             class="swal2-textarea" 
             placeholder="Escribe tu mensaje aquí..."

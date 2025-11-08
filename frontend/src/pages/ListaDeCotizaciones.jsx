@@ -1382,8 +1382,8 @@ export default function ListaDeCotizaciones() {
                   </div>
                   <div className="form-row" style={{ display: 'flex', gap: '15px', alignItems: 'end' }}>
                     <div className="form-group" style={{ flex: '1' }}>
-                      <label><i className="fa-solid fa-id-badge"></i> Nombre Completo *</label>
-                      <input
+                      <label htmlFor="input-lista-cot-1"><i className="fa-solid fa-id-badge"></i> Nombre Completo *</label>
+                      <input id="input-lista-cot-1"
                         type="text"
                         placeholder="Ingrese el nombre completo del cliente"
                         value={cotizacionSeleccionada.cliente?.nombre || ''}
@@ -1395,8 +1395,8 @@ export default function ListaDeCotizaciones() {
                       />
                     </div>
                     <div className="form-group" style={{ flex: '1' }}>
-                      <label><i className="fa-solid fa-at"></i> Correo Electrónico *</label>
-                      <input
+                      <label htmlFor="input-lista-cot-2"><i className="fa-solid fa-at"></i> Correo Electrónico *</label>
+                      <input id="input-lista-cot-2"
                         type="email"
                         placeholder="cliente@ejemplo.com"
                         value={cotizacionSeleccionada.cliente?.correo || ''}
@@ -1408,8 +1408,8 @@ export default function ListaDeCotizaciones() {
                       />
                     </div>
                     <div className="form-group" style={{ flex: '1' }}>
-                      <label><i className="fa-solid fa-mobile-screen-button"></i> Teléfono</label>
-                      <input
+                      <label htmlFor="input-lista-cot-3"><i className="fa-solid fa-mobile-screen-button"></i> Teléfono</label>
+                      <input id="input-lista-cot-3"
                         type="tel"
                         placeholder="+57 300 123 4567"
                         value={cotizacionSeleccionada.cliente?.telefono || ''}
@@ -1420,8 +1420,8 @@ export default function ListaDeCotizaciones() {
                       />
                     </div>
                     <div className="form-group" style={{ flex: '1' }}>
-                      <label><i className="fa-solid fa-map-location-dot"></i> Ciudad</label>
-                      <input
+                      <label htmlFor="input-lista-cot-4"><i className="fa-solid fa-map-location-dot"></i> Ciudad</label>
+                      <input id="input-lista-cot-4"
                         type="text"
                         placeholder="Ciudad"
                         value={cotizacionSeleccionada.cliente?.ciudad || ''}
@@ -1433,8 +1433,8 @@ export default function ListaDeCotizaciones() {
                     </div>
                   </div>
                   <div className="form-group" style={{ marginTop: '15px' }}>
-                    <label><i className="fa-solid fa-location-arrow"></i> Dirección Completa</label>
-                    <input
+                    <label htmlFor="input-lista-cot-5"><i className="fa-solid fa-location-arrow"></i> Dirección Completa</label>
+                    <input id="input-lista-cot-5"
                       type="text"
                       placeholder="Calle, número, barrio, referencias adicionales"
                       value={cotizacionSeleccionada.cliente?.direccion || ''}
@@ -1453,8 +1453,8 @@ export default function ListaDeCotizaciones() {
                   </div>
                   <div className="form-row">
                     <div className="form-group">
-                      <label><i className="fa-solid fa-file-text"></i> Descripción del Proyecto</label>
-                      <textarea
+                      <label htmlFor="input-lista-cot-6"><i className="fa-solid fa-file-text"></i> Descripción del Proyecto</label>
+                      <textarea id="input-lista-cot-6"
                         placeholder="Detalle los servicios o productos incluidos en esta cotización..."
                         value={cotizacionSeleccionada.descripcion || ''}
                         onChange={(e) => setCotizacionSeleccionada({
@@ -1465,8 +1465,8 @@ export default function ListaDeCotizaciones() {
                       />
                     </div>
                     <div className="form-group">
-                      <label><i className="fa-solid fa-hand-holding-dollar"></i> Condiciones de Pago</label>
-                      <textarea
+                      <label htmlFor="input-lista-cot-7"><i className="fa-solid fa-hand-holding-dollar"></i> Condiciones de Pago</label>
+                      <textarea id="input-lista-cot-7"
                         placeholder="Ej: 50% anticipo al firmar contrato, 50% contra entrega final..."
                         value={cotizacionSeleccionada.condicionesPago || ''}
                         onChange={(e) => setCotizacionSeleccionada({
@@ -1534,8 +1534,8 @@ export default function ListaDeCotizaciones() {
                           </div>
                           <div className="producto-row">
                             <div className="form-group producto-select">
-                              <label><i className="fa-solid fa-box"></i> Producto *</label>
-                              <select
+                              <label htmlFor="input-lista-cot-8"><i className="fa-solid fa-box"></i> Producto *</label>
+                              <select id="input-lista-cot-8"
                                 value={producto.producto?.id || ''}
                                 onChange={(e) => {
                                   const selectedProduct = productos.find(p => p._id === e.target.value);
@@ -1564,8 +1564,8 @@ export default function ListaDeCotizaciones() {
                               </select>
                             </div>
                             <div className="form-group">
-                              <label><i className="fa-solid fa-hashtag"></i> Cantidad *</label>
-                              <input
+                              <label htmlFor="input-lista-cot-9"><i className="fa-solid fa-hashtag"></i> Cantidad *</label>
+                              <input id="input-lista-cot-9"
                                 type="number"
                                 min="1"
                                 step="1"
@@ -1586,8 +1586,8 @@ export default function ListaDeCotizaciones() {
                               />
                             </div>
                             <div className="form-group">
-                              <label><i className="fa-solid fa-dollar-sign"></i> Precio Unitario *</label>
-                              <input
+                              <label htmlFor="input-lista-cot-10"><i className="fa-solid fa-dollar-sign"></i> Precio Unitario *</label>
+                              <input id="input-lista-cot-10"
                                 type="number"
                                 min="0"
                                 step="0.01"
@@ -1608,8 +1608,8 @@ export default function ListaDeCotizaciones() {
                               />
                             </div>
                             <div className="form-group">
-                              <label><i className="fa-solid fa-percent"></i> Descuento (%)</label>
-                              <input
+                              <label htmlFor="input-lista-cot-11"><i className="fa-solid fa-percent"></i> Descuento (%)</label>
+                              <input id="input-lista-cot-11"
                                 type="number"
                                 min="0"
                                 max="100"
@@ -1768,3 +1768,4 @@ export default function ListaDeCotizaciones() {
     </div >
   )
 };
+

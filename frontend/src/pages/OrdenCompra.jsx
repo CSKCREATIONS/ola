@@ -2151,8 +2151,8 @@ JLA Global Company</textarea>
                     </h6>
                     <div className="form-grid">
                       <div className="form-group-profesional">
-                        <label className="form-label-profesional">Proveedor *</label>
-                        <select
+                        <label htmlFor="input-orden-1" className="form-label-profesional">Proveedor *</label>
+                        <select id="input-orden-1"
                           value={nuevaOrden.proveedorId || ''}
                           onChange={handleProveedorChange}
                           required
@@ -2169,8 +2169,8 @@ JLA Global Company</textarea>
                       </div>
 
                       <div className="form-group-profesional">
-                        <label className="form-label-profesional">Solicitado Por *</label>
-                        <input
+                        <label htmlFor="input-orden-2" className="form-label-profesional">Solicitado Por *</label>
+                        <input id="input-orden-2"
                           type="text"
                           value={nuevaOrden.solicitadoPor}
                           disabled
@@ -2182,8 +2182,8 @@ JLA Global Company</textarea>
                       </div>
 
                       <div className="form-group-profesional">
-                        <label className="form-label-profesional">Condiciones de Pago</label>
-                        <textarea
+                        <label htmlFor="input-orden-3" className="form-label-profesional">Condiciones de Pago</label>
+                        <textarea id="input-orden-3"
                           value={nuevaOrden.condicionesPago}
                           onChange={e => setNuevaOrden({ ...nuevaOrden, condicionesPago: e.target.value })}
                           className="form-input-profesional"
@@ -2254,8 +2254,8 @@ JLA Global Company</textarea>
 
                         <div className="form-grid">
                           <div className="form-group-profesional">
-                            <label className="form-label-profesional">Descripción</label>
-                            <input
+                            <label htmlFor="input-orden-4" className="form-label-profesional">Descripción</label>
+                            <input id="input-orden-4"
                               value={productoTemp.descripcion}
                               onChange={e => setProductoTemp({ ...productoTemp, descripcion: e.target.value })}
                               className="form-input-profesional"
@@ -2265,8 +2265,8 @@ JLA Global Company</textarea>
                           </div>
 
                           <div className="form-group-profesional">
-                            <label className="form-label-profesional">Cantidad *</label>
-                            <input
+                            <label htmlFor="input-orden-5" className="form-label-profesional">Cantidad *</label>
+                            <input id="input-orden-5"
                               type="number"
                               min="1"
                               value={productoTemp.cantidad}
@@ -2474,8 +2474,8 @@ JLA Global Company</textarea>
                     </h6>
                     <div className="form-grid">
                       <div className="form-group-profesional">
-                        <label className="form-label-profesional">Proveedor *</label>
-                        <select
+                        <label htmlFor="input-orden-6" className="form-label-profesional">Proveedor *</label>
+                        <select id="input-orden-6"
                           value={ordenEditando.proveedorId}
                           onChange={handleProveedorChangeEditar}
                           required
@@ -2492,8 +2492,8 @@ JLA Global Company</textarea>
                       </div>
 
                       <div className="form-group-profesional">
-                        <label className="form-label-profesional">Solicitado Por *</label>
-                        <input
+                        <label htmlFor="input-orden-7" className="form-label-profesional">Solicitado Por *</label>
+                        <input id="input-orden-7"
                           type="text"
                           value={ordenEditando.solicitadoPor}
                           disabled
@@ -2505,8 +2505,8 @@ JLA Global Company</textarea>
                       </div>
 
                       <div className="form-group-profesional">
-                        <label className="form-label-profesional">Condiciones de Pago</label>
-                        <textarea
+                        <label htmlFor="input-orden-8" className="form-label-profesional">Condiciones de Pago</label>
+                        <textarea id="input-orden-8"
                           value={ordenEditando.condicionesPago}
                           onChange={e => setOrdenEditando({ ...ordenEditando, condicionesPago: e.target.value })}
                           className="form-input-profesional"
@@ -2571,8 +2571,8 @@ JLA Global Company</textarea>
 
                         <div className="form-grid">
                           <div className="form-group-profesional">
-                            <label className="form-label-profesional">Descripción</label>
-                            <input
+                            <label htmlFor="input-orden-9" className="form-label-profesional">Descripción</label>
+                            <input id="input-orden-9"
                               value={productoTemp.descripcion}
                               onChange={e => setProductoTemp({ ...productoTemp, descripcion: e.target.value })}
                               className="form-input-profesional"
@@ -2582,8 +2582,8 @@ JLA Global Company</textarea>
                           </div>
 
                           <div className="form-group-profesional">
-                            <label className="form-label-profesional">Cantidad *</label>
-                            <input
+                            <label htmlFor="input-orden-10" className="form-label-profesional">Cantidad *</label>
+                            <input id="input-orden-10"
                               type="number"
                               min="1"
                               value={productoTemp.cantidad}

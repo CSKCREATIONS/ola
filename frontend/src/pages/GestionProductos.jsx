@@ -1312,7 +1312,7 @@ useEffect(() => {
             </div>
             
             <div style={{ position: 'relative', maxWidth: '300px' }}>
-              <label style={{
+              <label htmlFor="input-gestion-prod-1" style={{
                 position: 'absolute',
                 top: '-8px',
                 left: '12px',
@@ -1325,7 +1325,7 @@ useEffect(() => {
               }}>
                 Estado del Producto
               </label>
-              <select
+              <select id="input-gestion-prod-1"
                 value={filtroEstado}
                 onChange={(e) => setFiltroEstado(e.target.value)}
                 style={{

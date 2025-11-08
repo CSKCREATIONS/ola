@@ -308,10 +308,10 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               </div>
 
               <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                <label htmlFor="input-pedido-preview-1" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
                   📬 Correo destinatario:
                 </label>
-                <input 
+                <input id="input-pedido-preview-1" 
                   type="email" 
                   className="cuadroTexto" 
                   value={correo} 
@@ -322,10 +322,10 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               </div>
               
               <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                <label htmlFor="input-pedido-preview-2" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
                   📝 Asunto:
                 </label>
-                <input 
+                <input id="input-pedido-preview-2" 
                   type="text" 
                   className="cuadroTexto" 
                   value={asunto} 
@@ -335,10 +335,10 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               </div>
               
               <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                <label htmlFor="input-pedido-preview-3" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
                   💬 Mensaje:
                 </label>
-                <textarea 
+                <textarea id="input-pedido-preview-3" 
                   className="cuadroTexto" 
                   value={mensaje} 
                   onChange={e => setMensaje(e.target.value)} 
@@ -369,3 +369,4 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
     </div>
   );
 }
+

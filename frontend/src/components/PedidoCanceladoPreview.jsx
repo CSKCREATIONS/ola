@@ -538,10 +538,10 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               </h3>
               
               <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                <label htmlFor="input-pedido-cancelado-preview-1" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
                   Correo del destinatario:
                 </label>
-                <input
+                <input id="input-pedido-cancelado-preview-1"
                   type="email"
                   value={correo}
                   onChange={(e) => setCorreo(e.target.value)}
@@ -557,10 +557,10 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               </div>
 
               <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                <label htmlFor="input-pedido-cancelado-preview-2" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
                   Asunto:
                 </label>
-                <input
+                <input id="input-pedido-cancelado-preview-2"
                   type="text"
                   value={asunto}
                   onChange={(e) => setAsunto(e.target.value)}
@@ -576,10 +576,10 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               </div>
 
               <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                <label htmlFor="input-pedido-cancelado-preview-3" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
                   Mensaje:
                 </label>
-                <textarea
+                <textarea id="input-pedido-cancelado-preview-3"
                   value={mensaje}
                   onChange={(e) => setMensaje(e.target.value)}
                   placeholder="Escriba un mensaje personalizado..."
