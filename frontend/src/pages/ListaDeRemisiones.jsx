@@ -418,18 +418,8 @@ export default function ListaDeRemisiones() {
               color: 'white',
               boxShadow: '0 8px 25px rgba(102, 126, 234, 0.4)',
               position: 'relative',
-              overflow: 'hidden',
-              transition: 'transform 0.3s ease, box-shadow 0.3s ease'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-5px)';
-              e.currentTarget.style.boxShadow = '0 15px 35px rgba(102, 126, 234, 0.5)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 8px 25px rgba(102, 126, 234, 0.4)';
-            }}
-            >
+              overflow: 'hidden'
+            }}>
               <div style={{
                 position: 'absolute',
                 top: '-20px',
@@ -477,18 +467,8 @@ export default function ListaDeRemisiones() {
               color: 'white',
               boxShadow: '0 8px 25px rgba(17, 153, 142, 0.4)',
               position: 'relative',
-              overflow: 'hidden',
-              transition: 'transform 0.3s ease, box-shadow 0.3s ease'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-5px)';
-              e.currentTarget.style.boxShadow = '0 15px 35px rgba(17, 153, 142, 0.5)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 8px 25px rgba(17, 153, 142, 0.4)';
-            }}
-            >
+              overflow: 'hidden'
+            }}>
               <div style={{
                 position: 'absolute',
                 top: '-20px',
@@ -536,18 +516,8 @@ export default function ListaDeRemisiones() {
               color: 'white',
               boxShadow: '0 8px 25px rgba(79, 172, 254, 0.4)',
               position: 'relative',
-              overflow: 'hidden',
-              transition: 'transform 0.3s ease, box-shadow 0.3s ease'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-5px)';
-              e.currentTarget.style.boxShadow = '0 15px 35px rgba(79, 172, 254, 0.5)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 8px 25px rgba(79, 172, 254, 0.4)';
-            }}
-            >
+              overflow: 'hidden'
+            }}>
               <div style={{
                 position: 'absolute',
                 top: '-20px',
@@ -595,18 +565,8 @@ export default function ListaDeRemisiones() {
               color: '#374151',
               boxShadow: '0 8px 25px rgba(168, 237, 234, 0.4)',
               position: 'relative',
-              overflow: 'hidden',
-              transition: 'transform 0.3s ease, box-shadow 0.3s ease'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-5px)';
-              e.currentTarget.style.boxShadow = '0 15px 35px rgba(168, 237, 234, 0.5)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 8px 25px rgba(168, 237, 234, 0.4)';
-            }}
-            >
+              overflow: 'hidden'
+            }}>
               <div style={{
                 position: 'absolute',
                 top: '-20px',

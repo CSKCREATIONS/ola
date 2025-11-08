@@ -535,18 +535,23 @@ export default function PedidosEntregados() {
                           }}>
                             <i className="fa-solid fa-file-invoice" style={{ color: 'white', fontSize: '12px' }}></i>
                           </div>
-                          <span 
-                            style={{ 
-                              cursor: 'pointer', 
-                              color: '#10b981', 
+                          <button
+                            type="button"
+                            style={{
+                              cursor: 'pointer',
+                              color: '#10b981',
                               textDecoration: 'underline',
-                              fontWeight: 'bold'
+                              fontWeight: 'bold',
+                              background: 'none',
+                              border: 'none',
+                              padding: 0,
+                              font: 'inherit'
                             }}
                             onClick={() => abrirRemision(pedido._id)}
                             title="Clic para generar remisión"
                           >
                             {pedido.numeroPedido || '---'}
-                          </span>
+                          </button>
                         </div>
                       </td>
                       <td style={{ color: '#6b7280' }}>

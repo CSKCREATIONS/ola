@@ -187,17 +187,8 @@ export default function Perfil() {
                     borderRadius: '16px',
                     background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(99, 102, 241, 0.1))',
                     border: '2px solid rgba(99, 102, 241, 0.2)',
-                    transition: 'all 0.3s ease'
-                  }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'translateY(-2px)';
-                      e.currentTarget.style.boxShadow = '0 8px 16px -4px rgba(99, 102, 241, 0.2)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = 'translateY(0)';
-                      e.currentTarget.style.boxShadow = 'none';
-                    }}
-                  >
+                    boxShadow: '0 2px 4px rgba(99, 102, 241, 0.05)'
+                  }}>
                     <div style={{
                       display: 'flex',
                       alignItems: 'center',
@@ -237,17 +228,8 @@ export default function Perfil() {
                     borderRadius: '16px',
                     background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(16, 185, 129, 0.1))',
                     border: '2px solid rgba(16, 185, 129, 0.2)',
-                    transition: 'all 0.3s ease'
-                  }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'translateY(-2px)';
-                      e.currentTarget.style.boxShadow = '0 8px 16px -4px rgba(16, 185, 129, 0.2)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = 'translateY(0)';
-                      e.currentTarget.style.boxShadow = 'none';
-                    }}
-                  >
+                    boxShadow: '0 2px 4px rgba(16, 185, 129, 0.05)'
+                  }}>
                     <div style={{
                       display: 'flex',
                       alignItems: 'center',
@@ -287,17 +269,8 @@ export default function Perfil() {
                     borderRadius: '16px',
                     background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.05), rgba(245, 158, 11, 0.1))',
                     border: '2px solid rgba(245, 158, 11, 0.2)',
-                    transition: 'all 0.3s ease'
-                  }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'translateY(-2px)';
-                      e.currentTarget.style.boxShadow = '0 8px 16px -4px rgba(245, 158, 11, 0.2)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = 'translateY(0)';
-                      e.currentTarget.style.boxShadow = 'none';
-                    }}
-                  >
+                    boxShadow: '0 2px 4px rgba(245, 158, 11, 0.05)'
+                  }}>
                     <div style={{
                       display: 'flex',
                       alignItems: 'center',
@@ -338,17 +311,8 @@ export default function Perfil() {
                     borderRadius: '16px',
                     background: 'linear-gradient(135deg, rgba(236, 72, 153, 0.05), rgba(236, 72, 153, 0.1))',
                     border: '2px solid rgba(236, 72, 153, 0.2)',
-                    transition: 'all 0.3s ease'
-                  }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'translateY(-2px)';
-                      e.currentTarget.style.boxShadow = '0 8px 16px -4px rgba(236, 72, 153, 0.2)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = 'translateY(0)';
-                      e.currentTarget.style.boxShadow = 'none';
-                    }}
-                  >
+                    boxShadow: '0 2px 4px rgba(236, 72, 153, 0.05)'
+                  }}>
                     <div style={{
                       display: 'flex',
                       alignItems: 'center',
