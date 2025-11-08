@@ -155,8 +155,9 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
   return (
     <div 
       id="editUserModal"
-      role="button"
-      tabIndex={0}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="edit-user-title"
       style={{
         position: 'fixed',
         top: 0,
@@ -174,12 +175,6 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
       }}
       onClick={(e) => {
         if (e.target.id === 'editUserModal') {
-          closeModal('editUserModal');
-        }
-      }}
-      onKeyDown={(e) => {
-        if ((e.key === 'Enter' || e.key === ' ') && e.target.id === 'editUserModal') {
-          e.preventDefault();
           closeModal('editUserModal');
         }
       }}
@@ -209,14 +204,16 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
           padding: '2rem',
           borderRadius: '20px 20px 0 0'
         }}>
-          <h3 style={{ 
-            margin: 0, 
-            fontSize: '1.5rem', 
-            fontWeight: '600',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.75rem'
-          }}>
+          <h3 
+            id="edit-user-title"
+            style={{ 
+              margin: 0, 
+              fontSize: '1.5rem', 
+              fontWeight: '600',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.75rem'
+            }}>
             <div style={{
               width: '50px',
               height: '50px',

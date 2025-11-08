@@ -117,8 +117,9 @@ export default function EditarPerfil() {
   return (
     <div 
       id="editar-perfil"
-      role="button"
-      tabIndex={0}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="edit-profile-title"
       style={{
         position: 'fixed',
         top: 0,
@@ -135,12 +136,6 @@ export default function EditarPerfil() {
       }}
       onClick={(e) => {
         if (e.target.id === 'editar-perfil') {
-          closeModal('editar-perfil');
-        }
-      }}
-      onKeyDown={(e) => {
-        if ((e.key === 'Enter' || e.key === ' ') && e.target.id === 'editar-perfil') {
-          e.preventDefault();
           closeModal('editar-perfil');
         }
       }}
@@ -166,14 +161,16 @@ export default function EditarPerfil() {
           padding: '2rem',
           borderRadius: '20px 20px 0 0'
         }}>
-          <h3 style={{ 
-            margin: 0, 
-            fontSize: '1.5rem', 
-            fontWeight: '600',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.75rem'
-          }}>
+          <h3 
+            id="edit-profile-title"
+            style={{ 
+              margin: 0, 
+              fontSize: '1.5rem', 
+              fontWeight: '600',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.75rem'
+            }}>
             <div style={{
               width: '50px',
               height: '50px',
