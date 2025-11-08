@@ -805,7 +805,7 @@ export default function ListaDeUsuarios() {
               gap: '20px'
             }}>
               <div style={{ position: 'relative' }}>
-                <label style={{
+                <label htmlFor="input-usuarios-1" style={{
                   position: 'absolute',
                   top: '-8px',
                   left: '12px',
@@ -816,9 +816,8 @@ export default function ListaDeUsuarios() {
                   color: '#6366f1',
                   zIndex: 1
                 }}>
-                  Buscar Usuario
-                </label>
-                <input
+                  Buscar Usuario</label>
+                <input id="input-usuarios-1"
                   type="text"
                   placeholder="Nombre o correo electrónico..."
                   value={filtroTexto}
@@ -844,7 +843,7 @@ export default function ListaDeUsuarios() {
               </div>
 
               <div style={{ position: 'relative' }}>
-                <label style={{
+                <label htmlFor="input-usuarios-2" style={{
                   position: 'absolute',
                   top: '-8px',
                   left: '12px',
@@ -855,9 +854,8 @@ export default function ListaDeUsuarios() {
                   color: '#6366f1',
                   zIndex: 1
                 }}>
-                  Filtrar por Rol
-                </label>
-                <select
+                  Filtrar por Rol</label>
+                <select id="input-usuarios-2"
                   value={filtroRol}
                   onChange={(e) => setFiltroRol(e.target.value)}
                   style={{
@@ -892,7 +890,7 @@ export default function ListaDeUsuarios() {
               </div>
 
               <div style={{ position: 'relative' }}>
-                <label style={{
+                <label htmlFor="input-usuarios-3" style={{
                   position: 'absolute',
                   top: '-8px',
                   left: '12px',
@@ -903,9 +901,8 @@ export default function ListaDeUsuarios() {
                   color: '#6366f1',
                   zIndex: 1
                 }}>
-                  Estado del Usuario
-                </label>
-                <select
+                  Estado del Usuario</label>
+                <select id="input-usuarios-3"
                   value={filtroEstado}
                   onChange={(e) => setFiltroEstado(e.target.value)}
                   style={{

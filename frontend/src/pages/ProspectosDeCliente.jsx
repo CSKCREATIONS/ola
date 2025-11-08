@@ -529,7 +529,7 @@ export default function ListaDeClientes() {
             </div>
             
             <div style={{ position: 'relative', maxWidth: '400px' }}>
-              <label style={{
+              <label htmlFor="input-prospectos-1" style={{
                 position: 'absolute',
                 top: '-8px',
                 left: '12px',
@@ -540,9 +540,8 @@ export default function ListaDeClientes() {
                 color: '#6366f1',
                 zIndex: 1
               }}>
-                Filtrar por Cliente
-              </label>
-              <input
+                Filtrar por Cliente</label>
+              <input id="input-prospectos-1"
                 type="text"
                 placeholder="Buscar por nombre, ciudad, teléfono o correo..."
                 value={filtroTexto}
