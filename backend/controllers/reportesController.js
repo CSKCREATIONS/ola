@@ -521,7 +521,7 @@ exports.reporteCotizaciones = async (req, res) => {
     const filtro = {};
 
     // Validar que las fechas existan y sean válidas
-    if (desde && hasta && !isNaN(new Date(desde)) && !isNaN(new Date(hasta))) {
+    if (desde && hasta && !Number.isNaN(new Date(desde).getTime()) && !Number.isNaN(new Date(hasta).getTime())) {
       filtro.fecha = {
         $gte: new Date(desde),
         $lte: new Date(hasta)
