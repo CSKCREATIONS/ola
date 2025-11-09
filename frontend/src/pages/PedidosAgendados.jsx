@@ -1,5 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { Editor } from "@tinymce/tinymce-react";
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Fijo from '../components/Fijo';
 import NavVentas from '../components/NavVentas';
@@ -229,17 +228,9 @@ if (typeof document !== 'undefined') {
 }
 
 export default function PedidosAgendados() {
-  const editorRef = useRef(null);
   const navigate = useNavigate();
   const [pedidos, setPedidos] = useState([]);
   const [mostrarModalAgendar, setMostrarModalAgendar] = useState(false);
-  const [datos, setDatos] = useState([]);
-  const [cliente, setCliente] = useState(null);
-  const [selectedProducts, setSelectedProducts] = useState([]);
-  const [total, setTotal] = useState(0);
-  const [observacion, setObservacion] = useState('');
-  const [fechaEntrega, setFechaEntrega] = useState('');
-  const [fechaActual, setFechaActual] = useState(new Date().toISOString().slice(0, 10));
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const [cotizacionPreview, setCotizacionPreview] = useState(null);
@@ -267,14 +258,6 @@ export default function PedidosAgendados() {
         setPedidos(agendadosOrdenados);
       } catch (err) {
         console.error('❌ Error al cargar pedidos agendados:', err);
-      }
-
-      try {
-        const clientesRes = await api.get('/api/clientes');
-        const clientesData = clientesRes.data || clientesRes;
-        setDatos(clientesData.data || clientesData || []);
-      } catch (err) {
-        console.error('Error al cargar clientes:', err);
       }
     };
 
@@ -323,7 +306,6 @@ export default function PedidosAgendados() {
   };
 
   const cancelarPedido = async (id) => {
-    const token = localStorage.getItem('token');
     const confirm = await Swal.fire({
       title: '¿Cancelar pedido?',
       text: 'Esta acción no se puede deshacer.',
@@ -351,7 +333,6 @@ export default function PedidosAgendados() {
   };
 
   const marcarComoEntregado = async (id) => {
-    const token = localStorage.getItem('token');
     
     // Confirmación antes de entregar
     const confirm = await Swal.fire({
@@ -389,75 +370,6 @@ export default function PedidosAgendados() {
         icon: 'error'
       });
     }
-  };
-
-  const eliminarPedido = async (id) => {
-    const token = localStorage.getItem('token');
-    const result = await Swal.fire({
-      title: '¿Eliminar pedido?',
-      text: 'Esta acción no se puede deshacer.',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar'
-    });
-
-    if (!result.isConfirmed) return;
-
-    try {
-      const res = await api.delete(`/api/pedidos/${id}`);
-      if (res.status >= 200 && res.status < 300) {
-        setPedidos(prev => prev.filter(p => p._id !== id));
-        Swal.fire('Eliminado', 'El pedido ha sido eliminado', 'success');
-      } else {
-        throw new Error('No se pudo eliminar');
-      }
-    } catch (error) {
-      Swal.fire('Error', 'No se pudo eliminar el pedido', 'error');
-    }
-  };
-
-  const ModalProductosCotizacion = ({ visible, onClose, productos, cotizacionId }) => {
-    if (!visible) return null;
-    return (
-      <div className="modal-overlay">
-        <div className="modal-compact modal-lg">
-          <div className="modal-header">
-            <h5 className="modal-title">Productos del Pedido</h5>
-            <button className="modal-close" onClick={onClose}>&times;</button>
-          </div>
-          <div className="modal-body">
-            <div className="table-container">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Producto</th>
-                    <th>Categoría</th>
-                    <th>Cantidad</th>
-                    <th>Precio Unitario</th>
-                    <th>Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {productos?.map((item, index) => (
-                    <tr key={index}>
-                      <td>{item.producto?.name || item.product?.name || 'Producto no disponible'}</td>
-                      <td>{item.producto?.categoria?.name || item.product?.categoria?.name || 'Sin categoría'}</td>
-                      <td>{item.cantidad}</td>
-                      <td>${(item.precio || item.producto?.price || item.product?.price || 0).toLocaleString('es-CO')}</td>
-                      <td>${((item.cantidad || 1) * (item.precio || item.producto?.price || item.product?.price || 0)).toLocaleString('es-CO')}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-          <div className="modal-footer">
-            <button className="btn btn-cancel" onClick={onClose}>Cerrar</button>
-          </div>
-        </div>
-      </div>
-    );
   };
 
   return (

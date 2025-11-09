@@ -1,12 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import Fijo from '../components/Fijo';
 import NavVentas from '../components/NavVentas';
-import EncabezadoModulo from '../components/EncabezadoModulo';
 import RemisionModal from '../components/RemisionModal';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import * as XLSX from 'xlsx';
-import { saveAs } from 'file-saver';
 import Swal from 'sweetalert2';
 import api from '../api/axiosConfig';
 
@@ -201,7 +199,6 @@ if (typeof document !== 'undefined') {
 
 export default function PedidosEntregados() {
   const [pedidosEntregados, setPedidosEntregados] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [showRemisionModal, setShowRemisionModal] = useState(false);
   const [datosRemision, setDatosRemision] = useState(null);
@@ -228,15 +225,13 @@ export default function PedidosEntregados() {
       console.error('Error:', error);
       Swal.fire('Error', 'Error de conexión', 'error');
     } finally {
-      setLoading(false);
+      // loading eliminado por no usarse
     }
   };
 
   // 🆕 Función para crear remisión desde pedido
   const crearRemisionDesdePedido = async (pedidoId) => {
     try {
-      const token = localStorage.getItem('token');
-      
       // Mostrar loading
       Swal.fire({
         title: 'Creando remisión...',
@@ -292,7 +287,7 @@ export default function PedidosEntregados() {
 
   const exportarPDF = () => {
     const elementosNoExport = document.querySelectorAll('.no-export');
-    elementosNoExport.forEach(el => el.style.display = 'none');
+    for (const el of elementosNoExport) { el.style.display = 'none'; }
 
     const input = document.getElementById('tabla_entregados');
     html2canvas(input).then((canvas) => {
@@ -315,20 +310,20 @@ export default function PedidosEntregados() {
       }
 
       pdf.save('pedidos_entregados.pdf');
-      elementosNoExport.forEach(el => el.style.display = '');
+      for (const el of elementosNoExport) { el.style.display = ''; }
     });
   };
 
   const exportarExcel = () => {
     const elementosNoExport = document.querySelectorAll('.no-export');
-    elementosNoExport.forEach(el => el.style.display = 'none');
+    for (const el of elementosNoExport) { el.style.display = 'none'; }
 
     const tabla = document.getElementById("tabla_entregados");
     const workbook = XLSX.utils.table_to_book(tabla, { sheet: "Pedidos Entregados" });
     workbook.Sheets["Pedidos Entregados"]["!cols"] = Array(7).fill({ width: 20 });
 
     XLSX.writeFile(workbook, 'pedidos_entregados.xlsx');
-    elementosNoExport.forEach(el => el.style.display = '');
+    for (const el of elementosNoExport) { el.style.display = ''; }
   };
 
   const abrirRemision = async (pedidoId) => {
@@ -336,43 +331,7 @@ export default function PedidosEntregados() {
     await crearRemisionDesdePedido(pedidoId);
   };
 
-  const ModalProductosCotizacion = ({ visible, onClose, productos, cotizacionId }) => {
-    if (!visible) return null;
-    return (
-      <div className="modal-overlay">
-        <div className="modal-compact modal-lg">
-          <div className="modal-header">
-            <h5 className="modal-title">Productos del Pedido Entregado</h5>
-            <button className="modal-close" onClick={onClose}>&times;</button>
-          </div>
-          <div className="modal-body">
-            {productos && productos.length > 0 ? (
-              <ul style={{ listStyle: 'none', padding: 0 }}>
-                {productos.map((prod, index) => (
-                  <li key={index} style={{ 
-                    marginBottom: '10px', 
-                    padding: '10px', 
-                    border: '1px solid #ddd', 
-                    borderRadius: '5px' 
-                  }}>
-                    <strong>{prod?.product?.name || 'Producto desconocido'}</strong><br />
-                    Cantidad: {prod?.cantidad}<br />
-                    Precio unitario: ${prod?.precioUnitario?.toFixed(2) || 0}<br />
-                    <em>Total: ${(prod?.cantidad * prod?.precioUnitario).toFixed(2)}</em>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p>No hay productos asociados a este pedido.</p>
-            )}
-          </div>
-          <div className="modal-footer">
-            <button className="btn btn-cancel" onClick={onClose}>Cerrar</button>
-          </div>
-        </div>
-      </div>
-    );
-  };
+  // ModalProductosCotizacion eliminado por no utilizarse
 
   return (
     <div>

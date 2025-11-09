@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import Fijo from '../components/Fijo';
 import NavVentas from '../components/NavVentas';
-import EncabezadoModulo from '../components/EncabezadoModulo';
 import PedidoDevueltoPreview from '../components/PedidoDevueltoPreview';
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
-import Swal from 'sweetalert2';
 import api from '../api/axiosConfig';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
@@ -13,18 +11,12 @@ import { saveAs } from 'file-saver';
 
 export default function PedidosDevueltos() {
   const [pedidos, setPedidos] = useState([]);
-  const [pedidoSeleccionado, setPedidoSeleccionado] = useState(null);
   const [datosDevuelto, setDatosDevuelto] = useState(null);
   const [mostrarDevuelto, setMostrarDevuelto] = useState(false);
 
-  const mostrarProductos = (pedido) => {
-    setPedidoSeleccionado(pedido);
-  };
 
   const generarFormatoDevuelto = async (pedido) => {
     try {
-      const token = localStorage.getItem('token');
-
       console.log('Pedido original:', pedido); // Debug
 
       // Obtener los datos completos del pedido con productos poblados
@@ -90,39 +82,6 @@ export default function PedidosDevueltos() {
     fetchData();
   }, []);
 
-  const ModalProductosCotizacion = ({ visible, onClose, productos, cotizacionId }) => {
-    if (!visible) return null;
-
-    return (
-      <div className="modal-overlay">
-        <div className="modal-compact modal-lg">
-          <div className="modal-header">
-            <h5 className="modal-title">Productos del Pedido #{cotizacionId?.slice(-5)}</h5>
-            <button className="modal-close" onClick={onClose}>&times;</button>
-          </div>
-          <div className="modal-body">
-            {productos && productos.length > 0 ? (
-              <ul className="list-group">
-                {productos.map((prod, idx) => (
-                  <li key={idx} className="list-group-item">
-                    <strong>{prod?.product?.name || 'Producto desconocido'}</strong><br />
-                    Cantidad: {prod?.cantidad}<br />
-                    Precio unitario: ${prod?.precioUnitario?.toFixed(2) || 0}<br />
-                    <em>Total: ${(prod?.cantidad * prod?.precioUnitario).toFixed(2)}</em>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p>No hay productos asociados a este pedido.</p>
-            )}
-          </div>
-          <div className="modal-footer">
-            <button className="btn btn-cancel" onClick={onClose}>Cerrar</button>
-          </div>
-        </div>
-      </div>
-    );
-  };
 
   const exportarPDF = () => {
     const input = document.getElementById('tabla_pedidos_devueltos');
@@ -244,13 +203,6 @@ export default function PedidosDevueltos() {
         </div>
 
       </div>
-      <ModalProductosCotizacion
-        visible={!!pedidoSeleccionado}
-        onClose={() => setPedidoSeleccionado(null)}
-        productos={pedidoSeleccionado?.productos || []}
-        cotizacionId={pedidoSeleccionado?._id}
-      />
-
       {mostrarDevuelto && datosDevuelto && (
         <PedidoDevueltoPreview
           datos={datosDevuelto}
