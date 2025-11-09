@@ -273,7 +273,7 @@ export default function OrdenCompra() {
       setCargandoProductos(true);
       console.log('Buscando productos para proveedor ID:', proveedorId);
 
-      const token = localStorage.getItem('token');
+  // token eliminado por no usarse
 
       // Cargar TODOS los productos
       const res = await api.get('/api/products');
@@ -657,34 +657,7 @@ export default function OrdenCompra() {
   };
 
   // Función para verificar stock antes de completar
-const verificarStockDisponible = async (productos) => {
-  const verificaciones = await Promise.all(
-    productos.map(async (item) => {
-      const productoId = item.productoId || item.producto?._id || item.producto;
-      try {
-        const res = await api.get(`/api/products/${productoId}`);
-        const data = res.data || res;
-        const producto = data.product || data.data || data;
-        
-        return {
-          producto: item.producto,
-          stockActual: producto.stock || 0,
-          cantidadOrden: item.cantidad,
-          stockDespues: (producto.stock || 0) + item.cantidad,
-          suficiente: true // Siempre suficiente para órdenes de compra
-        };
-      } catch (error) {
-        return {
-          producto: item.producto,
-          error: error.message,
-          suficiente: false
-        };
-      }
-    })
-  );
-  
-  return verificaciones;
-};
+// verificarStockDisponible eliminado por no utilizarse
 
   // Función para marcar orden como completada - CORREGIDA
   const marcarComoCompletada = async (orden) => {
@@ -702,7 +675,7 @@ const verificarStockDisponible = async (productos) => {
     if (!confirm.isConfirmed) return;
 
     try {
-      const token = localStorage.getItem('token');
+  // token eliminado por no usarse
 
       // 1. Completar la orden en el backend (esto actualiza el stock)
       const resCompletar = await api.put(`/api/ordenes-compra/${orden._id}/completar`);
@@ -773,37 +746,7 @@ const verificarStockDisponible = async (productos) => {
     return subtotal - descuento;
   };
 
-  const agregarProducto = () => {
-    if (!productoTemp.producto || productoTemp.cantidad < 1 || productoTemp.valorUnitario < 0) {
-      Swal.fire('Error', 'Los campos Producto, Cantidad y Valor Unitario son obligatorios y no pueden ser negativos.', 'error');
-      return;
-    }
-
-    const valorTotal = calcularValorTotalProducto(productoTemp);
-    const nuevoProducto = {
-      producto: productoTemp.producto,
-      descripcion: productoTemp.descripcion,
-      cantidad: productoTemp.cantidad,
-      valorUnitario: productoTemp.valorUnitario,
-      descuento: productoTemp.descuento,
-      valorTotal: valorTotal,
-      productoId: productoTemp.productoId
-    };
-
-    setNuevaOrden({
-      ...nuevaOrden,
-      productos: [...nuevaOrden.productos, nuevoProducto]
-    });
-
-    setProductoTemp({
-      producto: '',
-      descripcion: '',
-      cantidad: 1,
-      valorUnitario: 0,
-      descuento: 0,
-      productoId: ''
-    });
-  };
+  // agregarProducto eliminado por no utilizarse (se usa agregarProductoDesdeLista/agregarProductoEdicion)
 
   const eliminarProducto = (index) => {
     const nuevosProductos = [...nuevaOrden.productos];
@@ -821,41 +764,7 @@ const verificarStockDisponible = async (productos) => {
     });
   };
 
-  const actualizarProducto = () => {
-    if (!productoEditando.producto || productoEditando.cantidad < 1 || productoEditando.valorUnitario < 0) {
-      Swal.fire('Error', 'Los campos Producto, Cantidad y Valor Unitario son obligatorios y no pueden ser negativos.', 'error');
-      return;
-    }
-
-    const valorTotal = calcularValorTotalProducto(productoEditando);
-    const productoActualizado = {
-      producto: productoEditando.producto,
-      descripcion: productoEditando.descripcion,
-      cantidad: productoEditando.cantidad,
-      valorUnitario: productoEditando.valorUnitario,
-      descuento: productoEditando.descuento,
-      valorTotal: valorTotal,
-      productoId: productoEditando.productoId 
-    };
-
-    const nuevosProductos = [...ordenEditando.productos];
-    nuevosProductos[productoEditando.index] = productoActualizado;
-
-    setOrdenEditando({
-      ...ordenEditando,
-      productos: nuevosProductos
-    });
-
-    setProductoEditando({
-      producto: '',
-      descripcion: '',
-      cantidad: 1,
-      valorUnitario: 0,
-      descuento: 0,
-      index: null,
-      productoId: ''
-    });
-  };
+  // actualizarProducto eliminado por no utilizarse
 
   const eliminarProductoEdicion = (index) => {
     const nuevosProductos = ordenEditando.productos.filter((_, i) => i !== index);

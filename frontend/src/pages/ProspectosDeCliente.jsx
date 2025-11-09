@@ -1,6 +1,6 @@
 import Fijo from '../components/Fijo'
 import NavVentas from '../components/NavVentas'
-import { Link, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import * as XLSX from 'xlsx';

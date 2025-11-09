@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Fijo from '../components/Fijo';
 import NavVentas from '../components/NavVentas';
 import html2canvas from "html2canvas";
@@ -9,8 +9,6 @@ import api from '../api/axiosConfig';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import CotizacionPreview from '../components/CotizacionPreview';
-import ReactDOM from 'react-dom';
-import { useNavigate } from 'react-router-dom';
 import '../cotizaciones-modal.css';
 
 // CSS para diseño avanzado
@@ -64,7 +62,7 @@ export default function ListaDeCotizaciones() {
   const location = useLocation();
   const [highlightId, setHighlightId] = useState(null);
   const [blinkOn, setBlinkOn] = useState(false);
-  const [pendingHighlightId, setPendingHighlightId] = useState(null);
+  // pendingHighlightId eliminado (se establecía pero nunca se utilizaba)
 
 
 
@@ -223,7 +221,7 @@ export default function ListaDeCotizaciones() {
   };
 
   const guardarEdicion = async () => {
-    const token = localStorage.getItem('token');
+    // token eliminado por no usarse directamente
 
     // Mostrar loading
     Swal.fire({
@@ -360,7 +358,7 @@ export default function ListaDeCotizaciones() {
 
   // Si venimos con state desde RegistrarCotizacion: abrir formato y marcar pending highlight
   useEffect(() => {
-    if (location && location.state && location.state.abrirFormato && location.state.cotizacion) {
+    if (location?.state?.abrirFormato && location?.state?.cotizacion) {
       const cot = location.state.cotizacion;
       setCotizacionSeleccionada(cot);
       setMostrarPreview(true);
@@ -369,18 +367,14 @@ export default function ListaDeCotizaciones() {
       if (id) {
         // Insertar la cotización en la lista si no existe para asegurar que la fila esté renderizada
         setCotizaciones(prev => {
-          try {
-            if (Array.isArray(prev) && prev.find(p => p._id === id)) return prev;
-            return [cot, ...prev];
-          } catch (e) {
-            return prev;
-          }
+          if (Array.isArray(prev) && prev.some(p => p._id === id)) return prev;
+          return [cot, ...(Array.isArray(prev) ? prev : [])];
         });
 
         // Marcarla como pendiente para que al cerrar el preview se produzca el titileo
-        setPendingHighlightId(id);
+        
         // Limpieza eventual del history.state para evitar reaperturas
-        try { window.history.replaceState({}, document.title); } catch (e) { /* no-op */ }
+       
       }
     }
   }, [location]);
@@ -393,18 +387,7 @@ export default function ListaDeCotizaciones() {
     return cantidad * precio * (1 - descuento / 100);
   };
 
-  const calcularTotalDescuentos = (productos) => {
-    return productos?.reduce((acc, p) => {
-      const cantidad = Number.parseFloat(p?.cantidad) || 0;
-      const precio = Number.parseFloat(p?.valorUnitario) || 0;
-      const descuento = Number.parseFloat(p?.descuento) || 0;
-      return acc + (cantidad * precio * descuento / 100);
-    }, 0) || 0;
-  };
-
-  const calcularTotalFinal = (productos) => {
-    return productos?.reduce((acc, p) => acc + calcularSubtotalProducto(p), 0) || 0;
-  };
+  // calcularTotalDescuentos y calcularTotalFinal eliminadas (no utilizadas directamente)
 
   const subtotal = cotizacionSeleccionada?.productos?.reduce((acc, p) => {
     const cantidad = Number.parseFloat(p?.cantidad) || 0;
@@ -412,43 +395,7 @@ export default function ListaDeCotizaciones() {
     return acc + cantidad * precio;
   }, 0) || 0;
 
-
-  const enviarCorreo = () => {
-    Swal.fire('Enviado', 'Correo enviado con éxito (simulado)', 'success');
-  };
-
-  const imprimir = () => {
-    const printContent = modalRef.current;
-    const win = window.open('', '', 'width=800,height=600');
-    win.document.write(`
-      <html>
-        <head>
-          <title>Cotización</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 20px; }
-            table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-            th { background-color: #f2f2f2; }
-            .header { text-align: center; margin-bottom: 30px; }
-            .info-section { margin: 20px 0; }
-            .signature-section { margin-top: 50px; }
-          </style>
-        </head>
-        <body>
-          ${printContent.innerHTML}
-        </body>
-      </html>
-    `);
-    win.document.close();
-    win.focus();
-    win.print();
-    win.close();
-  };
-
-  const abrirFormato = (cotizacion) => {
-    setCotizacionSeleccionada(cotizacion);
-    setModoEdicion(false);
-  };
+  // enviarCorreo, imprimir y abrirFormato eliminados (no usados)
 
   // Cierra el preview y hace titilar la fila correspondiente por 3s
   const closePreviewAndBlink = () => {
@@ -493,45 +440,10 @@ export default function ListaDeCotizaciones() {
     }
   };
 
-  const abrirEdicion = async (cotizacion) => {
-    try {
-      const response = await api.get(`/api/cotizaciones/${cotizacion._id}`);
-      const cotizacionCompleta = response.data || response;
-
-      // Si no tiene productos inicializados, crear array vacío
-      if (!cotizacionCompleta.productos) {
-        cotizacionCompleta.productos = [];
-      }
-
-      // Asegurar que el cliente está inicializado
-      if (!cotizacionCompleta.cliente) {
-        cotizacionCompleta.cliente = {
-          nombre: '',
-          correo: '',
-          telefono: '',
-          ciudad: '',
-          direccion: ''
-        };
-      }
-
-      setCotizacionSeleccionada(cotizacionCompleta);
-      setModoEdicion(true);
-    } catch (error) {
-      console.error('Error al cargar cotización:', error);
-      Swal.fire({
-        title: 'Error',
-        text: 'No se pudo cargar la información de la cotización',
-        icon: 'error',
-        confirmButtonText: 'OK'
-      });
-    }
-  };
+  // abrirEdicion eliminado (no utilizado; edición se maneja inline en botones)
 
 
-  const limpiarHTML = (html) => {
-    const doc = new DOMParser().parseFromString(html, 'text/html');
-    return doc.body.textContent || "";
-  };
+  // limpiarHTML eliminado (sin referencia en el JSX)
 
 
   return (
@@ -1202,7 +1114,7 @@ export default function ListaDeCotizaciones() {
 
                                 const fechaEntrega = new Date(fechaSeleccionada).toISOString();
 
-                                const crearRes = await api.post('/api/pedidos', {
+                                await api.post('/api/pedidos', {
                                   cliente: clienteId,
                                   productos: productosPedido,
                                   fechaEntrega,
