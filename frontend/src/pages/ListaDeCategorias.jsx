@@ -205,7 +205,7 @@ const CategoriaModal = ({ categoria, onClose, onSave }) => {
   console.log('🔍 CategoriaModal - categoria._id:', categoria?._id);
 
   const handleSubmit = async (e) => {
-    
+
     e.preventDefault();
 
     if (!name.trim() || !description.trim()) {
@@ -272,9 +272,9 @@ const CategoriaModal = ({ categoria, onClose, onSave }) => {
           padding: '2rem',
           borderRadius: '20px 20px 0 0'
         }}>
-          <h3 style={{ 
-            margin: 0, 
-            fontSize: '1.5rem', 
+          <h3 style={{
+            margin: 0,
+            fontSize: '1.5rem',
             fontWeight: '600',
             display: 'flex',
             alignItems: 'center',
@@ -293,17 +293,17 @@ const CategoriaModal = ({ categoria, onClose, onSave }) => {
             </div>
             {categoria ? 'Editar Categoría' : 'Nueva Categoría'}
           </h3>
-          <p style={{ 
-            margin: '0.5rem 0 0 4rem', 
-            opacity: 0.9, 
-            fontSize: '0.95rem' 
+          <p style={{
+            margin: '0.5rem 0 0 4rem',
+            opacity: 0.9,
+            fontSize: '0.95rem'
           }}>
             {categoria ? 'Modifica la información de la categoría' : 'Crea una nueva categoría para organizar productos'}
           </p>
         </div>
 
         {/* Contenido scrolleable */}
-        <div style={{ 
+        <div style={{
           flex: 1,
           overflowY: 'auto',
           padding: '2.5rem',
@@ -414,9 +414,9 @@ const CategoriaModal = ({ categoria, onClose, onSave }) => {
         </div>
 
         {/* Botones de acción */}
-        <div style={{ 
-          display: 'flex', 
-          gap: '1.5rem', 
+        <div style={{
+          display: 'flex',
+          gap: '1.5rem',
           justifyContent: 'flex-end',
           padding: '2rem 2.5rem',
           borderTop: '2px solid #e5e7eb',
@@ -424,8 +424,8 @@ const CategoriaModal = ({ categoria, onClose, onSave }) => {
           borderRadius: '0 0 20px 20px',
           flexShrink: 0
         }}>
-          <button 
-            type="button" 
+          <button
+            type="button"
             onClick={onClose}
             style={{
               padding: '0.875rem 1.5rem',
@@ -453,8 +453,8 @@ const CategoriaModal = ({ categoria, onClose, onSave }) => {
             <i className="fa-solid fa-times"></i>
             Cancelar
           </button>
-          
-          <button 
+
+          <button
             type="submit"
             style={{
               padding: '0.875rem 1.5rem',
@@ -525,17 +525,17 @@ const ListaDeCategorias = () => {
       console.log('📝 handleSave - categoriaData:', categoriaData);
       const method = categoriaData.id ? 'PUT' : 'POST';
       const url = categoriaData.id ? `${API_URL}/${categoriaData.id}` : API_URL;
-      
+
       console.log('📝 Method:', method, 'URL:', url);
-      
+
       const res = await api({
         url,
         method,
         data: { name: categoriaData.name, description: categoriaData.description }
       });
-      
+
       console.log('✅ Respuesta del servidor:', res.data);
-      
+
       Swal.fire('Éxito', `Categoría ${categoriaData.id ? 'actualizada' : 'creada'} correctamente`, 'success');
       setModalVisible(false);
       setCategoriaEditando(null);
@@ -569,48 +569,48 @@ const ListaDeCategorias = () => {
   };
 
   const toggleEstadoCategoria = async (id, activar = false) => {
-  const confirm = await Swal.fire({
-    title: activar ? '¿Activar categoría?' : '¿Desactivar categoría?',
-    text: activar ? 'Estará nuevamente disponible. Deberás activar sus subcategorías y productos manualmente si así lo deseas.' : 'Sus subcategorías y productos también serán desactivados. Podrás volver a activarla más adelante.',
-    icon: activar ? 'question' : 'warning',
-    showCancelButton: true,
-    confirmButtonText: activar ? 'Sí, activar' : 'Sí, desactivar',
-    cancelButtonText: 'Cancelar'
-  });
+    const confirm = await Swal.fire({
+      title: activar ? '¿Activar categoría?' : '¿Desactivar categoría?',
+      text: activar ? 'Estará nuevamente disponible. Deberás activar sus subcategorías y productos manualmente si así lo deseas.' : 'Sus subcategorías y productos también serán desactivados. Podrás volver a activarla más adelante.',
+      icon: activar ? 'question' : 'warning',
+      showCancelButton: true,
+      confirmButtonText: activar ? 'Sí, activar' : 'Sí, desactivar',
+      cancelButtonText: 'Cancelar'
+    });
 
-  if (!confirm.isConfirmed) return;
+    if (!confirm.isConfirmed) return;
 
-  try {
-    const res = await api.put(`/api/categories/${id}`, { activo: activar });
-    if (!(res.status >= 200 && res.status < 300)) throw new Error('No se pudo actualizar el estado');
+    try {
+      const res = await api.put(`/api/categories/${id}`, { activo: activar });
+      if (!(res.status >= 200 && res.status < 300)) throw new Error('No se pudo actualizar el estado');
 
-    Swal.fire(
-      activar ? 'Activada' : 'Desactivada',
-      `Categoría ${activar ? 'activada' : 'desactivada'} correctamente`,
-      'success'
-    );
-    
-    loadCategories();
-  } catch (err) {
-    Swal.fire('Error', err.message, 'error');
-  }
-};
+      Swal.fire(
+        activar ? 'Activada' : 'Desactivada',
+        `Categoría ${activar ? 'activada' : 'desactivada'} correctamente`,
+        'success'
+      );
 
-const handleEdit = (categoria) => {
-  setCategoriaEditando(categoria);
-  setModalVisible(true);
-};
+      loadCategories();
+    } catch (err) {
+      Swal.fire('Error', err.message, 'error');
+    }
+  };
 
-const handleCloseModal = () => {
-  setModalVisible(false);
-  setCategoriaEditando(null);
-};
+  const handleEdit = (categoria) => {
+    setCategoriaEditando(categoria);
+    setModalVisible(true);
+  };
+
+  const handleCloseModal = () => {
+    setModalVisible(false);
+    setCategoriaEditando(null);
+  };
 
   return (
     <div>
       <Fijo />
       <div className="content">
-        <NavProductos/>
+        <NavProductos />
         <div className="contenido-modulo">
           {/* Encabezado profesional */}
           <div className="categoria-professional-header">
@@ -622,10 +622,10 @@ const handleCloseModal = () => {
                 </div>
                 <div>
                   <h2 style={{ margin: '0 0 8px 0', fontSize: '2rem', fontWeight: '700' }}>
-                    Lista de Categorías
+                    Categorías
                   </h2>
                   <p style={{ margin: 0, fontSize: '1.1rem', opacity: 0.9 }}>
-                    Organización y gestión de categorías de productos
+                    Aquí podrá gestionar todas las categorías de productos
                   </p>
                 </div>
               </div>
@@ -710,8 +710,8 @@ const handleCloseModal = () => {
           </div>
 
           {/* Botón agregar */}
-          <button 
-            className="categoria-add-btn" 
+          <button
+            className="categoria-add-btn"
             onClick={() => { setCategoriaEditando(null); setModalVisible(true); }}
           >
             <i className="fa-solid fa-plus"></i>
@@ -734,8 +734,8 @@ const handleCloseModal = () => {
                 <tbody>
                   {categorias.length === 0 ? (
                     <tr>
-                      <td 
-                        colSpan={5} 
+                      <td
+                        colSpan={5}
                         style={{
                           padding: '40px',
                           textAlign: 'center',
@@ -750,7 +750,7 @@ const handleCloseModal = () => {
                   ) : (
                     currentCategorias.map((cat, index) => (
                       <tr key={cat._id}>
-                        <td style={{ fontWeight: '500', color: '#6b7280' }}>
+                        <td >
                           {indexOfFirstItem + index + 1}
                         </td>
                         <td style={{ fontWeight: '600', color: '#1f2937' }}>
@@ -784,7 +784,7 @@ const handleCloseModal = () => {
                         </td>
                         <td>
                           <div style={{ display: 'flex', gap: '5px' }}>
-                            <button 
+                            <button
                               className="categoria-action-btn"
                               onClick={() => handleEdit(cat)}
                             >
@@ -799,48 +799,19 @@ const handleCloseModal = () => {
               </table>
             </div>
 
-            {/* Paginación */}
-            {totalPages > 1 && (
-              <div style={{
-                padding: '20px 25px',
-                borderTop: '1px solid #e5e7eb',
-                display: 'flex',
-                justifyContent: 'center',
-                gap: '8px'
-              }}>
-                {Array.from({ length: totalPages }, (_, i) => (
-                  <button
-                    key={i + 1}
-                    onClick={() => paginate(i + 1)}
-                    style={{
-                      padding: '8px 16px',
-                      border: currentPage === i + 1 ? '2px solid #6366f1' : '2px solid #e5e7eb',
-                      borderRadius: '8px',
-                      background: currentPage === i + 1 ? '#6366f1' : 'white',
-                      color: currentPage === i + 1 ? 'white' : '#4b5563',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease'
-                    }}
-                    onMouseEnter={(e) => {
-                      if (currentPage !== i + 1) {
-                        e.target.style.borderColor = '#6366f1';
-                        e.target.style.color = '#6366f1';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (currentPage !== i + 1) {
-                        e.target.style.borderColor = '#e5e7eb';
-                        e.target.style.color = '#4b5563';
-                      }
-                    }}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
-              </div>
-            )}
+
+          </div>
+          {/* Paginación de la tabla*/}
+          <div className="pagination">
+            {Array.from({ length: totalPages }, (_, i) => (
+              <button
+                key={i + 1}
+                onClick={() => paginate(i + 1)}
+                className={currentPage === i + 1 ? 'active-page' : ''}
+              >
+                {i + 1}
+              </button>
+            ))}
           </div>
         </div>
 
@@ -851,13 +822,13 @@ const handleCloseModal = () => {
             onSave={handleSave}
           />
         )}
-        
+
       </div>
       <div className="custom-footer">
-          <p className="custom-footer-text">
-            © 2025 <span className="custom-highlight">PANGEA</span>. Todos los derechos reservados.
-          </p>
-        </div>
+        <p className="custom-footer-text">
+          © 2025 <span className="custom-highlight">PANGEA</span>. Todos los derechos reservados.
+        </p>
+      </div>
     </div>
   );
 };
