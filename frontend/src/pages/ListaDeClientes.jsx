@@ -210,20 +210,20 @@ export default function ListaDeClientes() {
           <form onSubmit={handleSubmit}>
             <div className="modal-body">
               <div className="form-group">
-                <label className="form-label required">Nombre</label>
-                <input name="nombre" value={form.nombre} onChange={handleChange} className="form-input" required />
+                <label htmlFor="input-cliente-1" className="form-label required">Nombre</label>
+                <input id="input-cliente-1" name="nombre" value={form.nombre} onChange={handleChange} className="form-input" required />
               </div>
               <div className="form-group">
-                <label className="form-label required">Ciudad</label>
-                <input name="ciudad" value={form.ciudad} onChange={handleChange} className="form-input" required />
+                <label htmlFor="input-cliente-2" className="form-label required">Ciudad</label>
+                <input id="input-cliente-2" name="ciudad" value={form.ciudad} onChange={handleChange} className="form-input" required />
               </div>
               <div className="form-group">
-                <label className="form-label required">Teléfono</label>
-                <input name="telefono" value={form.telefono} onChange={handleChange} className="form-input" required />
+                <label htmlFor="input-cliente-3" className="form-label required">Teléfono</label>
+                <input id="input-cliente-3" name="telefono" value={form.telefono} onChange={handleChange} className="form-input" required />
               </div>
               <div className="form-group">
-                <label className="form-label required">Correo</label>
-                <input name="correo" value={form.correo} onChange={handleChange} className="form-input" required />
+                <label htmlFor="input-cliente-4" className="form-label required">Correo</label>
+                <input id="input-cliente-4" name="correo" value={form.correo} onChange={handleChange} className="form-input" required />
               </div>
             </div>
             <div className="modal-footer">
@@ -730,3 +730,4 @@ export default function ListaDeClientes() {
     </div>
   );
 }
+

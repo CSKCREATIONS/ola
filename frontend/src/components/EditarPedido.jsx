@@ -27,27 +27,27 @@ export default function EditarPedido() {
         <div className="modal" id="editarPedidoModal">
             <div className="modal-content">
                 <div className="form-group">
-                    <label>No Pedido</label>
-                    <input className='entrada' type="text" required placeholder='1' disabled/>
+                    <label htmlFor="no-pedido">No Pedido</label>
+                    <input id="no-pedido" className='entrada' type="text" required placeholder='1' disabled/>
                 </div>
                 <div className="form-group">
-                    <label>Producto</label>
-                    <select className='entrada' name="" id="" >
+                    <label htmlFor="producto">Producto</label>
+                    <select id="producto" className='entrada' name="" >
                         <option value="">Grama sintetica</option>
                         <option value="">Cilindros de oxigeno</option>
                     </select>
                 </div>
                 <div className="form-group">
-                    <label>Cantidad</label>
-                    <input className='entrada' type="text" />
+                    <label htmlFor="cantidad">Cantidad</label>
+                    <input id="cantidad" className='entrada' type="text" />
                 </div>
                 <div className="form-group">
-                    <label>Fecha de Entrega</label>
-                    <input className='entrada' type="date" required />
+                    <label htmlFor="fecha-entrega">Fecha de Entrega</label>
+                    <input id="fecha-entrega" className='entrada' type="date" required />
                 </div>
                 <div className="form-group">
-                    <label>Observación</label>
-                    <textarea style={{marginLeft:"1rem"}} className='textarea'  cols="40"></textarea>
+                    <label htmlFor="observacion">Observación</label>
+                    <textarea id="observacion" style={{marginLeft:"1rem"}} className='textarea'  cols="40"></textarea>
 
 
                 </div>

@@ -22,20 +22,20 @@ export default function EditarUsuario() {
         <div className="modal" id="editUserModal">
             <div className="modal-content">
                 <div className="form-group">
-                    <label>Nombre / Razón Social</label>
-                    <input className='entrada' type="text" required />
+                    <label htmlFor="nombre-razon-social">Nombre / Razón Social</label>
+                    <input id="nombre-razon-social" className='entrada' type="text" required />
                     </div>
                 <div className="form-group">
-                    <label>Ciudad</label>
-                    <input className='entrada' type="text" required />
+                    <label htmlFor="ciudad">Ciudad</label>
+                    <input id="ciudad" className='entrada' type="text" required />
                 </div>
                 <div className="form-group">
-                    <label>Telefono</label>
-                    <input className='entrada' type="text" required />
+                    <label htmlFor="telefono">Telefono</label>
+                    <input id="telefono" className='entrada' type="text" required />
                 </div>
                 <div className="form-group">
-                    <label>Correo</label>
-                    <input className='entrada' type="text" required />
+                    <label htmlFor="correo">Correo</label>
+                    <input id="correo" className='entrada' type="text" required />
                 </div>
                 
                 <div className="buttons">

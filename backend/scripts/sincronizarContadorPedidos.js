@@ -25,7 +25,7 @@ async function sincronizarContadorPedidos() {
       for (const pedido of pedidos) {
         const numeroMatch = pedido.numeroPedido.match(/^PED-(\d+)$/);
         if (numeroMatch) {
-          const numero = parseInt(numeroMatch[1]);
+          const numero = Number.parseInt(numeroMatch[1], 10);
           if (numero > maxNumero) {
             maxNumero = numero;
           }

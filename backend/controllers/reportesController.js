@@ -80,9 +80,28 @@ exports.reporteProductos = async (req, res) => {
     const { minStock, maxPrice, categoria } = req.query;
     const filters = {};
 
-    if (minStock) filters.stock = { $gte: parseInt(minStock) };
-    if (maxPrice) filters.price = { $lte: parseFloat(maxPrice) };
-    if (categoria) filters.category = categoria;
+    // Sanitizar y validar parámetros
+    if (minStock) {
+      const minStockNum = Number.parseInt(minStock, 10);
+      if (!Number.isNaN(minStockNum) && minStockNum >= 0) {
+        filters.stock = { $gte: minStockNum };
+      }
+    }
+    
+    if (maxPrice) {
+      const maxPriceNum = Number.parseFloat(maxPrice);
+      if (!Number.isNaN(maxPriceNum) && maxPriceNum >= 0) {
+        filters.price = { $lte: maxPriceNum };
+      }
+    }
+    
+    // Sanitizar categoría para prevenir inyección NoSQL
+    if (categoria) {
+      const categoriaSanitizada = typeof categoria === 'string' ? categoria.trim() : '';
+      if (categoriaSanitizada && categoriaSanitizada.match(/^[0-9a-fA-F]{24}$/)) {
+        filters.category = categoriaSanitizada;
+      }
+    }
 
     const productos = await Product.find(filters)
       .populate('category', 'name')
@@ -502,7 +521,7 @@ exports.reporteCotizaciones = async (req, res) => {
     const filtro = {};
 
     // Validar que las fechas existan y sean válidas
-    if (desde && hasta && !isNaN(new Date(desde)) && !isNaN(new Date(hasta))) {
+    if (desde && hasta && !Number.isNaN(new Date(desde).getTime()) && !Number.isNaN(new Date(hasta).getTime())) {
       filtro.fecha = {
         $gte: new Date(desde),
         $lte: new Date(hasta)
@@ -660,6 +679,7 @@ exports.estadisticasVentas = async (req, res) => {
         $project: {
           mes: {
             $switch: {
+              // eslint-disable-next-line quote-props
               branches: [
                 { case: { $eq: ["$_id", 1] }, then: "Enero" },
                 { case: { $eq: ["$_id", 2] }, then: "Febrero" },

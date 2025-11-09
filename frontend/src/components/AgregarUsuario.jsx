@@ -276,7 +276,7 @@ export default function AgregarUsuario() {
                 marginBottom: '2rem'
               }}>
                 <div>
-                  <label style={{
+                  <label htmlFor="firstName-agregar" style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.5rem',
@@ -290,6 +290,7 @@ export default function AgregarUsuario() {
                     <span style={{ color: '#ef4444' }}>*</span>
                   </label>
                   <input 
+                    id="firstName-agregar"
                     className='entrada' 
                     type="text" 
                     autoFocus 
@@ -320,7 +321,7 @@ export default function AgregarUsuario() {
                 </div>
                 
                 <div>
-                  <label style={{
+                  <label htmlFor="secondName-agregar" style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.5rem',
@@ -333,6 +334,7 @@ export default function AgregarUsuario() {
                     Segundo Nombre
                   </label>
                   <input 
+                    id="secondName-agregar"
                     className='entrada' 
                     type="text" 
                     value={secondName} 
@@ -367,7 +369,7 @@ export default function AgregarUsuario() {
                 gap: '1.5rem'
               }}>
                 <div>
-                  <label style={{
+                  <label htmlFor="surname-agregar" style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.5rem',
@@ -381,6 +383,7 @@ export default function AgregarUsuario() {
                     <span style={{ color: '#ef4444' }}>*</span>
                   </label>
                   <input 
+                    id="surname-agregar"
                     className='entrada' 
                     type="text" 
                     value={surname} 
@@ -410,7 +413,7 @@ export default function AgregarUsuario() {
                 </div>
                 
                 <div>
-                  <label style={{
+                  <label htmlFor="secondSurname-agregar" style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.5rem',
@@ -423,6 +426,7 @@ export default function AgregarUsuario() {
                     Segundo Apellido
                   </label>
                   <input 
+                    id="secondSurname-agregar"
                     className='entrada' 
                     type="text" 
                     value={secondSurname} 
@@ -480,7 +484,7 @@ export default function AgregarUsuario() {
                 gap: '2rem'
               }}>
                 <div>
-                  <label style={{
+                  <label htmlFor="role-agregar" style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.5rem',
@@ -494,6 +498,7 @@ export default function AgregarUsuario() {
                     <span style={{ color: '#ef4444' }}>*</span>
                   </label>
                   <select 
+                    id="role-agregar"
                     className='entrada' 
                     value={role} 
                     onChange={e => setRole(e.target.value)} 
@@ -573,7 +578,7 @@ export default function AgregarUsuario() {
                 </div>
                 
                 <div>
-                  <label style={{
+                  <label htmlFor="email-agregar" style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.5rem',
@@ -587,6 +592,7 @@ export default function AgregarUsuario() {
                     <span style={{ color: '#ef4444' }}>*</span>
                   </label>
                   <input 
+                    id="email-agregar"
                     className='entrada' 
                     type="email" 
                     value={email} 

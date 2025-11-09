@@ -387,17 +387,17 @@ export default function ListaDeCotizaciones() {
 
   // Funciones de cálculo mejoradas
   const calcularSubtotalProducto = (producto) => {
-    const cantidad = parseFloat(producto?.cantidad) || 0;
-    const precio = parseFloat(producto?.valorUnitario) || 0;
-    const descuento = parseFloat(producto?.descuento) || 0;
+    const cantidad = Number.parseFloat(producto?.cantidad) || 0;
+    const precio = Number.parseFloat(producto?.valorUnitario) || 0;
+    const descuento = Number.parseFloat(producto?.descuento) || 0;
     return cantidad * precio * (1 - descuento / 100);
   };
 
   const calcularTotalDescuentos = (productos) => {
     return productos?.reduce((acc, p) => {
-      const cantidad = parseFloat(p?.cantidad) || 0;
-      const precio = parseFloat(p?.valorUnitario) || 0;
-      const descuento = parseFloat(p?.descuento) || 0;
+      const cantidad = Number.parseFloat(p?.cantidad) || 0;
+      const precio = Number.parseFloat(p?.valorUnitario) || 0;
+      const descuento = Number.parseFloat(p?.descuento) || 0;
       return acc + (cantidad * precio * descuento / 100);
     }, 0) || 0;
   };
@@ -407,8 +407,8 @@ export default function ListaDeCotizaciones() {
   };
 
   const subtotal = cotizacionSeleccionada?.productos?.reduce((acc, p) => {
-    const cantidad = parseFloat(p?.cantidad) || 0;
-    const precio = parseFloat(p?.valorUnitario) || 0;
+    const cantidad = Number.parseFloat(p?.cantidad) || 0;
+    const precio = Number.parseFloat(p?.valorUnitario) || 0;
     return acc + cantidad * precio;
   }, 0) || 0;
 
@@ -596,7 +596,7 @@ export default function ListaDeCotizaciones() {
                 
                 <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                   <button
-                    onClick={() => exportToExcel(cotizaciones)}
+                    onClick={exportToExcel}
                     style={{
                       display: 'inline-flex', 
                       alignItems: 'center', 
@@ -957,14 +957,18 @@ export default function ListaDeCotizaciones() {
                         {(currentPage - 1) * itemsPerPage + index + 1}
                       </td>
                       <td style={{ padding: '16px 12px' }}>
-                        <a
+                        <button
                           style={{ 
                             cursor: 'pointer', 
                             color: '#3b82f6', 
                             textDecoration: 'none',
                             fontWeight: '600',
                             fontSize: '14px',
-                            transition: 'color 0.2s ease'
+                            transition: 'color 0.2s ease',
+                            background: 'none',
+                            border: 'none',
+                            padding: 0,
+                            font: 'inherit'
                           }}
                           onClick={async () => {
                             try {
@@ -982,7 +986,7 @@ export default function ListaDeCotizaciones() {
                           onMouseLeave={(e) => e.target.style.color = '#3b82f6'}
                         >
                           {cot.codigo}
-                        </a>
+                        </button>
                       </td>
                       <td style={{ padding: '16px 12px', color: '#4b5563', fontWeight: '500' }}>
                         {new Date(cot.fecha).toLocaleDateString('es-ES')}
@@ -1353,12 +1357,24 @@ export default function ListaDeCotizaciones() {
       {/* Modal de Edición */}
       {modoEdicion && cotizacionSeleccionada && (
         <div className="cotizacion-modal-container">
-          <div className="modal-overlay" onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setModoEdicion(false);
-              setCotizacionSeleccionada(null);
-            }
-          }}>
+          <div
+            className="modal-overlay"
+            role="button"
+            tabIndex={0}
+            aria-label="Cerrar modal"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setModoEdicion(false);
+                setCotizacionSeleccionada(null);
+              }
+            }}
+            onKeyDown={(e) => {
+              if ((e.key === 'Enter' || e.key === ' ') && e.target === e.currentTarget) {
+                setModoEdicion(false);
+                setCotizacionSeleccionada(null);
+              }
+            }}
+          >
             <div className="modal-content-large">
               <div className="modal-header">
                 <div className="header-info">
@@ -1382,8 +1398,8 @@ export default function ListaDeCotizaciones() {
                   </div>
                   <div className="form-row" style={{ display: 'flex', gap: '15px', alignItems: 'end' }}>
                     <div className="form-group" style={{ flex: '1' }}>
-                      <label><i className="fa-solid fa-id-badge"></i> Nombre Completo *</label>
-                      <input
+                      <label htmlFor="input-lista-cot-1"><i className="fa-solid fa-id-badge"></i> Nombre Completo *</label>
+                      <input id="input-lista-cot-1"
                         type="text"
                         placeholder="Ingrese el nombre completo del cliente"
                         value={cotizacionSeleccionada.cliente?.nombre || ''}
@@ -1395,8 +1411,8 @@ export default function ListaDeCotizaciones() {
                       />
                     </div>
                     <div className="form-group" style={{ flex: '1' }}>
-                      <label><i className="fa-solid fa-at"></i> Correo Electrónico *</label>
-                      <input
+                      <label htmlFor="input-lista-cot-2"><i className="fa-solid fa-at"></i> Correo Electrónico *</label>
+                      <input id="input-lista-cot-2"
                         type="email"
                         placeholder="cliente@ejemplo.com"
                         value={cotizacionSeleccionada.cliente?.correo || ''}
@@ -1408,8 +1424,8 @@ export default function ListaDeCotizaciones() {
                       />
                     </div>
                     <div className="form-group" style={{ flex: '1' }}>
-                      <label><i className="fa-solid fa-mobile-screen-button"></i> Teléfono</label>
-                      <input
+                      <label htmlFor="input-lista-cot-3"><i className="fa-solid fa-mobile-screen-button"></i> Teléfono</label>
+                      <input id="input-lista-cot-3"
                         type="tel"
                         placeholder="+57 300 123 4567"
                         value={cotizacionSeleccionada.cliente?.telefono || ''}
@@ -1420,8 +1436,8 @@ export default function ListaDeCotizaciones() {
                       />
                     </div>
                     <div className="form-group" style={{ flex: '1' }}>
-                      <label><i className="fa-solid fa-map-location-dot"></i> Ciudad</label>
-                      <input
+                      <label htmlFor="input-lista-cot-4"><i className="fa-solid fa-map-location-dot"></i> Ciudad</label>
+                      <input id="input-lista-cot-4"
                         type="text"
                         placeholder="Ciudad"
                         value={cotizacionSeleccionada.cliente?.ciudad || ''}
@@ -1433,8 +1449,8 @@ export default function ListaDeCotizaciones() {
                     </div>
                   </div>
                   <div className="form-group" style={{ marginTop: '15px' }}>
-                    <label><i className="fa-solid fa-location-arrow"></i> Dirección Completa</label>
-                    <input
+                    <label htmlFor="input-lista-cot-5"><i className="fa-solid fa-location-arrow"></i> Dirección Completa</label>
+                    <input id="input-lista-cot-5"
                       type="text"
                       placeholder="Calle, número, barrio, referencias adicionales"
                       value={cotizacionSeleccionada.cliente?.direccion || ''}
@@ -1453,8 +1469,8 @@ export default function ListaDeCotizaciones() {
                   </div>
                   <div className="form-row">
                     <div className="form-group">
-                      <label><i className="fa-solid fa-file-text"></i> Descripción del Proyecto</label>
-                      <textarea
+                      <label htmlFor="input-lista-cot-6"><i className="fa-solid fa-file-text"></i> Descripción del Proyecto</label>
+                      <textarea id="input-lista-cot-6"
                         placeholder="Detalle los servicios o productos incluidos en esta cotización..."
                         value={cotizacionSeleccionada.descripcion || ''}
                         onChange={(e) => setCotizacionSeleccionada({
@@ -1465,8 +1481,8 @@ export default function ListaDeCotizaciones() {
                       />
                     </div>
                     <div className="form-group">
-                      <label><i className="fa-solid fa-hand-holding-dollar"></i> Condiciones de Pago</label>
-                      <textarea
+                      <label htmlFor="input-lista-cot-7"><i className="fa-solid fa-hand-holding-dollar"></i> Condiciones de Pago</label>
+                      <textarea id="input-lista-cot-7"
                         placeholder="Ej: 50% anticipo al firmar contrato, 50% contra entrega final..."
                         value={cotizacionSeleccionada.condicionesPago || ''}
                         onChange={(e) => setCotizacionSeleccionada({
@@ -1534,8 +1550,8 @@ export default function ListaDeCotizaciones() {
                           </div>
                           <div className="producto-row">
                             <div className="form-group producto-select">
-                              <label><i className="fa-solid fa-box"></i> Producto *</label>
-                              <select
+                              <label htmlFor="input-lista-cot-8"><i className="fa-solid fa-box"></i> Producto *</label>
+                              <select id="input-lista-cot-8"
                                 value={producto.producto?.id || ''}
                                 onChange={(e) => {
                                   const selectedProduct = productos.find(p => p._id === e.target.value);
@@ -1564,8 +1580,8 @@ export default function ListaDeCotizaciones() {
                               </select>
                             </div>
                             <div className="form-group">
-                              <label><i className="fa-solid fa-hashtag"></i> Cantidad *</label>
-                              <input
+                              <label htmlFor="input-lista-cot-9"><i className="fa-solid fa-hashtag"></i> Cantidad *</label>
+                              <input id="input-lista-cot-9"
                                 type="number"
                                 min="1"
                                 step="1"
@@ -1586,8 +1602,8 @@ export default function ListaDeCotizaciones() {
                               />
                             </div>
                             <div className="form-group">
-                              <label><i className="fa-solid fa-dollar-sign"></i> Precio Unitario *</label>
-                              <input
+                              <label htmlFor="input-lista-cot-10"><i className="fa-solid fa-dollar-sign"></i> Precio Unitario *</label>
+                              <input id="input-lista-cot-10"
                                 type="number"
                                 min="0"
                                 step="0.01"
@@ -1608,8 +1624,8 @@ export default function ListaDeCotizaciones() {
                               />
                             </div>
                             <div className="form-group">
-                              <label><i className="fa-solid fa-percent"></i> Descuento (%)</label>
-                              <input
+                              <label htmlFor="input-lista-cot-11"><i className="fa-solid fa-percent"></i> Descuento (%)</label>
+                              <input id="input-lista-cot-11"
                                 type="number"
                                 min="0"
                                 max="100"
@@ -1653,9 +1669,9 @@ export default function ListaDeCotizaciones() {
                         <span>Descuentos aplicados:</span>
                         <span>
                           ${(cotizacionSeleccionada.productos?.reduce((acc, p) => {
-                            const cantidad = parseFloat(p?.cantidad) || 0;
-                            const precio = parseFloat(p?.valorUnitario) || 0;
-                            const descuento = parseFloat(p?.descuento) || 0;
+                            const cantidad = Number.parseFloat(p?.cantidad) || 0;
+                            const precio = Number.parseFloat(p?.valorUnitario) || 0;
+                            const descuento = Number.parseFloat(p?.descuento) || 0;
                             return acc + (cantidad * precio * descuento / 100);
                           }, 0) || 0).toLocaleString('es-CO', { minimumFractionDigits: 2 })}
                         </span>
@@ -1664,9 +1680,9 @@ export default function ListaDeCotizaciones() {
                         <span>Total Final:</span>
                         <strong>
                           ${(cotizacionSeleccionada.productos?.reduce((acc, p) => {
-                            const cantidad = parseFloat(p?.cantidad) || 0;
-                            const precio = parseFloat(p?.valorUnitario) || 0;
-                            const descuento = parseFloat(p?.descuento) || 0;
+                            const cantidad = Number.parseFloat(p?.cantidad) || 0;
+                            const precio = Number.parseFloat(p?.valorUnitario) || 0;
+                            const descuento = Number.parseFloat(p?.descuento) || 0;
                             return acc + (cantidad * precio * (1 - descuento / 100));
                           }, 0) || 0).toLocaleString('es-CO', { minimumFractionDigits: 2 })}
                         </strong>
@@ -1768,3 +1784,4 @@ export default function ListaDeCotizaciones() {
     </div >
   )
 };
+

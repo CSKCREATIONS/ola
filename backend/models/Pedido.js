@@ -40,10 +40,6 @@ const PedidoSchema = new mongoose.Schema({
     ref: 'Cliente',
     required: true
   },
-  motivoDevolucion: {
-    type: String,
-    default: ''
-  },
 }, { timestamps: true });
 
 module.exports = mongoose.models.Pedido || mongoose.model('Pedido', PedidoSchema);

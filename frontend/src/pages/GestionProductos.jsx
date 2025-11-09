@@ -233,18 +233,17 @@ const ProductoModal = ({
       zIndex: 1000,
       backdropFilter: 'blur(4px)'
     }}>
-      <form onSubmit={handleSubmit} style={{
-        backgroundColor: 'white',
+      <div style={{
+        background: 'white',
         borderRadius: '20px',
+        width: '90%',
         maxWidth: '800px',
-        width: '95%',
         maxHeight: '90vh',
-        overflow: 'hidden',
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-        animation: 'modalSlideIn 0.3s ease-out',
         display: 'flex',
-        flexDirection: 'column'
+        flexDirection: 'column',
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
       }}>
+        <form onSubmit={handleSubmit}>
         {/* Header del modal */}
         <div style={{
           background: 'linear-gradient(135deg, #f59e0b, #d97706)',
@@ -339,7 +338,7 @@ const ProductoModal = ({
                 marginBottom: '1.5rem'
               }}>
                 <div>
-                  <label style={{
+                  <label htmlFor="input-producto-nombre" style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.5rem',
@@ -353,6 +352,7 @@ const ProductoModal = ({
                     <span style={{ color: '#ef4444' }}>*</span>
                   </label>
                   <input 
+                    id="input-producto-nombre"
                     name="name" 
                     value={form.name} 
                     onChange={handleChange} 
@@ -381,7 +381,7 @@ const ProductoModal = ({
                 </div>
                 
                 <div>
-                  <label style={{
+                  <label htmlFor="input-producto-precio" style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.5rem',
@@ -395,6 +395,7 @@ const ProductoModal = ({
                     <span style={{ color: '#ef4444' }}>*</span>
                   </label>
                   <input 
+                    id="input-producto-precio"
                     type="number" 
                     step="0.01"
                     name="price" 
@@ -431,7 +432,7 @@ const ProductoModal = ({
                 gap: '1.5rem'
               }}>
                 <div>
-                  <label style={{
+                  <label htmlFor="input-producto-descripcion" style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.5rem',
@@ -445,6 +446,7 @@ const ProductoModal = ({
                     <span style={{ color: '#ef4444' }}>*</span>
                   </label>
                   <input 
+                    id="input-producto-descripcion"
                     name="description" 
                     value={form.description} 
                     onChange={handleChange} 
@@ -473,7 +475,7 @@ const ProductoModal = ({
                 </div>
                 
                 <div>
-                  <label style={{
+                  <label htmlFor="input-producto-stock" style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.5rem',
@@ -487,6 +489,7 @@ const ProductoModal = ({
                     <span style={{ color: '#ef4444' }}>*</span>
                   </label>
                   <input 
+                    id="input-producto-stock"
                     type="number" 
                     name="stock" 
                     value={form.stock} 
@@ -545,7 +548,7 @@ const ProductoModal = ({
                 gap: '1.5rem'
               }}>
                 <div>
-                  <label style={{
+                  <label htmlFor="input-producto-categoria" style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.5rem',
@@ -559,6 +562,7 @@ const ProductoModal = ({
                     <span style={{ color: '#ef4444' }}>*</span>
                   </label>
                   <select 
+                    id="input-producto-categoria"
                     name="category" 
                     value={form.category} 
                     onChange={handleChange} 
@@ -591,7 +595,7 @@ const ProductoModal = ({
                 </div>
                 
                 <div>
-                  <label style={{
+                  <label htmlFor="input-producto-subcategoria" style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.5rem',
@@ -605,6 +609,7 @@ const ProductoModal = ({
                     <span style={{ color: '#ef4444' }}>*</span>
                   </label>
                   <select 
+                    id="input-producto-subcategoria"
                     name="subcategory" 
                     value={form.subcategory} 
                     onChange={handleChange} 
@@ -639,7 +644,7 @@ const ProductoModal = ({
                 </div>
                 
                 <div>
-                  <label style={{
+                  <label htmlFor="input-producto-proveedor" style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.5rem',
@@ -653,6 +658,7 @@ const ProductoModal = ({
                     <span style={{ color: '#ef4444' }}>*</span>
                   </label>
                   <select 
+                    id="input-producto-proveedor"
                     name="proveedor" 
                     value={form.proveedor} 
                     onChange={handleChange} 
@@ -761,7 +767,8 @@ const ProductoModal = ({
                 {producto ? 'Actualizar' : 'Guardar'} Producto
               </button>
             </div>
-      </form>
+        </form>
+      </div>
     </div>
   );
 };
@@ -926,88 +933,10 @@ useEffect(() => {
 
  
   return (
-    <div>
+    <>
       <Fijo />
       <div className="content">
         <NavProductos />
-        <div className="contenido-modulo">
-          {/* Encabezado profesional */}
-          <div style={{
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            borderRadius: '20px',
-            padding: '30px',
-            marginBottom: '30px',
-            color: 'white',
-            position: 'relative',
-            overflow: 'hidden'
-          }}>
-            <div style={{
-              position: 'absolute',
-              top: '-50%',
-              right: '-10%',
-              width: '300px',
-              height: '300px',
-              background: 'rgba(255,255,255,0.1)',
-              borderRadius: '50%',
-              zIndex: 1
-            }}></div>
-            <div style={{ position: 'relative', zIndex: 2 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '20px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                  <div style={{
-                    background: 'rgba(255,255,255,0.2)',
-                    borderRadius: '16px',
-                    padding: '20px',
-                    backdropFilter: 'blur(10px)'
-                  }}>
-                    <i className="fa-solid fa-boxes-stacked" style={{ fontSize: '2.5rem', color: 'white' }}></i>
-                  </div>
-                  <div>
-                    <h2 style={{ margin: '0 0 8px 0', fontSize: '2rem', fontWeight: '700' }}>
-                      Gestión de Productos
-                    </h2>
-                    <p style={{ margin: 0, fontSize: '1.1rem', opacity: 0.9 }}>
-                      Administra el inventario y catálogo de productos
-                    </p>
-                  </div>
-                </div>
-                <div>
-                  <button 
-                    onClick={() => {
-                      setProductoEditando(null);
-                      setModalVisible(true);
-                    }}
-                    style={{
-                      background: 'linear-gradient(135deg, #10b981, #059669)',
-                      border: 'none',
-                      borderRadius: '12px',
-                      padding: '12px 24px',
-                      color: 'white',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      cursor: 'pointer',
-                      transition: 'all 0.3s ease',
-                      boxShadow: '0 4px 15px rgba(16, 185, 129, 0.4)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.target.style.transform = 'translateY(-2px)';
-                      e.target.style.boxShadow = '0 6px 20px rgba(16, 185, 129, 0.6)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.target.style.transform = 'translateY(0)';
-                      e.target.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.4)';
-                    }}
-                  >
-                    <i className="fa-solid fa-plus"></i>
-                    Agregar Producto
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
 
           {/* Estadísticas avanzadas */}
           <div style={{
@@ -1021,16 +950,7 @@ useEffect(() => {
               borderRadius: '16px',
               padding: '25px',
               border: '1px solid #e5e7eb',
-              transition: 'all 0.3s ease',
-              cursor: 'pointer'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-5px)';
-              e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.15)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = 'none';
+              boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                 <div style={{
@@ -1059,16 +979,7 @@ useEffect(() => {
               borderRadius: '16px',
               padding: '25px',
               border: '1px solid #e5e7eb',
-              transition: 'all 0.3s ease',
-              cursor: 'pointer'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-5px)';
-              e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.15)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = 'none';
+              boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                 <div style={{
@@ -1097,16 +1008,7 @@ useEffect(() => {
               borderRadius: '16px',
               padding: '25px',
               border: '1px solid #e5e7eb',
-              transition: 'all 0.3s ease',
-              cursor: 'pointer'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-5px)';
-              e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.15)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = 'none';
+              boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                 <div style={{
@@ -1135,16 +1037,7 @@ useEffect(() => {
               borderRadius: '16px',
               padding: '25px',
               border: '1px solid #e5e7eb',
-              transition: 'all 0.3s ease',
-              cursor: 'pointer'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-5px)';
-              e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.15)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = 'none';
+              boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                 <div style={{
@@ -1160,8 +1053,8 @@ useEffect(() => {
                 <div>
                   <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
                     ${productos.reduce((sum, p) => {
-                      const price = parseFloat(p.price) || 0;
-                      const stock = parseInt(p.stock) || 0;
+                      const price = Number.parseFloat(p.price) || 0;
+                      const stock = Number.parseInt(p.stock) || 0;
                       return sum + (price * stock);
                     }, 0).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                   </h3>
@@ -1206,8 +1099,8 @@ useEffect(() => {
                   <h3 style={{ margin: '0 0 5px 0', fontSize: '1.8rem', fontWeight: '700', color: '#1f2937' }}>
                     ${productos.length > 0 ? 
                       (productos.reduce((sum, p) => {
-                        const price = parseFloat(p.price) || 0;
-                        const stock = parseInt(p.stock) || 0;
+                        const price = Number.parseFloat(p.price) || 0;
+                        const stock = Number.parseInt(p.stock) || 0;
                         return sum + (price * stock);
                       }, 0) / productos.length).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
                       : '0'
@@ -1241,7 +1134,7 @@ useEffect(() => {
                 </div>
                 <div>
                   <h3 style={{ margin: '0 0 5px 0', fontSize: '1.8rem', fontWeight: '700', color: '#1f2937' }}>
-                    {productos.reduce((sum, p) => sum + (parseInt(p.stock) || 0), 0).toLocaleString()}
+                    {productos.reduce((sum, p) => sum + (Number.parseInt(p.stock) || 0), 0).toLocaleString()}
                   </h3>
                   <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
                     Unidades en Stock Total
@@ -1271,7 +1164,7 @@ useEffect(() => {
                 </div>
                 <div>
                   <h3 style={{ margin: '0 0 5px 0', fontSize: '1.8rem', fontWeight: '700', color: '#1f2937' }}>
-                    {productos.filter(p => (parseInt(p.stock) || 0) < 10).length}
+                    {productos.filter(p => (Number.parseInt(p.stock) || 0) < 10).length}
                   </h3>
                   <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
                     Productos con Bajo Stock
@@ -1305,7 +1198,7 @@ useEffect(() => {
             </div>
             
             <div style={{ position: 'relative', maxWidth: '300px' }}>
-              <label style={{
+              <label htmlFor="input-gestion-prod-1" style={{
                 position: 'absolute',
                 top: '-8px',
                 left: '12px',
@@ -1318,7 +1211,7 @@ useEffect(() => {
               }}>
                 Estado del Producto
               </label>
-              <select
+              <select id="input-gestion-prod-1"
                 value={filtroEstado}
                 onChange={(e) => setFiltroEstado(e.target.value)}
                 style={{
@@ -1493,7 +1386,7 @@ useEffect(() => {
               categorias={categorias || []}
               subcategorias={subcategorias || []}
               proveedores={proveedores || []}
-                        />
+            />
           )}
           <div className="pagination">
             {Array.from({ length: totalPaginas }, (_, i) => (
@@ -1506,17 +1399,15 @@ useEffect(() => {
               </button>
             ))}
           </div>
-            
+          
+          <div className="custom-footer">
+            <p className="custom-footer-text">
+              © 2025 <span className="custom-highlight">PANGEA</span>. Todos los derechos reservados.
+            </p>
+          </div>
         </div>
-        
-      </div>
-      <div className="custom-footer">
-          <p className="custom-footer-text">
-            © 2025 <span className="custom-highlight">PANGEA</span>. Todos los derechos reservados.
-          </p>
-        </div>
-    </div>
+    </>
   );
-};
+}
 
 export default GestionProductos;

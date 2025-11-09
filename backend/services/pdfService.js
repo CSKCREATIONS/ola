@@ -98,9 +98,9 @@ class PDFService {
     
     // Calcular total si no existe
     const total = cotizacion.total || cotizacion.productos?.reduce((sum, prod) => {
-      const cantidad = parseFloat(prod.cantidad) || 0;
-      const valorUnitario = parseFloat(prod.precioUnitario || prod.valorUnitario) || 0;
-      const descuento = parseFloat(prod.descuento) || 0;
+      const cantidad = Number.parseFloat(prod.cantidad) || 0;
+      const valorUnitario = Number.parseFloat(prod.precioUnitario || prod.valorUnitario) || 0;
+      const descuento = Number.parseFloat(prod.descuento) || 0;
       return sum + (cantidad * valorUnitario * (1 - descuento / 100));
     }, 0) || 0;
 
@@ -308,9 +308,9 @@ class PDFService {
                 <td style="text-align: right;">$${(p.precioUnitario || p.valorUnitario || 0).toLocaleString('es-CO')}</td>
                 <td style="text-align: right;">${p.descuento || 0}%</td>
                 <td style="text-align: right; font-weight: bold;">$${(() => {
-                  const cantidad = parseFloat(p.cantidad) || 0;
-                  const valorUnitario = parseFloat(p.precioUnitario || p.valorUnitario) || 0;
-                  const descuento = parseFloat(p.descuento) || 0;
+                  const cantidad = Number.parseFloat(p.cantidad) || 0;
+                  const valorUnitario = Number.parseFloat(p.precioUnitario || p.valorUnitario) || 0;
+                  const descuento = Number.parseFloat(p.descuento) || 0;
                   const subtotal = cantidad * valorUnitario * (1 - descuento / 100);
                   return subtotal.toLocaleString('es-CO');
                 })()}</td>
@@ -385,9 +385,9 @@ class PDFService {
     
     // Calcular total
     const total = remision.total || remision.productos?.reduce((sum, prod) => {
-      const cantidad = parseFloat(prod.cantidad) || 0;
-      const valorUnitario = parseFloat(prod.precioUnitario || prod.valorUnitario) || 0;
-      const descuento = parseFloat(prod.descuento) || 0;
+      const cantidad = Number.parseFloat(prod.cantidad) || 0;
+      const valorUnitario = Number.parseFloat(prod.precioUnitario || prod.valorUnitario) || 0;
+      const descuento = Number.parseFloat(prod.descuento) || 0;
       return sum + (cantidad * valorUnitario * (1 - descuento / 100));
     }, 0) || 0;
     
@@ -548,9 +548,9 @@ class PDFService {
                 <td style="text-align: right;">$${(p.precioUnitario || p.valorUnitario || 0).toLocaleString('es-CO')}</td>
                 <td style="text-align: right;">${p.descuento || 0}%</td>
                 <td style="text-align: right; font-weight: bold;">$${(() => {
-                  const cantidad = parseFloat(p.cantidad) || 0;
-                  const valorUnitario = parseFloat(p.precioUnitario || p.valorUnitario) || 0;
-                  const descuento = parseFloat(p.descuento) || 0;
+                  const cantidad = Number.parseFloat(p.cantidad) || 0;
+                  const valorUnitario = Number.parseFloat(p.precioUnitario || p.valorUnitario) || 0;
+                  const descuento = Number.parseFloat(p.descuento) || 0;
                   const subtotal = cantidad * valorUnitario * (1 - descuento / 100);
                   return subtotal.toLocaleString('es-CO');
                 })()}</td>
@@ -613,9 +613,9 @@ class PDFService {
     
     // Calcular total
     const total = pedido.total || pedido.productos?.reduce((sum, prod) => {
-      const cantidad = parseFloat(prod.cantidad) || 0;
-      const valorUnitario = parseFloat(prod.precioUnitario || prod.valorUnitario) || 0;
-      const descuento = parseFloat(prod.descuento) || 0;
+      const cantidad = Number.parseFloat(prod.cantidad) || 0;
+      const valorUnitario = Number.parseFloat(prod.precioUnitario || prod.valorUnitario) || 0;
+      const descuento = Number.parseFloat(prod.descuento) || 0;
       return sum + (cantidad * valorUnitario * (1 - descuento / 100));
     }, 0) || 0;
 
@@ -850,9 +850,9 @@ class PDFService {
                 <td style="text-align: right;">$${(p.precioUnitario || p.valorUnitario || 0).toLocaleString('es-CO')}</td>
                 <td style="text-align: right;">${p.descuento || 0}%</td>
                 <td style="text-align: right; font-weight: bold;">$${(() => {
-                  const cantidad = parseFloat(p.cantidad) || 0;
-                  const valorUnitario = parseFloat(p.precioUnitario || p.valorUnitario) || 0;
-                  const descuento = parseFloat(p.descuento) || 0;
+                  const cantidad = Number.parseFloat(p.cantidad) || 0;
+                  const valorUnitario = Number.parseFloat(p.precioUnitario || p.valorUnitario) || 0;
+                  const descuento = Number.parseFloat(p.descuento) || 0;
                   const subtotal = cantidad * valorUnitario * (1 - descuento / 100);
                   return subtotal.toLocaleString('es-CO');
                 })()}</td>

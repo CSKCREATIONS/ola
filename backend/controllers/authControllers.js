@@ -116,8 +116,19 @@ exports.signin = async (req, res) => {
       });
     }
 
+    // Sanitizar el username para prevenir inyección NoSQL
+    // Asegurarse de que username sea un string y no un objeto
+    const sanitizedUsername = typeof username === 'string' ? username.trim() : '';
+    
+    if (!sanitizedUsername) {
+      console.log('[AuthController] Username inválido');
+      return res.status(400).json({
+        success: false,
+        message: "Usuario o contraseña incorrectos"
+      });
+    }
 
-    const user = await User.findOne({ username })
+    const user = await User.findOne({ username: sanitizedUsername })
       .select('+password')
       .populate('role'); // trae el objeto de rol completo
 
@@ -225,7 +236,14 @@ exports.recoverPassword = async (req, res) => {
   const { email } = req.body;
 
   try {
-    const user = await User.findOne({ email });
+    // Sanitizar el email para prevenir inyección NoSQL
+    const sanitizedEmail = typeof email === 'string' ? email.toLowerCase().trim() : '';
+    
+    if (!sanitizedEmail || !sanitizedEmail.includes('@')) {
+      return res.status(400).json({ success: false, message: 'Email inválido' });
+    }
+
+    const user = await User.findOne({ email: sanitizedEmail });
 
     if (!user) {
       return res.status(404).json({ success: false, message: 'Correo no registrado' });
@@ -239,7 +257,7 @@ exports.recoverPassword = async (req, res) => {
     await user.save();
 
     const msg = {
-      to: email,
+      to: sanitizedEmail,
       from: 'gaseosaconpan1@gmail.com', // usa el Gmail verificado
       subject: 'Recuperación de contraseña - JLA Global Company',
       html: `

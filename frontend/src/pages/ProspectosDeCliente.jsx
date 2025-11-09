@@ -324,7 +324,7 @@ export default function ListaDeClientes() {
                 </div>
                 <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                   <button
-                    onClick={() => exportToExcel(prospectos)}
+                    onClick={exportToExcel}
                     style={{
                       background: 'rgba(255,255,255,0.2)',
                       border: '2px solid rgba(255,255,255,0.3)',
@@ -398,16 +398,7 @@ export default function ListaDeClientes() {
               borderRadius: '16px',
               padding: '25px',
               border: '1px solid #e5e7eb',
-              transition: 'all 0.3s ease',
-              cursor: 'pointer'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-5px)';
-              e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.15)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = 'none';
+              boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                 <div style={{
@@ -436,16 +427,7 @@ export default function ListaDeClientes() {
               borderRadius: '16px',
               padding: '25px',
               border: '1px solid #e5e7eb',
-              transition: 'all 0.3s ease',
-              cursor: 'pointer'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-5px)';
-              e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.15)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = 'none';
+              boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                 <div style={{
@@ -474,16 +456,7 @@ export default function ListaDeClientes() {
               borderRadius: '16px',
               padding: '25px',
               border: '1px solid #e5e7eb',
-              transition: 'all 0.3s ease',
-              cursor: 'pointer'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-5px)';
-              e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.15)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = 'none';
+              boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                 <div style={{
@@ -529,7 +502,7 @@ export default function ListaDeClientes() {
             </div>
             
             <div style={{ position: 'relative', maxWidth: '400px' }}>
-              <label style={{
+              <label htmlFor="input-prospectos-1" style={{
                 position: 'absolute',
                 top: '-8px',
                 left: '12px',
@@ -540,9 +513,8 @@ export default function ListaDeClientes() {
                 color: '#6366f1',
                 zIndex: 1
               }}>
-                Filtrar por Cliente
-              </label>
-              <input
+                Filtrar por Cliente</label>
+              <input id="input-prospectos-1"
                 type="text"
                 placeholder="Buscar por nombre, ciudad, teléfono o correo..."
                 value={filtroTexto}

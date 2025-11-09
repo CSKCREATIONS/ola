@@ -170,7 +170,7 @@ export default function PedidosDevueltos() {
               <h3 className='titulo-profesional'>Pedidos devueltos</h3>
               {/* BOTONES EXPORTAR */}
               <button
-                onClick={() => exportToExcel(pedidos)}
+                onClick={exportToExcel}
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '0.45rem 0.9rem', border: '1.5px solid #16a34a', borderRadius: '8px', background: 'transparent', color: '#16a34a',
                   fontSize: '14px', fontWeight: '500', cursor: 'pointer', transition: 'all 0.3s ease'

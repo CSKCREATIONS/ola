@@ -270,8 +270,8 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                     </td>
                     <td style={{ padding: '0.6rem', textAlign: 'right', fontWeight: 'bold', fontSize: '0.8rem' }}>
                       ${(() => {
-                        const cantidad = parseFloat(p.cantidad) || 0;
-                        const precio = parseFloat(p.valorUnitario || p.precioUnitario || p.product?.price) || 0;
+                        const cantidad = Number.parseFloat(p.cantidad) || 0;
+                        const precio = Number.parseFloat(p.valorUnitario || p.precioUnitario || p.product?.price) || 0;
                         return (cantidad * precio).toLocaleString('es-CO');
                       })()}
                     </td>
@@ -293,8 +293,8 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                 <td style={{ padding: '0.75rem', textAlign: 'right', fontSize: '1rem', color: '#059669' }}>
                   ${datos.productos && datos.productos.length > 0 ? datos.productos
                     .reduce((acc, p) => {
-                      const cantidad = parseFloat(p.cantidad) || 0;
-                      const precio = parseFloat(p.valorUnitario || p.precioUnitario || p.product?.price) || 0;
+                      const cantidad = Number.parseFloat(p.cantidad) || 0;
+                      const precio = Number.parseFloat(p.valorUnitario || p.precioUnitario || p.product?.price) || 0;
                       return acc + (cantidad * precio);
                     }, 0)
                     .toLocaleString('es-CO') : '0'}
@@ -362,10 +362,11 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
             </div>
 
             <div style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+              <label htmlFor="correo-remision-modal" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
                 📬 Correo destinatario:
               </label>
               <input 
+                id="correo-remision-modal"
                 type="email" 
                 className="cuadroTexto" 
                 value={correo} 
@@ -376,10 +377,11 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
             </div>
             
             <div style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+              <label htmlFor="asunto-remision-modal" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
                 📝 Asunto:
               </label>
               <input 
+                id="asunto-remision-modal"
                 type="text" 
                 className="cuadroTexto" 
                 value={asunto} 
@@ -389,10 +391,11 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
             </div>
             
             <div style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+              <label htmlFor="mensaje-remision-modal" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
                 💬 Mensaje:
               </label>
               <textarea 
+                id="mensaje-remision-modal"
                 className="cuadroTexto" 
                 value={mensaje} 
                 onChange={e => setMensaje(e.target.value)} 

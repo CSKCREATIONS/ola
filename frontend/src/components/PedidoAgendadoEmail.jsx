@@ -129,10 +129,11 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
             
             <div className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="correo-destinatario" className="block text-sm font-medium text-gray-700 mb-2">
                   Correo destinatario:
                 </label>
                 <input
+                  id="correo-destinatario"
                   type="email"
                   value={correo}
                   onChange={(e) => setCorreo(e.target.value)}
@@ -143,10 +144,11 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="asunto" className="block text-sm font-medium text-gray-700 mb-2">
                   Asunto:
                 </label>
                 <input
+                  id="asunto"
                   type="text"
                   value={asunto}
                   onChange={(e) => setAsunto(e.target.value)}
@@ -157,10 +159,11 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="mensaje" className="block text-sm font-medium text-gray-700 mb-2">
                   Mensaje:
                 </label>
                 <textarea
+                  id="mensaje"
                   value={mensaje}
                   onChange={(e) => setMensaje(e.target.value)}
                   rows={12}

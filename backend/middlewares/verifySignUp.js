@@ -38,13 +38,23 @@ const checkRolesExisted = async (req, res, next) => {
         });
     }
 
+    // Sanitizar el nombre del rol para prevenir inyección NoSQL
+    const roleNameSanitizado = typeof roleName === 'string' ? roleName.trim() : '';
+    
+    if (!roleNameSanitizado) {
+        return res.status(400).json({
+            success: false,
+            message: 'Nombre de rol inválido'
+        });
+    }
+
     try {
-        const roleExists = await Role.findOne({ name: roleName });
+        const roleExists = await Role.findOne({ name: roleNameSanitizado });
 
         if (!roleExists) {
             return res.status(400).json({
                 success: false,
-                message: `Rol no encontrado: ${roleName}`
+                message: `Rol no encontrado: ${roleNameSanitizado}`
             });
         }
 

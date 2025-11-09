@@ -180,8 +180,9 @@ export default function PedidoEntregadoPreview({ datos, onClose }) {
               </div>
               <div className="modal-body">
                 <div className="form-group">
-                  <label>Correo destinatario:</label>
+                  <label htmlFor="correo-pedido-entregado">Correo destinatario:</label>
                   <input
+                    id="correo-pedido-entregado"
                     type="email"
                     className="form-control"
                     value={correo}
@@ -190,8 +191,9 @@ export default function PedidoEntregadoPreview({ datos, onClose }) {
                   />
                 </div>
                 <div className="form-group">
-                  <label>Asunto:</label>
+                  <label htmlFor="asunto-pedido-entregado">Asunto:</label>
                   <input
+                    id="asunto-pedido-entregado"
                     type="text"
                     className="form-control"
                     value={asunto}
@@ -199,8 +201,9 @@ export default function PedidoEntregadoPreview({ datos, onClose }) {
                   />
                 </div>
                 <div className="form-group">
-                  <label>Mensaje:</label>
+                  <label htmlFor="mensaje-pedido-entregado">Mensaje:</label>
                   <textarea
+                    id="mensaje-pedido-entregado"
                     className="form-control"
                     rows="4"
                     value={mensaje}

@@ -629,29 +629,34 @@ export default function PedidosAgendados() {
                             <i className="fa-solid fa-file-invoice" style={{ color: 'white', fontSize: '12px' }}></i>
                           </div>
                           {pedido.numeroPedido ? (
-                            <a
-                              style={{
-                                cursor: 'pointer',
-                                color: '#f59e0b',
-                                textDecoration: 'underline',
-                                fontWeight: 'bold'
-                              }}
-                              onClick={async () => {
-                                    try {
-                                      const res = await api.get(`/api/pedidos/${pedido._id}?populate=true`);
-                                      // normalize response shape
-                                      const data = res.data || res;
-                                      const pedidoCompleto = data.data || data;
-                                      setCotizacionPreview(pedidoCompleto);
-                                    } catch (error) {
-                                      console.error('Error loading pedido:', error);
-                                      Swal.fire('Error', 'No se pudo cargar la información del pedido.', 'error');
-                                    }
-                                  }}
-                              title="Clic para ver información del pedido"
-                            >
-                              {pedido.numeroPedido}
-                            </a>
+                              <button
+                                type="button"
+                                style={{
+                                  cursor: 'pointer',
+                                  color: '#f59e0b',
+                                  textDecoration: 'underline',
+                                  fontWeight: 'bold',
+                                  background: 'none',
+                                  border: 'none',
+                                  padding: 0,
+                                  font: 'inherit'
+                                }}
+                                onClick={async () => {
+                                      try {
+                                        const res = await api.get(`/api/pedidos/${pedido._id}?populate=true`);
+                                        // normalize response shape
+                                        const data = res.data || res;
+                                        const pedidoCompleto = data.data || data;
+                                        setCotizacionPreview(pedidoCompleto);
+                                      } catch (error) {
+                                        console.error('Error loading pedido:', error);
+                                        Swal.fire('Error', 'No se pudo cargar la información del pedido.', 'error');
+                                      }
+                                    }}
+                                title="Clic para ver información del pedido"
+                              >
+                                {pedido.numeroPedido}
+                              </button>
                           ) : '---'}
                         </div>
                       </td>

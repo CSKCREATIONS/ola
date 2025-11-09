@@ -11,6 +11,15 @@ const nodemailer = require('nodemailer');
 const sgMail = require('@sendgrid/mail');
 const PDFService = require('../services/pdfService');
 
+// Helper function para sanitizar IDs y prevenir inyección NoSQL
+const sanitizarId = (id) => {
+  const idSanitizado = typeof id === 'string' ? id.trim() : '';
+  if (!idSanitizado || !idSanitizado.match(/^[0-9a-fA-F]{24}$/)) {
+    return null;
+  }
+  return idSanitizado;
+};
+
 // Configurar SendGrid de forma segura para no bloquear el arranque
 try {
   const apiKey = process.env.SENDGRID_API_KEY;
@@ -45,7 +54,24 @@ const createGmailTransporter = () => {
 exports.getPedidos = async (req, res) => {
   try {
     const { estado } = req.query;
-    const filtro = estado ? { estado } : {};
+    
+    // Sanitizar el estado para prevenir inyección NoSQL
+    let filtro = {};
+    if (estado) {
+      const estadoSanitizado = typeof estado === 'string' ? estado.trim() : '';
+      
+      // Lista blanca de estados válidos
+      const estadosValidos = ['Pendiente', 'Agendado', 'Entregado', 'Cancelado'];
+      
+      if (estadoSanitizado && estadosValidos.includes(estadoSanitizado)) {
+        filtro = { estado: estadoSanitizado };
+      } else if (estadoSanitizado) {
+        return res.status(400).json({ 
+          message: 'Estado inválido. Valores permitidos: Pendiente, Agendado, Entregado, Cancelado' 
+        });
+      }
+    }
+    
     const pedidos = await Pedido.find(filtro).populate('cliente').populate('productos.product');
     
     // Calcular el total para cada pedido
@@ -336,7 +362,13 @@ exports.actualizarEstadoPedido = async (req, res) => {
 
 exports.marcarComoEntregado = async (req, res) => {
   try {
-    const pedido = await Pedido.findById(req.params.id)
+    // Sanitizar el ID para prevenir inyección NoSQL
+    const pedidoId = sanitizarId(req.params.id);
+    if (!pedidoId) {
+      return res.status(400).json({ message: 'ID de pedido inválido' });
+    }
+
+    const pedido = await Pedido.findById(pedidoId)
       .populate('productos.product') // Asegúrate que el campo se llama "productos.product"
       .populate('cliente');
 
@@ -408,7 +440,12 @@ exports.marcarComoEntregado = async (req, res) => {
 // Crear remisión desde pedido entregado
 exports.crearRemisionDesdePedido = async (req, res) => {
   try {
-    const pedidoId = req.params.id; // Obtener ID del parámetro de ruta
+    // Sanitizar el ID para prevenir inyección NoSQL
+    const pedidoId = sanitizarId(req.params.id);
+    if (!pedidoId) {
+      return res.status(400).json({ message: 'ID de pedido inválido' });
+    }
+
     const { observaciones, numeroRemision, fechaEntrega } = req.body;
 
     console.log('🔍 Creando remisión para pedido:', pedidoId);
@@ -459,14 +496,14 @@ exports.crearRemisionDesdePedido = async (req, res) => {
       if (p.product && typeof p.product === 'object') {
         // Si product está populado
         nombre = p.product.name || 'Producto sin nombre';
-        precio = parseFloat(p.precioUnitario) || parseFloat(p.product.price) || 0;
+        precio = Number.parseFloat(p.precioUnitario) || Number.parseFloat(p.product.price) || 0;
       } else {
         // Si no está populado, usar datos directos
         nombre = `Producto ID: ${p.product}`;
-        precio = parseFloat(p.precioUnitario) || 0;
+        precio = Number.parseFloat(p.precioUnitario) || 0;
       }
 
-      cantidad = parseInt(p.cantidad) || 1;
+      cantidad = Number.parseInt(p.cantidad, 10) || 1;
       const total = cantidad * precio;
 
       console.log(`📦 Producto ${index + 1}:`, {
@@ -481,7 +518,7 @@ exports.crearRemisionDesdePedido = async (req, res) => {
         cantidad: cantidad,
         precioUnitario: precio,
         precio: precio, // Mantener compatibilidad
-        total: parseFloat(total.toFixed(2)),
+        total: Number.parseFloat(total.toFixed(2)),
         descripcion: p.product?.description || '',
         codigo: p.product?._id || p.product || ''
       };
@@ -491,7 +528,7 @@ exports.crearRemisionDesdePedido = async (req, res) => {
 
     // Calcular totales
     const subtotal = productos.reduce((sum, p) => sum + p.total, 0);
-    const totalGeneral = parseFloat(subtotal.toFixed(2));
+    const totalGeneral = Number.parseFloat(subtotal.toFixed(2));
 
     console.log('💰 Cálculos financieros:');
     console.log(`   Subtotal: $${subtotal.toFixed(2)}`);
@@ -570,7 +607,12 @@ exports.enviarPedidoAgendadoPorCorreo = async (req, res) => {
     console.log('🎯 FUNCIÓN ESPERADA: Generar contenido de PEDIDO AGENDADO');
     
     const { correoDestino, asunto, mensaje } = req.body;
-    const pedidoId = req.params.id;
+    
+    // Sanitizar el ID para prevenir inyección NoSQL
+    const pedidoId = sanitizarId(req.params.id);
+    if (!pedidoId) {
+      return res.status(400).json({ message: 'ID de pedido inválido' });
+    }
 
     console.log('🔍 Iniciando envío de correo para pedido agendado:', pedidoId);
 
@@ -636,7 +678,12 @@ exports.enviarPedidoAgendadoPorCorreo = async (req, res) => {
 exports.enviarPedidoDevueltoPorCorreo = async (req, res) => {
   try {
     const { correoDestino, asunto, mensaje, motivoDevolucion } = req.body;
-    const pedidoId = req.params.id;
+    
+    // Sanitizar el ID para prevenir inyección NoSQL
+    const pedidoId = sanitizarId(req.params.id);
+    if (!pedidoId) {
+      return res.status(400).json({ message: 'ID de pedido inválido' });
+    }
 
     console.log('🔍 Iniciando envío de correo para pedido devuelto:', pedidoId);
 
@@ -687,7 +734,12 @@ exports.enviarPedidoDevueltoPorCorreo = async (req, res) => {
 exports.enviarPedidoCanceladoPorCorreo = async (req, res) => {
   try {
     const { correoDestino, asunto, mensaje, motivoCancelacion } = req.body;
-    const pedidoId = req.params.id;
+    
+    // Sanitizar el ID para prevenir inyección NoSQL
+    const pedidoId = sanitizarId(req.params.id);
+    if (!pedidoId) {
+      return res.status(400).json({ message: 'ID de pedido inválido' });
+    }
 
     console.log('🔍 Iniciando envío de correo para pedido cancelado:', pedidoId);
 
@@ -1716,7 +1768,12 @@ function generarHTMLPedidoCancelado(pedido, mensaje, motivoCancelacion) {
 exports.enviarPedidoPorCorreo = async (req, res) => {
   try {
     const { correoDestino, asunto, mensaje } = req.body;
-    const pedidoId = req.params.id;
+    
+    // Sanitizar el ID para prevenir inyección NoSQL
+    const pedidoId = sanitizarId(req.params.id);
+    if (!pedidoId) {
+      return res.status(400).json({ message: 'ID de pedido inválido' });
+    }
 
     console.log('🔍 Iniciando envío de correo para pedido:', pedidoId);
     console.log('📧 Datos de envío:', { correoDestino, asunto });
@@ -1875,7 +1932,12 @@ exports.enviarPedidoPorCorreo = async (req, res) => {
 exports.enviarRemisionPorCorreo = async (req, res) => {
   try {
     const { correoDestino, asunto, mensaje } = req.body;
-    const pedidoId = req.params.id;
+    
+    // Sanitizar el ID para prevenir inyección NoSQL
+    const pedidoId = sanitizarId(req.params.id);
+    if (!pedidoId) {
+      return res.status(400).json({ message: 'ID de pedido inválido' });
+    }
     
     console.log('🔍 Iniciando envío de remisión por correo:', pedidoId);
     console.log('📧 Datos de envío:', { correoDestino, asunto });
@@ -1955,7 +2017,12 @@ exports.enviarRemisionPorCorreo = async (req, res) => {
 exports.enviarRemisionFormalPorCorreo = async (req, res) => {
   try {
     const { numeroRemision, correoDestino, asunto, mensaje } = req.body;
-    const pedidoId = req.params.id;
+    
+    // Sanitizar el ID para prevenir inyección NoSQL
+    const pedidoId = sanitizarId(req.params.id);
+    if (!pedidoId) {
+      return res.status(400).json({ message: 'ID de pedido inválido' });
+    }
     
     console.log('🔍 Iniciando envío de remisión formal por correo:', pedidoId);
     console.log('📧 Datos de envío:', { correoDestino, asunto, numeroRemision });

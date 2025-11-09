@@ -131,10 +131,10 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
             
             <div className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="input-pedido-devuelto-1" className="block text-sm font-medium text-gray-700 mb-2">
                   Correo destinatario:
                 </label>
-                <input
+                <input id="input-pedido-devuelto-1"
                   type="email"
                   value={correo}
                   onChange={(e) => setCorreo(e.target.value)}
@@ -145,10 +145,10 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="input-pedido-devuelto-2" className="block text-sm font-medium text-gray-700 mb-2">
                   Asunto:
                 </label>
-                <input
+                <input id="input-pedido-devuelto-2"
                   type="text"
                   value={asunto}
                   onChange={(e) => setAsunto(e.target.value)}
@@ -159,10 +159,10 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="input-pedido-devuelto-3" className="block text-sm font-medium text-gray-700 mb-2">
                   Motivo de la devolución:
                 </label>
-                <input
+                <input id="input-pedido-devuelto-3"
                   type="text"
                   value={motivoDevolucion}
                   onChange={(e) => setMotivoDevolucion(e.target.value)}
@@ -172,10 +172,10 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="input-pedido-devuelto-4" className="block text-sm font-medium text-gray-700 mb-2">
                   Mensaje:
                 </label>
-                <textarea
+                <textarea id="input-pedido-devuelto-4"
                   value={mensaje}
                   onChange={(e) => setMensaje(e.target.value)}
                   rows={12}

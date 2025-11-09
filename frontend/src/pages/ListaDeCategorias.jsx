@@ -318,7 +318,7 @@ const CategoriaModal = ({ categoria, onClose, onSave }) => {
             border: '1px solid #e2e8f0',
             borderLeft: '4px solid #f59e0b'
           }}>
-            <label style={{
+            <label htmlFor="nombre-categoria-agregar" style={{
               display: 'flex',
               alignItems: 'center',
               gap: '0.5rem',
@@ -332,6 +332,7 @@ const CategoriaModal = ({ categoria, onClose, onSave }) => {
               <span style={{ color: '#ef4444' }}>*</span>
             </label>
             <input
+              id="nombre-categoria-agregar"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -367,7 +368,7 @@ const CategoriaModal = ({ categoria, onClose, onSave }) => {
             border: '1px solid #e2e8f0',
             borderLeft: '4px solid #10b981'
           }}>
-            <label style={{
+            <label htmlFor="descripcion-categoria-agregar" style={{
               display: 'flex',
               alignItems: 'center',
               gap: '0.5rem',
@@ -381,6 +382,7 @@ const CategoriaModal = ({ categoria, onClose, onSave }) => {
               <span style={{ color: '#ef4444' }}>*</span>
             </label>
             <textarea
+              id="descripcion-categoria-agregar"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Describe brevemente esta categoría y qué tipo de productos incluye..."

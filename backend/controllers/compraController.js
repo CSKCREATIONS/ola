@@ -35,7 +35,49 @@ const crearCompra = async (req, res) => {
       });
     }
 
-    const nuevaCompra = await Compra.create(req.body);
+    // Sanitizar y validar datos antes de crear la compra
+    // Asegurar que los campos sean del tipo correcto y no objetos maliciosos
+    const numeroOrden = typeof req.body.numeroOrden === 'string' ? req.body.numeroOrden : '';
+    const proveedor = typeof req.body.proveedor === 'string' ? req.body.proveedor : '';
+    const solicitadoPor = typeof req.body.solicitadoPor === 'string' ? req.body.solicitadoPor : '';
+    const observaciones = typeof req.body.observaciones === 'string' ? req.body.observaciones : '';
+    const estado = typeof req.body.estado === 'string' ? req.body.estado : 'Completada';
+    
+    // Validar que productos sea un array válido
+    const productos = Array.isArray(req.body.productos) ? req.body.productos : [];
+    
+    // Validar números
+    const subtotal = typeof req.body.subtotal === 'number' ? req.body.subtotal : Number(req.body.subtotal) || 0;
+    const impuestos = typeof req.body.impuestos === 'number' ? req.body.impuestos : Number(req.body.impuestos) || 0;
+    const total = typeof req.body.total === 'number' ? req.body.total : Number(req.body.total) || 0;
+    
+    // Validar fecha
+    const fecha = req.body.fecha && !Number.isNaN(new Date(req.body.fecha).getTime()) 
+      ? new Date(req.body.fecha) 
+      : new Date();
+
+    // Validaciones básicas
+    if (!proveedor || productos.length === 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Datos incompletos: se requiere proveedor y al menos un producto' 
+      });
+    }
+
+    const compraData = {
+      numeroOrden,
+      proveedor,
+      solicitadoPor,
+      productos,
+      subtotal,
+      impuestos,
+      total,
+      observaciones,
+      estado,
+      fecha
+    };
+
+    const nuevaCompra = await Compra.create(compraData);
     res.status(201).json({ success: true, data: nuevaCompra });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Error en el servidor', error: error.message });
@@ -50,7 +92,17 @@ const obtenerComprasPorProveedor = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const compras = await Compra.find({ proveedor: id })
+    // Sanitizar el ID para prevenir inyección NoSQL
+    const proveedorId = typeof id === 'string' ? id.trim() : '';
+    
+    if (!proveedorId) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'ID de proveedor inválido' 
+      });
+    }
+
+    const compras = await Compra.find({ proveedor: proveedorId })
       .populate('proveedor', 'name')
       .populate('productos.producto', 'nombre precio');
 
@@ -84,7 +136,17 @@ const obtenerTodasLasCompras = async (req, res) => {
 
 const eliminarCompra = async (req, res) => {
   try {
-    const compra = await Compra.findByIdAndDelete(req.params.id);
+    // Sanitizar el ID para prevenir inyección NoSQL
+    const compraId = typeof req.params.id === 'string' ? req.params.id.trim() : '';
+    
+    if (!compraId) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'ID de compra inválido' 
+      });
+    }
+
+    const compra = await Compra.findByIdAndDelete(compraId);
     if (!compra) {
       return res.status(404).json({ success: false, message: 'Compra no encontrada' });
     }
@@ -100,8 +162,18 @@ const actualizarCompra = async (req, res) => {
     const { proveedor, productos, condicionesPago, observaciones, total } = req.body;
     const { id } = req.params;
 
+    // Sanitizar el ID para prevenir inyección NoSQL
+    const compraId = typeof id === 'string' ? id.trim() : '';
+    
+    if (!compraId) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'ID de compra inválido' 
+      });
+    }
+
     const compraActualizada = await Compra.findByIdAndUpdate(
-      id,
+      compraId,
       {
         proveedor,
         productos,
@@ -129,14 +201,24 @@ const enviarCompraPorCorreo = async (req, res) => {
     const { id } = req.params;
     const { destinatario, asunto, mensaje } = req.body;
 
-    console.log('🔍 Iniciando envío de correo para compra:', id);
+    // Sanitizar el ID para prevenir inyección NoSQL
+    const compraId = typeof id === 'string' ? id.trim() : '';
+    
+    if (!compraId) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'ID de compra inválido' 
+      });
+    }
+
+    console.log('🔍 Iniciando envío de correo para compra:', compraId);
     console.log('📧 Destinatario:', destinatario);
 
     if (!destinatario) {
       return res.status(400).json({ success: false, message: 'Destinatario es requerido' });
     }
 
-    const compra = await Compra.findById(id)
+    const compra = await Compra.findById(compraId)
       .populate('proveedor', 'nombre email telefono')
       .populate('productos.producto', 'name price');
 

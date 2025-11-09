@@ -124,7 +124,16 @@ if (!document.getElementById('historial-compras-advanced-styles')) {
 export default function HistorialCompras() {
   const [compras, setCompras] = useState([]);
   const [modalDetallesVisible, setModalDetallesVisible] = useState(false);
+  const [modalNuevaCompraVisible, setModalNuevaCompraVisible] = useState(false);
   const [compraSeleccionada, setCompraSeleccionada] = useState(null);
+  const [proveedores, setProveedores] = useState([]);
+  const [productos, setProductos] = useState([]);
+  const [nuevaCompra, setNuevaCompra] = useState({
+    proveedor: '',
+    productos: [],
+    observaciones: '',
+    solicitadoPor: ''
+  });
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -154,8 +163,109 @@ export default function HistorialCompras() {
     }
   };
 
+  const fetchProveedores = async () => {
+    try {
+      const res = await api.get('/api/proveedores');
+      const data = res.data || res;
+      setProveedores(data.proveedores || data.data || data);
+    } catch (error) {
+      console.error('Error al cargar proveedores:', error);
+    }
+  };
+
+  const fetchProductos = async () => {
+    try {
+      const res = await api.get('/api/products');
+      const data = res.data || res;
+      setProductos(data.products || data.data || data);
+    } catch (error) {
+      console.error('Error al cargar productos:', error);
+    }
+  };
+
+  const abrirModalNuevaCompra = () => {
+    const storedUser = localStorage.getItem('user');
+    let nombreCompleto = '';
+    if (storedUser) {
+      const usuario = JSON.parse(storedUser);
+      nombreCompleto = `${usuario.firstName || ''} ${usuario.surname || ''}`.trim();
+    }
+    
+    setNuevaCompra({
+      proveedor: '',
+      productos: [],
+      observaciones: '',
+      solicitadoPor: nombreCompleto
+    });
+    setModalNuevaCompraVisible(true);
+  };
+
+  const agregarProductoNuevaCompra = () => {
+    setNuevaCompra({
+      ...nuevaCompra,
+      productos: [...nuevaCompra.productos, {
+        producto: '',
+        cantidad: 1,
+        precioUnitario: 0
+      }]
+    });
+  };
+
+  const eliminarProductoNuevaCompra = (index) => {
+    const productosActualizados = nuevaCompra.productos.filter((_, i) => i !== index);
+    setNuevaCompra({ ...nuevaCompra, productos: productosActualizados });
+  };
+
+  const actualizarProductoNuevaCompra = (index, campo, valor) => {
+    const productosActualizados = [...nuevaCompra.productos];
+    productosActualizados[index][campo] = valor;
+    setNuevaCompra({ ...nuevaCompra, productos: productosActualizados });
+  };
+
+  const guardarNuevaCompra = async () => {
+    if (!nuevaCompra.proveedor) {
+      Swal.fire('Error', 'Debe seleccionar un proveedor', 'error');
+      return;
+    }
+    if (nuevaCompra.productos.length === 0) {
+      Swal.fire('Error', 'Debe agregar al menos un producto', 'error');
+      return;
+    }
+
+    try {
+      const subtotal = nuevaCompra.productos.reduce((sum, p) => sum + (p.cantidad * p.precioUnitario), 0);
+      const impuestos = subtotal * 0.19;
+      const total = subtotal + impuestos;
+
+      const compraData = {
+        proveedor: nuevaCompra.proveedor,
+        productos: nuevaCompra.productos,
+        observaciones: nuevaCompra.observaciones,
+        solicitadoPor: nuevaCompra.solicitadoPor,
+        subtotal,
+        impuestos,
+        total,
+        estado: 'Confirmada'
+      };
+
+      const res = await api.post('/api/compras', compraData);
+      if (res.data.success) {
+        Swal.fire('Éxito', 'Compra registrada correctamente', 'success');
+        setModalNuevaCompraVisible(false);
+        fetchCompras();
+      } else {
+        Swal.fire('Error', res.data.message || 'No se pudo registrar la compra', 'error');
+      }
+    } catch (error) {
+      console.error('Error al guardar compra:', error);
+      Swal.fire('Error', 'No se pudo conectar con el servidor', 'error');
+    }
+  };
+
   useEffect(() => {
     fetchCompras();
+    fetchProveedores();
+    fetchProductos();
   }, []);
 
   const verDetallesCompra = (compra) => {
@@ -443,10 +553,10 @@ export default function HistorialCompras() {
       title: '📧 Enviar Compra por Correo',
       html: `
         <div style="text-align: left;">
-          <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">
+          <label htmlFor="input-historial-1" style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">
             Correo del destinatario:
           </label>
-          <input 
+          <input id="input-historial-1" 
             type="email" 
             id="emailDestino" 
             class="swal2-input" 
@@ -456,10 +566,10 @@ export default function HistorialCompras() {
             required
           >
           
-          <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">
+          <label htmlFor="input-historial-2" style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">
             Asunto:
           </label>
-          <input 
+          <input id="input-historial-2" 
             type="text" 
             id="asuntoEmail" 
             class="swal2-input" 
@@ -468,10 +578,10 @@ export default function HistorialCompras() {
             value="Compra Confirmada - N° ${compraSeleccionada.numeroOrden || 'N/A'} - JLA Global Company"
           >
           
-          <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">
+          <label htmlFor="input-historial-3" style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">
             Mensaje:
           </label>
-          <textarea 
+          <textarea id="input-historial-3" 
             id="mensajeEmail" 
             class="swal2-textarea" 
             placeholder="Escribe tu mensaje aquí..."
@@ -590,7 +700,7 @@ JLA Global Company</textarea>
                 }}>
                   <i className="fa-solid fa-history" style={{ fontSize: '2.5rem', color: 'white' }}></i>
                 </div>
-                <div>
+                <div style={{ flex: 1 }}>
                   <h2 style={{ margin: '0 0 8px 0', fontSize: '2rem', fontWeight: '700' }}>
                     Historial de Compras
                   </h2>
@@ -598,6 +708,35 @@ JLA Global Company</textarea>
                     Compras realizadas a partir de órdenes de compra
                   </p>
                 </div>
+                <button
+                  onClick={abrirModalNuevaCompra}
+                  style={{
+                    background: 'linear-gradient(135deg, #10b981, #059669)',
+                    color: 'white',
+                    border: 'none',
+                    padding: '12px 24px',
+                    borderRadius: '12px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.transform = 'translateY(-2px)';
+                    e.target.style.boxShadow = '0 6px 20px rgba(16, 185, 129, 0.4)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.transform = 'translateY(0)';
+                    e.target.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.3)';
+                  }}
+                >
+                  <i className="fa-solid fa-plus"></i>
+                  Nueva Compra
+                </button>
               </div>
             </div>
           </div>
@@ -614,16 +753,7 @@ JLA Global Company</textarea>
               borderRadius: '16px',
               padding: '25px',
               border: '1px solid #e5e7eb',
-              transition: 'all 0.3s ease',
-              cursor: 'pointer'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-5px)';
-              e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.15)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = 'none';
+              boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                 <div style={{
@@ -652,16 +782,7 @@ JLA Global Company</textarea>
               borderRadius: '16px',
               padding: '25px',
               border: '1px solid #e5e7eb',
-              transition: 'all 0.3s ease',
-              cursor: 'pointer'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-5px)';
-              e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.15)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = 'none';
+              boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                 <div style={{
@@ -690,16 +811,7 @@ JLA Global Company</textarea>
               borderRadius: '16px',
               padding: '25px',
               border: '1px solid #e5e7eb',
-              transition: 'all 0.3s ease',
-              cursor: 'pointer'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-5px)';
-              e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.15)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = 'none';
+              boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                 <div style={{
@@ -833,24 +945,23 @@ JLA Global Company</textarea>
                         <button
                           onClick={() => verDetallesCompra(compra)}
                           style={{
-                            background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                            color: 'white',
+                            background: 'none',
+                            color: '#6366f1',
                             border: 'none',
-                            padding: '8px 16px',
-                            borderRadius: '8px',
-                            fontSize: '12px',
+                            padding: '0',
+                            fontSize: '14px',
                             fontWeight: '600',
                             cursor: 'pointer',
-                            transition: 'all 0.3s ease',
-                            textDecoration: 'none'
+                            textDecoration: 'underline',
+                            transition: 'all 0.2s ease'
                           }}
                           onMouseEnter={(e) => {
-                            e.target.style.transform = 'translateY(-2px)';
-                            e.target.style.boxShadow = '0 5px 15px rgba(99, 102, 241, 0.4)';
+                            e.target.style.color = '#8b5cf6';
+                            e.target.style.textDecoration = 'none';
                           }}
                           onMouseLeave={(e) => {
-                            e.target.style.transform = 'translateY(0)';
-                            e.target.style.boxShadow = 'none';
+                            e.target.style.color = '#6366f1';
+                            e.target.style.textDecoration = 'underline';
                           }}
                         >
                           {compra.numeroOrden || 'N/A'}
@@ -1287,6 +1398,324 @@ JLA Global Company</textarea>
     </div>
 )}
 
+          {/* Modal Nueva Compra */}
+          {modalNuevaCompraVisible && (
+            <div className="modal-overlay">
+              <div className="modal-realista modal-lg" style={{ maxWidth: '900px', width: '95%' }}>
+                <div className="modal-header-realista" style={{
+                  background: 'linear-gradient(135deg, #10b981, #059669)',
+                  color: 'white',
+                  padding: '1.5rem 2rem',
+                  borderTopLeftRadius: '12px',
+                  borderTopRightRadius: '12px'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                      <i className="fa-solid fa-plus-circle" style={{ fontSize: '1.8rem' }}></i>
+                      <div>
+                        <h5 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 'bold' }}>
+                          NUEVA COMPRA
+                        </h5>
+                        <p style={{ margin: 0, opacity: 0.9, fontSize: '1rem' }}>
+                          Registrar compra sin orden de compra previa
+                        </p>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => setModalNuevaCompraVisible(false)}
+                      style={{
+                        background: 'rgba(255,255,255,0.2)',
+                        border: 'none',
+                        color: 'white',
+                        fontSize: '1.8rem',
+                        cursor: 'pointer',
+                        borderRadius: '50%',
+                        width: '40px',
+                        height: '40px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                    >
+                      &times;
+                    </button>
+                  </div>
+                </div>
+
+                <div className="modal-body" style={{ padding: '2rem', maxHeight: '70vh', overflowY: 'auto' }}>
+                  {/* Información General */}
+                  <div style={{ marginBottom: '2rem' }}>
+                    <h6 style={{ marginBottom: '1rem', color: '#2c3e50', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <i className="fa-solid fa-info-circle" style={{ color: '#10b981' }}></i>
+                      Información General
+                    </h6>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#374151' }}>
+                          Proveedor *
+                        </label>
+                        <select
+                          value={nuevaCompra.proveedor}
+                          onChange={(e) => setNuevaCompra({ ...nuevaCompra, proveedor: e.target.value })}
+                          style={{
+                            width: '100%',
+                            padding: '0.75rem',
+                            border: '2px solid #e5e7eb',
+                            borderRadius: '8px',
+                            fontSize: '14px'
+                          }}
+                        >
+                          <option value="">Seleccione un proveedor</option>
+                          {proveedores.map(p => (
+                            <option key={p._id} value={p._id}>{p.nombre}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#374151' }}>
+                          Solicitado Por
+                        </label>
+                        <input
+                          type="text"
+                          value={nuevaCompra.solicitadoPor}
+                          disabled
+                          style={{
+                            width: '100%',
+                            padding: '0.75rem',
+                            border: '2px solid #e5e7eb',
+                            borderRadius: '8px',
+                            fontSize: '14px',
+                            backgroundColor: '#f3f4f6',
+                            cursor: 'not-allowed'
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Productos */}
+                  <div style={{ marginBottom: '2rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                      <h6 style={{ margin: 0, color: '#2c3e50', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <i className="fa-solid fa-boxes" style={{ color: '#10b981' }}></i>
+                        Productos ({nuevaCompra.productos.length})
+                      </h6>
+                      <button
+                        onClick={agregarProductoNuevaCompra}
+                        style={{
+                          background: 'linear-gradient(135deg, #10b981, #059669)',
+                          color: 'white',
+                          border: 'none',
+                          padding: '0.5rem 1rem',
+                          borderRadius: '8px',
+                          fontSize: '12px',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem'
+                        }}
+                      >
+                        <i className="fa-solid fa-plus"></i>
+                        Agregar Producto
+                      </button>
+                    </div>
+
+                    {nuevaCompra.productos.map((prod, index) => (
+                      <div key={index} style={{
+                        background: '#f8f9fa',
+                        padding: '1rem',
+                        borderRadius: '8px',
+                        marginBottom: '1rem',
+                        border: '1px solid #e5e7eb'
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                          <strong style={{ color: '#2c3e50' }}>Producto #{index + 1}</strong>
+                          <button
+                            onClick={() => eliminarProductoNuevaCompra(index)}
+                            style={{
+                              background: '#ef4444',
+                              color: 'white',
+                              border: 'none',
+                              padding: '0.25rem 0.5rem',
+                              borderRadius: '6px',
+                              fontSize: '12px',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            <i className="fa-solid fa-trash"></i>
+                          </button>
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '1rem' }}>
+                          <div>
+                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '12px', fontWeight: '600' }}>
+                              Producto
+                            </label>
+                            <select
+                              value={prod.producto}
+                              onChange={(e) => actualizarProductoNuevaCompra(index, 'producto', e.target.value)}
+                              style={{
+                                width: '100%',
+                                padding: '0.5rem',
+                                border: '1px solid #d1d5db',
+                                borderRadius: '6px',
+                                fontSize: '13px'
+                              }}
+                            >
+                              <option value="">Seleccione</option>
+                              {productos.map(p => (
+                                <option key={p._id} value={p._id}>{p.name}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div>
+                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '12px', fontWeight: '600' }}>
+                              Cantidad
+                            </label>
+                            <input
+                              type="number"
+                              value={prod.cantidad}
+                              onChange={(e) => actualizarProductoNuevaCompra(index, 'cantidad', Number.parseInt(e.target.value) || 0)}
+                              min="1"
+                              style={{
+                                width: '100%',
+                                padding: '0.5rem',
+                                border: '1px solid #d1d5db',
+                                borderRadius: '6px',
+                                fontSize: '13px'
+                              }}
+                            />
+                          </div>
+                          <div>
+                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '12px', fontWeight: '600' }}>
+                              Precio Unit.
+                            </label>
+                            <input
+                              type="number"
+                              value={prod.precioUnitario}
+                              onChange={(e) => actualizarProductoNuevaCompra(index, 'precioUnitario', Number.parseFloat(e.target.value) || 0)}
+                              min="0"
+                              step="0.01"
+                              style={{
+                                width: '100%',
+                                padding: '0.5rem',
+                                border: '1px solid #d1d5db',
+                                borderRadius: '6px',
+                                fontSize: '13px'
+                              }}
+                            />
+                          </div>
+                        </div>
+                        <div style={{ marginTop: '0.5rem', textAlign: 'right', fontSize: '14px', fontWeight: '600', color: '#059669' }}>
+                          Subtotal: ${(prod.cantidad * prod.precioUnitario).toLocaleString()}
+                        </div>
+                      </div>
+                    ))}
+
+                    {nuevaCompra.productos.length === 0 && (
+                      <div style={{ textAlign: 'center', padding: '2rem', color: '#9ca3af', fontStyle: 'italic' }}>
+                        No hay productos agregados. Haz clic en "Agregar Producto" para comenzar.
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Observaciones */}
+                  <div style={{ marginBottom: '2rem' }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#374151' }}>
+                      Observaciones
+                    </label>
+                    <textarea
+                      value={nuevaCompra.observaciones}
+                      onChange={(e) => setNuevaCompra({ ...nuevaCompra, observaciones: e.target.value })}
+                      rows="3"
+                      placeholder="Notas adicionales sobre la compra..."
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '2px solid #e5e7eb',
+                        borderRadius: '8px',
+                        fontSize: '14px',
+                        resize: 'vertical'
+                      }}
+                    />
+                  </div>
+
+                  {/* Resumen */}
+                  {nuevaCompra.productos.length > 0 && (
+                    <div style={{
+                      background: 'linear-gradient(135deg, #f0fdf4, #dcfce7)',
+                      padding: '1.5rem',
+                      borderRadius: '10px',
+                      border: '2px solid #10b981'
+                    }}>
+                      <h6 style={{ marginBottom: '1rem', color: '#059669', fontWeight: '700' }}>Resumen de la Compra</h6>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', textAlign: 'center' }}>
+                        <div>
+                          <div style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.25rem' }}>Subtotal</div>
+                          <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#2c3e50' }}>
+                            ${nuevaCompra.productos.reduce((sum, p) => sum + (p.cantidad * p.precioUnitario), 0).toLocaleString()}
+                          </div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.25rem' }}>IVA (19%)</div>
+                          <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#2c3e50' }}>
+                            ${(nuevaCompra.productos.reduce((sum, p) => sum + (p.cantidad * p.precioUnitario), 0) * 0.19).toLocaleString()}
+                          </div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.25rem' }}>TOTAL</div>
+                          <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#10b981' }}>
+                            ${(nuevaCompra.productos.reduce((sum, p) => sum + (p.cantidad * p.precioUnitario), 0) * 1.19).toLocaleString()}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="modal-footer" style={{
+                  padding: '1.5rem 2rem',
+                  borderTop: '1px solid #e0e0e0',
+                  background: '#f8f9fa',
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  gap: '1rem'
+                }}>
+                  <button
+                    onClick={() => setModalNuevaCompraVisible(false)}
+                    style={{
+                      background: '#95a5a6',
+                      color: 'white',
+                      border: 'none',
+                      padding: '0.75rem 1.5rem',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <i className="fa-solid fa-times"></i> Cancelar
+                  </button>
+                  <button
+                    onClick={guardarNuevaCompra}
+                    style={{
+                      background: 'linear-gradient(135deg, #10b981, #059669)',
+                      color: 'white',
+                      border: 'none',
+                      padding: '0.75rem 1.5rem',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)'
+                    }}
+                  >
+                    <i className="fa-solid fa-save"></i> Guardar Compra
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
           
         </div>
       </div>

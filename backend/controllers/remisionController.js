@@ -11,24 +11,35 @@ exports.getAllRemisiones = async (req, res) => {
     const { estado, limite = 50, pagina = 1 } = req.query;
     
     let filtro = {};
+    
+    // Sanitizar estado para prevenir inyección NoSQL con lista blanca
     if (estado && estado !== 'todas') {
-      filtro.estado = estado;
+      const estadoSanitizado = typeof estado === 'string' ? estado.trim() : '';
+      const estadosValidos = ['Pendiente', 'Enviada', 'Entregada', 'Cancelada'];
+      
+      if (estadoSanitizado && estadosValidos.includes(estadoSanitizado)) {
+        filtro.estado = estadoSanitizado;
+      } else if (estadoSanitizado) {
+        return res.status(400).json({ 
+          message: 'Estado inválido. Valores permitidos: Pendiente, Enviada, Entregada, Cancelada' 
+        });
+      }
     }
 
     const remisiones = await Remision.find(filtro)
       .populate('responsable', 'username firstName surname')
       .populate('cotizacionReferencia', 'codigo')
       .sort({ fechaRemision: -1 })
-      .limit(parseInt(limite))
-      .skip((parseInt(pagina) - 1) * parseInt(limite));
+      .limit(Number.parseInt(limite, 10))
+      .skip((Number.parseInt(pagina, 10) - 1) * Number.parseInt(limite, 10));
 
     const total = await Remision.countDocuments(filtro);
 
     res.json({
       remisiones,
       total,
-      pagina: parseInt(pagina),
-      totalPaginas: Math.ceil(total / parseInt(limite))
+      pagina: Number.parseInt(pagina, 10),
+      totalPaginas: Math.ceil(total / Number.parseInt(limite, 10))
     });
   } catch (error) {
     console.error('Error al obtener remisiones:', error);
@@ -40,10 +51,18 @@ exports.getAllRemisiones = async (req, res) => {
 exports.crearRemisionDesdePedido = async (req, res) => {
   try {
     const pedidoId = req.params.pedidoId;
-    console.log(`📋 Creando remisión desde pedido ID: ${pedidoId}`);
+    
+    // Sanitizar el ID para prevenir inyección NoSQL
+    const pedidoIdSanitizado = typeof pedidoId === 'string' ? pedidoId.trim() : '';
+    
+    if (!pedidoIdSanitizado || !pedidoIdSanitizado.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ message: 'ID de pedido inválido' });
+    }
+
+    console.log(`📋 Creando remisión desde pedido ID: ${pedidoIdSanitizado}`);
 
     // Obtener el pedido con toda la información poblada
-    const pedido = await Pedido.findById(pedidoId)
+    const pedido = await Pedido.findById(pedidoIdSanitizado)
       .populate('cliente')
       .populate('productos.product');
 
@@ -63,7 +82,7 @@ exports.crearRemisionDesdePedido = async (req, res) => {
     }
 
     // Verificar si ya existe una remisión para este pedido
-    const remisionExistente = await Remision.findOne({ pedidoReferencia: pedidoId });
+    const remisionExistente = await Remision.findOne({ pedidoReferencia: pedidoIdSanitizado });
     if (remisionExistente) {
       return res.status(200).json({
         message: 'Ya existe una remisión para este pedido',

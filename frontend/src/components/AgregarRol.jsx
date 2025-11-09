@@ -245,7 +245,7 @@ export default function AgregarRol() {
                      border: '1px solid #e2e8f0',
                      borderLeft: '4px solid #8b5cf6'
                   }}>
-                     <label style={{
+                     <label htmlFor="nombre-rol-agregar" style={{
                         display: 'flex',
                         alignItems: 'center',
                         gap: '0.5rem',
@@ -259,6 +259,7 @@ export default function AgregarRol() {
                         <span style={{ color: '#ef4444' }}>*</span>
                      </label>
                      <input 
+                        id="nombre-rol-agregar"
                         className='entrada' 
                         type="text" 
                         value={nombreRol} 
@@ -517,7 +518,7 @@ export default function AgregarRol() {
                      <br />
                      {mostrarListaUsuarios && (
                         <div className="form-group-rol" id='lista-usuarios'>
-                           <label>Permisos para lista de usuarios</label>
+                           <h5 style={{ margin: '0 0 0.5rem 0', fontWeight: '600', color: '#374151' }}>Permisos para lista de usuarios</h5>
                            <div className="radio-options">
                               <input type="checkbox"
                                  checked={permisos.includes('usuarios.crear')}
@@ -548,7 +549,7 @@ export default function AgregarRol() {
 
                      {mostrarListaRoles && (
                         <div className="form-group-rol" id='roles-y-permisos'>
-                           <label>Permisos para roles y permisos</label>
+                           <h5 style={{ margin: '0 0 0.5rem 0', fontWeight: '600', color: '#374151' }}>Permisos para roles y permisos</h5>
                            <div className="radio-options">
                               <input
                                  type="checkbox"
@@ -736,7 +737,7 @@ export default function AgregarRol() {
                      <br />
 
                      <div className="form-group-rol " id="lista-productos">
-                        <label>Permisos para lista de productos</label>
+                        <h5 style={{ margin: '0 0 0.5rem 0', fontWeight: '600', color: '#374151' }}>Permisos para lista de productos</h5>
                         <div className="radio-options">
                            <input
                               type="checkbox"

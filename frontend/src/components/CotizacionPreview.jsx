@@ -767,10 +767,10 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                         {producto.cantidad}
                       </td>
                       <td style={{ padding: '1rem', textAlign: 'right' }}>
-                        S/. {parseFloat(producto.valorUnitario || producto.precioUnitario || 0).toFixed(2)}
+                        S/. {Number.parseFloat(producto.valorUnitario || producto.precioUnitario || 0).toFixed(2)}
                       </td>
                       <td style={{ padding: '1rem', textAlign: 'right', fontWeight: 'bold' }}>
-                        S/. {parseFloat(producto.subtotal || 0).toFixed(2)}
+                        S/. {Number.parseFloat(producto.subtotal || 0).toFixed(2)}
                       </td>
                     </tr>
                   ))}
@@ -881,10 +881,11 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               </h3>
               
               <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                <label htmlFor="correo-destinatario-cotizacion" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
                   Correo del destinatario:
                 </label>
                 <input
+                  id="correo-destinatario-cotizacion"
                   type="email"
                   value={correo}
                   onChange={(e) => setCorreo(e.target.value)}
@@ -900,10 +901,11 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               </div>
 
               <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                <label htmlFor="asunto-cotizacion" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
                   Asunto:
                 </label>
                 <input
+                  id="asunto-cotizacion"
                   type="text"
                   value={asunto}
                   onChange={(e) => setAsunto(e.target.value)}
@@ -919,10 +921,11 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               </div>
 
               <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                <label htmlFor="mensaje-cotizacion" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
                   Mensaje:
                 </label>
                 <textarea
+                  id="mensaje-cotizacion"
                   value={mensaje}
                   onChange={(e) => setMensaje(e.target.value)}
                   placeholder="Escriba un mensaje personalizado..."

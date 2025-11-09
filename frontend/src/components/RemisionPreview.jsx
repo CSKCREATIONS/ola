@@ -541,8 +541,8 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                     }}>
                       S/. {datosConDefaults.total || (datosConDefaults.productos && datosConDefaults.productos.length > 0 ? datosConDefaults.productos
                         .reduce((acc, p) => {
-                          const cantidad = parseFloat(p.cantidad) || 0;
-                          const precio = parseFloat(p.precioUnitario || p.valorUnitario || p.product?.price) || 0;
+                          const cantidad = Number.parseFloat(p.cantidad) || 0;
+                          const precio = Number.parseFloat(p.precioUnitario || p.valorUnitario || p.product?.price) || 0;
                           return acc + (cantidad * precio);
                         }, 0)
                         .toLocaleString('es-ES') : '0')}
@@ -679,10 +679,11 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               </h3>
               
               <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                <label htmlFor="correo-remision-preview" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
                   Correo del destinatario:
                 </label>
                 <input
+                  id="correo-remision-preview"
                   type="email"
                   value={correo}
                   onChange={(e) => setCorreo(e.target.value)}
@@ -698,10 +699,11 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               </div>
 
               <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                <label htmlFor="asunto-remision-preview" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
                   Asunto:
                 </label>
                 <input
+                  id="asunto-remision-preview"
                   type="text"
                   value={asunto}
                   onChange={(e) => setAsunto(e.target.value)}
@@ -717,10 +719,11 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               </div>
 
               <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                <label htmlFor="mensaje-remision-preview" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
                   Mensaje:
                 </label>
                 <textarea
+                  id="mensaje-remision-preview"
                   value={mensaje}
                   onChange={(e) => setMensaje(e.target.value)}
                   placeholder="Escriba un mensaje personalizado..."

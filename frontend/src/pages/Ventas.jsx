@@ -112,7 +112,7 @@ useEffect(() => {
               <h3 className='titulo-profesional'>Lista de ventas</h3>
               {/* BOTONES EXPORTAR */}
               <button
-                onClick={() => exportToExcel(ventas)}
+                onClick={exportToExcel}
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '0.45rem 0.9rem', border: '1.5px solid #16a34a', borderRadius: '8px', background: 'transparent', color: '#16a34a',
                   fontSize: '14px', fontWeight: '500', cursor: 'pointer', transition: 'all 0.3s ease'
@@ -136,8 +136,9 @@ useEffect(() => {
           </div>
           <div className="filtros-tabla">
             <div className="filtro-grupo">
-              <label>Fecha:</label>
+              <label htmlFor="filtro-fecha-ventas">Fecha:</label>
               <input
+                id="filtro-fecha-ventas"
                 type="date"
                 className="filtro-input"
                 value={filtroFecha}
@@ -146,8 +147,9 @@ useEffect(() => {
             </div>
             &nbsp;&nbsp;
             <div className="filtro-grupo">
-              <label>Cliente:</label>
+              <label htmlFor="filtro-cliente-ventas">Cliente:</label>
               <input
+                id="filtro-cliente-ventas"
                 type="text"
                 className="filtro-input"
                 placeholder="Buscar cliente..."
@@ -157,8 +159,9 @@ useEffect(() => {
             </div>
             &nbsp;&nbsp;
             <div className="filtro-grupo">
-              <label>Estado:</label>
+              <label htmlFor="filtro-estado-ventas">Estado:</label>
               <select
+                id="filtro-estado-ventas"
                 className="filtro-select"
                 value={filtroEstado}
                 onChange={e => setFiltroEstado(e.target.value)}

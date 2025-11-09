@@ -65,8 +65,15 @@ exports.createCotizacion = async (req, res) => {
       return res.status(400).json({ message: 'Datos de cliente inválidos' });
     }
 
+    // Sanitizar el correo para prevenir inyección NoSQL
+    const correoSanitizado = typeof cliente.correo === 'string' ? cliente.correo.toLowerCase().trim() : '';
+    
+    if (!correoSanitizado || !correoSanitizado.includes('@')) {
+      return res.status(400).json({ message: 'Correo electrónico inválido' });
+    }
+
     // Buscar cliente existente por correo
-    let clienteExistente = await Cliente.findOne({ correo: cliente.correo });
+    let clienteExistente = await Cliente.findOne({ correo: correoSanitizado });
 
     if (!clienteExistente) {
       // Crear cliente potencial
@@ -75,7 +82,7 @@ exports.createCotizacion = async (req, res) => {
         ciudad: cliente.ciudad,
         direccion: cliente.direccion,
         telefono: cliente.telefono,
-        correo: cliente.correo,
+        correo: correoSanitizado,
         esCliente: !clientePotencial // true si es cliente, false si prospecto
       });
       await clienteExistente.save();
@@ -89,7 +96,7 @@ exports.createCotizacion = async (req, res) => {
 
     let fechaCotizacion = null;
 
-    if (fecha && !isNaN(new Date(fecha).getTime())) {
+    if (fecha && !Number.isNaN(new Date(fecha).getTime())) {
       fechaCotizacion = new Date(fecha);
     } else {
       fechaCotizacion = new Date(); // si no viene, usa la fecha actual
@@ -243,12 +250,15 @@ exports.getCotizaciones = async (req, res) => {
 // Obtener cotización por ID
 exports.getCotizacionById = async (req, res) => {
   try {
-    // Validate ObjectId format first
-    if (!req.params.id.match(/^[0-9a-fA-F]{24}$/)) {
+    // Sanitizar y validar el ID para prevenir inyección NoSQL
+    const cotizacionId = typeof req.params.id === 'string' ? req.params.id.trim() : '';
+    
+    // Validate ObjectId format
+    if (!cotizacionId || !cotizacionId.match(/^[0-9a-fA-F]{24}$/)) {
       return res.status(400).json({ message: 'ID de cotización inválido' });
     }
 
-    let cotizacion = await Cotizacion.findById(req.params.id)
+    let cotizacion = await Cotizacion.findById(cotizacionId)
       .populate('cliente.referencia', 'nombre correo ciudad telefono esCliente')
       .populate({
         path: 'productos.producto.id',
@@ -288,6 +298,13 @@ exports.updateCotizacion = async (req, res) => {
   }
 
   try {
+    // Sanitizar y validar el ID para prevenir inyección NoSQL
+    const cotizacionId = typeof req.params.id === 'string' ? req.params.id.trim() : '';
+    
+    if (!cotizacionId || !cotizacionId.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ message: 'ID de cotización inválido' });
+    }
+
     // No permitir cambiar el código ni el _id
     const { codigo, _id, ...rest } = req.body;
 
@@ -310,7 +327,7 @@ exports.updateCotizacion = async (req, res) => {
     }
 
     const cotizacion = await Cotizacion.findByIdAndUpdate(
-      req.params.id,
+      cotizacionId,
       rest,
       { new: true }
     );
@@ -324,8 +341,15 @@ exports.updateCotizacion = async (req, res) => {
 // Eliminar cotización
 exports.deleteCotizacion = async (req, res) => {
   try {
+    // Sanitizar y validar el ID para prevenir inyección NoSQL
+    const cotizacionId = typeof req.params.id === 'string' ? req.params.id.trim() : '';
+    
+    if (!cotizacionId || !cotizacionId.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ message: 'ID de cotización inválido' });
+    }
+
     // Primero obtenemos la cotización para comprobar su antigüedad
-    const cotizacion = await Cotizacion.findById(req.params.id);
+    const cotizacion = await Cotizacion.findById(cotizacionId);
     if (!cotizacion) return res.status(404).json({ message: 'Cotización no encontrada' });
 
     // Determinar fecha base: preferir createdAt (timestamps), si no existe usar fecha
@@ -346,7 +370,7 @@ exports.deleteCotizacion = async (req, res) => {
     }
 
     // Si cumple la condición, eliminar definitivamente
-    await Cotizacion.findByIdAndDelete(req.params.id);
+    await Cotizacion.findByIdAndDelete(cotizacionId);
     return res.status(200).json({ message: 'Cotización eliminada' });
   } catch (error) {
     res.status(500).json({ message: 'Error al eliminar cotización', error: error.message });
@@ -357,8 +381,15 @@ exports.deleteCotizacion = async (req, res) => {
 exports.updateEstadoCotizacion = async (req, res) => {
   const { estado } = req.body;
   try {
+    // Sanitizar y validar el ID para prevenir inyección NoSQL
+    const cotizacionId = typeof req.params.id === 'string' ? req.params.id.trim() : '';
+    
+    if (!cotizacionId || !cotizacionId.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ message: 'ID de cotización inválido' });
+    }
+
     const cotizacion = await Cotizacion.findByIdAndUpdate(
-      req.params.id,
+      cotizacionId,
       { estado },
       { new: true }
     );
@@ -375,12 +406,15 @@ exports.getUltimaCotizacionPorCliente = async (req, res) => {
   const { cliente } = req.query;
 
   try {
-    // Validate ObjectId format first
-    if (!cliente || !cliente.match(/^[0-9a-fA-F]{24}$/)) {
+    // Sanitizar y validar el ID del cliente para prevenir inyección NoSQL
+    const clienteId = typeof cliente === 'string' ? cliente.trim() : '';
+    
+    // Validate ObjectId format
+    if (!clienteId || !clienteId.match(/^[0-9a-fA-F]{24}$/)) {
       return res.status(400).json({ message: 'ID de cliente inválido' });
     }
 
-    let cotizacion = await Cotizacion.findOne({ 'cliente.referencia': cliente })
+    let cotizacion = await Cotizacion.findOne({ 'cliente.referencia': clienteId })
       .sort({ createdAt: -1 })
       .populate({
         path: 'productos.producto.id',
@@ -414,7 +448,13 @@ exports.getUltimaCotizacionPorCliente = async (req, res) => {
 exports.enviarCotizacionPorCorreo = async (req, res) => {
   try {
     const { correoDestino, asunto, mensaje } = req.body;
-    const cotizacionId = req.params.id;
+    
+    // Sanitizar y validar el ID para prevenir inyección NoSQL
+    const cotizacionId = typeof req.params.id === 'string' ? req.params.id.trim() : '';
+    
+    if (!cotizacionId || !cotizacionId.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ message: 'ID de cotización inválido' });
+    }
 
     console.log('🔍 Iniciando envío de correo para cotización:', cotizacionId);
     console.log('📧 Datos de envío:', { correoDestino, asunto });

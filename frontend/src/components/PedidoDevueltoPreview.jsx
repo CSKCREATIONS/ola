@@ -170,8 +170,8 @@ export default function PedidoDevueltoPreview({ datos, onClose }) {
                   </td>
                   <td style={{ padding: '0.6rem', textAlign: 'right', fontWeight: 'bold', fontSize: '0.8rem' }}>
                     ${(() => {
-                      const cantidad = parseFloat(p.cantidad) || 0;
-                      const precio = parseFloat(p.valorUnitario || p.precioUnitario || p.product?.price) || 0;
+                      const cantidad = Number.parseFloat(p.cantidad) || 0;
+                      const precio = Number.parseFloat(p.valorUnitario || p.precioUnitario || p.product?.price) || 0;
                       return (cantidad * precio).toLocaleString('es-CO');
                     })()}
                   </td>
@@ -204,8 +204,8 @@ export default function PedidoDevueltoPreview({ datos, onClose }) {
                 <td style={{ padding: '0.75rem', textAlign: 'right', fontSize: '1rem', color: '#f59e0b' }}>
                   ${datos.productos && datos.productos.length > 0 ? datos.productos
                     .reduce((acc, p) => {
-                      const cantidad = parseFloat(p.cantidad) || 0;
-                      const precio = parseFloat(p.valorUnitario || p.precioUnitario || p.product?.price) || 0;
+                      const cantidad = Number.parseFloat(p.cantidad) || 0;
+                      const precio = Number.parseFloat(p.valorUnitario || p.precioUnitario || p.product?.price) || 0;
                       return acc + (cantidad * precio);
                     }, 0)
                     .toLocaleString('es-CO') : '0'}
@@ -239,16 +239,16 @@ export default function PedidoDevueltoPreview({ datos, onClose }) {
             <button className="close-modal" onClick={() => setShowEnviarModal(false)}>×</button>
             <h3 style={{ textAlign: 'center', marginBottom: '1rem' }}>Enviar pedido devuelto</h3>
             <div style={{ marginBottom: '1rem' }}>
-              <label>Correo destinatario:</label>
-              <input type="email" className="cuadroTexto" value={correo} onChange={e => setCorreo(e.target.value)} style={{ width: '100%' }} />
+              <label htmlFor="correo-pedido-devuelto">Correo destinatario:</label>
+              <input id="correo-pedido-devuelto" type="email" className="cuadroTexto" value={correo} onChange={e => setCorreo(e.target.value)} style={{ width: '100%' }} />
             </div>
             <div style={{ marginBottom: '1rem' }}>
-              <label>Asunto:</label>
-              <input type="text" className="cuadroTexto" value={asunto} onChange={e => setAsunto(e.target.value)} style={{ width: '100%' }} placeholder={`Pedido Devuelto ${datos.numeroPedido}`} />
+              <label htmlFor="asunto-pedido-devuelto">Asunto:</label>
+              <input id="asunto-pedido-devuelto" type="text" className="cuadroTexto" value={asunto} onChange={e => setAsunto(e.target.value)} style={{ width: '100%' }} placeholder={`Pedido Devuelto ${datos.numeroPedido}`} />
             </div>
             <div style={{ marginBottom: '1rem' }}>
-              <label>Mensaje:</label>
-              <textarea className="cuadroTexto" value={mensaje} onChange={e => setMensaje(e.target.value)} style={{ width: '100%', minHeight: '80px' }} placeholder="Confirmación de devolución de pedido..." />
+              <label htmlFor="mensaje-pedido-devuelto">Mensaje:</label>
+              <textarea id="mensaje-pedido-devuelto" className="cuadroTexto" value={mensaje} onChange={e => setMensaje(e.target.value)} style={{ width: '100%', minHeight: '80px' }} placeholder="Confirmación de devolución de pedido..." />
             </div>
             <button className="btn-enviar-modal" style={{ width: '100%' }} onClick={() => { }}>Enviar</button>
           </div>
