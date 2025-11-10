@@ -664,6 +664,7 @@ export default function PedidosAgendados() {
               datos={cotizacionPreview}
               onClose={() => setCotizacionPreview(null)}
               onEmailSent={handleEmailSent}
+              onRemisionar={() => marcarComoEntregado(cotizacionPreview._id)}
             />
           )}
 

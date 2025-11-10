@@ -31,7 +31,6 @@ import ReporteProveedores from './pages/ReporteProveedores';
 import ReporteProductos from './pages/ReporteProductos';
 import OrdenCompra from './pages/OrdenCompra';
 import RegistrarCompra from './pages/RegistrarCompra';
-import ListaDeRemisiones from './pages/ListaDeRemisiones';
 
 
 const App = () => {
@@ -303,16 +302,6 @@ const App = () => {
             }
           />
 
-          <Route
-            path='/ListaDeRemisiones'
-            element={
-              <PrivateRoute>
-                <PermisoRoute permiso="remisiones.ver">
-                  <ListaDeRemisiones />
-                </PermisoRoute>
-              </PrivateRoute>
-            }
-          />
 
         </Routes>
 

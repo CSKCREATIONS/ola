@@ -1,10 +1,8 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 import './FormatoCotizacion.css';
 import api from '../api/axiosConfig';
 
 export default function RemisionPreview({ datos, onClose }) {
-  const navigate = useNavigate();
   // Obtener usuario logueado con fallback
   const usuarioStorage = JSON.parse(localStorage.getItem('user') || '{}');
   const usuario = {
@@ -406,7 +404,6 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                   <p><strong>Dirección:</strong> {datosConDefaults.empresa?.direccion || 'Cl. 21 # 5 - 52 C19, Chía, Cundinamarca'}</p>
                   <p><strong>Responsable:</strong> {usuario.firstName || ''} {usuario.surname || ''}</p>
                   <p><strong>Ref. Pedido:</strong> {datosConDefaults.codigoPedido || 'N/A'}</p>
-                  <p><strong>Ref. Cotización:</strong> {datosConDefaults.codigoCotizacion || 'N/A'}</p>
                   <p><strong>Fecha Remisión:</strong> {datosConDefaults.fechaRemision ? new Date(datosConDefaults.fechaRemision).toLocaleDateString('es-ES') : 'N/A'}</p>
                   <p><strong>Estado:</strong> 
                     <span style={{
