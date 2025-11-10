@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import Fijo from '../components/Fijo';
 import NavVentas from '../components/NavVentas';
-import RemisionModal from '../components/RemisionModal';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import * as XLSX from 'xlsx';
 import Swal from 'sweetalert2';
 import api from '../api/axiosConfig';
+import RemisionPreview from '../components/RemisionPreview';
 
 /* Estilos CSS avanzados para Pedidos Entregados */
 const pedidosEntregadosStyles = `
@@ -200,9 +200,8 @@ if (typeof document !== 'undefined') {
 export default function PedidosEntregados() {
   const [pedidosEntregados, setPedidosEntregados] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [showRemisionModal, setShowRemisionModal] = useState(false);
-  const [datosRemision, setDatosRemision] = useState(null);
   const itemsPerPage = 10;
+  const [remisionPreview, setRemisionPreview] = useState(null);
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -247,7 +246,7 @@ export default function PedidosEntregados() {
 
       Swal.close();
 
-      if (result.existente) {
+        if (result.existente) {
         // Ya existe una remisión
         Swal.fire({
           icon: 'info',
@@ -256,8 +255,7 @@ export default function PedidosEntregados() {
           confirmButtonText: 'Ver remisión'
         }).then((r) => {
           if (r.isConfirmed) {
-            setDatosRemision(result.remision);
-            setShowRemisionModal(true);
+              // No abrimos modal local aquí; el usuario puede navegar a la remisión desde la lista
           }
         });
       } else {
@@ -268,10 +266,7 @@ export default function PedidosEntregados() {
           text: `Se ha creado la remisión ${result.remision?.numeroRemision || ''}`,
           confirmButtonText: 'Ver remisión'
         }).then((swalResult) => {
-          if (swalResult.isConfirmed) {
-            setDatosRemision(result.remision);
-            setShowRemisionModal(true);
-          }
+          // El usuario podrá ver la remisión desde la lista; no abrimos modal local.
         });
       }
 
@@ -325,11 +320,7 @@ export default function PedidosEntregados() {
     XLSX.writeFile(workbook, 'pedidos_entregados.xlsx');
     for (const el of elementosNoExport) { el.style.display = ''; }
   };
-
-  const abrirRemision = async (pedidoId) => {
-    // Usar la función de creación automática de remisión
-    await crearRemisionDesdePedido(pedidoId);
-  };
+  
 
   // ModalProductosCotizacion eliminado por no utilizarse
 
@@ -352,7 +343,7 @@ export default function PedidosEntregados() {
                     Pedidos Entregados
                   </h2>
                   <p style={{ margin: 0, fontSize: '1.1rem', opacity: 0.9 }}>
-                    Historial completo de pedidos entregados exitosamente
+                    Aquí encontrará las ventas concretadas con sus respectivas remisiones
                   </p>
                 </div>
               </div>
@@ -468,7 +459,7 @@ export default function PedidosEntregados() {
                 <thead>
                   <tr>
                     <th>No</th>
-                    <th>Identificador de Pedido</th>
+                    <th>Remisión</th>
                     <th>F. Entrega</th>
                     <th>Cliente</th>
                     <th>Ciudad</th>
@@ -505,9 +496,44 @@ export default function PedidosEntregados() {
                               border: 'none',
                               padding: 0,
                               font: 'inherit'
+                            }} 
+                            onClick={async () => {
+                              try {
+                                // Primero intentar obtener remisión existente desde el pedido
+                                // Estrategia: buscar remisión llamando endpoint crear-desde-pedido (que retorna existente si ya hay)
+                                const res = await api.post(`/api/remisiones/crear-desde-pedido/${pedido._id}`);
+                                const data = res.data || res;
+                                if (data.remision) {
+                                  setRemisionPreview(data.remision);
+                                } else {
+                                  // Si no viene remision detallada, intentar fallback obtener pedido completo y mapear estructura mínima
+                                  const pedidoRes = await api.get(`/api/pedidos/${pedido._id}?populate=true`);
+                                  const pedidoData = (pedidoRes.data || pedidoRes).data || (pedidoRes.data || pedidoRes);
+                                  const remisionLike = {
+                                    numeroRemision: 'REM-PED-' + (pedidoData.numeroPedido || pedidoData._id?.slice(-6)),
+                                    codigoPedido: pedidoData.numeroPedido,
+                                    fechaRemision: pedidoData.updatedAt || pedidoData.createdAt,
+                                    fechaEntrega: pedidoData.fechaEntrega,
+                                    estado: 'activa',
+                                    cliente: pedidoData.cliente || {},
+                                    productos: (pedidoData.productos || []).map(p => ({
+                                      nombre: p.product?.name || p.product?.nombre || p.nombre || 'Producto',
+                                      cantidad: p.cantidad,
+                                      precioUnitario: p.precioUnitario,
+                                      total: p.cantidad * (p.precioUnitario || 0),
+                                      descripcion: p.product?.description || p.product?.descripcion || '',
+                                      codigo: p.product?.code || p.product?.codigo || ''
+                                    })),
+                                    total: (pedidoData.productos || []).reduce((sum, pr) => sum + pr.cantidad * (pr.precioUnitario || 0), 0),
+                                    observaciones: pedidoData.observacion || '',
+                                  };
+                                  setRemisionPreview(remisionLike);
+                                }
+                              } catch (error) {
+                                console.error('Error cargando remisión/pedido para vista previa:', error);
+                                Swal.fire('Error', 'No se pudo cargar la remisión del pedido', 'error');
+                              }
                             }}
-                            onClick={() => abrirRemision(pedido._id)}
-                            title="Clic para generar remisión"
                           >
                             {pedido.numeroPedido || '---'}
                           </button>
@@ -578,13 +604,14 @@ export default function PedidosEntregados() {
             </div>
           )}
 
-          {/* Modal de remisión */}
-          {showRemisionModal && datosRemision && (
-            <RemisionModal
-              datos={datosRemision}
-              onClose={() => setShowRemisionModal(false)}
+          {remisionPreview && (
+            <RemisionPreview
+              datos={remisionPreview}
+              onClose={() => setRemisionPreview(null)}
             />
           )}
+
+          
         </div>
       </div>
       <div className="custom-footer">

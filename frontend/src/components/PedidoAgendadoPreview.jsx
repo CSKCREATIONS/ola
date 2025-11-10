@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import api from '../api/axiosConfig';
 
-const PedidoAgendadoPreview = ({ datos, onClose, onEmailSent }) => {
+const PedidoAgendadoPreview = ({ datos, onClose, onEmailSent, onRemisionar }) => {
   const [showEnviarModal, setShowEnviarModal] = useState(false);
   const [correo, setCorreo] = useState('');
   const [asunto, setAsunto] = useState('');
@@ -15,10 +15,10 @@ const PedidoAgendadoPreview = ({ datos, onClose, onEmailSent }) => {
   const formatDate = (fecha) => {
     if (!fecha) return 'No especificada';
     const date = new Date(fecha);
-    return date.toLocaleDateString('es-ES', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+    return date.toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
     });
   };
 
@@ -44,34 +44,12 @@ const PedidoAgendadoPreview = ({ datos, onClose, onEmailSent }) => {
     setMensaje(
       `Estimado/a ${datos?.cliente?.nombre || 'cliente'},
 
-Esperamos se encuentre muy bien. Adjunto encontrará la información del pedido agendado:
+Le extendemos un cordial saludo desde el equipo de ventas de JLA GLOBAL COMPANY. Esperamos se encuentre muy bien.
 
-📋 DETALLES DEL PEDIDO:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Número de pedido: ${datos?.numeroPedido || datos?.codigo || 'N/A'}
-• Fecha de emisión: ${datos?.fecha ? new Date(datos.fecha).toLocaleDateString('es-ES') : 'N/A'}
-• Fecha de entrega programada: ${datos?.fechaEntrega ? new Date(datos.fechaEntrega).toLocaleDateString('es-ES') : 'N/A'}
-• Cliente: ${datos?.cliente?.nombre || 'N/A'}
-• Correo: ${datos?.cliente?.correo || 'N/A'}
-• Teléfono: ${datos?.cliente?.telefono || 'N/A'}
-• Ciudad: ${datos?.cliente?.ciudad || 'N/A'}
-• Estado actual: ${datos?.estado || 'Agendado'}
-• Total de productos: ${datos?.productos?.length || 0} artículos
-• TOTAL PEDIDO: S/. ${totalFinal.toLocaleString('es-ES')}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-${datos?.observacion ? `📝 OBSERVACIONES:
-${datos.observacion}
-
-` : ''}Su pedido ha sido programado y se encuentra en proceso de preparación. Le notificaremos cuando esté listo para entrega.
+Adjunto encontrará el formato de pedido que ha agendado con nosotros. Por favor, revise los detalles para cerciornarse de que toda la información es correcta. Cualquier inquietud o inconsistencia, no dude en contactarnos.
 
 ¡Gracias por confiar en nosotros!
 
-Saludos cordiales,
-
-${usuario?.firstName || usuario?.nombre || 'Equipo de ventas'} ${usuario?.surname || ''}${usuario?.email ? `
-📧 Correo: ${usuario.email}` : ''}${usuario?.telefono ? `
-📞 Teléfono: ${usuario.telefono}` : ''}
 
 ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
 🌐 Productos de calidad`
@@ -82,7 +60,6 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
   // Función para enviar por correo
   const enviarPorCorreo = async () => {
     try {
-      const token = localStorage.getItem('token');
       const response = await api.post(`/api/pedidos/${datos._id}/enviar-correo`, {
         pedidoId: datos._id,
         correoDestino: correo,
@@ -98,12 +75,12 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
           confirmButtonColor: '#fd7e14'
         });
         setShowEnviarModal(false);
-        
+
         // Actualizar el estado local para reflejar que fue enviado
         if (datos) {
           datos.enviadoCorreo = true;
         }
-        
+
         // Llamar al callback para actualizar el componente padre
         if (onEmailSent) {
           onEmailSent(datos._id);
@@ -242,6 +219,35 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               <i className="fa-solid fa-envelope"></i>
               Enviar
             </button>
+            {/* Botón de enviar por correo */}
+            <button
+              onClick={() => {
+                if (typeof onRemisionar === 'function') {
+                  onRemisionar();
+                } else {
+                  Swal.fire('Acción no disponible', 'No se pudo ejecutar la remisión (handler no definido).', 'warning');
+                }
+              }}
+              style={{
+                background: 'rgba(255, 255, 255, 0.2)',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '0.75rem 1rem',
+                color: 'white',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                fontSize: '0.9rem',
+                fontWeight: 'bold',
+                transition: 'all 0.3s ease'
+              }}
+              onMouseEnter={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.3)'}
+              onMouseLeave={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.2)'}
+            >
+              <i className="fa-solid fa-file-invoice"></i>
+              Remisionar
+            </button>
 
             {/* Botón de cerrar */}
             <button
@@ -277,13 +283,13 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
           <div
             className="pdf-pedido-agendado"
             id="pdf-pedido-agendado-block"
-            style={{ 
-              display: 'flex', 
-              flexDirection: 'column', 
-              background: '#fff', 
-              padding: '2rem', 
-              borderRadius: '10px', 
-              boxShadow: '0 2px 8px rgba(0,0,0,0.08)', 
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              background: '#fff',
+              padding: '2rem',
+              borderRadius: '10px',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
               marginTop: '1rem',
               userSelect: 'none',
               WebkitUserSelect: 'none',
@@ -322,9 +328,9 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               marginBottom: '2rem'
             }}>
               <div>
-                <h3 style={{ 
-                  borderBottom: '3px solid #fd7e14', 
-                  paddingBottom: '0.5rem', 
+                <h3 style={{
+                  borderBottom: '3px solid #fd7e14',
+                  paddingBottom: '0.5rem',
                   color: '#fd7e14',
                   fontSize: '1.2rem',
                   fontWeight: 'bold',
@@ -342,9 +348,9 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               </div>
 
               <div>
-                <h3 style={{ 
-                  borderBottom: '3px solid #fd7e14', 
-                  paddingBottom: '0.5rem', 
+                <h3 style={{
+                  borderBottom: '3px solid #fd7e14',
+                  paddingBottom: '0.5rem',
                   color: '#fd7e14',
                   fontSize: '1.2rem',
                   fontWeight: 'bold',
@@ -355,7 +361,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                 <div style={{ lineHeight: '1.8' }}>
                   <p><strong>Fecha de Pedido:</strong> {formatDate(datos?.createdAt)}</p>
                   <p><strong>Fecha de Entrega:</strong> {formatDate(datos?.fechaEntrega)}</p>
-                  <p><strong>Estado:</strong> 
+                  <p><strong>Estado:</strong>
                     <span style={{
                       background: '#fd7e14',
                       color: 'white',
@@ -373,9 +379,9 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
 
             {/* Tabla de productos */}
             <div style={{ marginBottom: '2rem' }}>
-              <h3 style={{ 
-                borderBottom: '3px solid #fd7e14', 
-                paddingBottom: '0.5rem', 
+              <h3 style={{
+                borderBottom: '3px solid #fd7e14',
+                paddingBottom: '0.5rem',
                 color: '#fd7e14',
                 fontSize: '1.2rem',
                 fontWeight: 'bold',
@@ -401,7 +407,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                 </thead>
                 <tbody>
                   {datos?.productos && datos.productos.map((producto, index) => (
-                    <tr key={index} style={{ 
+                    <tr key={index} style={{
                       borderBottom: '1px solid #eee',
                       backgroundColor: index % 2 === 0 ? '#fafafa' : 'white'
                     }}>
@@ -428,23 +434,23 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                   ))}
                 </tbody>
                 <tfoot>
-                  <tr style={{ 
-                    background: 'linear-gradient(135deg, #fff5e6, #ffe4cc)', 
-                    borderTop: '2px solid #fd7e14' 
+                  <tr style={{
+                    background: 'linear-gradient(135deg, #fff5e6, #ffe4cc)',
+                    borderTop: '2px solid #fd7e14'
                   }}>
-                    <td colSpan="3" style={{ 
-                      padding: '1rem', 
-                      textAlign: 'right', 
-                      fontWeight: 'bold', 
+                    <td colSpan="3" style={{
+                      padding: '1rem',
+                      textAlign: 'right',
+                      fontWeight: 'bold',
                       fontSize: '1.1rem',
                       color: '#fd7e14'
                     }}>
                       TOTAL:
                     </td>
-                    <td style={{ 
-                      padding: '1rem', 
-                      textAlign: 'right', 
-                      fontWeight: 'bold', 
+                    <td style={{
+                      padding: '1rem',
+                      textAlign: 'right',
+                      fontWeight: 'bold',
                       fontSize: '1.3rem',
                       color: '#fd7e14'
                     }}>
@@ -458,9 +464,9 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
             {/* Observaciones */}
             {datos?.observacion && (
               <div style={{ marginBottom: '2rem' }}>
-                <h3 style={{ 
-                  borderBottom: '3px solid #fd7e14', 
-                  paddingBottom: '0.5rem', 
+                <h3 style={{
+                  borderBottom: '3px solid #fd7e14',
+                  paddingBottom: '0.5rem',
                   color: '#fd7e14',
                   fontSize: '1.2rem',
                   fontWeight: 'bold',
@@ -489,9 +495,9 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               textAlign: 'center',
               borderTop: '3px solid #fd7e14'
             }}>
-              <div style={{ 
-                fontSize: '1.1rem', 
-                fontWeight: 'bold', 
+              <div style={{
+                fontSize: '1.1rem',
+                fontWeight: 'bold',
                 color: '#fd7e14',
                 marginBottom: '0.5rem'
               }}>
@@ -531,7 +537,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                 <i className="fa-solid fa-envelope" style={{ marginRight: '0.5rem' }}></i>
                 Enviar Pedido por Correo
               </h3>
-              
+
               <div style={{ marginBottom: '1rem' }}>
                 <label htmlFor="input-pedido-agendado-preview-1" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
                   Correo del destinatario:

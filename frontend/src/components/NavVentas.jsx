@@ -13,7 +13,6 @@ export default function NavVentas() {
   const [puedeVerVentasAgendadas, setPuedeVerVentasAgendadas] = useState(false);
   const [puedeVerPedidosEntregados, setPuedeVerPedidosEntregados] = useState(false);
   const [puedeVerPedidosCancelados, setPuedeVerPedidosCancelados] = useState(false);
-  const [puedeVerPedidosDevueltos, setPuedeVerPedidosDevueltos] = useState(false);
   const [puedeVerListaDeVentas, setPuedeVerListaDeVentas] = useState(false);
   const [puedeVerListaDeClientes, setPuedeVerListaDeClientes] = useState(false);
   const [puedeVerProspectos, setPuedeVerProspectos] = useState(false);
@@ -29,7 +28,6 @@ export default function NavVentas() {
       setPuedeVerVentasAgendadas(usuario.permissions.includes('pedidosAgendados.ver'));
       setPuedeVerPedidosEntregados(usuario.permissions.includes('pedidosEntregados.ver'));
       setPuedeVerPedidosCancelados(usuario.permissions.includes('pedidosCancelados.ver'));
-      setPuedeVerPedidosDevueltos(usuario.permissions.includes('pedidosDevueltos.ver'));
       setPuedeVerListaDeVentas(usuario.permissions.includes('listaDeVentas.ver'));
       setPuedeVerListaDeClientes(usuario.permissions.includes('clientes.ver'));
       setPuedeVerProspectos(usuario.permissions.includes('prospectos.ver'));
@@ -43,14 +41,8 @@ export default function NavVentas() {
     { path: "/RegistrarCotizacion", label: "Registrar cotización", visible: puedeRegistrarCotizacion },
     { path: "/ListaDeCotizaciones", label: "Lista de cotizaciones", visible: puedeVerCotizaciones },
     { path: "/PedidosAgendados", label: "Pedidos agendados", visible: puedeVerVentasAgendadas },
-
-    { path: "/PedidosEntregados", label: "Pedidos Entregados", visible: puedeVerPedidosEntregados },
-
     { path: "/PedidosCancelados", label: "Pedidos cancelados", visible: puedeVerPedidosCancelados },
-
-    
-    { path: "/ListaDeRemisiones", label: "Lista de remisiones", visible: puedeVerRemisiones },
-    
+    { path: "/PedidosEntregados", label: "Pedidos Entregados", visible: puedeVerPedidosEntregados },
     { path: "/ListaDeClientes", label: "Lista de clientes", visible: puedeVerListaDeClientes },
     { path: "/ProspectosDeClientes", label: "Prospectos de clientes", visible: puedeVerProspectos },
     { path: "/ReportessVentas", label: "Reportes", visible: puedeVerReportesVentas }
@@ -60,11 +52,9 @@ export default function NavVentas() {
     puedeVerVentasAgendadas,
     puedeVerPedidosEntregados,
     puedeVerPedidosCancelados,
-    puedeVerListaDeVentas,
     puedeVerListaDeClientes,
     puedeVerProspectos,
     puedeVerReportesVentas,
-    puedeVerRemisiones
   ]);
 
   const filteredLinks = useMemo(() => allLinks.filter(link => link.visible), [allLinks]);

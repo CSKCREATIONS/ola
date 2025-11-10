@@ -619,30 +619,26 @@ const GestionSubcategorias = () => {
   };
 
   // Nueva función: verifica el estado de la categoría padre antes de intentar activar la subcategoría
-  // Valida primero si la categoría padre está activa antes de intentar activar la subcategoría.
-  // Para desactivar no hace falta validar.
   const handleToggleWithParentCheck = async (subcatId, wantToActivate) => {
     try {
-      if (wantToActivate) {
-        // Obtener la subcategoría para conocer su categoría padre
-        const subRes = await api.get(`${API_URL}/${subcatId}`);
-        const subPayload = subRes.data?.data || subRes.data || subRes; // flexibilidad según estructura
-        const parentCategoryId = subPayload?.category?._id || subPayload?.category;
+      // Obtener la subcategoría para conocer su categoría padre
+      const subRes = await api.get(`${API_URL}/${subcatId}`);
+      const subData = subRes.data;
+      const parentCategoryId = subData?.data?.category?._id || subData?.category?._id || subData?.data?.category;
 
-        if (parentCategoryId) {
-          // Consultar la categoría padre
-            const catRes = await api.get(`${CATEGORY_API_URL}/${parentCategoryId}`);
-            if (!(catRes.status >= 200 && catRes.status < 300)) {
-              return Swal.fire('Error', 'No se pudo verificar la categoría padre', 'error');
-            }
-            const categoria = catRes.data?.data || catRes.data || catRes;
-            if (categoria && categoria.activo === false) {
-              return Swal.fire('Acción no permitida', 'No se puede activar la subcategoría porque la categoría padre está desactivada', 'error');
-            }
+      if (wantToActivate && parentCategoryId) {
+        // Consultar la categoría padre
+        const catRes = await api.get(`${CATEGORY_API_URL}/${parentCategoryId}`);
+        const catData = catRes.data;
+
+        const categoria = catData?.data || catData;
+        if (catRes.ok && categoria && categoria.activo === false) {
+          // Mostrar mensaje del backend o personalizado
+          return Swal.fire('Acción no permitida', 'No se puede activar la subcategoría porque la categoría padre está desactivada', 'error');
         }
       }
 
-      // Si la validación pasa (o estamos desactivando), ejecutar el cambio de estado.
+      // Si pasa las comprobaciones, ejecutar la función original
       await toggleEstadoSubcategoria(subcatId, wantToActivate);
     } catch (error) {
       console.error('Error al verificar categoría padre:', error);

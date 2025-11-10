@@ -3,8 +3,7 @@ import NavVentas from '../components/NavVentas'
 import Swal from 'sweetalert2'
 import { useNavigate } from 'react-router-dom';
 import { Editor } from "@tinymce/tinymce-react";
-import React, { useRef, useState, useEffect } from 'react';
-import { transform } from 'lodash';
+import { useRef, useState, useEffect } from 'react';
 import api from '../api/axiosConfig';
 
 export default function RegistrarCotizacion() {
@@ -15,7 +14,16 @@ export default function RegistrarCotizacion() {
   const [productos, setProductos] = useState([]);
   const [productosSeleccionados, setProductosSeleccionados] = useState([]);
 
-  const [notificacion, setNotificacion] = useState(null);
+  // Autocompletado de cliente (buscar por nombre y completar ciudad)
+  const [clienteNombre, setClienteNombre] = useState('');
+  const [clienteCiudad, setClienteCiudad] = useState('');
+  const [clienteDireccion, setClienteDireccion] = useState('');
+  const [clienteTelefono, setClienteTelefono] = useState('');
+  const [clienteCorreo, setClienteCorreo] = useState('');
+  const [clientes, setClientes] = useState([]);
+  const [filteredClientes, setFilteredClientes] = useState([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -28,6 +36,20 @@ export default function RegistrarCotizacion() {
     };
 
     loadProducts();
+  }, []);
+
+  // Cargar clientes una vez (se filtra en el frontend por nombre)
+  useEffect(() => {
+    const loadClientes = async () => {
+      try {
+        const res = await api.get('/api/clientes');
+        const lista = res.data?.data || res.data || [];
+        setClientes(Array.isArray(lista) ? lista : []);
+      } catch (err) {
+        console.error('Error al cargar clientes:', err);
+      }
+    };
+    loadClientes();
   }, []);
 
   useEffect(() => {
@@ -118,6 +140,15 @@ export default function RegistrarCotizacion() {
         });
 
         setProductosSeleccionados([]);
+
+        // limpiar estado controlado de cliente
+        setClienteNombre('');
+        setClienteCiudad('');
+  setClienteDireccion('');
+  setClienteTelefono('');
+  setClienteCorreo('');
+        setFilteredClientes([]);
+        setShowDropdown(false);
 
         if (descripcionRef.current) {
           descripcionRef.current.setContent('');
@@ -256,8 +287,20 @@ export default function RegistrarCotizacion() {
   // En vez de mostrar el modal aquí, navegamos a ListaDeCotizaciones
   // y pasamos la cotización creada en el state para que la lista abra el formato
   const nuevaCot = result.data || result;
-  setNotificacion('Cotización guardada');
-  setTimeout(() => setNotificacion(null), 5000);
+  // Mostrar toast de éxito (persiste al navegar porque SweetAlert2 se monta en body)
+  Swal.fire({
+    toast: true,
+    position: 'top-end',
+    icon: 'success',
+    title: 'Cotización guardada',
+    showConfirmButton: false,
+    timer: 2000,
+    timerProgressBar: true,
+    didOpen: (toast) => {
+      toast.addEventListener('mouseenter', Swal.stopTimer);
+      toast.addEventListener('mouseleave', Swal.resumeTimer);
+    }
+  });
   navigate('/ListaDeCotizaciones', { state: { abrirFormato: true, cotizacion: nuevaCot } });
 
       // Limpiar todos los inputs de la vista después de guardar correctamente
@@ -343,13 +386,6 @@ export default function RegistrarCotizacion() {
                   </div>
                   Información del Cliente
                 </h4>
-                <p style={{
-                  margin: '0.5rem 0 0 3.25rem',
-                  color: '#64748b',
-                  fontSize: '0.9rem'
-                }}>
-                  Complete los datos del cliente para generar la cotización
-                </p>
               </div>
 
               {/* Grid del formulario */}
@@ -374,31 +410,118 @@ export default function RegistrarCotizacion() {
                     Nombre o Razón Social
                     <span style={{ color: '#ef4444' }}>*</span>
                   </label>
-                  <input
-                    id='cliente'
-                    type="text"
-                    className="cuadroTexto"
-                    placeholder="Ingrese el nombre completo o razón social"
-                    style={{
-                      width: '100%',
-                      padding: '0.875rem 1rem',
-                      border: '2px solid #e5e7eb',
-                      borderRadius: '10px',
-                      fontSize: '1rem',
-                      transition: 'all 0.3s ease',
-                      backgroundColor: '#ffffff',
-                      fontFamily: 'inherit',
-                      boxSizing: 'border-box'
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = '#3b82f6';
-                      e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = '#e5e7eb';
-                      e.target.style.boxShadow = 'none';
-                    }}
-                  />
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      id='cliente'
+                      type="text"
+                      className="cuadroTexto"
+                      placeholder="Ingrese el nombre completo o razón social"
+                      value={clienteNombre}
+                      onChange={(e) => {
+                        const q = e.target.value;
+                        setClienteNombre(q);
+                        if (q && q.trim().length >= 1) {
+                          const ql = q.trim().toLowerCase();
+                          const matches = clientes
+                            .filter(c => (c?.nombre || '').toLowerCase().includes(ql))
+                            .slice(0, 10);
+                          setFilteredClientes(matches);
+                          setShowDropdown(matches.length > 0);
+                        } else {
+                          setFilteredClientes([]);
+                          setShowDropdown(false);
+                        }
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: '0.875rem 1rem',
+                        border: '2px solid #e5e7eb',
+                        borderRadius: '10px',
+                        fontSize: '1rem',
+                        transition: 'all 0.3s ease',
+                        backgroundColor: '#ffffff',
+                        fontFamily: 'inherit',
+                        boxSizing: 'border-box'
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = '#3b82f6';
+                        e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+                        if (filteredClientes.length > 0) setShowDropdown(true);
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = '#e5e7eb';
+                        e.target.style.boxShadow = 'none';
+                        // pequeño retraso para permitir click en dropdown
+                        setTimeout(() => setShowDropdown(false), 150);
+                      }}
+                    />
+
+                    {showDropdown && filteredClientes.length > 0 && (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: '100%',
+                          left: 0,
+                          right: 0,
+                          zIndex: 50,
+                          background: 'white',
+                          border: '1px solid #e5e7eb',
+                          borderTop: 'none',
+                          borderRadius: '0 0 10px 10px',
+                          maxHeight: '240px',
+                          overflowY: 'auto',
+                          boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)'
+                        }}
+                      >
+                        {filteredClientes.map((c) => (
+                          <div
+                            key={c._id}
+                            onMouseDown={(ev) => {
+                              ev.preventDefault();
+                              setClienteNombre(c.nombre || '');
+                              const ciudad = c.ciudad || '';
+                              setClienteCiudad(ciudad);
+                              const direccion = c.direccion || '';
+                              const telefono = c.telefono || '';
+                              const correo = c.correo || '';
+                              setClienteDireccion(direccion);
+                              setClienteTelefono(telefono);
+                              setClienteCorreo(correo);
+                              // también reflejar en el input ciudad si existe
+                              const ciudadEl = document.getElementById('ciudad');
+                              if (ciudadEl) ciudadEl.value = ciudad;
+                              const direccionEl = document.getElementById('direccion');
+                              if (direccionEl) direccionEl.value = direccion;
+                              const telefonoEl = document.getElementById('telefono');
+                              if (telefonoEl) telefonoEl.value = telefono;
+                              const emailEl = document.getElementById('email');
+                              if (emailEl) emailEl.value = correo;
+                              setShowDropdown(false);
+                            }}
+                            style={{
+                              padding: '10px 12px',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: '4px',
+                              borderTop: '1px solid #f1f5f9'
+                            }}
+                            onMouseEnter={(ev) => {
+                              ev.currentTarget.style.background = '#f8fafc';
+                            }}
+                            onMouseLeave={(ev) => {
+                              ev.currentTarget.style.background = 'white';
+                            }}
+                          >
+                            <span style={{ fontWeight: 600, color: '#111827' }}>{c.nombre}</span>
+                            <span style={{ fontSize: '12px', color: '#6b7280' }}>
+                              {c.ciudad || 'Ciudad no especificada'}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Campo Ciudad */}
@@ -420,6 +543,8 @@ export default function RegistrarCotizacion() {
                     type="text"
                     className="cuadroTexto"
                     placeholder="Ciudad de residencia"
+                    value={clienteCiudad}
+                    onChange={(e) => setClienteCiudad(e.target.value)}
                     style={{
                       width: '100%',
                       padding: '0.875rem 1rem',
@@ -461,6 +586,8 @@ export default function RegistrarCotizacion() {
                     type="text"
                     className="cuadroTexto"
                     placeholder="Dirección completa"
+                    value={clienteDireccion}
+                    onChange={(e) => setClienteDireccion(e.target.value)}
                     style={{
                       width: '100%',
                       padding: '0.875rem 1rem',
@@ -503,6 +630,8 @@ export default function RegistrarCotizacion() {
                     type="tel"
                     className="cuadroTexto"
                     placeholder="+51 999 888 777"
+                    value={clienteTelefono}
+                    onChange={(e) => setClienteTelefono(e.target.value)}
                     style={{
                       width: '100%',
                       padding: '0.875rem 1rem',
@@ -545,6 +674,8 @@ export default function RegistrarCotizacion() {
                     type="email"
                     className="cuadroTexto"
                     placeholder="cliente@ejemplo.com"
+                    value={clienteCorreo}
+                    onChange={(e) => setClienteCorreo(e.target.value)}
                     style={{
                       width: '100%',
                       padding: '0.875rem 1rem',
@@ -707,13 +838,6 @@ export default function RegistrarCotizacion() {
                   </div>
                   Descripción de la Cotización
                 </h4>
-                <p style={{
-                  margin: '0.5rem 0 0 3.25rem',
-                  color: '#64748b',
-                  fontSize: '0.9rem'
-                }}>
-                  Añada detalles adicionales sobre la cotización
-                </p>
               </div>
               
               <div style={{
@@ -769,15 +893,8 @@ export default function RegistrarCotizacion() {
                       }}>
                         <i className="fa-solid fa-box" style={{ fontSize: '1.2rem' }}></i>
                       </div>
-                      Productos y Servicios
+                      Productos a cotizar
                     </h4>
-                    <p style={{
-                      margin: '0.5rem 0 0 3.25rem',
-                      color: '#64748b',
-                      fontSize: '0.9rem'
-                    }}>
-                      Seleccione los productos para incluir en la cotización
-                    </p>
                   </div>
                   
                   {/* Botones de acción */}
@@ -1334,24 +1451,7 @@ export default function RegistrarCotizacion() {
               <button className="btn btn-primary-env">Guardar y Enviar</button>
             </div>
 
-            {notificacion && (
-              <div style={{
-                position: 'fixed',
-                top: '5vh',
-                right: '40dvw',
-                border: '2px solid #76aafdff',
-                background: '#d4e3f7ff',
-                color: '#3041a4ff',
-                padding: '12px 24px',
-                borderRadius: '8px',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-                zIndex: 9999,
-                fontSize: 'small',
-                transition: 'opacity 0.3s'
-              }}>
-                {notificacion}
-              </div>
-            )}
+            
           </div>
         </div >
         <div className="custom-footer">

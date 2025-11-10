@@ -7,8 +7,6 @@ import api from '../api/axiosConfig';
 
 // API endpoint constants used in this page
 const API_PRODUCTS = '/api/products';
-const API_CATEGORIES = '/api/categories';
-const API_SUBCATEGORIES = '/api/subcategories';
 
 // CSS inyectado para diseño avanzado
 const advancedStyles = `
@@ -244,71 +242,71 @@ const ProductoModal = ({
         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
       }}>
         <form onSubmit={handleSubmit}>
-        {/* Header del modal */}
-        <div style={{
-          background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-          color: 'white',
-          padding: '2rem',
-          borderRadius: '20px 20px 0 0'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <div style={{
-                width: '50px',
-                height: '50px',
-                borderRadius: '12px',
-                background: 'rgba(255, 255, 255, 0.2)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}>
-                <i className="fa-solid fa-box" style={{ fontSize: '1.5rem' }}></i>
-              </div>
-              <div>
-                <h3 style={{ 
-                  margin: 0, 
-                  fontSize: '1.5rem', 
-                  fontWeight: '600'
+          {/* Header del modal */}
+          <div style={{
+            background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+            color: 'white',
+            padding: '2rem',
+            borderRadius: '20px 20px 0 0'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={{
+                  width: '50px',
+                  height: '50px',
+                  borderRadius: '12px',
+                  background: 'rgba(255, 255, 255, 0.2)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
                 }}>
-                  {producto ? 'Editar Producto' : 'Agregar Producto'}
-                </h3>
-                <p style={{ 
-                  margin: '0.25rem 0 0 0', 
-                  opacity: 0.9, 
-                  fontSize: '0.95rem' 
-                }}>
-                  {producto ? 'Modifica la información del producto' : 'Complete los datos del nuevo producto'}
-                </p>
+                  <i className="fa-solid fa-box" style={{ fontSize: '1.5rem' }}></i>
+                </div>
+                <div>
+                  <h3 style={{
+                    margin: 0,
+                    fontSize: '1.5rem',
+                    fontWeight: '600'
+                  }}>
+                    {producto ? 'Editar Producto' : 'Agregar Producto'}
+                  </h3>
+                  <p style={{
+                    margin: '0.25rem 0 0 0',
+                    opacity: 0.9,
+                    fontSize: '0.95rem'
+                  }}>
+                    {producto ? 'Modifica la información del producto' : 'Complete los datos del nuevo producto'}
+                  </p>
+                </div>
               </div>
+              <button
+                onClick={onClose}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.2)',
+                  border: 'none',
+                  borderRadius: '8px',
+                  color: 'white',
+                  fontSize: '1.5rem',
+                  width: '40px',
+                  height: '40px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                &times;
+              </button>
             </div>
-            <button 
-              onClick={onClose}
-              style={{
-                background: 'rgba(255, 255, 255, 0.2)',
-                border: 'none',
-                borderRadius: '8px',
-                color: 'white',
-                fontSize: '1.5rem',
-                width: '40px',
-                height: '40px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              &times;
-            </button>
           </div>
-        </div>
 
-        {/* Contenido scrolleable */}
-        <div style={{ 
-          flex: 1,
-          overflowY: 'auto',
-          padding: '2rem',
-          backgroundColor: '#f8fafc'
-        }}>
+          {/* Contenido scrolleable */}
+          <div style={{
+            flex: 1,
+            overflowY: 'auto',
+            padding: '2rem',
+            backgroundColor: '#f8fafc'
+          }}>
             {/* Información básica */}
             <div style={{
               background: 'white',
@@ -330,7 +328,7 @@ const ProductoModal = ({
                 <i className="fa-solid fa-info-circle" style={{ color: '#f59e0b' }}></i>
                 Información Básica
               </h4>
-              
+
               <div style={{
                 display: 'grid',
                 gridTemplateColumns: '2fr 1fr',
@@ -351,11 +349,11 @@ const ProductoModal = ({
                     Nombre del Producto
                     <span style={{ color: '#ef4444' }}>*</span>
                   </label>
-                  <input 
+                  <input
                     id="input-producto-nombre"
-                    name="name" 
-                    value={form.name} 
-                    onChange={handleChange} 
+                    name="name"
+                    value={form.name}
+                    onChange={handleChange}
                     placeholder="Ingrese el nombre del producto"
                     required
                     style={{
@@ -379,7 +377,7 @@ const ProductoModal = ({
                     }}
                   />
                 </div>
-                
+
                 <div>
                   <label htmlFor="input-producto-precio" style={{
                     display: 'flex',
@@ -394,13 +392,13 @@ const ProductoModal = ({
                     Precio
                     <span style={{ color: '#ef4444' }}>*</span>
                   </label>
-                  <input 
+                  <input
                     id="input-producto-precio"
-                    type="number" 
+                    type="number"
                     step="0.01"
-                    name="price" 
-                    value={form.price} 
-                    onChange={handleChange} 
+                    name="price"
+                    value={form.price}
+                    onChange={handleChange}
                     placeholder="0.00"
                     required
                     style={{
@@ -445,11 +443,11 @@ const ProductoModal = ({
                     Descripción
                     <span style={{ color: '#ef4444' }}>*</span>
                   </label>
-                  <input 
+                  <input
                     id="input-producto-descripcion"
-                    name="description" 
-                    value={form.description} 
-                    onChange={handleChange} 
+                    name="description"
+                    value={form.description}
+                    onChange={handleChange}
                     placeholder="Descripción detallada del producto"
                     required
                     style={{
@@ -473,7 +471,7 @@ const ProductoModal = ({
                     }}
                   />
                 </div>
-                
+
                 <div>
                   <label htmlFor="input-producto-stock" style={{
                     display: 'flex',
@@ -488,12 +486,12 @@ const ProductoModal = ({
                     Stock
                     <span style={{ color: '#ef4444' }}>*</span>
                   </label>
-                  <input 
+                  <input
                     id="input-producto-stock"
-                    type="number" 
-                    name="stock" 
-                    value={form.stock} 
-                    onChange={handleChange} 
+                    type="number"
+                    name="stock"
+                    value={form.stock}
+                    onChange={handleChange}
                     placeholder="0"
                     required
                     style={{
@@ -541,7 +539,7 @@ const ProductoModal = ({
                 <i className="fa-solid fa-sitemap" style={{ color: '#10b981' }}></i>
                 Clasificación y Proveedor
               </h4>
-              
+
               <div style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
@@ -561,11 +559,11 @@ const ProductoModal = ({
                     Categoría
                     <span style={{ color: '#ef4444' }}>*</span>
                   </label>
-                  <select 
+                  <select
                     id="input-producto-categoria"
-                    name="category" 
-                    value={form.category} 
-                    onChange={handleChange} 
+                    name="category"
+                    value={form.category}
+                    onChange={handleChange}
                     required
                     style={{
                       width: '100%',
@@ -593,7 +591,7 @@ const ProductoModal = ({
                     ))}
                   </select>
                 </div>
-                
+
                 <div>
                   <label htmlFor="input-producto-subcategoria" style={{
                     display: 'flex',
@@ -608,11 +606,11 @@ const ProductoModal = ({
                     Subcategoría
                     <span style={{ color: '#ef4444' }}>*</span>
                   </label>
-                  <select 
+                  <select
                     id="input-producto-subcategoria"
-                    name="subcategory" 
-                    value={form.subcategory} 
-                    onChange={handleChange} 
+                    name="subcategory"
+                    value={form.subcategory}
+                    onChange={handleChange}
                     required
                     style={{
                       width: '100%',
@@ -642,7 +640,7 @@ const ProductoModal = ({
                     ))}
                   </select>
                 </div>
-                
+
                 <div>
                   <label htmlFor="input-producto-proveedor" style={{
                     display: 'flex',
@@ -657,11 +655,11 @@ const ProductoModal = ({
                     Proveedor
                     <span style={{ color: '#ef4444' }}>*</span>
                   </label>
-                  <select 
+                  <select
                     id="input-producto-proveedor"
-                    name="proveedor" 
-                    value={form.proveedor} 
-                    onChange={handleChange} 
+                    name="proveedor"
+                    value={form.proveedor}
+                    onChange={handleChange}
                     required
                     style={{
                       width: '100%',
@@ -694,79 +692,79 @@ const ProductoModal = ({
               </div>
             </div>
 
-            </div> {/* Fin del contenido scrolleable */}
+          </div> {/* Fin del contenido scrolleable */}
 
-            {/* Botones de acción */}
-            <div style={{ 
-              display: 'flex', 
-              gap: '1.5rem', 
-              justifyContent: 'flex-end',
-              padding: '2rem 2.5rem',
-              borderTop: '2px solid #e5e7eb',
-              backgroundColor: 'white',
-              borderRadius: '0 0 20px 20px',
-              flexShrink: 0
-            }}>
-              <button 
-                type="button" 
-                onClick={onClose}
-                style={{
-                  padding: '0.875rem 1.5rem',
-                  border: '2px solid #e5e7eb',
-                  borderRadius: '10px',
-                  backgroundColor: 'white',
-                  color: '#374151',
-                  cursor: 'pointer',
-                  fontWeight: '600',
-                  fontSize: '0.95rem',
-                  transition: 'all 0.3s ease',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem'
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.backgroundColor = '#f3f4f6';
-                  e.target.style.borderColor = '#d1d5db';
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.backgroundColor = 'white';
-                  e.target.style.borderColor = '#e5e7eb';
-                }}
-              >
-                <i className="fa-solid fa-times"></i>
-                Cancelar
-              </button>
-              
-              <button 
-                type="submit"
-                style={{
-                  padding: '0.875rem 1.5rem',
-                  border: 'none',
-                  borderRadius: '10px',
-                  background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-                  color: 'white',
-                  cursor: 'pointer',
-                  fontWeight: '600',
-                  fontSize: '0.95rem',
-                  transition: 'all 0.3s ease',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  boxShadow: '0 4px 6px -1px rgba(245, 158, 11, 0.3)'
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.transform = 'translateY(-1px)';
-                  e.target.style.boxShadow = '0 6px 12px -1px rgba(245, 158, 11, 0.4)';
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.transform = 'translateY(0)';
-                  e.target.style.boxShadow = '0 4px 6px -1px rgba(245, 158, 11, 0.3)';
-                }}
-              >
-                <i className="fa-solid fa-save"></i>
-                {producto ? 'Actualizar' : 'Guardar'} Producto
-              </button>
-            </div>
+          {/* Botones de acción */}
+          <div style={{
+            display: 'flex',
+            gap: '1.5rem',
+            justifyContent: 'flex-end',
+            padding: '2rem 2.5rem',
+            borderTop: '2px solid #e5e7eb',
+            backgroundColor: 'white',
+            borderRadius: '0 0 20px 20px',
+            flexShrink: 0
+          }}>
+            <button
+              type="button"
+              onClick={onClose}
+              style={{
+                padding: '0.875rem 1.5rem',
+                border: '2px solid #e5e7eb',
+                borderRadius: '10px',
+                backgroundColor: 'white',
+                color: '#374151',
+                cursor: 'pointer',
+                fontWeight: '600',
+                fontSize: '0.95rem',
+                transition: 'all 0.3s ease',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.backgroundColor = '#f3f4f6';
+                e.target.style.borderColor = '#d1d5db';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.backgroundColor = 'white';
+                e.target.style.borderColor = '#e5e7eb';
+              }}
+            >
+              <i className="fa-solid fa-times"></i>
+              Cancelar
+            </button>
+
+            <button
+              type="submit"
+              style={{
+                padding: '0.875rem 1.5rem',
+                border: 'none',
+                borderRadius: '10px',
+                background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                color: 'white',
+                cursor: 'pointer',
+                fontWeight: '600',
+                fontSize: '0.95rem',
+                transition: 'all 0.3s ease',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                boxShadow: '0 4px 6px -1px rgba(245, 158, 11, 0.3)'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.transform = 'translateY(-1px)';
+                e.target.style.boxShadow = '0 6px 12px -1px rgba(245, 158, 11, 0.4)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = 'translateY(0)';
+                e.target.style.boxShadow = '0 4px 6px -1px rgba(245, 158, 11, 0.3)';
+              }}
+            >
+              <i className="fa-solid fa-save"></i>
+              {producto ? 'Actualizar' : 'Guardar'} Producto
+            </button>
+          </div>
         </form>
       </div>
     </div>
@@ -811,19 +809,19 @@ const GestionProductos = () => {
     loadSubcategorias();
   }, []);
 
-useEffect(() => {
-  const fetchProveedores = async () => {
-    try {
-      const res = await api.get('/api/proveedores/activos');
-      const data = res.data || res;
-      setProveedores(data.proveedores || data.data || []);
-    } catch (error) {
-      console.error('Error al cargar proveedores', error);
-    }
-  };
+  useEffect(() => {
+    const fetchProveedores = async () => {
+      try {
+        const res = await api.get('/api/proveedores/activos');
+        const data = res.data || res;
+        setProveedores(data.proveedores || data.data || []);
+      } catch (error) {
+        console.error('Error al cargar proveedores', error);
+      }
+    };
 
-  fetchProveedores();
-}, []);
+    fetchProveedores();
+  }, []);
 
 
   const loadProductos = async () => {
@@ -885,13 +883,13 @@ useEffect(() => {
             return Swal.fire('Acción no permitida', 'No se puede activar el producto porque su subcategoría está desactivada', 'error');
           }
 
-          
+
         }
       }
 
 
-  // Backend define PATCH para activar/desactivar productos
-  const res = await api.patch(url);
+      // Backend define PATCH para activar/desactivar productos
+      const res = await api.patch(url);
       if (res.status >= 200 && res.status < 300) {
         Swal.fire(`Producto ${accion === 'deactivate' ? 'desactivado' : 'activado'}`, '', 'success');
         loadProductos();
@@ -903,7 +901,7 @@ useEffect(() => {
     }
   };
 
-  
+
 
   const loadCategorias = async () => {
     try {
@@ -929,15 +927,92 @@ useEffect(() => {
     }
   };
 
-  
 
- 
+
+
   return (
     <>
       <Fijo />
       <div className="content">
         <NavProductos />
-
+        <div className="contenido-modulo">
+          {/* Encabezado profesional */}
+          <div style={{
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            borderRadius: '20px',
+            padding: '30px',
+            marginBottom: '30px',
+            color: 'white',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            <div style={{
+              position: 'absolute',
+              top: '-50%',
+              right: '-10%',
+              width: '300px',
+              height: '300px',
+              background: 'rgba(255,255,255,0.1)',
+              borderRadius: '50%',
+              zIndex: 1
+            }}></div>
+            <div style={{ position: 'relative', zIndex: 2 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '20px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                  <div style={{
+                    background: 'rgba(255,255,255,0.2)',
+                    borderRadius: '16px',
+                    padding: '20px',
+                    backdropFilter: 'blur(10px)'
+                  }}>
+                    <i className="fa-solid fa-boxes-stacked" style={{ fontSize: '2.5rem', color: 'white' }}></i>
+                  </div>
+                  <div>
+                    <h2 style={{ margin: '0 0 8px 0', fontSize: '2rem', fontWeight: '700' }}>
+                      Gestión de Productos
+                    </h2>
+                    <p style={{ margin: 0, fontSize: '1.1rem', opacity: 0.9 }}>
+                      Administra el inventario y catálogo de productos
+                    </p>
+                  </div>
+                </div>
+                <div>
+                  <button 
+                    onClick={() => {
+                      setProductoEditando(null);
+                      setModalVisible(true);
+                    }}
+                    style={{
+                      background: 'linear-gradient(135deg, #10b981, #059669)',
+                      border: 'none',
+                      borderRadius: '12px',
+                      padding: '12px 24px',
+                      color: 'white',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                      boxShadow: '0 4px 15px rgba(16, 185, 129, 0.4)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.transform = 'translateY(-2px)';
+                      e.target.style.boxShadow = '0 6px 20px rgba(16, 185, 129, 0.6)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.transform = 'translateY(0)';
+                      e.target.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.4)';
+                    }}
+                  >
+                    <i className="fa-solid fa-plus"></i>
+                    Agregar Producto
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
           {/* Estadísticas avanzadas */}
           <div style={{
             display: 'grid',
@@ -1399,13 +1474,15 @@ useEffect(() => {
               </button>
             ))}
           </div>
-          
-          <div className="custom-footer">
-            <p className="custom-footer-text">
-              © 2025 <span className="custom-highlight">PANGEA</span>. Todos los derechos reservados.
-            </p>
-          </div>
         </div>
+
+
+        <div className="custom-footer">
+          <p className="custom-footer-text">
+            © 2025 <span className="custom-highlight">PANGEA</span>. Todos los derechos reservados.
+          </p>
+        </div>
+      </div>
     </>
   );
 }
