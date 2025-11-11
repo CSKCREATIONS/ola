@@ -194,16 +194,17 @@ exports.createPedido = async (req, res) => {
     // Si el pedido se creó desde una cotización, marcarla como agendada
     if (cotizacionReferenciada) {
       try {
+        // Marcar la cotización como agendada usando el campo 'estado'
         await Cotizacion.findByIdAndUpdate(
           cotizacionReferenciada,
           {
-            agendada: true,
+            estado: 'Agendada',
             pedidoReferencia: pedidoGuardado._id
           }
         );
-        console.log(`✅ Cotización ${cotizacionCodigo} marcada como agendada`);
+        console.log(`✅ Cotización ${cotizacionCodigo} marcada como agendada (estado updated)`);
       } catch (cotError) {
-        console.error('⚠️ Error al marcar cotización como agendada:', cotError);
+        console.error('⚠️ Error al marcar cotización como agendada (estado):', cotError);
         // No fallar el pedido por este error
       }
     }

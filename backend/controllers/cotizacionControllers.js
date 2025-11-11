@@ -1024,7 +1024,9 @@ function generarHTMLCotizacion(cotizacion) {
           <!-- Message Section -->
           <div class="message-section">
             <h3>💬 Mensaje</h3>
-            <p>Estimado/a ${cotizacion.cliente?.nombre || 'Cliente'}, esperamos que se encuentre muy bien. Adjunto encontrará la cotización solicitada con todos los detalles de los productos y servicios requeridos. Esta cotización tiene una validez de ${cotizacion.validez || '15 días'} a partir de la fecha de emisión. Quedamos atentos a sus comentarios y esperamos tener la oportunidad de trabajar juntos.</p>
+            <p>Estimado/a ${cotizacion.cliente?.nombre || 'Cliente'}, esperamos que se encuentre muy bien.<br><br>
+            Adjunto encontrará el documento de la cotización solicitada con todos sus detalles.<br><br>
+            ⚠ Esta cotización tiene una validez de ${cotizacion.validez || '15 días'} a partir de la fecha de emisión. Quedamos atentos a sus comentarios y/o respuesta.</p>
           </div>
 
           ${cotizacion.observaciones ? `
@@ -1062,17 +1064,7 @@ exports.remisionarCotizacion = async (req, res) => {
       return res.status(404).json({ message: 'Cotización no encontrada' });
     }
 
-    // Función para generar número de pedido secuencial usando Counter
-    const generarNumeroPedido = async () => {
-      const Counter = require('../models/Counter');
-      const counter = await Counter.findByIdAndUpdate(
-        'pedido',
-        { $inc: { seq: 1 } },
-        { new: true, upsert: true }
-      );
-      return `PED-${String(counter.seq).padStart(5, '0')}`;
-    };
-
+    
     // Función para generar número de remisión secuencial
     const generarNumeroRemision = async () => {
       const Counter = require('../models/Counter');
@@ -1149,7 +1141,7 @@ exports.remisionarCotizacion = async (req, res) => {
       productos: productosRemisionDoc,
       fechaRemision: new Date(),
       fechaEntrega: fechaEntrega ? new Date(fechaEntrega) : new Date(),
-      observaciones: `Remisión generada automáticamente desde cotización ${cotizacion.codigo}. ${observaciones || ''}`,
+      observaciones: `Remisión generada desde cotización ${cotizacion.codigo}. ${observaciones || ''}`,
       responsable: req.userId, // ID del usuario que crea la remisión
       estado: 'activa',
       total: total,
@@ -1159,9 +1151,9 @@ exports.remisionarCotizacion = async (req, res) => {
 
     await nuevaRemision.save();
 
-    // Actualizar estado de la cotización
+    // Actualizar estado de la cotización (persistir que fue remisionada)
     await Cotizacion.findByIdAndUpdate(cotizacionId, { 
-      estado: 'remisionado',
+      estado: 'Remisionada',
       pedidoReferencia: nuevoPedido._id 
     });
 

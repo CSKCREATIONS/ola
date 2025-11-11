@@ -60,9 +60,9 @@ const CotizacionSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
-  agendada: {
-    type: Boolean,
-    default: false
+  estado: {
+    type: String,
+    default: 'Pendiente'
   },
   pedidoReferencia: {
     type: mongoose.Schema.Types.ObjectId,

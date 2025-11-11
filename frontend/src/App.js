@@ -26,7 +26,6 @@ import Subcategorias from './pages/Subcategorias';
 import ReportessVentas from './pages/ReportessVentas';
 import PrivateRoute from './routes/PrivateRoute';
 import PermisoRoute from './routes/PermisoRoute';
-import PedidosDevueltos from './pages/PedidosDevueltos';
 import ReporteProveedores from './pages/ReporteProveedores';
 import ReporteProductos from './pages/ReporteProductos';
 import OrdenCompra from './pages/OrdenCompra';
@@ -252,17 +251,6 @@ const App = () => {
               <PrivateRoute>
                 <PermisoRoute permiso="pedidosCancelados.ver">
                   <PedidosCancelados />
-                </PermisoRoute>
-              </PrivateRoute>
-            }
-          />
-
-          <Route
-            path='/PedidosDevueltos'
-            element={
-              <PrivateRoute>
-                <PermisoRoute permiso="pedidosDevueltos.ver">
-                  <PedidosDevueltos />
                 </PermisoRoute>
               </PrivateRoute>
             }
