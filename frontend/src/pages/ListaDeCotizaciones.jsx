@@ -135,7 +135,35 @@ export default function ListaDeCotizaciones() {
   }, []);
 
   // Helper para detectar si una cotización está marcada como agendada.
-  const isAgendada = (val) => {
+  // Acepta tanto el objeto cotización completo como valores primitivos (compatibilidad backwards).
+  const isAgendada = (valOrCot) => {
+    if (!valOrCot && valOrCot !== false && valOrCot !== 0) return false;
+
+    // Si se pasó el objeto completo
+    if (typeof valOrCot === 'object') {
+      const cot = valOrCot;
+      if (cot.estado && typeof cot.estado === 'string') {
+        const s = cot.estado.trim().toLowerCase();
+        return s === 'agendada' || s === 'agendado' || s === 'agendar';
+      }
+
+      // Fallback: si aún existe la propiedad agendada en algún documento antiguo
+      if ('agendada' in cot) {
+        const v = cot.agendada;
+        if (v === true || v === 1) return true;
+        if (v === false || v === 0 || v === undefined || v === null) return false;
+        if (typeof v === 'string') {
+          const s = v.trim().toLowerCase();
+          return s === 'true' || s === '1' || s === 'si' || s === 'yes' || s === 'agendada';
+        }
+        return Boolean(v);
+      }
+
+      return false;
+    }
+
+    // Si se pasó un valor primitivo (compatibilidad)
+    const val = valOrCot;
     if (val === true || val === 1) return true;
     if (val === false || val === 0 || val === undefined || val === null) return false;
     if (typeof val === 'string') {
@@ -143,6 +171,16 @@ export default function ListaDeCotizaciones() {
       return s === 'true' || s === '1' || s === 'si' || s === 'yes' || s === 'agendada';
     }
     return Boolean(val);
+  };
+
+  // Helper para detectar si una cotización ya fue remisionada
+  const isRemisionada = (cot) => {
+    if (!cot) return false;
+    if (cot.estado && typeof cot.estado === 'string') {
+      const s = cot.estado.trim().toLowerCase();
+      if (s === 'remisionada' || s === 'remisionado' || s === 'remision') return true;
+    }
+    return Boolean(cot.remision || cot.remisionId || cot.remisionada || cot.numeroRemision);
   };
 
   // Helper para determinar si han pasado al menos 15 días desde la creación/fecha
@@ -372,9 +410,9 @@ export default function ListaDeCotizaciones() {
         });
 
         // Marcarla como pendiente para que al cerrar el preview se produzca el titileo
-        
+
         // Limpieza eventual del history.state para evitar reaperturas
-       
+
       }
     }
   }, [location]);
@@ -423,20 +461,33 @@ export default function ListaDeCotizaciones() {
   // Función para manejar cuando se envía un correo y actualizar el estado
   const handleEmailSent = (cotizacionId) => {
     // Actualizar el estado de la cotización en la lista
-    setCotizaciones(prevCotizaciones => 
-      prevCotizaciones.map(cot => 
-        cot._id === cotizacionId 
+    setCotizaciones(prevCotizaciones =>
+      prevCotizaciones.map(cot =>
+        cot._id === cotizacionId
           ? { ...cot, enviadoCorreo: true }
           : cot
       )
     );
-    
+
     // También actualizar la cotización seleccionada si es la misma
     if (cotizacionSeleccionada && cotizacionSeleccionada._id === cotizacionId) {
       setCotizacionSeleccionada(prev => ({
         ...prev,
         enviadoCorreo: true
       }));
+    }
+  };
+
+  // Callback cuando una cotización fue remisionada (actualiza la lista y la selección si aplica)
+  const handleRemisionCreated = (cotizacionId, remisionResult) => {
+    setCotizaciones(prev => prev.map(c =>
+      c._id === cotizacionId
+        ? { ...c, remisionada: true, numeroRemision: remisionResult?.numeroRemision || remisionResult?.remision?.numeroRemision || remisionResult?.numeroRemision }
+        : c
+    ));
+
+    if (cotizacionSeleccionada && (cotizacionSeleccionada._id === cotizacionId)) {
+      setCotizacionSeleccionada(prev => ({ ...prev, remisionada: true, numeroRemision: remisionResult?.numeroRemision || remisionResult?.remision?.numeroRemision || remisionResult?.numeroRemision }));
     }
   };
 
@@ -482,7 +533,7 @@ export default function ListaDeCotizaciones() {
               borderRadius: '50%',
               pointerEvents: 'none'
             }}></div>
-            
+
             <div style={{ position: 'relative', zIndex: 2 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
                 <div>
@@ -505,22 +556,22 @@ export default function ListaDeCotizaciones() {
                     Gestión completa de cotizaciones comerciales
                   </p>
                 </div>
-                
+
                 <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                   <button
                     onClick={exportToExcel}
                     style={{
-                      display: 'inline-flex', 
-                      alignItems: 'center', 
-                      gap: '8px', 
-                      padding: '12px 20px', 
-                      border: '2px solid rgba(255,255,255,0.3)', 
-                      borderRadius: '12px', 
-                      background: 'rgba(255,255,255,0.2)', 
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      padding: '12px 20px',
+                      border: '2px solid rgba(255,255,255,0.3)',
+                      borderRadius: '12px',
+                      background: 'rgba(255,255,255,0.2)',
                       color: 'white',
-                      fontSize: '14px', 
-                      fontWeight: '600', 
-                      cursor: 'pointer', 
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
                       transition: 'all 0.3s ease',
                       backdropFilter: 'blur(10px)'
                     }}
@@ -540,17 +591,17 @@ export default function ListaDeCotizaciones() {
                   <button
                     onClick={exportarPDF}
                     style={{
-                      display: 'inline-flex', 
-                      alignItems: 'center', 
-                      gap: '8px', 
-                      padding: '12px 20px', 
-                      border: '2px solid rgba(255,255,255,0.3)', 
-                      borderRadius: '12px', 
-                      background: 'rgba(255,255,255,0.2)', 
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      padding: '12px 20px',
+                      border: '2px solid rgba(255,255,255,0.3)',
+                      borderRadius: '12px',
+                      background: 'rgba(255,255,255,0.2)',
                       color: 'white',
-                      fontSize: '14px', 
-                      fontWeight: '600', 
-                      cursor: 'pointer', 
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
                       transition: 'all 0.3s ease',
                       backdropFilter: 'blur(10px)'
                     }}
@@ -596,7 +647,7 @@ export default function ListaDeCotizaciones() {
                   Filtros y Controles
                 </h4>
               </div>
-              
+
               <div style={{
                 background: '#f8fafc',
                 padding: '8px 16px',
@@ -612,27 +663,27 @@ export default function ListaDeCotizaciones() {
                 </span>
               </div>
             </div>
-            
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
               gap: '20px',
               alignItems: 'end'
             }}>
               <div>
-                <label style={{ 
-                  display: 'block', 
-                  marginBottom: '8px', 
-                  color: '#374151', 
-                  fontSize: '14px', 
-                  fontWeight: '600' 
+                <label style={{
+                  display: 'block',
+                  marginBottom: '8px',
+                  color: '#374151',
+                  fontSize: '14px',
+                  fontWeight: '600'
                 }}>
                   <i className="fa-solid fa-calendar" style={{ marginRight: '6px', color: '#6366f1' }}></i>
                   Fecha:
                 </label>
-                <input 
-                  type="date" 
-                  value={filtroFecha} 
+                <input
+                  type="date"
+                  value={filtroFecha}
                   onChange={(e) => setFiltroFecha(e.target.value)}
                   style={{
                     width: '100%',
@@ -649,22 +700,22 @@ export default function ListaDeCotizaciones() {
                   onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
                 />
               </div>
-              
+
               <div>
-                <label style={{ 
-                  display: 'block', 
-                  marginBottom: '8px', 
-                  color: '#374151', 
-                  fontSize: '14px', 
-                  fontWeight: '600' 
+                <label style={{
+                  display: 'block',
+                  marginBottom: '8px',
+                  color: '#374151',
+                  fontSize: '14px',
+                  fontWeight: '600'
                 }}>
                   <i className="fa-solid fa-user" style={{ marginRight: '6px', color: '#6366f1' }}></i>
                   Cliente:
                 </label>
-                <input 
-                  type="text" 
-                  placeholder="Buscar cliente..." 
-                  value={filtroCliente} 
+                <input
+                  type="text"
+                  placeholder="Buscar cliente..."
+                  value={filtroCliente}
                   onChange={(e) => setFiltroCliente(e.target.value)}
                   style={{
                     width: '100%',
@@ -681,20 +732,20 @@ export default function ListaDeCotizaciones() {
                   onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
                 />
               </div>
-              
+
               <div>
-                <label style={{ 
-                  display: 'block', 
-                  marginBottom: '8px', 
-                  color: '#374151', 
-                  fontSize: '14px', 
-                  fontWeight: '600' 
+                <label style={{
+                  display: 'block',
+                  marginBottom: '8px',
+                  color: '#374151',
+                  fontSize: '14px',
+                  fontWeight: '600'
                 }}>
                   <i className="fa-solid fa-envelope" style={{ marginRight: '6px', color: '#6366f1' }}></i>
                   Estado de envío:
                 </label>
-                <select 
-                  value={filtroEnviado} 
+                <select
+                  value={filtroEnviado}
                   onChange={(e) => setFiltroEnviado(e.target.value)}
                   style={{
                     width: '100%',
@@ -759,7 +810,7 @@ export default function ListaDeCotizaciones() {
                 </div>
               </div>
             </div>
-            
+
             <div style={{ overflow: 'auto' }}>
               <table style={{
                 width: '100%',
@@ -767,14 +818,14 @@ export default function ListaDeCotizaciones() {
                 fontSize: '14px'
               }} id='tabla_cotizaciones'>
                 <thead>
-                  <tr style={{ 
+                  <tr style={{
                     background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)',
                     borderBottom: '2px solid #e5e7eb'
                   }}>
-                    <th style={{ 
-                      padding: '16px 12px', 
-                      textAlign: 'left', 
-                      fontWeight: '600', 
+                    <th style={{
+                      padding: '16px 12px',
+                      textAlign: 'left',
+                      fontWeight: '600',
                       color: '#374151',
                       fontSize: '13px',
                       letterSpacing: '0.5px'
@@ -782,10 +833,10 @@ export default function ListaDeCotizaciones() {
                       <i className="fa-solid fa-hashtag" style={{ marginRight: '6px', color: '#6366f1' }}></i>
                       #
                     </th>
-                    <th style={{ 
-                      padding: '16px 12px', 
-                      textAlign: 'left', 
-                      fontWeight: '600', 
+                    <th style={{
+                      padding: '16px 12px',
+                      textAlign: 'left',
+                      fontWeight: '600',
                       color: '#374151',
                       fontSize: '13px',
                       letterSpacing: '0.5px'
@@ -793,10 +844,10 @@ export default function ListaDeCotizaciones() {
                       <i className="fa-solid fa-code" style={{ marginRight: '6px', color: '#6366f1' }}></i>
                       CÓDIGO COTIZACIÓN
                     </th>
-                    <th style={{ 
-                      padding: '16px 12px', 
-                      textAlign: 'left', 
-                      fontWeight: '600', 
+                    <th style={{
+                      padding: '16px 12px',
+                      textAlign: 'left',
+                      fontWeight: '600',
                       color: '#374151',
                       fontSize: '13px',
                       letterSpacing: '0.5px'
@@ -804,10 +855,10 @@ export default function ListaDeCotizaciones() {
                       <i className="fa-solid fa-calendar" style={{ marginRight: '6px', color: '#6366f1' }}></i>
                       FECHA ELABORACIÓN
                     </th>
-                    <th style={{ 
-                      padding: '16px 12px', 
-                      textAlign: 'left', 
-                      fontWeight: '600', 
+                    <th style={{
+                      padding: '16px 12px',
+                      textAlign: 'left',
+                      fontWeight: '600',
                       color: '#374151',
                       fontSize: '13px',
                       letterSpacing: '0.5px'
@@ -815,10 +866,10 @@ export default function ListaDeCotizaciones() {
                       <i className="fa-solid fa-user" style={{ marginRight: '6px', color: '#6366f1' }}></i>
                       CLIENTE
                     </th>
-                    <th style={{ 
-                      padding: '16px 12px', 
-                      textAlign: 'center', 
-                      fontWeight: '600', 
+                    <th style={{
+                      padding: '16px 12px',
+                      textAlign: 'center',
+                      fontWeight: '600',
                       color: '#374151',
                       fontSize: '13px',
                       letterSpacing: '0.5px'
@@ -826,10 +877,10 @@ export default function ListaDeCotizaciones() {
                       <i className="fa-solid fa-envelope" style={{ marginRight: '6px', color: '#6366f1' }}></i>
                       ENVIADO
                     </th>
-                    <th style={{ 
-                      padding: '16px 12px', 
-                      textAlign: 'center', 
-                      fontWeight: '600', 
+                    <th style={{
+                      padding: '16px 12px',
+                      textAlign: 'center',
+                      fontWeight: '600',
                       color: '#374151',
                       fontSize: '13px',
                       letterSpacing: '0.5px'
@@ -837,10 +888,10 @@ export default function ListaDeCotizaciones() {
                       <i className="fa-solid fa-flag" style={{ marginRight: '6px', color: '#6366f1' }}></i>
                       ESTADO
                     </th>
-                    <th style={{ 
-                      padding: '16px 12px', 
-                      textAlign: 'center', 
-                      fontWeight: '600', 
+                    <th style={{
+                      padding: '16px 12px',
+                      textAlign: 'center',
+                      fontWeight: '600',
                       color: '#374151',
                       fontSize: '13px',
                       letterSpacing: '0.5px'
@@ -852,27 +903,27 @@ export default function ListaDeCotizaciones() {
                 </thead>
                 <tbody>
                   {currentItems.map((cot, index) => (
-                    <tr key={cot._id} 
-                        className={highlightId === cot._id ? (blinkOn ? 'row-blink' : 'row-blink-off') : ''}
-                        style={{
-                          borderBottom: '1px solid #f3f4f6',
-                          transition: 'all 0.2s ease'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = '#f8fafc';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = 'transparent';
-                        }}
+                    <tr key={cot._id}
+                      className={highlightId === cot._id ? (blinkOn ? 'row-blink' : 'row-blink-off') : ''}
+                      style={{
+                        borderBottom: '1px solid #f3f4f6',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#f8fafc';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                      }}
                     >
                       <td style={{ padding: '16px 12px', fontWeight: '600', color: '#4b5563' }}>
                         {(currentPage - 1) * itemsPerPage + index + 1}
                       </td>
                       <td style={{ padding: '16px 12px' }}>
                         <button
-                          style={{ 
-                            cursor: 'pointer', 
-                            color: '#3b82f6', 
+                          style={{
+                            cursor: 'pointer',
+                            color: '#3b82f6',
                             textDecoration: 'none',
                             fontWeight: '600',
                             fontSize: '14px',
@@ -942,7 +993,24 @@ export default function ListaDeCotizaciones() {
                         )}
                       </td>
                       <td style={{ padding: '16px 12px', textAlign: 'center' }}>
-                        {cot.agendada ? (
+                        {isRemisionada(cot) ? (
+                          <span style={{
+                            background: 'linear-gradient(135deg, #7c3aed, #6d28d9)',
+                            color: 'white',
+                            padding: '8px 12px',
+                            borderRadius: '20px',
+                            fontSize: '11px',
+                            fontWeight: '700',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.5px'
+                          }}>
+                            <i className="fa-solid fa-tag" style={{ fontSize: '10px' }}></i>
+                            REMISIONADA
+                          </span>
+                        ) : isAgendada(cot) ? (
                           <span style={{
                             backgroundColor: '#16a34a',
                             color: 'white',
@@ -981,7 +1049,7 @@ export default function ListaDeCotizaciones() {
                       <td style={{ padding: '16px 12px', textAlign: 'center' }}>
                         <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
                           {isDeletable(cot) && (
-                            <button 
+                            <button
                               onClick={() => intentarEliminarCotizacion(cot._id)}
                               title="Eliminar cotización"
                               style={{
@@ -1008,8 +1076,8 @@ export default function ListaDeCotizaciones() {
                               <i className="fa-solid fa-trash"></i>
                             </button>
                           )}
-                          
-                          {!isAgendada(cot.agendada) && (
+
+                          {!isAgendada(cot) && !isRemisionada(cot) && (
                             <button
                               onClick={async () => {
                                 try {
@@ -1049,7 +1117,7 @@ export default function ListaDeCotizaciones() {
                             </button>
                           )}
 
-                          {!isAgendada(cot.agendada) && (
+                          {!isAgendada(cot) && !isRemisionada(cot) && (
                             <button
                               onClick={async () => {
                                 try {
@@ -1058,113 +1126,113 @@ export default function ListaDeCotizaciones() {
                                   const data = res.data || res;
                                   const cotizacion = data.data || data;
 
-                                const confirm = await Swal.fire({
-                                  title: `¿Agendar la cotización '${cotizacion.codigo}' como pedido?`,
-                                  icon: 'question',
-                                  showCancelButton: true,
-                                  confirmButtonText: 'Sí, agendar',
-                                  cancelButtonText: 'No'
-                                });
-                                if (!confirm.isConfirmed) return;
+                                  const confirm = await Swal.fire({
+                                    title: `¿Agendar la cotización '${cotizacion.codigo}' como pedido?`,
+                                    icon: 'question',
+                                    showCancelButton: true,
+                                    confirmButtonText: 'Sí, agendar',
+                                    cancelButtonText: 'No'
+                                  });
+                                  if (!confirm.isConfirmed) return;
 
 
-                                const clienteId = (
-                                  cotizacion?.cliente?.referencia?._id ||
-                                  cotizacion?.cliente?.referencia ||
-                                  cot?.cliente?._id ||
-                                  cot?.cliente?.referencia?._id ||
-                                  cot?.cliente?.referencia
-                                );
+                                  const clienteId = (
+                                    cotizacion?.cliente?.referencia?._id ||
+                                    cotizacion?.cliente?.referencia ||
+                                    cot?.cliente?._id ||
+                                    cot?.cliente?.referencia?._id ||
+                                    cot?.cliente?.referencia
+                                  );
 
 
-                                // Mapear productos al formato de pedido
-                                const productosPedido = (cotizacion.productos || []).map(p => {
-                                  const productId = (p?.producto?.id && (p.producto.id._id || p.producto.id)) || p?.producto;
-                                  if (!productId) return null;
-                                  const cantidadNum = Number(p?.cantidad);
-                                  const precioNum = p?.valorUnitario != null ? Number(p.valorUnitario) : Number(p?.producto?.price);
-                                  return {
-                                    product: productId,
-                                    cantidad: Number.isFinite(cantidadNum) && cantidadNum > 0 ? cantidadNum : 1,
-                                    precioUnitario: Number.isFinite(precioNum) ? precioNum : 0,
-                                  };
-                                }).filter(Boolean);
+                                  // Mapear productos al formato de pedido
+                                  const productosPedido = (cotizacion.productos || []).map(p => {
+                                    const productId = (p?.producto?.id && (p.producto.id._id || p.producto.id)) || p?.producto;
+                                    if (!productId) return null;
+                                    const cantidadNum = Number(p?.cantidad);
+                                    const precioNum = p?.valorUnitario != null ? Number(p.valorUnitario) : Number(p?.producto?.price);
+                                    return {
+                                      product: productId,
+                                      cantidad: Number.isFinite(cantidadNum) && cantidadNum > 0 ? cantidadNum : 1,
+                                      precioUnitario: Number.isFinite(precioNum) ? precioNum : 0,
+                                    };
+                                  }).filter(Boolean);
 
-                                if (productosPedido.length === 0) {
-                                  return Swal.fire('Error', 'La cotización no tiene productos.', 'warning');
+                                  if (productosPedido.length === 0) {
+                                    return Swal.fire('Error', 'La cotización no tiene productos.', 'warning');
+                                  }
+
+                                  // Pedir al usuario la fecha de entrega antes de crear el pedido
+                                  const baseDate = cotizacion.fecha ? new Date(cotizacion.fecha) : new Date();
+                                  const defaultDate = baseDate.toISOString().slice(0, 10); // YYYY-MM-DD
+                                  const { value: fechaSeleccionada } = await Swal.fire({
+                                    title: 'Seleccione la fecha de entrega',
+                                    input: 'date',
+                                    inputLabel: 'Fecha de entrega',
+                                    inputValue: defaultDate,
+                                    showCancelButton: true,
+                                    confirmButtonText: 'Confirmar',
+                                    cancelButtonText: 'Cancelar'
+                                  });
+
+                                  if (!fechaSeleccionada) {
+                                    // Usuario canceló la selección
+                                    return;
+                                  }
+
+                                  const fechaEntrega = new Date(fechaSeleccionada).toISOString();
+
+                                  await api.post('/api/pedidos', {
+                                    cliente: clienteId,
+                                    productos: productosPedido,
+                                    fechaEntrega,
+                                    observacion: `Agendado desde cotización ${cotizacion.codigo}`,
+                                    cotizacionReferenciada: cotizacion._id,
+                                    cotizacionCodigo: cotizacion.codigo
+                                  });
+
+                                  // Actualizar el estado local de la cotización (usar campo 'estado')
+                                  setCotizaciones(prev => prev.map(c =>
+                                    c._id === cot._id ? { ...c, estado: 'Agendada' } : c
+                                  ));
+
+                                  await Swal.fire('Agendado', 'La cotización fue agendada como pedido.', 'success');
+                                  navigate('/PedidosAgendados');
+                                } catch (error) {
+                                  console.error(error);
+                                  Swal.fire('Error', error.message || 'Hubo un problema al agendar la cotización', 'error');
                                 }
-
-                                // Pedir al usuario la fecha de entrega antes de crear el pedido
-                                const baseDate = cotizacion.fecha ? new Date(cotizacion.fecha) : new Date();
-                                const defaultDate = baseDate.toISOString().slice(0, 10); // YYYY-MM-DD
-                                const { value: fechaSeleccionada } = await Swal.fire({
-                                  title: 'Seleccione la fecha de entrega',
-                                  input: 'date',
-                                  inputLabel: 'Fecha de entrega',
-                                  inputValue: defaultDate,
-                                  showCancelButton: true,
-                                  confirmButtonText: 'Confirmar',
-                                  cancelButtonText: 'Cancelar'
-                                });
-
-                                if (!fechaSeleccionada) {
-                                  // Usuario canceló la selección
-                                  return;
-                                }
-
-                                const fechaEntrega = new Date(fechaSeleccionada).toISOString();
-
-                                await api.post('/api/pedidos', {
-                                  cliente: clienteId,
-                                  productos: productosPedido,
-                                  fechaEntrega,
-                                  observacion: `Agendado desde cotización ${cotizacion.codigo}`,
-                                  cotizacionReferenciada: cotizacion._id,
-                                  cotizacionCodigo: cotizacion.codigo
-                                });
-
-                                // Actualizar el estado local de la cotización
-                                setCotizaciones(prev => prev.map(c =>
-                                  c._id === cot._id ? { ...c, agendada: true } : c
-                                ));
-
-                                await Swal.fire('Agendado', 'La cotización fue agendada como pedido.', 'success');
-                                navigate('/PedidosAgendados');
-                              } catch (error) {
-                                console.error(error);
-                                Swal.fire('Error', error.message || 'Hubo un problema al agendar la cotización', 'error');
-                              }
-                            }}
-                            title="Agendar como pedido"
-                            style={{
-                              background: 'linear-gradient(135deg, #dcfce7, #bbf7d0)',
-                              color: '#16a34a',
-                              border: 'none',
-                              borderRadius: '8px',
-                              padding: '8px 10px',
-                              cursor: 'pointer',
-                              fontSize: '12px',
-                              fontWeight: '600',
-                              transition: 'all 0.2s ease',
-                              boxShadow: '0 2px 4px rgba(22, 163, 74, 0.2)'
-                            }}
-                            onMouseEnter={(e) => {
-                              e.target.style.transform = 'translateY(-2px)';
-                              e.target.style.boxShadow = '0 4px 8px rgba(22, 163, 74, 0.3)';
-                            }}
-                            onMouseLeave={(e) => {
-                              e.target.style.transform = 'translateY(0)';
-                              e.target.style.boxShadow = '0 2px 4px rgba(22, 163, 74, 0.2)';
-                            }}
-                          >
-                            <i className="fa-solid fa-calendar-plus"></i>
-                          </button>
+                              }}
+                              title="Agendar como pedido"
+                              style={{
+                                background: 'linear-gradient(135deg, #dcfce7, #bbf7d0)',
+                                color: '#16a34a',
+                                border: 'none',
+                                borderRadius: '8px',
+                                padding: '8px 10px',
+                                cursor: 'pointer',
+                                fontSize: '12px',
+                                fontWeight: '600',
+                                transition: 'all 0.2s ease',
+                                boxShadow: '0 2px 4px rgba(22, 163, 74, 0.2)'
+                              }}
+                              onMouseEnter={(e) => {
+                                e.target.style.transform = 'translateY(-2px)';
+                                e.target.style.boxShadow = '0 4px 8px rgba(22, 163, 74, 0.3)';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.target.style.transform = 'translateY(0)';
+                                e.target.style.boxShadow = '0 2px 4px rgba(22, 163, 74, 0.2)';
+                              }}
+                            >
+                              <i className="fa-solid fa-calendar-plus"></i>
+                            </button>
                           )}
                         </div>
                       </td>
                     </tr>
                   ))}
-                  
+
                   {cotizacionesFiltradas.length === 0 && (
                     <tr>
                       <td colSpan="7" style={{ textAlign: 'center', padding: '80px 20px' }}>
@@ -1180,23 +1248,23 @@ export default function ListaDeCotizaciones() {
                             padding: '25px',
                             marginBottom: '10px'
                           }}>
-                            <i className="fa-solid fa-file-invoice" style={{ 
-                              fontSize: '3.5rem', 
+                            <i className="fa-solid fa-file-invoice" style={{
+                              fontSize: '3.5rem',
                               color: '#9ca3af'
                             }}></i>
                           </div>
                           <div style={{ textAlign: 'center' }}>
-                            <h5 style={{ 
-                              color: '#6b7280', 
+                            <h5 style={{
+                              color: '#6b7280',
                               margin: '0 0 12px 0',
                               fontSize: '1.2rem',
                               fontWeight: '600'
                             }}>
                               No hay cotizaciones disponibles
                             </h5>
-                            <p style={{ 
-                              color: '#9ca3af', 
-                              margin: 0, 
+                            <p style={{
+                              color: '#9ca3af',
+                              margin: 0,
                               fontSize: '14px',
                               lineHeight: '1.5'
                             }}>
@@ -1210,7 +1278,7 @@ export default function ListaDeCotizaciones() {
                 </tbody>
               </table>
             </div>
-            
+
             {/* Paginación mejorada */}
             {totalPages > 1 && (
               <div style={{
@@ -1259,10 +1327,11 @@ export default function ListaDeCotizaciones() {
 
 
       {mostrarPreview && cotizacionSeleccionada && (
-        <CotizacionPreview 
-          datos={cotizacionSeleccionada} 
+        <CotizacionPreview
+          datos={cotizacionSeleccionada}
           onClose={closePreviewAndBlink}
           onEmailSent={handleEmailSent}
+          onRemisionCreated={handleRemisionCreated}
         />
       )}
 
@@ -1678,10 +1747,11 @@ export default function ListaDeCotizaciones() {
           </div>
 
           {mostrarPreview && cotizacionSeleccionada && (
-            <CotizacionPreview 
-              datos={cotizacionSeleccionada} 
+            <CotizacionPreview
+              datos={cotizacionSeleccionada}
               onClose={closePreviewAndBlink}
               onEmailSent={handleEmailSent}
+              onRemisionCreated={handleRemisionCreated}
             />
           )
           }

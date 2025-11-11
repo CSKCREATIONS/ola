@@ -219,7 +219,29 @@ export default function PedidosEntregados() {
       const arr = Array.isArray(data) ? data : data.data || [];
       const entregados = arr.filter(pedido => pedido.estado === 'entregado');
       const entregadosOrdenados = entregados.sort((a, b) => new Date(b.createdAt || b.fechaCreacion) - new Date(a.createdAt || a.fechaCreacion));
-      setPedidosEntregados(entregadosOrdenados);
+      // Intentar obtener remisiones existentes y mapear su número al pedido correspondiente
+      try {
+        const remRes = await api.get('/api/remisiones?limite=1000');
+        const remData = remRes.data || remRes;
+        // controller retorna { remisiones, total, ... }
+        const remisionesArr = Array.isArray(remData) ? remData : remData.remisiones || remData.data || [];
+        const mapRemisionByPedido = {};
+        for (const r of remisionesArr) {
+          // r.pedidoReferencia puede ser ObjectId (string) o poblado
+          const pedidoRef = r.pedidoReferencia?._id || r.pedidoReferencia || r.pedidoReferenciaId || null;
+          if (pedidoRef) mapRemisionByPedido[String(pedidoRef)] = r.numeroRemision || r.numero || r.numeroRemision;
+        }
+
+        const entregadosConRemision = entregadosOrdenados.map(p => ({
+          ...p,
+          numeroRemision: mapRemisionByPedido[String(p._id)] || p.numeroRemision || null
+        }));
+
+        setPedidosEntregados(entregadosConRemision);
+      } catch (remError) {
+        console.warn('No se pudieron cargar remisiones, se muestra la lista de pedidos sin números de remisión', remError);
+        setPedidosEntregados(entregadosOrdenados);
+      }
     } catch (error) {
       console.error('Error:', error);
       Swal.fire('Error', 'Error de conexión', 'error');
@@ -504,6 +526,8 @@ export default function PedidosEntregados() {
                                 const res = await api.post(`/api/remisiones/crear-desde-pedido/${pedido._id}`);
                                 const data = res.data || res;
                                 if (data.remision) {
+                                  // actualizar estado local para mostrar numeroRemision en la tabla
+                                  setPedidosEntregados(prev => prev.map(p => p._id === pedido._id ? { ...p, numeroRemision: data.remision.numeroRemision } : p));
                                   setRemisionPreview(data.remision);
                                 } else {
                                   // Si no viene remision detallada, intentar fallback obtener pedido completo y mapear estructura mínima
@@ -527,6 +551,8 @@ export default function PedidosEntregados() {
                                     total: (pedidoData.productos || []).reduce((sum, pr) => sum + pr.cantidad * (pr.precioUnitario || 0), 0),
                                     observaciones: pedidoData.observacion || '',
                                   };
+                                  // actualizar estado local con número de remisión estimado
+                                  setPedidosEntregados(prev => prev.map(p => p._id === pedido._id ? { ...p, numeroRemision: remisionLike.numeroRemision } : p));
                                   setRemisionPreview(remisionLike);
                                 }
                               } catch (error) {
@@ -535,7 +561,7 @@ export default function PedidosEntregados() {
                               }
                             }}
                           >
-                            {pedido.numeroPedido || '---'}
+                            {pedido.numeroRemision || '---'}
                           </button>
                         </div>
                       </td>

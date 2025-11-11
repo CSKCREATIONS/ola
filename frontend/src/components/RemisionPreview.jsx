@@ -199,11 +199,8 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
             <i className="fa-solid fa-truck" style={{ fontSize: '1.8rem' }}></i>
             <div>
               <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 'bold' }}>
-                Vista Previa - Remisión
+                Remisión {numeroRemision}
               </h2>
-              <p style={{ margin: 0, opacity: 0.9, fontSize: '0.95rem' }}>
-                N° {numeroRemision}
-              </p>
             </div>
           </div>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -384,7 +381,6 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                   <p><strong>Dirección:</strong> {datosConDefaults.cliente?.direccion || 'Dirección no especificada'}</p>
                   <p><strong>Ciudad:</strong> {datosConDefaults.cliente?.ciudad || 'Ciudad no especificada'}</p>
                   <p><strong>Teléfono:</strong> {datosConDefaults.cliente?.telefono || 'No especificado'}</p>
-                  <p><strong>Email:</strong> {datosConDefaults.cliente?.correo || 'Sin correo'}</p>
                 </div>
               </div>
 
@@ -402,24 +398,13 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                 <div style={{ lineHeight: '1.8' }}>
                   <p><strong>Empresa:</strong> {datosConDefaults.empresa?.nombre || 'JLA GLOBAL COMPANY'}</p>
                   <p><strong>Dirección:</strong> {datosConDefaults.empresa?.direccion || 'Cl. 21 # 5 - 52 C19, Chía, Cundinamarca'}</p>
-                  <p><strong>Responsable:</strong> {usuario.firstName || ''} {usuario.surname || ''}</p>
-                  <p><strong>Ref. Pedido:</strong> {datosConDefaults.codigoPedido || 'N/A'}</p>
+                  
                   <p><strong>Fecha Remisión:</strong> {datosConDefaults.fechaRemision ? new Date(datosConDefaults.fechaRemision).toLocaleDateString('es-ES') : 'N/A'}</p>
-                  <p><strong>Estado:</strong> 
-                    <span style={{
-                      background: datosConDefaults.estado === 'activa' ? '#059669' : datosConDefaults.estado === 'cancelada' ? '#dc2626' : '#6b7280',
-                      color: 'white',
-                      padding: '4px 12px',
-                      borderRadius: '15px',
-                      fontSize: '0.9rem',
-                      marginLeft: '0.5rem'
-                    }}>
-                      {datosConDefaults.estado?.toUpperCase() || 'ACTIVA'}
-                    </span>
-                  </p>
+                  
                   {datosConDefaults.fechaEntrega && (
                     <p><strong>Fecha Entrega:</strong> {new Date(datosConDefaults.fechaEntrega).toLocaleDateString('es-ES')}</p>
                   )}
+                  <p><strong>Teléfono:</strong> {datosConDefaults.empresa?.telefono || 'No especificado'}</p>
                 </div>
               </div>
             </div>

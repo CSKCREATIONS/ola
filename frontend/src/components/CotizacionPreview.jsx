@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import api from '../api/axiosConfig';
 
-export default function CotizacionPreview({ datos, onClose, onEmailSent }) {
+export default function CotizacionPreview({ datos, onClose, onEmailSent, onRemisionCreated }) {
   const navigate = useNavigate();
   // Obtener usuario logueado
   const usuario = JSON.parse(localStorage.getItem('user') || '{}');
@@ -13,6 +13,15 @@ export default function CotizacionPreview({ datos, onClose, onEmailSent }) {
   const [correo, setCorreo] = useState('');
   const [asunto, setAsunto] = useState('');
   const [mensaje, setMensaje] = useState('');
+
+  // Detectar si la cotización ya fue remisionada (varios nombres posibles según el objeto)
+  const isRemisionada = Boolean(
+    datos?.remision ||
+    datos?.remisionId ||
+    datos?.numeroRemision ||
+    datos?.remisionada ||
+    (typeof datos?.estado === 'string' && datos.estado.trim().toLowerCase() === 'remisionada')
+  );
 
   // Función para formatear fecha
   const formatDate = (fecha) => {
@@ -182,7 +191,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                 </label>
                 <textarea 
                   id="observaciones" 
-                  placeholder="Ingrese observaciones adicionales para el pedido y la remisión..."
+                  placeholder="Ingrese observaciones adicionales para la remisión..."
                   rows="4"
                   style="
                     width: 100%; 
@@ -210,9 +219,8 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                   <i class="fa-solid fa-lightbulb"></i> ¿Qué se creará?
                 </h5>
                 <ul style="margin: 0; padding-left: 20px; color: #92400e; font-size: 13px; line-height: 1.6;">
-                  <li><strong>📋 Pedido:</strong> Se agregará a la lista de pedidos con estado "Entregado"</li>
-                  <li><strong>🚚 Remisión:</strong> Se creará el documento de entrega en remisiones</li>
-                  <li><strong>📄 Cotización:</strong> Se marcará como "Remisionado"</li>
+                  <li><strong>🚚 Remisión:</strong> Se listara un nuevo pedido entregado</li>
+                  <li><strong>📄 Cotización:</strong> Se marcará como "Remisionada"</li>
                 </ul>
               </div>
               
@@ -336,7 +344,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
 
         const result = res.data || res;
 
-        if (res.status >= 200 && res.status < 300) {
+  if (res.status >= 200 && res.status < 300) {
           Swal.fire({
             icon: 'success',
             title: '¡Cotización Remisionada!',
@@ -376,6 +384,16 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
             }
           });
           
+          // Notificar al componente padre para actualizar la lista (ej. mostrar badge "REMISIONADA")
+          try {
+            if (onRemisionCreated) {
+              // result contiene numeroRemision y numeroPedido según el backend
+              onRemisionCreated(datos._id, result);
+            }
+          } catch (e) {
+            console.error('Error calling onRemisionCreated callback:', e);
+          }
+
           onClose();
         } else {
           throw new Error(result.message || 'Error al remisionar');
@@ -465,8 +483,8 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               </button>
             )}
 
-            {/* Botón de remisionar */}
-            {datos.tipo !== 'pedido' && (
+            {/* Botón de remisionar (oculto si ya está remisionada) */}
+            {datos.tipo !== 'pedido' && !isRemisionada && (
               <button
                 onClick={remisionarCotizacion}
                 style={{
