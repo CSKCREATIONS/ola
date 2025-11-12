@@ -66,7 +66,7 @@ const crearCompra = async (req, res) => {
     let fecha = new Date();
     if (req.body.fecha) {
       const parsedDate = new Date(req.body.fecha);
-      if (!isNaN(parsedDate.getTime())) {
+      if (!Number.isNaN(parsedDate.getTime())) {
         fecha = parsedDate;
       }
     }
