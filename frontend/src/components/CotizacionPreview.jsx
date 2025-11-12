@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import api from '../api/axiosConfig';
@@ -996,3 +997,10 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
     </div>
   );
 }
+
+CotizacionPreview.propTypes = {
+  datos: PropTypes.object,
+  onClose: PropTypes.func,
+  onEmailSent: PropTypes.func,
+  onRemisionCreated: PropTypes.func
+};
