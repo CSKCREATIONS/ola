@@ -250,7 +250,7 @@ export default function AgregarUsuario() {
               alignItems: 'center',
               gap: '0.75rem'
             }}>
-              <div style={{
+                <div style={{
                 width: '50px',
                 height: '50px',
                 borderRadius: '12px',
@@ -259,9 +259,9 @@ export default function AgregarUsuario() {
                 alignItems: 'center',
                 justifyContent: 'center'
               }}>
-                <i className="fa-solid fa-user-plus" style={{ fontSize: '1.5rem' }}></i>
+                <i className="fa-solid fa-user-plus" style={{ fontSize: '1.5rem' }} aria-hidden={true}></i>
               </div>
-              Crear Nuevo Usuario
+              <span>Crear Nuevo Usuario</span>
             </h3>
             <p style={{ 
               margin: '0.5rem 0 0 4rem', 
@@ -297,8 +297,8 @@ export default function AgregarUsuario() {
                 alignItems: 'center',
                 gap: '0.5rem'
               }}>
-                <i className="fa-solid fa-id-card" style={{ color: '#3b82f6' }}></i>
-                Información Personal
+                <i className="fa-solid fa-id-card" style={{ color: '#3b82f6' }} aria-hidden={true}></i>
+                <span>Información Personal</span>
               </h4>
               
               <div style={{
@@ -317,9 +317,8 @@ export default function AgregarUsuario() {
                     color: '#374151',
                     fontSize: '0.95rem'
                   }}>
-                    <i className="fa-solid fa-user" style={{ color: '#10b981', fontSize: '0.9rem' }}></i>
-                    Primer Nombre
-                    <span style={{ color: '#ef4444' }}>*</span>
+                    <i className="fa-solid fa-user" style={{ color: '#10b981', fontSize: '0.9rem' }} aria-hidden={true}></i>
+                    <span>Primer Nombre <span style={{ color: '#ef4444' }}>*</span></span>
                   </label>
                   <input 
                     id="firstName-agregar"
@@ -362,8 +361,8 @@ export default function AgregarUsuario() {
                     color: '#374151',
                     fontSize: '0.95rem'
                   }}>
-                    <i className="fa-solid fa-user" style={{ color: '#10b981', fontSize: '0.9rem' }}></i>
-                    Segundo Nombre
+                    <i className="fa-solid fa-user" style={{ color: '#10b981', fontSize: '0.9rem' }} aria-hidden={true}></i>
+                    <span>Segundo Nombre</span>
                   </label>
                   <input 
                     id="secondName-agregar"
@@ -410,9 +409,8 @@ export default function AgregarUsuario() {
                     color: '#374151',
                     fontSize: '0.95rem'
                   }}>
-                    <i className="fa-solid fa-user" style={{ color: '#f59e0b', fontSize: '0.9rem' }}></i>
-                    Primer Apellido
-                    <span style={{ color: '#ef4444' }}>*</span>
+                    <i className="fa-solid fa-user" style={{ color: '#f59e0b', fontSize: '0.9rem' }} aria-hidden={true}></i>
+                    <span>Primer Apellido <span style={{ color: '#ef4444' }}>*</span></span>
                   </label>
                   <input 
                     id="surname-agregar"
@@ -454,8 +452,8 @@ export default function AgregarUsuario() {
                     color: '#374151',
                     fontSize: '0.95rem'
                   }}>
-                    <i className="fa-solid fa-user" style={{ color: '#f59e0b', fontSize: '0.9rem' }}></i>
-                    Segundo Apellido
+                    <i className="fa-solid fa-user" style={{ color: '#f59e0b', fontSize: '0.9rem' }} aria-hidden={true}></i>
+                    <span>Segundo Apellido</span>
                   </label>
                   <input 
                     id="secondSurname-agregar"
@@ -506,8 +504,8 @@ export default function AgregarUsuario() {
                 alignItems: 'center',
                 gap: '0.5rem'
               }}>
-                <i className="fa-solid fa-cog" style={{ color: '#10b981' }}></i>
-                Configuración de la Cuenta
+                <i className="fa-solid fa-cog" style={{ color: '#10b981' }} aria-hidden={true}></i>
+                <span>Configuración de la Cuenta</span>
               </h4>
               
               <div style={{
@@ -525,9 +523,8 @@ export default function AgregarUsuario() {
                     color: '#374151',
                     fontSize: '0.95rem'
                   }}>
-                    <i className="fa-solid fa-shield-alt" style={{ color: '#8b5cf6', fontSize: '0.9rem' }}></i>
-                    Rol del Usuario
-                    <span style={{ color: '#ef4444' }}>*</span>
+                    <i className="fa-solid fa-shield-alt" style={{ color: '#8b5cf6', fontSize: '0.9rem' }} aria-hidden={true}></i>
+                    <span>Rol del Usuario <span style={{ color: '#ef4444' }}>*</span></span>
                   </label>
                   <select 
                     id="role-agregar"
@@ -585,25 +582,25 @@ export default function AgregarUsuario() {
                   }}>
                     {cargandoRoles ? (
                       <span style={{ color: '#3b82f6' }}>
-                        <i className="fa-solid fa-spinner fa-spin icon-gap" style={{}}></i>
-                        Cargando roles...
+                        <i className="fa-solid fa-spinner fa-spin icon-gap" style={{}} aria-hidden={true}></i>
+                        <span>Cargando roles...</span>
                       </span>
                     ) : rolesDisponibles.length === 0 ? (
                       rolesForbidden ? (
                         <span style={{ color: '#ef4444' }}>
-                          <i className="fa-solid fa-lock icon-gap" style={{}}></i>
-                          No tienes permiso para ver la lista de roles.
+                          <i className="fa-solid fa-lock icon-gap" style={{}} aria-hidden={true}></i>
+                          <span>No tienes permiso para ver la lista de roles.</span>
                         </span>
                       ) : (
                         <span style={{ color: '#ef4444' }}>
-                          <i className="fa-solid fa-exclamation-triangle icon-gap" style={{}}></i>
-                          No se encontraron roles. Verifica tu conexión o permisos.
+                          <i className="fa-solid fa-exclamation-triangle icon-gap" style={{}} aria-hidden={true}></i>
+                          <span>No se encontraron roles. Verifica tu conexión o permisos.</span>
                         </span>
                       )
                     ) : (
                       <span style={{ color: '#10b981' }}>
-                        <i className="fa-solid fa-check-circle icon-gap" style={{}}></i>
-                        {rolesDisponibles.filter(r => r.enabled !== false).length} roles disponibles
+                        <i className="fa-solid fa-check-circle icon-gap" style={{}} aria-hidden={true}></i>
+                        <span>{rolesDisponibles.filter(r => r.enabled !== false).length} roles disponibles</span>
                       </span>
                     )}
                   </div>
@@ -619,9 +616,8 @@ export default function AgregarUsuario() {
                     color: '#374151',
                     fontSize: '0.95rem'
                   }}>
-                    <i className="fa-solid fa-envelope" style={{ color: '#ef4444', fontSize: '0.9rem' }}></i>
-                    Correo Electrónico
-                    <span style={{ color: '#ef4444' }}>*</span>
+                    <i className="fa-solid fa-envelope" style={{ color: '#ef4444', fontSize: '0.9rem' }} aria-hidden={true}></i>
+                    <span>Correo Electrónico <span style={{ color: '#ef4444' }}>*</span></span>
                   </label>
                   <input 
                     id="email-agregar"
@@ -662,14 +658,14 @@ export default function AgregarUsuario() {
                 padding: '1.5rem',
                 marginTop: '2rem'
               }}>
-                <div style={{
+                  <div style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.5rem',
                   color: '#0c4a6e',
                   fontSize: '0.9rem'
                 }}>
-                  <i className="fa-solid fa-info-circle" style={{ color: '#0284c7' }}></i>
+                  <i className="fa-solid fa-info-circle" style={{ color: '#0284c7' }} aria-hidden={true}></i>
                   <strong>Información importante:</strong>
                 </div>
                 <p style={{
@@ -723,8 +719,8 @@ export default function AgregarUsuario() {
                   e.target.style.borderColor = '#e5e7eb';
                 }}
               >
-                <i className="fa-solid fa-times"></i>
-                Cancelar
+                <i className="fa-solid fa-times" aria-hidden={true}></i>
+                <span>Cancelar</span>
               </button>
               <button 
                 type="submit" 
@@ -752,8 +748,8 @@ export default function AgregarUsuario() {
                   e.target.style.boxShadow = '0 4px 6px -1px rgba(59, 130, 246, 0.3)';
                 }}
               >
-                <i className="fa-solid fa-user-plus"></i>
-                Crear Usuario
+                <i className="fa-solid fa-user-plus" aria-hidden={true}></i>
+                <span>Crear Usuario</span>
               </button>
             </div>
         </form>
