@@ -167,16 +167,16 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
           <span className='modal-title'>{datos.codigo ? datos.codigo : ''}</span>
           <div className="botones-cotizacion" style={{ display: 'flex', gap: '18px', justifyContent: 'center', marginBottom: '1rem' }}>
             <button className="btn-cotizacion moderno" title="Editar" onClick={() => { onClose(); navigate('/RegistrarCotizacion', { state: { datos } }); }}>
-              <i className="fa-solid fa-pen icon-gap" style={{ fontSize: '1.2rem' }}></i>
-              Editar
+              <i className="fa-solid fa-pen icon-gap" style={{ fontSize: '1.2rem' }} aria-hidden={true}></i>
+              <span>Editar</span>
             </button>
             <button className="btn-cotizacion moderno" title="Remisionar" onClick={() => { }}>
-              <i className="fa-solid fa-file-invoice icon-gap" style={{ fontSize: '1.2rem' }}></i>
-              Remisionar
+              <i className="fa-solid fa-file-invoice icon-gap" style={{ fontSize: '1.2rem' }} aria-hidden={true}></i>
+              <span>Remisionar</span>
             </button>
             <button className="btn-cotizacion moderno" title="Enviar" onClick={abrirModalEnvio}>
-              <i className="fa-solid fa-envelope icon-gap" style={{ fontSize: '1rem', color: '#EA4335' }}></i>
-              Enviar
+              <i className="fa-solid fa-envelope icon-gap" style={{ fontSize: '1rem', color: '#EA4335' }} aria-hidden={true}></i>
+              <span>Enviar</span>
             </button>
             <button className="btn-cotizacion moderno" title="Imprimir" onClick={() => {
               // Método seguro de impresión sin manipular DOM
@@ -205,8 +205,8 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               newWindow.focus();
               newWindow.print();
               newWindow.close();
-            }}>
-              <i className="fa-solid fa-print icon-gap" style={{ fontSize: '1.2rem' }}></i>
+            }} aria-label="Imprimir">
+              <i className="fa-solid fa-print icon-gap" style={{ fontSize: '1.2rem' }} aria-hidden={true}></i>
             </button>
           </div>
         </div>
@@ -431,6 +431,7 @@ FormatoCotizacion.propTypes = {
       })
     ),
     productosLista: PropTypes.arrayOf(PropTypes.object),
+    total: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     enviadoCorreo: PropTypes.bool,
   }).isRequired,
   onClose: PropTypes.func,
