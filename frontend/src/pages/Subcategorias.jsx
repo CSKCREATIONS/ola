@@ -295,7 +295,7 @@ const SubcategoriaModal = ({ subcategoria, categorias, onClose, onSave }) => {
             border: '1px solid #e2e8f0',
             borderLeft: '4px solid #8b5cf6'
           }}>
-            <label style={{
+            <label htmlFor="input-subcategoria-name" style={{
               display: 'flex',
               alignItems: 'center',
               gap: '0.5rem',
@@ -309,6 +309,7 @@ const SubcategoriaModal = ({ subcategoria, categorias, onClose, onSave }) => {
               <span style={{ color: '#ef4444' }}>*</span>
             </label>
             <input
+              id="input-subcategoria-name"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -345,7 +346,7 @@ const SubcategoriaModal = ({ subcategoria, categorias, onClose, onSave }) => {
             border: '1px solid #e2e8f0',
             borderLeft: '4px solid #f59e0b'
           }}>
-            <label style={{
+            <label htmlFor="input-subcategoria-category" style={{
               display: 'flex',
               alignItems: 'center',
               gap: '0.5rem',
@@ -359,6 +360,7 @@ const SubcategoriaModal = ({ subcategoria, categorias, onClose, onSave }) => {
               <span style={{ color: '#ef4444' }}>*</span>
             </label>
             <select
+              id="input-subcategoria-category"
               value={categoryId}
               onChange={(e) => setCategoryId(e.target.value)}
               style={{
@@ -400,7 +402,7 @@ const SubcategoriaModal = ({ subcategoria, categorias, onClose, onSave }) => {
             border: '1px solid #e2e8f0',
             borderLeft: '4px solid #10b981'
           }}>
-            <label style={{
+            <label htmlFor="input-subcategoria-description" style={{
               display: 'flex',
               alignItems: 'center',
               gap: '0.5rem',
@@ -414,6 +416,7 @@ const SubcategoriaModal = ({ subcategoria, categorias, onClose, onSave }) => {
               <span style={{ color: '#ef4444' }}>*</span>
             </label>
             <input
+              id="input-subcategoria-description"
               type="text"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
