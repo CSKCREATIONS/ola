@@ -13,6 +13,3 @@
 * Abrir el proyecto en el editor de codigo y en la carpeta raiz ejecutar 'npm i'
 * Luego ejecutar 'npm run dev'
 * Con esto se ejecuta el backend y el frontend en paralelo. De esta forma ya se podra ver el proyecto en el navegador y se actualizara simultaneamente con los cambios
-# ola
-# ola
-# ola
