@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 
 export function Card({ children, className = '' }) {
   return (
@@ -15,3 +16,12 @@ export function CardContent({ children, className = '' }) {
     </div>
   );
 }
+Card.propTypes = {
+  children: PropTypes.node,
+  className: PropTypes.string
+};
+
+CardContent.propTypes = {
+  children: PropTypes.node,
+  className: PropTypes.string
+};
