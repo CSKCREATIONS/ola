@@ -714,7 +714,7 @@ JLA Global Company</textarea>
                   padding: '20px',
                   backdropFilter: 'blur(10px)'
                 }}>
-                  <i className="fa-solid fa-history" style={{ fontSize: '2.5rem', color: 'white' }}></i>
+                  <i className="fa-solid fa-history" style={{ fontSize: '2.5rem', color: 'white' }} aria-hidden={true}></i>
                 </div>
                 <div style={{ flex: 1 }}>
                   <h2 style={{ margin: '0 0 8px 0', fontSize: '2rem', fontWeight: '700' }}>
@@ -750,8 +750,8 @@ JLA Global Company</textarea>
                     e.target.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.3)';
                   }}
                 >
-                  <i className="fa-solid fa-plus"></i>
-                  Nueva Compra
+                  <i className="fa-solid fa-plus" aria-hidden={true}></i>
+                  <span>Nueva Compra</span>
                 </button>
               </div>
             </div>
@@ -780,7 +780,7 @@ JLA Global Company</textarea>
                   alignItems: 'center',
                   justifyContent: 'center'
                 }}>
-                  <i className="fa-solid fa-shopping-cart" style={{ color: 'white', fontSize: '1.5rem' }}></i>
+                  <i className="fa-solid fa-shopping-cart" style={{ color: 'white', fontSize: '1.5rem' }} aria-hidden={true}></i>
                 </div>
                 <div>
                   <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
@@ -809,7 +809,7 @@ JLA Global Company</textarea>
                   alignItems: 'center',
                   justifyContent: 'center'
                 }}>
-                  <i className="fa-solid fa-dollar-sign" style={{ color: 'white', fontSize: '1.5rem' }}></i>
+                  <i className="fa-solid fa-dollar-sign" style={{ color: 'white', fontSize: '1.5rem' }} aria-hidden={true}></i>
                 </div>
                 <div>
                   <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
@@ -838,7 +838,7 @@ JLA Global Company</textarea>
                   alignItems: 'center',
                   justifyContent: 'center'
                 }}>
-                  <i className="fa-solid fa-chart-bar" style={{ color: 'white', fontSize: '1.5rem' }}></i>
+                  <i className="fa-solid fa-chart-bar" style={{ color: 'white', fontSize: '1.5rem' }} aria-hidden={true}></i>
                 </div>
                 <div>
                   <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
@@ -1104,7 +1104,7 @@ JLA Global Company</textarea>
                     width: '100%'
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                        <i className="fa-solid fa-receipt" style={{ fontSize: '1.8rem' }}></i>
+                        <i className="fa-solid fa-receipt" style={{ fontSize: '1.8rem' }} aria-hidden={true}></i>
                         <div>
                             <h5 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 'bold' }}>
                                 COMPRA CONFIRMADA
@@ -1169,8 +1169,8 @@ JLA Global Company</textarea>
                             alignItems: 'center',
                             gap: '0.5rem'
                         }}>
-                            <i className="fa-solid fa-truck" style={{ color: '#e74c3c' }}></i>
-                            PROVEEDOR
+                <i className="fa-solid fa-truck" style={{ color: '#e74c3c' }} aria-hidden={true}></i>
+                  <span>PROVEEDOR</span>
                         </h6>
                         <p style={{ margin: 0, fontWeight: 'bold', fontSize: '1.1rem' }}>
                             {compraSeleccionada.proveedor?.nombre || compraSeleccionada.proveedor || 'No especificado'}
@@ -1191,8 +1191,8 @@ JLA Global Company</textarea>
                             alignItems: 'center',
                             gap: '0.5rem'
                         }}>
-                            <i className="fa-solid fa-calendar-alt" style={{ color: '#3498db' }}></i>
-                            INFORMACIÓN
+              <i className="fa-solid fa-calendar-alt" style={{ color: '#3498db' }} aria-hidden={true}></i>
+              <span>INFORMACIÓN</span>
                         </h6>
                         <div style={{ display: 'grid', gap: '0.5rem' }}>
                             <div>
@@ -1225,8 +1225,8 @@ JLA Global Company</textarea>
                         alignItems: 'center',
                         gap: '0.5rem'
                     }}>
-                        <i className="fa-solid fa-chart-bar"></i>
-                        RESUMEN FINANCIERO
+            <i className="fa-solid fa-chart-bar" aria-hidden={true}></i>
+            <span>RESUMEN FINANCIERO</span>
                     </h6>
                     <div style={{ 
                         display: 'grid', 
@@ -1271,8 +1271,8 @@ JLA Global Company</textarea>
                             alignItems: 'center',
                             gap: '0.5rem'
                         }}>
-                            <i className="fa-solid fa-sticky-note"></i>
-                            OBSERVACIONES
+              <i className="fa-solid fa-sticky-note" aria-hidden={true}></i>
+              <span>OBSERVACIONES</span>
                         </h6>
                         <p style={{ margin: 0, color: '#856404', lineHeight: '1.5' }}>
                             {compraSeleccionada.observaciones}
@@ -1281,16 +1281,16 @@ JLA Global Company</textarea>
                 )}
 
                 {/* Tabla de productos mejorada */}
-                <h6 style={{ 
-                    color: '#2c3e50',
-                    marginBottom: '1rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem'
-                }}>
-                    <i className="fa-solid fa-boxes"></i>
-                    DETALLE DE PRODUCTOS ({compraSeleccionada.productos?.length || 0})
-                </h6>
+        <h6 style={{ 
+          color: '#2c3e50',
+          marginBottom: '1rem',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem'
+        }}>
+          <i className="fa-solid fa-boxes" aria-hidden={true}></i>
+          <span>DETALLE DE PRODUCTOS ({compraSeleccionada.productos?.length || 0})</span>
+        </h6>
 
                 <div className="table-responsive" style={{
                     border: '1px solid #e0e0e0',
@@ -1355,8 +1355,8 @@ JLA Global Company</textarea>
                         color: '#666',
                         fontStyle: 'italic'
                     }}>
-                        <i className="fa-solid fa-inbox" style={{ fontSize: '2rem', marginBottom: '1rem', display: 'block' }}></i>
-                        No hay productos registrados en esta compra
+            <i className="fa-solid fa-inbox" style={{ fontSize: '2rem', marginBottom: '1rem', display: 'block' }} aria-hidden={true}></i>
+            <span>No hay productos registrados en esta compra</span>
                     </div>
                 )}
             </div>
@@ -1373,16 +1373,16 @@ JLA Global Company</textarea>
                 borderBottomRightRadius: '12px'
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#666' }}>
-                    <i className="fa-solid fa-circle-check" style={{ color: '#27ae60' }}></i>
-                    <span>Compra confirmada y procesada</span>
+          <i className="fa-solid fa-circle-check" style={{ color: '#27ae60' }} aria-hidden={true}></i>
+          <span>Compra confirmada y procesada</span>
                 </div>
                 <div style={{ display: 'flex', gap: '1rem' }}>
                     <button
                         className="btn-profesional btn-primary-profesional"
                         onClick={imprimirCompra}
                     >
-                        <i className="fa-solid fa-print"></i>
-                        Imprimir PDF
+            <i className="fa-solid fa-print" aria-hidden={true}></i>
+            <span>Imprimir PDF</span>
                     </button>
                     <button
                         className="btn-profesional"
@@ -1393,8 +1393,8 @@ JLA Global Company</textarea>
                             padding: '0.5rem 1.5rem'
                         }}
                     >
-                        <i className="fa-solid fa-envelope"></i>
-                        Enviar por correo
+            <i className="fa-solid fa-envelope" aria-hidden={true}></i>
+            <span>Enviar por correo</span>
                     </button>
                     <button
                         className="btn-profesional"
@@ -1405,8 +1405,8 @@ JLA Global Company</textarea>
                             padding: '0.5rem 1.5rem'
                         }}
                     >
-                        <i className="fa-solid fa-times"></i>
-                        Cerrar
+            <i className="fa-solid fa-times" aria-hidden={true}></i>
+            <span>Cerrar</span>
                     </button>
                 </div>
             </div>
@@ -1427,7 +1427,7 @@ JLA Global Company</textarea>
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                      <i className="fa-solid fa-plus-circle" style={{ fontSize: '1.8rem' }}></i>
+                      <i className="fa-solid fa-plus-circle" style={{ fontSize: '1.8rem' }} aria-hidden={true}></i>
                       <div>
                         <h5 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 'bold' }}>
                           NUEVA COMPRA
@@ -1462,8 +1462,8 @@ JLA Global Company</textarea>
                   {/* Información General */}
                   <div style={{ marginBottom: '2rem' }}>
                     <h6 style={{ marginBottom: '1rem', color: '#2c3e50', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <i className="fa-solid fa-info-circle" style={{ color: '#10b981' }}></i>
-                      Información General
+                      <i className="fa-solid fa-info-circle" style={{ color: '#10b981' }} aria-hidden={true}></i>
+                      <span>Información General</span>
                     </h6>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
                       <div>
@@ -1515,8 +1515,8 @@ JLA Global Company</textarea>
                   <div style={{ marginBottom: '2rem' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                       <h6 style={{ margin: 0, color: '#2c3e50', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <i className="fa-solid fa-boxes" style={{ color: '#10b981' }}></i>
-                        Productos ({nuevaCompra.productos.length})
+                        <i className="fa-solid fa-boxes" style={{ color: '#10b981' }} aria-hidden={true}></i>
+                        <span>Productos ({nuevaCompra.productos.length})</span>
                       </h6>
                       <button
                         onClick={agregarProductoNuevaCompra}
@@ -1534,8 +1534,8 @@ JLA Global Company</textarea>
                           gap: '0.5rem'
                         }}
                       >
-                        <i className="fa-solid fa-plus"></i>
-                        Agregar Producto
+                        <i className="fa-solid fa-plus" aria-hidden={true}></i>
+                        <span>Agregar Producto</span>
                       </button>
                     </div>
 
@@ -1551,6 +1551,7 @@ JLA Global Company</textarea>
                           <strong style={{ color: '#2c3e50' }}>Producto #{index + 1}</strong>
                           <button
                             onClick={() => eliminarProductoNuevaCompra(index)}
+                            aria-label="Eliminar producto"
                             style={{
                               background: '#ef4444',
                               color: 'white',
@@ -1561,7 +1562,7 @@ JLA Global Company</textarea>
                               cursor: 'pointer'
                             }}
                           >
-                            <i className="fa-solid fa-trash"></i>
+                            <i className="fa-solid fa-trash" aria-hidden={true}></i>
                           </button>
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '1rem' }}>

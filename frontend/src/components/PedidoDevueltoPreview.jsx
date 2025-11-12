@@ -264,7 +264,8 @@ PedidoDevueltoPreview.propTypes = {
     _id: PropTypes.string,
     numeroPedido: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     createdAt: PropTypes.string,
-    fecha: PropTypes.string,
+  fecha: PropTypes.string,
+  fechaEntrega: PropTypes.string,
     cliente: PropTypes.shape({
       nombre: PropTypes.string,
       direccion: PropTypes.string,
