@@ -120,6 +120,14 @@ export default function EditarPerfil() {
       role="dialog"
       aria-modal="true"
       aria-labelledby="edit-profile-title"
+      // Make the backdrop keyboard-accessible so attaching onClick is allowed by a11y linters
+      tabIndex={-1}
+      onKeyDown={(e) => {
+        // Close modal on Escape key press
+        if (e.key === 'Escape' || e.key === 'Esc') {
+          closeModal('editar-perfil');
+        }
+      }}
       style={{
         position: 'fixed',
         top: 0,
