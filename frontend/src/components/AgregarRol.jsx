@@ -255,10 +255,7 @@ export default function AgregarRol() {
                         fontSize: '1.1rem'
                      }}>
                                        <i className="fa-solid fa-tag icon-gap" style={{ color: '#8b5cf6', fontSize: '1rem' }} aria-hidden={true}></i>
-                                       <span>
-                                          Nombre del Rol
-                                          <span style={{ color: '#ef4444' }}>*</span>
-                                       </span>
+                                       <span>Nombre del Rol <span style={{ color: '#ef4444' }}>*</span></span>
                      </label>
                      <input 
                         id="nombre-rol-agregar"
