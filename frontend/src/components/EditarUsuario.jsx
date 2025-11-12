@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { closeModal } from '../funciones/animaciones';
 import Swal from 'sweetalert2';
 import api from '../api/axiosConfig';
+import PropTypes from 'prop-types';
 
 export default function EditarUsuario({ usuario, fetchUsuarios }) {
   const [rolesDisponibles, setRolesDisponibles] = useState([]);
@@ -158,6 +159,12 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
       role="dialog"
       aria-modal="true"
       aria-labelledby="edit-user-title"
+      tabIndex={-1}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape' || e.key === 'Esc') {
+          closeModal('editUserModal');
+        }
+      }}
       style={{
         position: 'fixed',
         top: 0,
@@ -214,7 +221,7 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
               alignItems: 'center',
               gap: '0.75rem'
             }}>
-            <div style={{
+              <div style={{
               width: '50px',
               height: '50px',
               borderRadius: '12px',
@@ -223,9 +230,9 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
               alignItems: 'center',
               justifyContent: 'center'
             }}>
-              <i className="fa-solid fa-user-edit" style={{ fontSize: '1.5rem' }}></i>
+              <i className="fa-solid fa-user-edit" style={{ fontSize: '1.5rem' }} aria-hidden={true}></i>
             </div>
-            Editar Usuario
+            <span>Editar Usuario</span>
           </h3>
           <p style={{ 
             margin: '0.5rem 0 0 4rem', 
@@ -261,8 +268,8 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
               alignItems: 'center',
               gap: '0.5rem'
             }}>
-              <i className="fa-solid fa-id-card" style={{ color: '#3b82f6' }}></i>
-              Información Personal
+              <i className="fa-solid fa-id-card" style={{ color: '#3b82f6' }} aria-hidden={true}></i>
+              <span>Información Personal</span>
             </h4>
 
             <div style={{
@@ -272,8 +279,8 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
             }}>
               <div>
                 <label htmlFor="firstName-edit" style={labelStyle}>
-                  <i className="fa-solid fa-user" style={{ color: '#3b82f6', fontSize: '0.875rem' }}></i>
-                  Primer nombre
+                  <i className="fa-solid fa-user" style={{ color: '#3b82f6', fontSize: '0.875rem' }} aria-hidden={true}></i>
+                  <span>Primer nombre</span>
                 </label>
                 <input 
                   id="firstName-edit"
@@ -294,7 +301,7 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
               </div>
 
               <div>
-                <label htmlFor="secondName-edit" style={labelStyle}><i className="fa-solid fa-user" style={{ color: '#3b82f6', fontSize: '0.875rem' }}></i>Segundo nombre</label><input id="secondName-edit" type="text" name="secondName" 
+                <label htmlFor="secondName-edit" style={labelStyle}><i className="fa-solid fa-user" style={{ color: '#3b82f6', fontSize: '0.875rem' }} aria-hidden={true}></i><span>Segundo nombre</span></label><input id="secondName-edit" type="text" name="secondName" 
                   value={form.secondName} 
                   onChange={handleChange}
                   style={inputStyle}
@@ -311,8 +318,8 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
 
               <div>
                 <label htmlFor="surname-edit" style={labelStyle}>
-                  <i className="fa-solid fa-user" style={{ color: '#3b82f6', fontSize: '0.875rem' }}></i>
-                  Primer apellido
+                  <i className="fa-solid fa-user" style={{ color: '#3b82f6', fontSize: '0.875rem' }} aria-hidden={true}></i>
+                  <span>Primer apellido</span>
                 </label>
                 <input 
                   id="surname-edit"
@@ -334,8 +341,8 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
 
               <div>
                 <label htmlFor="secondSurname-edit" style={labelStyle}>
-                  <i className="fa-solid fa-user" style={{ color: '#3b82f6', fontSize: '0.875rem' }}></i>
-                  Segundo apellido
+                  <i className="fa-solid fa-user" style={{ color: '#3b82f6', fontSize: '0.875rem' }} aria-hidden={true}></i>
+                  <span>Segundo apellido</span>
                 </label>
                 <input 
                   id="secondSurname-edit"
@@ -375,8 +382,8 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
               alignItems: 'center',
               gap: '0.5rem'
             }}>
-              <i className="fa-solid fa-key" style={{ color: '#10b981' }}></i>
-              Información de Cuenta
+              <i className="fa-solid fa-key" style={{ color: '#10b981' }} aria-hidden={true}></i>
+              <span>Información de Cuenta</span>
             </h4>
 
             <div style={{
@@ -386,8 +393,8 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
             }}>
               <div>
                 <label htmlFor="email-edit" style={labelStyle}>
-                  <i className="fa-solid fa-envelope" style={{ color: '#10b981', fontSize: '0.875rem' }}></i>
-                  Correo electrónico
+                  <i className="fa-solid fa-envelope" style={{ color: '#10b981', fontSize: '0.875rem' }} aria-hidden={true}></i>
+                  <span>Correo electrónico</span>
                 </label>
                 <input 
                   id="email-edit"
@@ -409,8 +416,8 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
 
               <div>
                 <label htmlFor="username-edit" style={labelStyle}>
-                  <i className="fa-solid fa-at" style={{ color: '#10b981', fontSize: '0.875rem' }}></i>
-                  Nombre de usuario
+                  <i className="fa-solid fa-at" style={{ color: '#10b981', fontSize: '0.875rem' }} aria-hidden={true}></i>
+                  <span>Nombre de usuario</span>
                 </label>
                 <input 
                   id="username-edit"
@@ -432,9 +439,8 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
 
               <div>
                 <label htmlFor="role-edit" style={labelStyle}>
-                  <i className="fa-solid fa-shield-alt" style={{ color: '#10b981', fontSize: '0.875rem' }}></i>
-                  Rol
-                  <span style={{ color: '#ef4444' }}>*</span>
+                  <i className="fa-solid fa-shield-alt" style={{ color: '#10b981', fontSize: '0.875rem' }} aria-hidden={true}></i>
+                  <span>Rol <span style={{ color: '#ef4444' }}>*</span></span>
                 </label>
                 {rolesForbidden ? (
                   <div style={{ 
@@ -444,8 +450,8 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
                     borderRadius: '10px',
                     border: '2px solid #fecaca'
                   }}>
-                    <i className="fa-solid fa-lock icon-gap" style={{}}></i>
-                    No tienes permiso para ver roles
+                    <i className="fa-solid fa-lock icon-gap" style={{}} aria-hidden={true}></i>
+                    <span>No tienes permiso para ver roles</span>
                   </div>
                 ) : (
                   <select 
@@ -482,7 +488,7 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
             border: '1px solid #e2e8f0',
             borderLeft: '4px solid #f59e0b'
           }}>
-            <div 
+                <div 
               role="button"
               tabIndex={0}
               onClick={() => setMostrarCambiarPassword(!mostrarCambiarPassword)}
@@ -509,11 +515,11 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
                 alignItems: 'center',
                 gap: '0.5rem'
               }}>
-                <i className="fa-solid fa-lock" style={{ color: '#f59e0b' }}></i>
-                Cambiar Contraseña
+                <i className="fa-solid fa-lock" style={{ color: '#f59e0b' }} aria-hidden={true}></i>
+                <span>Cambiar Contraseña</span>
               </h4>
               <i className={`fa-solid fa-chevron-${mostrarCambiarPassword ? 'up' : 'down'}`} 
-                 style={{ color: '#6b7280' }}></i>
+                 style={{ color: '#6b7280' }} aria-hidden={true}></i>
             </div>
 
             {mostrarCambiarPassword && (
@@ -524,8 +530,8 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
               }}>
                 <div>
                   <label htmlFor="new-password-edit" style={labelStyle}>
-                    <i className="fa-solid fa-key" style={{ color: '#f59e0b', fontSize: '0.875rem' }}></i>
-                    Nueva contraseña
+                    <i className="fa-solid fa-key" style={{ color: '#f59e0b', fontSize: '0.875rem' }} aria-hidden={true}></i>
+                    <span>Nueva contraseña</span>
                   </label>
                   <input
                     id="new-password-edit"
@@ -547,8 +553,8 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
                 </div>
                 <div>
                   <label htmlFor="confirm-password-edit" style={labelStyle}>
-                    <i className="fa-solid fa-check" style={{ color: '#f59e0b', fontSize: '0.875rem' }}></i>
-                    Confirmar contraseña
+                    <i className="fa-solid fa-check" style={{ color: '#f59e0b', fontSize: '0.875rem' }} aria-hidden={true}></i>
+                    <span>Confirmar contraseña</span>
                   </label>
                   <input
                     id="confirm-password-edit"
@@ -610,8 +616,8 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
               e.target.style.borderColor = '#e5e7eb';
             }}
           >
-            <i className="fa-solid fa-times"></i>
-            Cancelar
+            <i className="fa-solid fa-times" aria-hidden={true}></i>
+            <span>Cancelar</span>
           </button>
           
           <button 
@@ -640,13 +646,32 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
               e.target.style.boxShadow = '0 4px 6px -1px rgba(59, 130, 246, 0.3)';
             }}
           >
-            <i className="fa-solid fa-save"></i>
-            Guardar Cambios
+            <i className="fa-solid fa-save" aria-hidden={true}></i>
+            <span>Guardar Cambios</span>
           </button>
         </div>
       </form>
     </div>
   );
 }
+
+EditarUsuario.propTypes = {
+  usuario: PropTypes.shape({
+    _id: PropTypes.string,
+    username: PropTypes.string,
+    firstName: PropTypes.string,
+    secondName: PropTypes.string,
+    surname: PropTypes.string,
+    secondSurname: PropTypes.string,
+    role: PropTypes.oneOfType([
+      PropTypes.string,
+      PropTypes.shape({ _id: PropTypes.string, name: PropTypes.string })
+    ]),
+    email: PropTypes.string,
+    enabled: PropTypes.bool
+  }),
+  fetchUsuarios: PropTypes.func
+};
+
 
 
