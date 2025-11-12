@@ -242,15 +242,27 @@ export default function Fijo() {
           <div className="modulos-menu">
             {(puedeVerUsuarios || puedeVerRoles) && (
               <nav>
-                <li style={{ padding: "10px 0" }} onClick={() => toggleSubMenu('submenuUsuarios')}>
-                  <i className="fas fa-users"></i> Usuarios
+                <li
+                  style={{ padding: "10px 0" }}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => toggleSubMenu('submenuUsuarios')}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      toggleSubMenu('submenuUsuarios');
+                    }
+                  }}
+                >
+                  <i className="fas fa-users" aria-hidden={true}></i>
+                  <span>Usuarios</span>
                 </li>
                 <ul className="dropdown" id="submenuUsuarios">
                   {puedeVerUsuarios && (
-                    <Link to="/ListaDeUsuarios"><li><i className="fas fa-list"></i> Lista de Usuarios</li></Link>
+                    <Link to="/ListaDeUsuarios"><li><i className="fas fa-list" aria-hidden={true}></i> <span>Lista de Usuarios</span></li></Link>
                   )}
                   {puedeVerRoles && (
-                    <Link to="/RolesYPermisos"><li><i className="fas fa-user-shield"></i> Roles y permisos</li></Link>
+                    <Link to="/RolesYPermisos"><li><i className="fas fa-user-shield" aria-hidden={true}></i> <span>Roles y permisos</span></li></Link>
                   )}
                 </ul>
               </nav>
@@ -258,19 +270,33 @@ export default function Fijo() {
 
             {(puedeGenerarOrden || puedeVerHCompras || puedeVerProveedores || puedeVerReportesCompras || puedeVerOrdenes) && (
               <nav>
-                <li style={{ padding: "10px 0" }} onClick={() => toggleSubMenu('submenuCompras')}><i className="fas fa-shopping-cart"></i> Compras</li>
+                <li
+                  style={{ padding: "10px 0" }}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => toggleSubMenu('submenuCompras')}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      toggleSubMenu('submenuCompras');
+                    }
+                  }}
+                >
+                  <i className="fas fa-shopping-cart" aria-hidden={true}></i>
+                  <span>Compras</span>
+                </li>
                 <ul id="submenuCompras" className="dropdown" >
                   {puedeGenerarOrden && (
-                    <Link as={Link} to="/OrdenCompra"><li><i className="fas fa-history"></i> Ordenes de compra</li></Link>
+                    <Link as={Link} to="/OrdenCompra"><li><i className="fas fa-history" aria-hidden={true}></i> <span>Ordenes de compra</span></li></Link>
                   )}
                   {puedeVerHCompras && (
-                    <Link as={Link} to="/HistorialCompras"><li><i className="fas fa-history"></i> Historial de compras</li></Link>
+                    <Link as={Link} to="/HistorialCompras"><li><i className="fas fa-history" aria-hidden={true}></i> <span>Historial de compras</span></li></Link>
                   )}
                   {puedeVerProveedores && (
-                    <Link as={Link} to="/Proveedores"><li><i className="fas fa-truck"></i> Lista de proveedores</li></Link>
+                    <Link as={Link} to="/Proveedores"><li><i className="fas fa-truck" aria-hidden={true}></i> <span>Lista de proveedores</span></li></Link>
                   )}
                   {puedeVerReportesCompras && (
-                    <Link as={Link} to="/ReporteProveedores"><li> <i className="fas fa-chart-bar"></i> Reportes de compras</li></Link>
+                    <Link as={Link} to="/ReporteProveedores"><li> <i className="fas fa-chart-bar" aria-hidden={true}></i> <span>Reportes de compras</span></li></Link>
                   )}
                 </ul>
               </nav>
@@ -278,19 +304,33 @@ export default function Fijo() {
 
             {(puedeVerCategorias || puedeVerSubcategorias || puedeVerProductos) && (
               <nav>
-                <li style={{ padding: "10px 0" }} onClick={() => toggleSubMenu('submenuProductos')}><i className="fas fa-boxes"></i> Productos</li>
+                <li
+                  style={{ padding: "10px 0" }}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => toggleSubMenu('submenuProductos')}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      toggleSubMenu('submenuProductos');
+                    }
+                  }}
+                >
+                  <i className="fas fa-boxes" aria-hidden={true}></i>
+                  <span>Productos</span>
+                </li>
                 <ul id="submenuProductos" className="dropdown">
                   {puedeVerCategorias && (
-                    <Link as={Link} to="/ListaDeCategorias"><li><i className="fas fa-tags"></i> Categorias</li></Link>
+                    <Link as={Link} to="/ListaDeCategorias"><li><i className="fas fa-tags" aria-hidden={true}></i> <span>Categorias</span></li></Link>
                   )}
                   {puedeVerSubcategorias && (
-                    <Link as={Link} to="/Subcategorias"><li><i className="fas fa-tag"></i> Subcategorias</li></Link>
+                    <Link as={Link} to="/Subcategorias"><li><i className="fas fa-tag" aria-hidden={true}></i> <span>Subcategorias</span></li></Link>
                   )}
                   {puedeVerProductos && (
-                    <Link as={Link} to="/GestionProductos"><li><i className="fas fa-box"></i> Lista de productos</li></Link>
+                    <Link as={Link} to="/GestionProductos"><li><i className="fas fa-box" aria-hidden={true}></i> <span>Lista de productos</span></li></Link>
                   )}
                   {puedeVerReportesProductos && (
-                    <Link as={Link} to="/ReporteProductos"><li> <i className="fas fa-chart-bar"></i> Reportes de productos</li></Link>
+                    <Link as={Link} to="/ReporteProductos"><li> <i className="fas fa-chart-bar" aria-hidden={true}></i> <span>Reportes de productos</span></li></Link>
                   )}
                 </ul>
               </nav>
@@ -300,34 +340,48 @@ export default function Fijo() {
 
             {(puedeRegistrarCotizacion || puedeVerCotizaciones || puedeVerListaDeClientes || puedeVerPedidosCancelados || puedeVerPedidosDevueltos || puedeVerPedidosEntregados || puedeVerProspectos || puedeVerReportesVentas || puedeVerVentasAgendadas) && (
               <nav>
-                <li style={{ padding: "10px 0" }} onClick={() => toggleSubMenu('submenuVentas')}><i className="fas fa-cash-register"></i> Ventas</li>
+                <li
+                  style={{ padding: "10px 0" }}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => toggleSubMenu('submenuVentas')}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      toggleSubMenu('submenuVentas');
+                    }
+                  }}
+                >
+                  <i className="fas fa-cash-register" aria-hidden={true}></i>
+                  <span>Ventas</span>
+                </li>
                 <ul id="submenuVentas" className="dropdown">
                   {puedeRegistrarCotizacion && (
-                    <Link as={Link} to="/RegistrarCotizacion"><li><i className="fas fa-file-invoice-dollar"></i> Registrar cotizacion</li></Link>
+                    <Link as={Link} to="/RegistrarCotizacion"><li><i className="fas fa-file-invoice-dollar" aria-hidden={true}></i> <span>Registrar cotizacion</span></li></Link>
                   )}
                   {puedeVerCotizaciones && (
-                    <Link as={Link} to="/ListaDeCotizaciones"><li><i className="fas fa-list-alt"></i> Lista de cotizaciones</li></Link>
+                    <Link as={Link} to="/ListaDeCotizaciones"><li><i className="fas fa-list-alt" aria-hidden={true}></i> <span>Lista de cotizaciones</span></li></Link>
                   )}
                   {puedeVerVentasAgendadas && (
-                    <Link as={Link} to="/PedidosAgendados"><li><i className="fas fa-calendar-check"></i> Pedidos agendados</li></Link>
+                    <Link as={Link} to="/PedidosAgendados"><li><i className="fas fa-calendar-check" aria-hidden={true}></i> <span>Pedidos agendados</span></li></Link>
                   )}
                   {puedeVerPedidosEntregados && (
-                    <Link as={Link} to="/PedidosEntregados"><li><i className="fas fa-check-circle"></i> Pedidos entregados</li></Link>
+                    <Link as={Link} to="/PedidosEntregados"><li><i className="fas fa-check-circle" aria-hidden={true}></i> <span>Pedidos entregados</span></li></Link>
                   )}
                   {puedeVerPedidosCancelados && (
-                    <Link as={Link} to="/PedidosCancelados"><li><i className="fas fa-times-circle"></i> Pedidos cancelados</li></Link>
+                    <Link as={Link} to="/PedidosCancelados"><li><i className="fas fa-times-circle" aria-hidden={true}></i> <span>Pedidos cancelados</span></li></Link>
                   )}
                   {puedeVerPedidosDevueltos && (
-                    <Link as={Link} to="/PedidosDevueltos"><li><i className="fas fa-undo-alt"></i> Pedidos devueltos</li></Link>
+                    <Link as={Link} to="/PedidosDevueltos"><li><i className="fas fa-undo-alt" aria-hidden={true}></i> <span>Pedidos devueltos</span></li></Link>
                   )}
                   {puedeVerListaDeClientes && (
-                    <Link as={Link} to="/ListaDeClientes"><li> <i className="fas fa-address-book"></i> Lista de clientes</li></Link>
+                    <Link as={Link} to="/ListaDeClientes"><li> <i className="fas fa-address-book" aria-hidden={true}></i> <span>Lista de clientes</span></li></Link>
                   )}
                   {puedeVerProspectos && (
-                    <Link as={Link} to="/ProspectosDeClientes"><li><i className="fas fa-user-plus"></i> Prospectos de cliente</li></Link>
+                    <Link as={Link} to="/ProspectosDeClientes"><li><i className="fas fa-user-plus" aria-hidden={true}></i> <span>Prospectos de cliente</span></li></Link>
                   )}
                   {puedeVerReportesVentas && (
-                    <Link as={Link} to="/ReporteVentas"><li><i className="fas fa-chart-bar"></i> Reportes</li></Link>
+                    <Link as={Link} to="/ReporteVentas"><li><i className="fas fa-chart-bar" aria-hidden={true}></i> <span>Reportes</span></li></Link>
                   )}
                 </ul>
               </nav>
