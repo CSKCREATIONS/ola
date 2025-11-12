@@ -1473,10 +1473,11 @@ JLA Global Company</textarea>
                         </select>
                       </div>
                       <div>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#374151' }}>
+                        <label htmlFor="nuevaCompra-solicitadoPor" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#374151' }}>
                           Solicitado Por
                         </label>
                         <input
+                          id="nuevaCompra-solicitadoPor"
                           type="text"
                           value={nuevaCompra.solicitadoPor}
                           disabled
@@ -1549,10 +1550,11 @@ JLA Global Company</textarea>
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '1rem' }}>
                           <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '12px', fontWeight: '600' }}>
+                            <label htmlFor={`nuevaCompra-producto-${index}`} style={{ display: 'block', marginBottom: '0.5rem', fontSize: '12px', fontWeight: '600' }}>
                               Producto
                             </label>
                             <select
+                              id={`nuevaCompra-producto-${index}`}
                               value={prod.producto}
                               onChange={(e) => actualizarProductoNuevaCompra(index, 'producto', e.target.value)}
                               style={{
@@ -1570,10 +1572,11 @@ JLA Global Company</textarea>
                             </select>
                           </div>
                           <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '12px', fontWeight: '600' }}>
+                            <label htmlFor={`nuevaCompra-cantidad-${index}`} style={{ display: 'block', marginBottom: '0.5rem', fontSize: '12px', fontWeight: '600' }}>
                               Cantidad
                             </label>
                             <input
+                              id={`nuevaCompra-cantidad-${index}`}
                               type="number"
                               value={prod.cantidad}
                               onChange={(e) => actualizarProductoNuevaCompra(index, 'cantidad', Number.parseInt(e.target.value) || 0)}
@@ -1588,10 +1591,11 @@ JLA Global Company</textarea>
                             />
                           </div>
                           <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '12px', fontWeight: '600' }}>
+                            <label htmlFor={`nuevaCompra-precio-${index}`} style={{ display: 'block', marginBottom: '0.5rem', fontSize: '12px', fontWeight: '600' }}>
                               Precio Unit.
                             </label>
                             <input
+                              id={`nuevaCompra-precio-${index}`}
                               type="number"
                               value={prod.precioUnitario}
                               onChange={(e) => actualizarProductoNuevaCompra(index, 'precioUnitario', Number.parseFloat(e.target.value) || 0)}
@@ -1622,10 +1626,11 @@ JLA Global Company</textarea>
 
                   {/* Observaciones */}
                   <div style={{ marginBottom: '2rem' }}>
-                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#374151' }}>
+                    <label htmlFor="nuevaCompra-observaciones" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#374151' }}>
                       Observaciones
                     </label>
                     <textarea
+                      id="nuevaCompra-observaciones"
                       value={nuevaCompra.observaciones}
                       onChange={(e) => setNuevaCompra({ ...nuevaCompra, observaciones: e.target.value })}
                       rows="3"
