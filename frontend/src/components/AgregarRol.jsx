@@ -619,70 +619,64 @@ export default function AgregarRol() {
                      <br />
                      <div className="permissions">
                         <div className="group">
-                           <label>
-                              <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" name="hcompras" checked={permisos.includes('hcompras.ver')} onChange={() => togglePermiso('hcompras.ver')} />
-                              Historial de compras
+                           <label className="form-option">
+                              <input className="input-gap" type="checkbox" name="hcompras" checked={permisos.includes('hcompras.ver')} onChange={() => togglePermiso('hcompras.ver')} />
+                              <span>Historial de compras</span>
                            </label>
-                           <br />
-                           <label>
-                              <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('compras.crear')} onChange={() => togglePermiso('compras.crear')} />
-                              Registrar compras
+                           <label className="form-option">
+                              <input className="input-gap" type="checkbox" checked={permisos.includes('compras.crear')} onChange={() => togglePermiso('compras.crear')} />
+                              <span>Registrar compras</span>
                            </label>
-                           <br />
-                           <label>
-                              <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('proveedores.ver')} onChange={() => togglePermiso('proveedores.ver')} />
-                              Catálogo de proveedores
+                           <label className="form-option">
+                              <input className="input-gap" type="checkbox" checked={permisos.includes('proveedores.ver')} onChange={() => togglePermiso('proveedores.ver')} />
+                              <span>Catálogo de proveedores</span>
                            </label>
-                           <br />
-                           <label>
-                              <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('proveedores.crear')} onChange={() => togglePermiso('proveedores.crear')} />
-                              Crear proveedores
+                           <label className="form-option">
+                              <input className="input-gap" type="checkbox" checked={permisos.includes('proveedores.crear')} onChange={() => togglePermiso('proveedores.crear')} />
+                              <span>Crear proveedores</span>
                            </label>
-                           <br />
-                           <label>
-                              <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('proveedores.editar')} onChange={() => togglePermiso('proveedores.editar')} />
-                              Editar proveedores
+                           <label className="form-option">
+                              <input className="input-gap" type="checkbox" checked={permisos.includes('proveedores.editar')} onChange={() => togglePermiso('proveedores.editar')} />
+                              <span>Editar proveedores</span>
                            </label>
-                           <br />
-                           <label>
-                              <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('proveedores.inactivar')} onChange={() => togglePermiso('proveedores.inactivar')} />
-                              Inactivar proveedores
+                           <label className="form-option">
+                              <input className="input-gap" type="checkbox" checked={permisos.includes('proveedores.inactivar')} onChange={() => togglePermiso('proveedores.inactivar')} />
+                              <span>Inactivar proveedores</span>
                            </label>
-                           <br />
-                           <label>
-                              <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('proveedores.activar')} onChange={() => togglePermiso('proveedores.activar')} />
-                              Activar proveedores
+                           <label className="form-option form-option--no-margin">
+                              <input className="input-gap" type="checkbox" checked={permisos.includes('proveedores.activar')} onChange={() => togglePermiso('proveedores.activar')} />
+                              <span>Activar proveedores</span>
                            </label>
                         </div>
                         <div className="group">
-                           <label>
-                              <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('ordenesCompra.ver')} onChange={() => togglePermiso('ordenesCompra.ver')} />
-                              Ver órdenes de compra
+                           <label className="form-option">
+                              <input className="input-gap" type="checkbox" checked={permisos.includes('ordenesCompra.ver')} onChange={() => togglePermiso('ordenesCompra.ver')} />
+                              <span>Ver órdenes de compra</span>
                            </label>
                            <br />
-                           <label>
-                              <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('ordenes.generar')} onChange={() => togglePermiso('ordenes.generar')} />
-                              Generar órdenes
+                           <label className="form-option">
+                              <input className="input-gap" type="checkbox" checked={permisos.includes('ordenes.generar')} onChange={() => togglePermiso('ordenes.generar')} />
+                              <span>Generar órdenes</span>
                            </label>
                            <br />
-                           <label>
-                              <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('ordenes.editar')} onChange={() => togglePermiso('ordenes.editar')} />
-                              Editar órdenes
+                           <label className="form-option">
+                              <input className="input-gap" type="checkbox" checked={permisos.includes('ordenes.editar')} onChange={() => togglePermiso('ordenes.editar')} />
+                              <span>Editar órdenes</span>
                            </label>
                            <br />
-                           <label>
-                              <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('ordenes.eliminar')} onChange={() => togglePermiso('ordenes.eliminar')} />
-                              Eliminar órdenes
+                           <label className="form-option">
+                              <input className="input-gap" type="checkbox" checked={permisos.includes('ordenes.eliminar')} onChange={() => togglePermiso('ordenes.eliminar')} />
+                              <span>Eliminar órdenes</span>
                            </label>
                            <br />
-                           <label>
-                              <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('ordenes.aprobar')} onChange={() => togglePermiso('ordenes.aprobar')} />
-                              Aprobar órdenes
+                           <label className="form-option">
+                              <input className="input-gap" type="checkbox" checked={permisos.includes('ordenes.aprobar')} onChange={() => togglePermiso('ordenes.aprobar')} />
+                              <span>Aprobar órdenes</span>
                            </label>
                            <br />
-                           <label>
-                              <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('reportesCompras.ver')} onChange={() => togglePermiso('reportesCompras.ver')} />
-                              Ver reportes
+                           <label className="form-option">
+                              <input className="input-gap" type="checkbox" checked={permisos.includes('reportesCompras.ver')} onChange={() => togglePermiso('reportesCompras.ver')} />
+                              <span>Ver reportes</span>
                            </label>
                            <br />
                            <label>
