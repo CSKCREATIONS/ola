@@ -1451,10 +1451,11 @@ JLA Global Company</textarea>
                     </h6>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
                       <div>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#374151' }}>
+                        <label htmlFor="nuevaCompra-proveedor" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#374151' }}>
                           Proveedor *
                         </label>
                         <select
+                          id="nuevaCompra-proveedor"
                           value={nuevaCompra.proveedor}
                           onChange={(e) => setNuevaCompra({ ...nuevaCompra, proveedor: e.target.value })}
                           style={{
