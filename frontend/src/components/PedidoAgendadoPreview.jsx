@@ -363,18 +363,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                 <div style={{ lineHeight: '1.8' }}>
                   <p><strong>Fecha de Pedido:</strong> {formatDate(datos?.createdAt)}</p>
                   <p><strong>Fecha de Entrega:</strong> {formatDate(datos?.fechaEntrega)}</p>
-                  <p><strong>Estado:</strong>
-                    <span style={{
-                      background: '#fd7e14',
-                      color: 'white',
-                      padding: '4px 12px',
-                      borderRadius: '15px',
-                      fontSize: '0.9rem',
-                      marginLeft: '0.5rem'
-                    }}>
-                      {datos?.estado}
-                    </span>
-                  </p>
+                  
                 </div>
               </div>
             </div>

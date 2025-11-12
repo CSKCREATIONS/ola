@@ -23,7 +23,6 @@ const proveedorRoutes = require('./routes/proveedorRoutes');
 const comprasRoutes = require('./routes/comprasRoutes'); // Ruta base para compras
 const cotizacionRoutes = require('./routes/cotizacionRoutes');
 const pedidosRoutes = require('./routes/pedidosRoutes');
-const ventasRoutes = require('./routes/ventasRoutes');
 const reportesRoutes = require('./routes/reportesRoutes');
 const ordenCompraRoutes = require('./routes/ordenCompraRoutes');
 const remisionRoutes = require('./routes/remisionRoutes');
@@ -151,7 +150,6 @@ app.use('/api/subcategories', subcategoryRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/roles', roleRoutes);
 app.use('/api/clientes', clientesRoutes); // Ruta base para clientes
-app.use('/api/ventas', ventasRoutes);
 app.use('/api/proveedores', proveedorRoutes); // Ruta base para proveedores
 app.use('/api/compras', comprasRoutes); // Ruta base para compras
 app.use('/api/cotizaciones', cotizacionRoutes);

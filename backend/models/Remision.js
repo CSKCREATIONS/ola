@@ -9,24 +9,17 @@ const RemisionSchema = new mongoose.Schema({
   pedidoReferencia: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Pedido',
-    required: true
-  },
-  codigoPedido: {
-    type: String,
-    required: true
+    required: false
   },
   cotizacionReferencia: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Cotizacion'
-  },
-  codigoCotizacion: {
-    type: String
+    ref: 'Cotizacion',
+    required: false
   },
   cliente: {
-    nombre: String,
-    correo: String,
-    telefono: String,
-    ciudad: String
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Cliente',
+    required: true
   },
   productos: [{
     nombre: String,
