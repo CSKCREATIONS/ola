@@ -196,33 +196,36 @@ function isValidEmail(email) {
   if (trimmed.length === 0 || trimmed.length > 254) return false;
 
   const at = trimmed.indexOf('@');
-  // must contain exactly one @
+  // must contain exactly one @ and not be first/last
   if (at <= 0 || trimmed.indexOf('@', at + 1) !== -1) return false;
 
   const local = trimmed.slice(0, at);
   const domain = trimmed.slice(at + 1);
-
   if (!local || !domain) return false;
-  if (local.length > 64) return false; // local part max length
-  if (domain.length > 253) return false;
 
-  // local part checks: no leading/trailing dot, no consecutive dots, allowed chars (simple conservative set)
-  if (local.startsWith('.') || local.endsWith('.')) return false;
-  if (local.indexOf('..') !== -1) return false;
-  if (!/^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+$/.test(local)) return false;
+  // length limits
+  if (local.length > 64 || domain.length > 253) return false;
 
-  // domain checks: must have at least one dot, no empty labels, labels <=63, allowed chars, no leading/trailing hyphen
-  if (domain.indexOf('..') !== -1) return false;
+  // simple conservative allowed-char patterns
+  const localAllowed = /^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+$/;
+  const labelAllowed = /^[A-Za-z0-9-]+$/;
+
+  // local checks (no leading/trailing dot, no consecutive dots, allowed chars)
+  if (local.startsWith('.') || local.endsWith('.') || local.includes('..')) return false;
+  if (!localAllowed.test(local)) return false;
+
+  // domain checks: no consecutive dots, at least one dot, all labels valid
+  if (domain.includes('..')) return false;
   const labels = domain.split('.');
   if (labels.length < 2) return false;
-  for (let i = 0; i < labels.length; i++) {
-    const lab = labels[i];
+
+  const allLabelsValid = labels.every(lab => {
     if (!lab || lab.length > 63) return false;
     if (lab.startsWith('-') || lab.endsWith('-')) return false;
-    if (!/^[A-Za-z0-9-]+$/.test(lab)) return false;
-  }
+    return labelAllowed.test(lab);
+  });
 
-  return true;
+  return allLabelsValid;
 }
 
 // Secure random string for client-side identifiers using Web Crypto when available

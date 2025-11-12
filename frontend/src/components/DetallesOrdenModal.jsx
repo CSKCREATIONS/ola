@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import PropTypes from 'prop-types';
 
 export default function DetallesOrdenModal({ visible, orden, onClose, onPrint, onSendEmail }) {
   const modalRef = useRef(null);
@@ -167,3 +168,11 @@ export default function DetallesOrdenModal({ visible, orden, onClose, onPrint, o
     </div>
   );
 }
+
+DetallesOrdenModal.propTypes = {
+  visible: PropTypes.bool,
+  orden: PropTypes.object,
+  onClose: PropTypes.func,
+  onPrint: PropTypes.func,
+  onSendEmail: PropTypes.func
+};

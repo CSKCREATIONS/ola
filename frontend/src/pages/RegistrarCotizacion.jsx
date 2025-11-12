@@ -175,29 +175,36 @@ export default function RegistrarCotizacion() {
     if (trimmed.length === 0 || trimmed.length > 254) return false;
 
     const at = trimmed.indexOf('@');
+    // single @ and not first/last
     if (at <= 0 || trimmed.indexOf('@', at + 1) !== -1) return false;
 
     const local = trimmed.slice(0, at);
     const domain = trimmed.slice(at + 1);
     if (!local || !domain) return false;
-    if (local.length > 64) return false;
-    if (domain.length > 253) return false;
 
-    if (local.startsWith('.') || local.endsWith('.')) return false;
-    if (local.indexOf('..') !== -1) return false;
-    if (!/^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+$/.test(local)) return false;
+    // length constraints
+    if (local.length > 64 || domain.length > 253) return false;
 
-    if (domain.indexOf('..') !== -1) return false;
+    // allowed char sets
+    const localAllowed = /^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+$/;
+    const labelAllowed = /^[A-Za-z0-9-]+$/;
+
+    // local checks
+    if (local.startsWith('.') || local.endsWith('.') || local.includes('..')) return false;
+    if (!localAllowed.test(local)) return false;
+
+    // domain checks
+    if (domain.includes('..')) return false;
     const labels = domain.split('.');
     if (labels.length < 2) return false;
-    for (let i = 0; i < labels.length; i++) {
-      const lab = labels[i];
+
+    const allLabelsValid = labels.every(lab => {
       if (!lab || lab.length > 63) return false;
       if (lab.startsWith('-') || lab.endsWith('-')) return false;
-      if (!/^[A-Za-z0-9-]+$/.test(lab)) return false;
-    }
+      return labelAllowed.test(lab);
+    });
 
-    return true;
+    return allLabelsValid;
   }
   // Helpers to reduce cognitive complexity of guardar flow
   const validarClienteYProductos = () => {
