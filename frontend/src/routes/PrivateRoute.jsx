@@ -1,5 +1,6 @@
 // src/routes/PrivateRoute.jsx
 import React from 'react';
+import PropTypes from 'prop-types';
 import { Navigate } from 'react-router-dom';
 
 export default function PrivateRoute({ children }) {
@@ -18,3 +19,7 @@ export default function PrivateRoute({ children }) {
 
   return children;
 }
+
+PrivateRoute.propTypes = {
+  children: PropTypes.node,
+};
