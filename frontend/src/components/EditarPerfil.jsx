@@ -188,9 +188,9 @@ export default function EditarPerfil() {
               alignItems: 'center',
               justifyContent: 'center'
             }}>
-              <i className="fa-solid fa-user-circle" style={{ fontSize: '1.5rem' }}></i>
+              <i className="fa-solid fa-user-circle" style={{ fontSize: '1.5rem' }} aria-hidden={true}></i>
             </div>
-            Editar Mi Perfil
+            <span>Editar Mi Perfil</span>
           </h3>
           <p style={{ 
             margin: '0.5rem 0 0 4rem', 
@@ -226,8 +226,8 @@ export default function EditarPerfil() {
               alignItems: 'center',
               gap: '0.5rem'
             }}>
-              <i className="fa-solid fa-id-card" style={{ color: '#6366f1' }}></i>
-              Información Personal
+              <i className="fa-solid fa-id-card" style={{ color: '#6366f1' }} aria-hidden={true}></i>
+              <span>Información Personal</span>
             </h4>
 
             <div style={{
@@ -236,7 +236,7 @@ export default function EditarPerfil() {
               gap: '1rem'
             }}>
               <div>
-                <label htmlFor="firstName" style={labelStyle}><i className="fa-solid fa-user" style={{ color: '#6366f1', fontSize: '0.875rem' }}></i>Primer nombre</label><input id="firstName" 
+                <label htmlFor="firstName" style={labelStyle}><i className="fa-solid fa-user" style={{ color: '#6366f1', fontSize: '0.875rem' }} aria-hidden={true}></i><span>Primer nombre</span></label><input id="firstName" 
                   type="text" 
                   name="firstName" 
                   value={form.firstName || ''} 
@@ -254,7 +254,7 @@ export default function EditarPerfil() {
               </div>
 
               <div>
-                <label htmlFor="secondName" style={labelStyle}><i className="fa-solid fa-user" style={{ color: '#6366f1', fontSize: '0.875rem' }}></i>Segundo nombre</label><input id="secondName" 
+                <label htmlFor="secondName" style={labelStyle}><i className="fa-solid fa-user" style={{ color: '#6366f1', fontSize: '0.875rem' }} aria-hidden={true}></i><span>Segundo nombre</span></label><input id="secondName" 
                   type="text" 
                   name="secondName" 
                   value={form.secondName || ''} 
@@ -273,8 +273,8 @@ export default function EditarPerfil() {
 
               <div>
                 <label htmlFor="surname" style={labelStyle}>
-                  <i className="fa-solid fa-user" style={{ color: '#6366f1', fontSize: '0.875rem' }}></i>
-                  Primer apellido
+                  <i className="fa-solid fa-user" style={{ color: '#6366f1', fontSize: '0.875rem' }} aria-hidden={true}></i>
+                  <span>Primer apellido</span>
                 </label>
                 <input 
                   id="surname"
@@ -296,8 +296,8 @@ export default function EditarPerfil() {
 
               <div>
                 <label htmlFor="secondSurname" style={labelStyle}>
-                  <i className="fa-solid fa-user" style={{ color: '#6366f1', fontSize: '0.875rem' }}></i>
-                  Segundo apellido
+                  <i className="fa-solid fa-user" style={{ color: '#6366f1', fontSize: '0.875rem' }} aria-hidden={true}></i>
+                  <span>Segundo apellido</span>
                 </label>
                 <input 
                   id="secondSurname"
@@ -328,7 +328,7 @@ export default function EditarPerfil() {
             border: '1px solid #e2e8f0',
             borderLeft: '4px solid #10b981'
           }}>
-            <h4 style={{
+              <h4 style={{
               margin: '0 0 1.5rem 0',
               color: '#1e293b',
               fontSize: '1.05rem',
@@ -337,8 +337,8 @@ export default function EditarPerfil() {
               alignItems: 'center',
               gap: '0.5rem'
             }}>
-              <i className="fa-solid fa-key" style={{ color: '#10b981' }}></i>
-              Información de Cuenta
+              <i className="fa-solid fa-key" style={{ color: '#10b981' }} aria-hidden={true}></i>
+              <span>Información de Cuenta</span>
             </h4>
 
             <div style={{
@@ -348,8 +348,8 @@ export default function EditarPerfil() {
             }}>
               <div>
                 <label htmlFor="email-perfil" style={labelStyle}>
-                  <i className="fa-solid fa-envelope" style={{ color: '#10b981', fontSize: '0.875rem' }}></i>
-                  Correo electrónico
+                  <i className="fa-solid fa-envelope" style={{ color: '#10b981', fontSize: '0.875rem' }} aria-hidden={true}></i>
+                  <span>Correo electrónico</span>
                 </label>
                 <input 
                   id="email-perfil"
@@ -371,8 +371,8 @@ export default function EditarPerfil() {
 
               <div>
                 <label htmlFor="username-perfil" style={labelStyle}>
-                  <i className="fa-solid fa-at" style={{ color: '#10b981', fontSize: '0.875rem' }}></i>
-                  Nombre de usuario
+                  <i className="fa-solid fa-at" style={{ color: '#10b981', fontSize: '0.875rem' }} aria-hidden={true}></i>
+                  <span>Nombre de usuario</span>
                 </label>
                 <input 
                   id="username-perfil"
@@ -394,8 +394,8 @@ export default function EditarPerfil() {
 
               <div>
                 <label htmlFor="role-perfil" style={labelStyle}>
-                  <i className="fa-solid fa-shield-alt" style={{ color: '#10b981', fontSize: '0.875rem' }}></i>
-                  Rol asignado
+                  <i className="fa-solid fa-shield-alt" style={{ color: '#10b981', fontSize: '0.875rem' }} aria-hidden={true}></i>
+                  <span>Rol asignado</span>
                 </label>
                 <input 
                   id="role-perfil"
@@ -422,7 +422,7 @@ export default function EditarPerfil() {
             border: '1px solid #e2e8f0',
             borderLeft: '4px solid #f59e0b'
           }}>
-            <div 
+              <div 
               role="button"
               tabIndex={0}
               onClick={() => setMostrarCambiarPassword(!mostrarCambiarPassword)}
@@ -449,11 +449,11 @@ export default function EditarPerfil() {
                 alignItems: 'center',
                 gap: '0.5rem'
               }}>
-                <i className="fa-solid fa-lock" style={{ color: '#f59e0b' }}></i>
-                Cambiar Contraseña
+                <i className="fa-solid fa-lock" style={{ color: '#f59e0b' }} aria-hidden={true}></i>
+                <span>Cambiar Contraseña</span>
               </h4>
-              <i className={`fa-solid fa-chevron-${mostrarCambiarPassword ? 'up' : 'down'}`} 
-                 style={{ color: '#6b7280' }}></i>
+          <i className={`fa-solid fa-chevron-${mostrarCambiarPassword ? 'up' : 'down'}`} 
+            style={{ color: '#6b7280' }} aria-hidden={true}></i>
             </div>
 
             {mostrarCambiarPassword && (
@@ -473,8 +473,8 @@ export default function EditarPerfil() {
                     alignItems: 'center',
                     gap: '0.5rem'
                   }}>
-                    <i className="fa-solid fa-info-circle"></i>
-                    Al cambiar tu contraseña, deberás iniciar sesión nuevamente
+                    <i className="fa-solid fa-info-circle" aria-hidden={true}></i>
+                    <span>Al cambiar tu contraseña, deberás iniciar sesión nuevamente</span>
                   </p>
                 </div>
                 
@@ -485,8 +485,8 @@ export default function EditarPerfil() {
                 }}>
                   <div>
                     <label htmlFor="new-password-perfil" style={labelStyle}>
-                      <i className="fa-solid fa-key" style={{ color: '#f59e0b', fontSize: '0.875rem' }}></i>
-                      Nueva contraseña
+                      <i className="fa-solid fa-key" style={{ color: '#f59e0b', fontSize: '0.875rem' }} aria-hidden={true}></i>
+                      <span>Nueva contraseña</span>
                     </label>
                     <input
                       id="new-password-perfil"
@@ -508,8 +508,8 @@ export default function EditarPerfil() {
                   </div>
                   <div>
                     <label htmlFor="confirm-password-perfil" style={labelStyle}>
-                      <i className="fa-solid fa-check" style={{ color: '#f59e0b', fontSize: '0.875rem' }}></i>
-                      Confirmar contraseña
+                      <i className="fa-solid fa-check" style={{ color: '#f59e0b', fontSize: '0.875rem' }} aria-hidden={true}></i>
+                      <span>Confirmar contraseña</span>
                     </label>
                     <input
                       id="confirm-password-perfil"
@@ -571,8 +571,8 @@ export default function EditarPerfil() {
               e.target.style.borderColor = '#e5e7eb';
             }}
           >
-            <i className="fa-solid fa-times"></i>
-            Cancelar
+            <i className="fa-solid fa-times" aria-hidden={true}></i>
+            <span>Cancelar</span>
           </button>
           
           <button 
@@ -601,8 +601,8 @@ export default function EditarPerfil() {
               e.target.style.boxShadow = '0 4px 6px -1px rgba(99, 102, 241, 0.3)';
             }}
           >
-            <i className="fa-solid fa-save"></i>
-            Guardar Cambios
+            <i className="fa-solid fa-save" aria-hidden={true}></i>
+            <span>Guardar Cambios</span>
           </button>
         </div>
       </form>
