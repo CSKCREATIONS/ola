@@ -397,7 +397,7 @@ export default function RegistrarCotizacion() {
               }}>
                 {/* Campo Cliente */}
                 <div style={{ gridColumn: 'span 2' }}>
-                  <label style={{
+                  <label htmlFor="cliente" style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.5rem',
@@ -474,10 +474,11 @@ export default function RegistrarCotizacion() {
                         }}
                       >
                         {filteredClientes.map((c) => (
-                          <div
+                          <button
+                            type="button"
                             key={c._id}
-                            onMouseDown={(ev) => {
-                              ev.preventDefault();
+                            onMouseDown={(ev) => { ev.preventDefault(); }}
+                            onClick={() => {
                               setClienteNombre(c.nombre || '');
                               const ciudad = c.ciudad || '';
                               setClienteCiudad(ciudad);
@@ -504,7 +505,11 @@ export default function RegistrarCotizacion() {
                               display: 'flex',
                               flexDirection: 'column',
                               gap: '4px',
-                              borderTop: '1px solid #f1f5f9'
+                              borderTop: '1px solid #f1f5f9',
+                              border: 'none',
+                              background: 'white',
+                              textAlign: 'left',
+                              width: '100%'
                             }}
                             onMouseEnter={(ev) => {
                               ev.currentTarget.style.background = '#f8fafc';
@@ -512,12 +517,13 @@ export default function RegistrarCotizacion() {
                             onMouseLeave={(ev) => {
                               ev.currentTarget.style.background = 'white';
                             }}
+                            aria-label={`Seleccionar cliente ${c.nombre || ''}`}
                           >
                             <span style={{ fontWeight: 600, color: '#111827' }}>{c.nombre}</span>
                             <span style={{ fontSize: '12px', color: '#6b7280' }}>
                               {c.ciudad || 'Ciudad no especificada'}
                             </span>
-                          </div>
+                          </button>
                         ))}
                       </div>
                     )}
@@ -526,7 +532,7 @@ export default function RegistrarCotizacion() {
 
                 {/* Campo Ciudad */}
                 <div>
-                  <label style={{
+                  <label htmlFor="ciudad" style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.5rem',
@@ -569,7 +575,7 @@ export default function RegistrarCotizacion() {
 
                 {/* Campo Dirección */}
                 <div>
-                  <label style={{
+                  <label htmlFor="direccion" style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.5rem',
@@ -612,7 +618,7 @@ export default function RegistrarCotizacion() {
 
                 {/* Campo Teléfono */}
                 <div>
-                  <label style={{
+                  <label htmlFor="telefono" style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.5rem',
@@ -656,7 +662,7 @@ export default function RegistrarCotizacion() {
 
                 {/* Campo Email */}
                 <div>
-                  <label style={{
+                  <label htmlFor="email" style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.5rem',
@@ -700,7 +706,7 @@ export default function RegistrarCotizacion() {
 
                 {/* Campo Responsable */}
                 <div>
-                  <label style={{
+                  <div style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.5rem',
@@ -711,7 +717,7 @@ export default function RegistrarCotizacion() {
                   }}>
                     <i className="fa-solid fa-user-tie" style={{ color: '#06b6d4', fontSize: '0.9rem' }}></i>
                     Responsable
-                  </label>
+                  </div>
                   <div style={{
                     padding: '0.875rem 1rem',
                     border: '2px solid #e5e7eb',
@@ -730,7 +736,7 @@ export default function RegistrarCotizacion() {
 
                 {/* Campo Fecha */}
                 <div>
-                  <label style={{
+                  <label htmlFor="fecha" style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.5rem',

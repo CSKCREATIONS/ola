@@ -311,8 +311,9 @@ export default function RegistrarCompra() {
                 </h6>
                 <div className="form-grid">
                   <div className="form-group-profesional">
-                    <label className="form-label-profesional">Proveedor *</label>
+                    <label className="form-label-profesional" htmlFor="input-registrarCompra-proveedor">Proveedor *</label>
                     <select
+                      id="input-registrarCompra-proveedor"
                       value={nuevaCompra.proveedorId || ''}
                       onChange={handleProveedorChange}
                       required
@@ -328,8 +329,9 @@ export default function RegistrarCompra() {
                   </div>
 
                   <div className="form-group-profesional">
-                    <label className="form-label-profesional">Registrado Por *</label>
+                    <label className="form-label-profesional" htmlFor="input-registrarCompra-registradoPor">Registrado Por *</label>
                     <input
+                      id="input-registrarCompra-registradoPor"
                       type="text"
                       value={nuevaCompra.registradoPor}
                       onChange={e => setNuevaCompra({ ...nuevaCompra, registradoPor: e.target.value })}
@@ -351,7 +353,7 @@ export default function RegistrarCompra() {
                 {nuevaCompra.proveedorId ? (
                   <>
                     <div className="form-group-profesional">
-                      <label className="form-label-profesional">
+                      <label className="form-label-profesional" htmlFor="input-registrarCompra-producto">
                         Producto *
                         {cargandoProductos && (
                           <small style={{ marginLeft: '10px', color: '#3498db' }}>
@@ -361,6 +363,7 @@ export default function RegistrarCompra() {
                       </label>
 
                       <select
+                        id="input-registrarCompra-producto"
                         value={productoTemp.productoId || ''}
                         onChange={handleProductoChange}
                         className="form-input-profesional"
@@ -400,19 +403,21 @@ export default function RegistrarCompra() {
 
                     <div className="form-grid">
                       <div className="form-group-profesional">
-                        <label className="form-label-profesional">Descripción</label>
-                        <input
-                          value={productoTemp.descripcion}
-                          onChange={e => setProductoTemp({ ...productoTemp, descripcion: e.target.value })}
-                          className="form-input-profesional"
-                          placeholder="Descripción del producto"
-                          disabled
-                        />
-                      </div>
+                          <label className="form-label-profesional" htmlFor="input-registrarCompra-descripcion">Descripción</label>
+                          <input
+                            id="input-registrarCompra-descripcion"
+                            value={productoTemp.descripcion}
+                            onChange={e => setProductoTemp({ ...productoTemp, descripcion: e.target.value })}
+                            className="form-input-profesional"
+                            placeholder="Descripción del producto"
+                            disabled
+                          />
+                        </div>
 
                       <div className="form-group-profesional">
-                        <label className="form-label-profesional">Cantidad *</label>
+                        <label className="form-label-profesional" htmlFor="input-registrarCompra-cantidad">Cantidad *</label>
                         <input
+                          id="input-registrarCompra-cantidad"
                           type="number"
                           min="1"
                           value={productoTemp.cantidad}
@@ -423,10 +428,11 @@ export default function RegistrarCompra() {
                       </div>
 
                       <div className="form-group-profesional">
-                        <label className="form-label-profesional">Valor Unitario *</label>
+                        <label className="form-label-profesional" htmlFor="input-registrarCompra-valorUnitario">Valor Unitario *</label>
                         <div style={{ position: 'relative' }}>
                           <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#666' }}>$</span>
                           <input
+                            id="input-registrarCompra-valorUnitario"
                             type="number"
                             min="0"
                             step="0.01"
