@@ -447,7 +447,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
           alignItems: 'center'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <i className="fa-solid fa-file-lines" style={{ fontSize: '1.8rem' }}></i>
+            <i className="fa-solid fa-file-lines" style={{ fontSize: '1.8rem' }} aria-hidden={true}></i>
             <div>
               <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 'bold' }}>
                 Vista Previa - Cotización
@@ -479,8 +479,8 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                 onMouseEnter={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.3)'}
                 onMouseLeave={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.2)'}
               >
-                <i className="fa-solid fa-pen"></i>
-                Editar
+                <i className="fa-solid fa-pen" aria-hidden={true}></i>
+                <span>Editar</span>
               </button>
             )}
 
@@ -505,8 +505,8 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                 onMouseEnter={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.3)'}
                 onMouseLeave={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.2)'}
               >
-                <i className="fa-solid fa-file-invoice"></i>
-                Remisionar
+                <i className="fa-solid fa-file-invoice" aria-hidden={true}></i>
+                <span>Remisionar</span>
               </button>
             )}
 
@@ -580,8 +580,8 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               onMouseEnter={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.3)'}
               onMouseLeave={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.2)'}
             >
-              <i className="fa-solid fa-envelope"></i>
-              Enviar
+              <i className="fa-solid fa-envelope" aria-hidden={true}></i>
+              <span>Enviar</span>
             </button>
 
             {/* Botón de cerrar */}
@@ -632,7 +632,6 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               msUserSelect: 'none'
             }}
             onCopy={e => e.preventDefault()}
-            onSelectStart={e => e.preventDefault()}
           >
             <div className="header" style={{
               textAlign: 'center',
@@ -645,7 +644,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               fontWeight: 'bold'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem' }}>
-                <i className="fa-solid fa-file-lines" style={{ fontSize: '2rem' }}></i>
+                <i className="fa-solid fa-file-lines" style={{ fontSize: '2rem' }} aria-hidden={true}></i>
                 <div>
                   <div>COTIZACIÓN</div>
                   <div style={{ fontSize: '1rem', fontWeight: 'normal', marginTop: '0.5rem' }}>
@@ -895,8 +894,8 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               overflow: 'auto'
             }}>
               <h3 style={{ marginBottom: '1rem', color: '#2563eb' }}>
-                <i className="fa-solid fa-envelope icon-gap" style={{}}></i>
-                Enviar Cotización por Correo
+                <i className="fa-solid fa-envelope icon-gap" style={{}} aria-hidden={true}></i>
+                <span>Enviar Cotización por Correo</span>
               </h3>
               
               <div style={{ marginBottom: '1rem' }}>
@@ -986,8 +985,8 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                     fontWeight: 'bold'
                   }}
                 >
-                  <i className="fa-solid fa-envelope icon-gap" style={{}}></i>
-                  Enviar Cotización
+                  <i className="fa-solid fa-envelope icon-gap" style={{}} aria-hidden={true}></i>
+                  <span>Enviar Cotización</span>
                 </button>
               </div>
             </div>

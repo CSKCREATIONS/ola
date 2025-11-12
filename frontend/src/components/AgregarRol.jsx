@@ -1023,9 +1023,9 @@ export default function AgregarRol() {
                         e.target.style.backgroundColor = 'white';
                         e.target.style.borderColor = '#e5e7eb';
                      }}
-                  >
-                     <i className="fa-solid fa-times icon-gap" style={{}}></i>
-                     Cancelar
+                     >
+                     <i className="fa-solid fa-times icon-gap" style={{}} aria-hidden={true}></i>
+                     <span>Cancelar</span>
                   </button>
                   
                   <button 
@@ -1054,8 +1054,8 @@ export default function AgregarRol() {
                         e.target.style.boxShadow = '0 4px 6px -1px rgba(139, 92, 246, 0.3)';
                      }}
                   >
-                     <i className="fa-solid fa-shield-alt icon-gap" style={{}}></i>
-                     Crear Rol
+                     <i className="fa-solid fa-shield-alt icon-gap" style={{}} aria-hidden={true}></i>
+                     <span>Crear Rol</span>
                   </button>
                </div>
 
