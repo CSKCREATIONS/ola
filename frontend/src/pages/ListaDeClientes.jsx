@@ -302,8 +302,8 @@ export default function ListaDeClientes() {
                     fontWeight: '700',
                     letterSpacing: '-0.5px'
                   }}>
-                    <i className="fa-solid fa-users icon-gap" style={{ fontSize: '1.8rem' }}></i>
-                    Lista de Clientes
+                    <i className="fa-solid fa-users icon-gap" style={{ fontSize: '1.8rem' }} aria-hidden={true}></i>
+                    <span>Lista de Clientes</span>
                   </h3>
                   <p style={{
                     color: 'rgba(255,255,255,0.9)',
@@ -422,16 +422,16 @@ export default function ListaDeClientes() {
               </div>
             </div>
             
-            <div>
-              <label htmlFor="buscar-clientes-input" style={{ 
+                <div>
+                  <label htmlFor="buscar-clientes-input" style={{ 
                 display: 'block', 
                 marginBottom: '8px', 
                 color: '#374151', 
                 fontSize: '14px', 
                 fontWeight: '600' 
               }}>
-                <i className="fa-solid fa-user-search icon-gap" style={{ color: '#6366f1' }}></i>
-                Buscar por nombre o correo:
+                <i className="fa-solid fa-user-search icon-gap" style={{ color: '#6366f1' }} aria-hidden={true}></i>
+                <span>Buscar por nombre o correo:</span>
               </label>
               <input
                 id="buscar-clientes-input"
@@ -519,8 +519,8 @@ export default function ListaDeClientes() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-user icon-gap" style={{ color: '#6366f1' }}></i>
-                      CLIENTES
+                      <i className="fa-solid fa-user icon-gap" style={{ color: '#6366f1' }} aria-hidden={true}></i>
+                        <span>CLIENTES</span>
                     </th>
                     <th style={{ 
                       padding: '16px 12px', 
@@ -530,8 +530,8 @@ export default function ListaDeClientes() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-map-marker-alt icon-gap" style={{ color: '#6366f1' }}></i>
-                      CIUDAD
+                      <i className="fa-solid fa-map-marker-alt icon-gap" style={{ color: '#6366f1' }} aria-hidden={true}></i>
+                      <span>CIUDAD</span>
                     </th>
                     <th style={{ 
                       padding: '16px 12px', 
@@ -541,8 +541,8 @@ export default function ListaDeClientes() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-phone icon-gap" style={{ color: '#6366f1' }}></i>
-                      TELÉFONO
+                      <i className="fa-solid fa-phone icon-gap" style={{ color: '#6366f1' }} aria-hidden={true}></i>
+                      <span>TELÉFONO</span>
                     </th>
                     <th style={{ 
                       padding: '16px 12px', 
@@ -552,8 +552,8 @@ export default function ListaDeClientes() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-envelope icon-gap" style={{ color: '#6366f1' }}></i>
-                      CORREO
+                      <i className="fa-solid fa-envelope icon-gap" style={{ color: '#6366f1' }} aria-hidden={true}></i>
+                      <span>CORREO</span>
                     </th>
                     <th style={{ 
                       padding: '16px 12px', 
@@ -563,8 +563,8 @@ export default function ListaDeClientes() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-cogs icon-gap" style={{ color: '#6366f1' }}></i>
-                      ACCIONES
+                      <i className="fa-solid fa-cogs icon-gap" style={{ color: '#6366f1' }} aria-hidden={true}></i>
+                      <span>ACCIONES</span>
                     </th>
                   </tr>
                 </thead>
