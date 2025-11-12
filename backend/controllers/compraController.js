@@ -36,48 +36,66 @@ const crearCompra = async (req, res) => {
     }
 
     // Sanitizar y validar datos antes de crear la compra
-    // Asegurar que los campos sean del tipo correcto y no objetos maliciosos
-    const numeroOrden = typeof req.body.numeroOrden === 'string' ? req.body.numeroOrden : '';
-    const proveedor = typeof req.body.proveedor === 'string' ? req.body.proveedor : '';
-    const solicitadoPor = typeof req.body.solicitadoPor === 'string' ? req.body.solicitadoPor : '';
-    const observaciones = typeof req.body.observaciones === 'string' ? req.body.observaciones : '';
-    const estado = typeof req.body.estado === 'string' ? req.body.estado : 'Completada';
+    // Whitelist approach: solo campos permitidos para prevenir inyección NoSQL
+    const allowedFields = {
+      numeroOrden: String(req.body.numeroOrden || '').trim(),
+      proveedor: String(req.body.proveedor || '').trim(),
+      solicitadoPor: String(req.body.solicitadoPor || '').trim(),
+      observaciones: String(req.body.observaciones || '').trim(),
+      estado: String(req.body.estado || 'Completada').trim()
+    };
     
-    // Validar que productos sea un array válido
-    const productos = Array.isArray(req.body.productos) ? req.body.productos : [];
+    // Validar y sanitizar productos (evita inyección de campos no deseados)
+    const productos = Array.isArray(req.body.productos) 
+      ? req.body.productos.map(p => ({
+          producto: String(p.producto || '').trim(),
+          descripcion: String(p.descripcion || '').trim(),
+          cantidad: Number(p.cantidad) || 0,
+          valorUnitario: Number(p.valorUnitario) || 0,
+          descuento: Number(p.descuento) || 0,
+          valorTotal: Number(p.valorTotal) || 0
+        }))
+      : [];
     
-    // Validar números
-    const subtotal = typeof req.body.subtotal === 'number' ? req.body.subtotal : Number(req.body.subtotal) || 0;
-    const impuestos = typeof req.body.impuestos === 'number' ? req.body.impuestos : Number(req.body.impuestos) || 0;
-    const total = typeof req.body.total === 'number' ? req.body.total : Number(req.body.total) || 0;
+    // Validar números de forma segura (previene NaN y valores maliciosos)
+    const subtotal = Number(req.body.subtotal) || 0;
+    const impuestos = Number(req.body.impuestos) || 0;
+    const total = Number(req.body.total) || 0;
     
-    // Validar fecha
-    const fecha = req.body.fecha && !Number.isNaN(new Date(req.body.fecha).getTime()) 
-      ? new Date(req.body.fecha) 
-      : new Date();
+    // Validar fecha de forma segura
+    let fecha = new Date();
+    if (req.body.fecha) {
+      const parsedDate = new Date(req.body.fecha);
+      if (!isNaN(parsedDate.getTime())) {
+        fecha = parsedDate;
+      }
+    }
 
     // Validaciones básicas
-    if (!proveedor || productos.length === 0) {
+    if (!allowedFields.proveedor || productos.length === 0) {
       return res.status(400).json({ 
         success: false, 
         message: 'Datos incompletos: se requiere proveedor y al menos un producto' 
       });
     }
 
+    // Construir objeto final con campos explícitos (previene prototype pollution)
     const compraData = {
-      numeroOrden,
-      proveedor,
-      solicitadoPor,
-      productos,
-      subtotal,
-      impuestos,
-      total,
-      observaciones,
-      estado,
-      fecha
+      numeroOrden: allowedFields.numeroOrden,
+      proveedor: allowedFields.proveedor,
+      solicitadoPor: allowedFields.solicitadoPor,
+      productos: productos,
+      subtotal: subtotal,
+      impuestos: impuestos,
+      total: total,
+      observaciones: allowedFields.observaciones,
+      estado: allowedFields.estado,
+      fecha: fecha
     };
 
-    const nuevaCompra = await Compra.create(compraData);
+    // Usar new + save para mayor control (delegando validación a Mongoose schema)
+    const nuevaCompra = new Compra(compraData);
+    await nuevaCompra.save();
     res.status(201).json({ success: true, data: nuevaCompra });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Error en el servidor', error: error.message });
