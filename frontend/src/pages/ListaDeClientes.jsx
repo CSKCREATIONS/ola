@@ -1,6 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import api from '../api/axiosConfig';
+import PropTypes from 'prop-types';
 import Swal from 'sweetalert2';
 import '../App.css';
 import Fijo from '../components/Fijo';
@@ -234,6 +235,24 @@ export default function ListaDeClientes() {
         </div>
       </div>
     );
+  };
+
+  // PropTypes for ModalEditarCliente
+  ModalEditarCliente.propTypes = {
+    cliente: PropTypes.shape({
+      _id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+      nombre: PropTypes.string,
+      ciudad: PropTypes.string,
+      telefono: PropTypes.string,
+      correo: PropTypes.string,
+    }),
+    onClose: PropTypes.func,
+    onSave: PropTypes.func.isRequired,
+  };
+
+  ModalEditarCliente.defaultProps = {
+    cliente: null,
+    onClose: () => {},
   };
 
   return (
