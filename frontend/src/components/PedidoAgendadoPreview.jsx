@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import Swal from 'sweetalert2';
 import api from '../api/axiosConfig';
 
@@ -134,8 +135,8 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
           justifyContent: 'space-between',
           alignItems: 'center'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <i className="fa-solid fa-calendar-check" style={{ fontSize: '1.8rem' }}></i>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <i className="fa-solid fa-calendar-check" style={{ fontSize: '1.8rem' }} aria-hidden={true}></i>
             <div>
               <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 'bold' }}>
                 Vista Previa - Pedido Agendado
@@ -192,8 +193,9 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               }}
               onMouseEnter={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.3)'}
               onMouseLeave={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.2)'}
+              aria-label="Imprimir pedido"
             >
-              <i className="fa-solid fa-print icon-gap" style={{ fontSize: '1.2rem' }}></i>
+                <i className="fa-solid fa-print icon-gap" style={{ fontSize: '1.2rem' }} aria-hidden={true}></i>
             </button>
 
             {/* Botón de enviar por correo */}
@@ -216,8 +218,8 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               onMouseEnter={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.3)'}
               onMouseLeave={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.2)'}
             >
-              <i className="fa-solid fa-envelope"></i>
-              Enviar
+              <i className="fa-solid fa-envelope" aria-hidden={true}></i>
+              <span>Enviar</span>
             </button>
             {/* Botón de enviar por correo */}
             <button
@@ -245,8 +247,8 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               onMouseEnter={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.3)'}
               onMouseLeave={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.2)'}
             >
-              <i className="fa-solid fa-file-invoice"></i>
-              Remisionar
+              <i className="fa-solid fa-file-invoice" aria-hidden={true}></i>
+              <span>Remisionar</span>
             </button>
 
             {/* Botón de cerrar */}
@@ -266,8 +268,9 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               }}
               onMouseEnter={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.3)'}
               onMouseLeave={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.2)'}
+              aria-label="Cerrar"
             >
-              <i className="fa-solid fa-times"></i>
+              <i className="fa-solid fa-times" aria-hidden={true}></i>
             </button>
           </div>
         </div>
@@ -297,7 +300,6 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               msUserSelect: 'none'
             }}
             onCopy={e => e.preventDefault()}
-            onSelectStart={e => e.preventDefault()}
           >
             <div className="header" style={{
               textAlign: 'center',
@@ -309,8 +311,8 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               fontSize: '1.8rem',
               fontWeight: 'bold'
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem' }}>
-                <i className="fa-solid fa-calendar-check" style={{ fontSize: '2rem' }}></i>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem' }}>
+                <i className="fa-solid fa-calendar-check" style={{ fontSize: '2rem' }} aria-hidden={true}></i>
                 <div>
                   <div>PEDIDO AGENDADO</div>
                   <div style={{ fontSize: '1rem', fontWeight: 'normal', marginTop: '0.5rem' }}>
@@ -534,8 +536,8 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               overflow: 'auto'
             }}>
               <h3 style={{ marginBottom: '1rem', color: '#fd7e14' }}>
-                <i className="fa-solid fa-envelope icon-gap" style={{}}></i>
-                Enviar Pedido por Correo
+                <i className="fa-solid fa-envelope icon-gap" style={{}} aria-hidden={true}></i>
+                <span>Enviar Pedido por Correo</span>
               </h3>
 
               <div style={{ marginBottom: '1rem' }}>
@@ -622,8 +624,8 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                     fontWeight: 'bold'
                   }}
                 >
-                  <i className="fa-solid fa-envelope icon-gap" style={{}}></i>
-                  Enviar Correo
+                  <i className="fa-solid fa-envelope icon-gap" style={{}} aria-hidden={true}></i>
+                  <span>Enviar Correo</span>
                 </button>
               </div>
             </div>
@@ -632,6 +634,44 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
       </div>
     </div>
   );
+};
+
+PedidoAgendadoPreview.propTypes = {
+  datos: PropTypes.shape({
+    _id: PropTypes.string,
+    numeroPedido: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    codigo: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    createdAt: PropTypes.string,
+    fechaEntrega: PropTypes.string,
+    cliente: PropTypes.shape({
+      nombre: PropTypes.string,
+      correo: PropTypes.string,
+      telefono: PropTypes.string,
+      direccion: PropTypes.string,
+      ciudad: PropTypes.string,
+    }),
+    productos: PropTypes.arrayOf(
+      PropTypes.shape({
+        cantidad: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+        precioUnitario: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+        product: PropTypes.object,
+        nombre: PropTypes.string,
+      })
+    ),
+    estado: PropTypes.string,
+    observacion: PropTypes.string,
+    enviadoCorreo: PropTypes.bool,
+  }),
+  onClose: PropTypes.func,
+  onEmailSent: PropTypes.func,
+  onRemisionar: PropTypes.func,
+};
+
+PedidoAgendadoPreview.defaultProps = {
+  datos: {},
+  onClose: () => {},
+  onEmailSent: undefined,
+  onRemisionar: undefined,
 };
 
 export default PedidoAgendadoPreview;
