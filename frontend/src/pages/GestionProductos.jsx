@@ -15,81 +15,9 @@ const advancedStyles = `
     border-radius: 16px;
     overflow: hidden;
     box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-    border: 1px solid #e5e7eb;
   }
-  
-  .productos-header-section {
-    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
-    padding: 20px 25px;
-    border-bottom: 1px solid #e5e7eb;
-  }
-  
-  .productos-filters-section {
-    background: linear-gradient(135deg, #f9fafb, #f3f4f6);
-    padding: 25px;
-    border-bottom: 1px solid #e5e7eb;
-  }
-  
-  .productos-filter-select {
-    width: 100%;
-    max-width: 250px;
-    padding: 12px 16px;
-    border: 2px solid #e5e7eb;
-    border-radius: 10px;
-    font-size: 14px;
-    transition: all 0.3s ease;
-    background: white;
-    cursor: pointer;
-  }
-  
-  .productos-filter-select:focus {
-    outline: none;
-    border-color: #6366f1;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-  }
-  
-  .productos-table-container {
-    overflow: auto;
-  }
-  
-  .productos-advanced-table table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 14px;
-  }
-  
-  .productos-advanced-table thead tr {
-    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
-    border-bottom: 2px solid #e5e7eb;
-  }
-  
-  .productos-advanced-table thead th {
-    padding: 16px 12px;
-    text-align: left;
-    font-weight: 600;
-    color: #374151;
-    font-size: 13px;
-    letter-spacing: 0.5px;
-  }
-  
-  .productos-advanced-table tbody tr {
-    border-bottom: 1px solid #f3f4f6;
-    transition: all 0.2s ease;
-  }
-  
-  .productos-advanced-table tbody tr:hover {
-    background-color: #f8fafc;
-  }
-  
-  .productos-advanced-table tbody td {
-    padding: 16px 12px;
-    color: #4b5563;
-    font-weight: 500;
-  }
-  
+
   .productos-action-btn {
-    background: linear-gradient(135deg, #dbeafe, #bfdbfe);
-    color: #1e40af;
     border: none;
     border-radius: 8px;
     padding: 8px 10px;
@@ -206,120 +134,7 @@ const ProductoModal = ({
 
   const handleChange = e => {
     const { name, value } = e.target;
-    setForm({ ...form, [name]: value });
-  };
-
-  // Helpers to reduce cognitive complexity of the inline checkbox handler
-  const fetchSubcategory = async (subcatId) => {
-    try {
-      const subRes = await api.get(`/api/subcategories/${subcatId}`);
-      if (!(subRes.status >= 200 && subRes.status < 300)) {
-        return { error: subRes.data?.message || 'No se pudo verificar la subcategoría' };
-      }
-      const subcategoria = subRes.data?.data || subRes.data || subRes;
-      return { subcategoria };
-    } catch (err) {
-      return { error: 'Error verificando subcategoría/categoría' };
-    }
-  };
-
-  const fetchCategory = async (catId) => {
-    try {
-      const catRes = await api.get(`/api/categories/${catId}`);
-      if (!(catRes.status >= 200 && catRes.status < 300)) {
-        return { error: catRes.data?.message || 'No se pudo verificar la categoría padre' };
-      }
-      const categoria = catRes.data?.data || catRes.data || catRes;
-      return { categoria };
-    } catch (err) {
-      return { error: 'Error verificando categoría padre' };
-    }
-  };
-
-  const confirmAction = async ({ title, text, icon = 'question', confirmText = 'Sí', cancelText = 'Cancelar' }) => {
-    const result = await Swal.fire({
-      title,
-      text,
-      icon,
-      showCancelButton: true,
-      confirmButtonText: confirmText,
-      cancelButtonText: cancelText
-    });
-    return result.isConfirmed;
-  };
-
-  const handleToggleCheckbox = async (prod) => {
-    const tryingToActivate = !prod.activo;
-    const subcatId = prod.subcategory?._id || prod.subcategory;
-
-  if (tryingToActivate) {
-      // Activation: validate subcategory and parent category
-      if (subcatId) {
-        const { subcategoria, error: subErr } = await fetchSubcategory(subcatId);
-        if (subErr) return Swal.fire('Error', subErr, 'error');
-        if (subcategoria && subcategoria.activo === false) {
-          return Swal.fire('Acción no permitida', 'No se puede activar el producto porque su subcategoría está desactivada', 'error');
-        }
-
-        const parentCatId = subcategoria?.category?._id || subcategoria?.category;
-        if (parentCatId) {
-          const { categoria, error: catErr } = await fetchCategory(parentCatId);
-          if (catErr) return Swal.fire('Error', catErr, 'error');
-          if (categoria && categoria.activo === false) {
-            return Swal.fire('Acción no permitida', 'No se puede activar el producto porque la categoría padre está desactivada', 'error');
-          }
-        }
-      }
-
-      const ok = await confirmAction({
-        title: `¿Está seguro de activar el producto "${prod.name}"?`,
-        text: 'Estará nuevamente disponible en cotizaciones y ventas',
-        icon: 'question',
-        confirmText: 'Sí, activar'
-      });
-      if (!ok) return;
-      if (typeof onToggleEstado === 'function') return onToggleEstado(prod, prod.activo);
-      return Swal.fire('Error', 'Operación no disponible', 'error');
-    }
-
-    // Deactivation flow: try to check subcategory and request confirmation when needed
-    if (subcatId) {
-      const { subcategoria, error: subErr } = await fetchSubcategory(subcatId);
-      if (!subErr && subcategoria && subcategoria.activo) {
-        const ok = await confirmAction({
-          title: `¿Está seguro de desactivar el producto "${prod.name}"?`,
-          text: 'No estará disponible para cotizaciones ni ventas',
-          icon: 'warning',
-          confirmText: 'Sí, desactivar'
-        });
-  if (!ok) return;
-  if (typeof onToggleEstado === 'function') return onToggleEstado(prod, prod.activo);
-  return Swal.fire('Error', 'Operación no disponible', 'error');
-      }
-      if (subErr) {
-        // If verification fails, still ask generic confirmation
-        const ok = await confirmAction({
-          title: `¿Está seguro de desactivar el producto "${prod.name}"?`,
-          text: 'No estará disponible para cotizaciones ni ventas',
-          icon: 'warning',
-          confirmText: 'Sí, desactivar'
-        });
-  if (!ok) return;
-  if (typeof onToggleEstado === 'function') return onToggleEstado(prod, prod.activo);
-  return Swal.fire('Error', 'Operación no disponible', 'error');
-      }
-    }
-
-    // No subcategory: ask confirmation
-    const ok = await confirmAction({
-      title: `¿Está seguro de desactivar el producto "${prod.name}"?`,
-      text: 'No estará disponible para cotizaciones ni ventas',
-      icon: 'warning',
-      confirmText: 'Sí, desactivar'
-    });
-    if (!ok) return;
-    if (typeof onToggleEstado === 'function') return onToggleEstado(prod, prod.activo);
-    return Swal.fire('Error', 'Operación no disponible', 'error');
+    setForm(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = e => {
@@ -328,7 +143,7 @@ const ProductoModal = ({
       Swal.fire('Error', 'Todos los campos son obligatorios', 'warning');
       return;
     }
-    onSave({ ...producto, ...form });
+    onSave(producto ? { ...producto, ...form } : form);
   };
 
   return (
@@ -338,90 +153,73 @@ const ProductoModal = ({
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor: 'rgba(0, 0, 0, 0.6)',
+      background: 'rgba(0, 0, 0, 0.5)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      zIndex: 1000,
-      backdropFilter: 'blur(4px)'
+      zIndex: 1000
     }}>
       <div style={{
         background: 'white',
         borderRadius: '20px',
         width: '90%',
-        maxWidth: '800px',
+        maxWidth: '900px',
         maxHeight: '90vh',
         display: 'flex',
         flexDirection: 'column',
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+        boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)'
       }}>
-        <form onSubmit={handleSubmit}>
-          {/* Header del modal */}
+        <form onSubmit={handleSubmit} style={{
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100%'
+        }}>
+          {/* Encabezado del modal */}
           <div style={{
+            padding: '2rem 2.5rem',
             background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+            borderRadius: '20px 20px 0 0',
             color: 'white',
-            padding: '2rem',
-            borderRadius: '20px 20px 0 0'
+            flexShrink: 0,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
           }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <div style={{
-                  width: '50px',
-                  height: '50px',
-                  borderRadius: '12px',
-                  background: 'rgba(255, 255, 255, 0.2)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <i className="fa-solid fa-box" style={{ fontSize: '1.5rem' }}></i>
-                </div>
-                <div>
-                  <h3 style={{
-                    margin: 0,
-                    fontSize: '1.5rem',
-                    fontWeight: '600'
-                  }}>
-                    {producto ? 'Editar Producto' : 'Agregar Producto'}
-                  </h3>
-                  <p style={{
-                    margin: '0.25rem 0 0 0',
-                    opacity: 0.9,
-                    fontSize: '0.95rem'
-                  }}>
-                    {producto ? 'Modifica la información del producto' : 'Complete los datos del nuevo producto'}
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={onClose}
-                style={{
-                  background: 'rgba(255, 255, 255, 0.2)',
-                  border: 'none',
-                  borderRadius: '8px',
-                  color: 'white',
-                  fontSize: '1.5rem',
-                  width: '40px',
-                  height: '40px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-              >
-                &times;
-              </button>
-            </div>
+            <h3 style={{
+              margin: 0,
+              fontSize: '1.8rem',
+              fontWeight: '700'
+            }}>
+              {producto ? 'Editar Producto' : 'Agregar Producto'}
+            </h3>
+            <button
+              type="button"
+              onClick={onClose}
+              style={{
+                background: 'rgba(255, 255, 255, 0.2)',
+                border: 'none',
+                borderRadius: '8px',
+                color: 'white',
+                fontSize: '1.5rem',
+                width: '40px',
+                height: '40px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              &times;
+            </button>
           </div>
 
           {/* Contenido scrolleable */}
           <div style={{
             flex: 1,
             overflowY: 'auto',
-            padding: '2rem',
-            backgroundColor: '#f8fafc'
+            padding: '2rem 2.5rem'
           }}>
-            {/* Información básica */}
+            {/* Información Básica */}
             <div style={{
               background: 'white',
               padding: '1.5rem',
@@ -805,8 +603,7 @@ const ProductoModal = ({
                 </div>
               </div>
             </div>
-
-          </div> {/* Fin del contenido scrolleable */}
+          </div>
 
           {/* Botones de acción */}
           <div style={{

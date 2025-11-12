@@ -965,25 +965,8 @@ export default function OrdenCompra() {
     });
   };
 
-  // Función para calcular totales (genérica)
-  const calcularTotales = (productos) => {
-    const subtotal = productos.reduce((acc, p) => acc + (p.valorTotal || 0), 0);
-    const impuestos = subtotal * 0.19;
-    const total = subtotal + impuestos;
-    return { subtotal, impuestos, total };
-  };
-
-  // Función específica para orden existente
-  const calcularTotalesOrden = (productos) => {
-    const subtotal = productos.reduce((acc, p) => {
-      const valorProducto = (p.cantidad || 0) * (p.valorUnitario || p.precioUnitario || 0);
-      const descuento = p.descuento || 0;
-      return acc + (valorProducto - descuento);
-    }, 0);
-    const impuestos = subtotal * 0.19;
-    const total = subtotal + impuestos;
-    return { subtotal, impuestos, total };
-  };
+  // NOTE: usamos los helpers top-level `calcularTotalesProductos` y `calcularTotalesOrdenProductos`
+  // para evitar duplicar lógica de cálculo de totales dentro del componente.
 
   // Función para imprimir orden
   const imprimirOrden = () => {
@@ -1013,7 +996,7 @@ export default function OrdenCompra() {
       return;
     }
 
-    const { subtotal, impuestos, total } = calcularTotales(nuevaOrden.productos);
+  const { subtotal, impuestos, total } = calcularTotalesProductos(nuevaOrden.productos);
 
     const ordenCompleta = {
       numeroOrden: `OC-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -1071,7 +1054,7 @@ export default function OrdenCompra() {
       return;
     }
 
-    const { subtotal, impuestos, total } = calcularTotales(ordenEditando.productos);
+  const { subtotal, impuestos, total } = calcularTotalesProductos(ordenEditando.productos);
 
     const ordenActualizada = {
       proveedor: ordenEditando.proveedor,
@@ -2134,13 +2117,13 @@ export default function OrdenCompra() {
                         <div>
                           <div style={{ fontSize: '0.9rem', opacity: '0.9' }}>Subtotal</div>
                           <div style={{ fontSize: '1.3rem', fontWeight: 'bold' }}>
-                            ${calcularTotales(nuevaOrden.productos).subtotal.toLocaleString()}
+                            ${calcularTotalesProductos(nuevaOrden.productos).subtotal.toLocaleString()}
                           </div>
                         </div>
                         <div>
                           <div style={{ fontSize: '0.9rem', opacity: '0.9' }}>Total</div>
                           <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#f39c12' }}>
-                            ${calcularTotales(nuevaOrden.productos).total.toLocaleString()}
+                            ${calcularTotalesProductos(nuevaOrden.productos).total.toLocaleString()}
                           </div>
                         </div>
                       </div>
@@ -2476,13 +2459,13 @@ export default function OrdenCompra() {
                         <div>
                           <div style={{ fontSize: '0.9rem', opacity: '0.9' }}>Subtotal</div>
                           <div style={{ fontSize: '1.3rem', fontWeight: 'bold' }}>
-                            ${calcularTotales(ordenEditando.productos).subtotal.toLocaleString()}
+                            ${calcularTotalesProductos(ordenEditando.productos).subtotal.toLocaleString()}
                           </div>
                         </div>
                         <div>
                           <div style={{ fontSize: '0.9rem', opacity: '0.9' }}>Total</div>
                           <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#f39c12' }}>
-                            ${calcularTotales(ordenEditando.productos).total.toLocaleString()}
+                            ${calcularTotalesProductos(ordenEditando.productos).total.toLocaleString()}
                           </div>
                         </div>
                       </div>
@@ -2737,13 +2720,13 @@ export default function OrdenCompra() {
                           <div style={{ textAlign: 'center' }}>
                             <div style={{ fontSize: '0.9rem', color: '#6c757d' }}>Subtotal</div>
                             <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#2c3e50' }}>
-                              ${(ordenSeleccionada.subtotal || calcularTotalesOrden(ordenSeleccionada.productos).subtotal).toLocaleString()}
+                              ${(ordenSeleccionada.subtotal || calcularTotalesOrdenProductos(ordenSeleccionada.productos).subtotal).toLocaleString()}
                             </div>
                           </div>
                           <div style={{ textAlign: 'center' }}>
                             <div style={{ fontSize: '0.9rem', color: '#6c757d' }}>Total</div>
                             <div style={{ fontSize: '1.4rem', fontWeight: 'bold', color: '#e74c3c' }}>
-                              ${(ordenSeleccionada.total || calcularTotalesOrden(ordenSeleccionada.productos).total).toLocaleString()}
+                              ${(ordenSeleccionada.total || calcularTotalesOrdenProductos(ordenSeleccionada.productos).total).toLocaleString()}
                             </div>
                           </div>
                         </div>
