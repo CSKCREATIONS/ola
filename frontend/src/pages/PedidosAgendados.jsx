@@ -500,7 +500,7 @@ export default function PedidosAgendados() {
                 onClick={() => setMostrarModalAgendar(true)}
               >
                 <i className="fa-solid fa-plus"></i>
-                Agendar Pedido
+                <span>Agendar Pedido</span>
               </button>
             </div>
           </div>

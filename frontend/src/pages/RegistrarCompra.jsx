@@ -319,7 +319,7 @@ export default function RegistrarCompra() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                 <h5>
                   <i className="fa-solid fa-shopping-cart icon-gap"></i>
-                  Nueva Compra
+                  <span>Nueva Compra</span>
                 </h5>
               </div>
             </div>
@@ -329,7 +329,7 @@ export default function RegistrarCompra() {
               <div className="modal-section">
                 <h6>
                   <i className="fa-solid fa-info-circle icon-gap"></i>
-                  Información de la Compra
+                  <span>Información de la Compra</span>
                 </h6>
                 <div className="form-grid">
                   <div className="form-group-profesional">
@@ -475,7 +475,7 @@ export default function RegistrarCompra() {
                           disabled={!productoTemp.productoId || productoTemp.cantidad < 1}
                         >
                           <i className="fa-solid fa-plus"></i>
-                          Agregar Producto
+                          <span>Agregar Producto</span>
                         </button>
                       </div>
                     </div>
@@ -500,7 +500,7 @@ export default function RegistrarCompra() {
                 <div className="modal-section">
                   <h6>
                     <i className="fa-solid fa-list-check icon-gap"></i>
-                    Productos en la Compra ({nuevaCompra.productos.length})
+                    <span>Productos en la Compra ({nuevaCompra.productos.length})</span>
                   </h6>
                   <div className="table-responsive">
                     <table className="table-profesional">
@@ -588,7 +588,7 @@ export default function RegistrarCompra() {
                     disabled={nuevaCompra.productos.length === 0}
                   >
                     <i className="fa-solid fa-check"></i>
-                    Registrar Compra
+                    <span>Registrar Compra</span>
                   </button>
                 </div>
               </div>

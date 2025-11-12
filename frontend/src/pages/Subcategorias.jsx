@@ -305,7 +305,7 @@ const SubcategoriaModal = ({ subcategoria, categorias, onClose, onSave }) => {
               fontSize: '1.1rem'
             }}>
               <i className="fa-solid fa-tag" style={{ color: '#8b5cf6', fontSize: '1rem' }}></i>
-              Nombre de la Subcategoría
+              <span>Nombre de la Subcategoría</span>
               <span style={{ color: '#ef4444' }}>*</span>
             </label>
             <input
@@ -356,7 +356,7 @@ const SubcategoriaModal = ({ subcategoria, categorias, onClose, onSave }) => {
               fontSize: '1.1rem'
             }}>
               <i className="fa-solid fa-tags" style={{ color: '#f59e0b', fontSize: '1rem' }}></i>
-              Categoría Principal
+              <span>Categoría Principal</span>
               <span style={{ color: '#ef4444' }}>*</span>
             </label>
             <select
@@ -483,7 +483,7 @@ const SubcategoriaModal = ({ subcategoria, categorias, onClose, onSave }) => {
             }}
           >
             <i className="fa-solid fa-times"></i>
-            Cancelar
+            <span>Cancelar</span>
           </button>
           
           <button 
@@ -766,7 +766,7 @@ const GestionSubcategorias = () => {
             onClick={() => { setSubcategoriaEditando(null); setModalVisible(true); }}
           >
             <i className="fa-solid fa-plus"></i>
-            Nueva Subcategoría
+            <span>Nueva Subcategoría</span>
           </button>
           {/* Tabla principal con diseño moderno */}
           <div className="subcategoria-table-modern">

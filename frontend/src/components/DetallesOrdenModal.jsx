@@ -60,7 +60,7 @@ export default function DetallesOrdenModal({ visible, orden, onClose, onPrint, o
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', padding: '0.5rem 1rem' }}>
             <h5 style={{ margin: 0 }}>
               <i className="fa-solid fa-file-invoice icon-gap" style={{}}></i>
-              Orden: {orden.numeroOrden}
+              <span>Orden: {orden.numeroOrden}</span>
             </h5>
             <button className="modal-close-realista" onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#666', padding: 0, width: '30px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>&times;</button>
           </div>

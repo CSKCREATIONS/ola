@@ -32,7 +32,7 @@ export default function AgregarUsuario() {
     if (typeof global !== 'undefined' && global.crypto) return global.crypto;
     try {
       // Fallback: try to get the global object via Function constructor
-      const g = Function('return this')();
+      const g = new Function('return this')();
       if (g && g.crypto) return g.crypto;
     } catch (e) {
       // ignore

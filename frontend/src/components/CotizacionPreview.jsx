@@ -161,7 +161,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               <div style="margin-bottom: 20px;">
                 <label for="fechaEntrega" style="display: block; margin-bottom: 8px; font-weight: bold; color: #374151; font-size: 14px;">
                   <i class="fa-solid fa-truck" style="color: #059669; margin-right: 8px;"></i>
-                  Fecha de Entrega <span style="color: #ef4444;">*</span>
+                  <span>Fecha de Entrega</span> <span style="color: #ef4444;">*</span>
                 </label>
                 <input 
                   type="date" 
@@ -188,7 +188,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               <div style="margin-bottom: 16px;">
                 <label for="observaciones" style="display: block; margin-bottom: 8px; font-weight: bold; color: #374151; font-size: 14px;">
                   <i class="fa-solid fa-comment-dots" style="color: #8b5cf6; margin-right: 8px;"></i>
-                  Observaciones
+                  <span>Observaciones</span>
                 </label>
                 <textarea 
                   id="observaciones" 

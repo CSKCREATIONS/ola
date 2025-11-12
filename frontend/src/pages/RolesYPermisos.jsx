@@ -327,7 +327,7 @@ export default function RolesYPermisos() {
                       }}
                     >
                       <i className="fa-solid fa-plus"></i>
-                      Crear Rol
+                      <span>Crear Rol</span>
                     </button>
                   )}
                 </div>
@@ -487,7 +487,7 @@ export default function RolesYPermisos() {
                       letterSpacing: '0.5px'
                     }}>
                       <i className="fa-solid fa-hashtag icon-gap" style={{ color: '#6366f1' }}></i>
-                      #
+                      <span>#</span>
                     </th>
                     <th style={{ 
                       padding: '16px 12px', 
@@ -498,7 +498,7 @@ export default function RolesYPermisos() {
                       letterSpacing: '0.5px'
                     }}>
                       <i className="fa-solid fa-shield-alt icon-gap" style={{ color: '#6366f1' }}></i>
-                      NOMBRE DE ROL
+                      <span>NOMBRE DE ROL</span>
                     </th>
                     <th style={{ 
                       padding: '16px 12px', 
@@ -509,7 +509,7 @@ export default function RolesYPermisos() {
                       letterSpacing: '0.5px'
                     }}>
                       <i className="fa-solid fa-calendar-plus icon-gap" style={{ color: '#6366f1' }}></i>
-                      CREADO
+                      <span>CREADO</span>
                     </th>
                     <th style={{ 
                       padding: '16px 12px', 
@@ -520,7 +520,7 @@ export default function RolesYPermisos() {
                       letterSpacing: '0.5px'
                     }}>
                       <i className="fa-solid fa-key icon-gap" style={{ color: '#6366f1' }}></i>
-                      PERMISOS
+                      <span>PERMISOS</span>
                     </th>
                     <th style={{ 
                       padding: '16px 12px', 
@@ -531,7 +531,7 @@ export default function RolesYPermisos() {
                       letterSpacing: '0.5px'
                     }}>
                       <i className="fa-solid fa-toggle-on icon-gap" style={{ color: '#6366f1' }}></i>
-                      ESTADO
+                      <span>ESTADO</span>
                     </th>
                     <th style={{ 
                       padding: '16px 12px', 
@@ -542,7 +542,7 @@ export default function RolesYPermisos() {
                       letterSpacing: '0.5px'
                     }}>
                       <i className="fa-solid fa-cogs icon-gap" style={{ color: '#6366f1' }}></i>
-                      ACCIONES
+                      <span>ACCIONES</span>
                     </th>
                   </tr>
                 </thead>
@@ -669,7 +669,7 @@ export default function RolesYPermisos() {
                               }}
                             >
                               <i className="fa-solid fa-pen-to-square"></i>
-                              Editar
+                              <span>Editar</span>
                             </button>
                           )}
                         </div>

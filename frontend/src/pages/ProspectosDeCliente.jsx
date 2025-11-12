@@ -404,7 +404,7 @@ export default function ListaDeClientes() {
                     }}
                   >
                     <i className="fa-solid fa-file-excel"></i>
-                    Exportar Excel
+                    <span>Exportar Excel</span>
                   </button>
                   <button
                     onClick={exportarPDF}
@@ -433,7 +433,7 @@ export default function ListaDeClientes() {
                     }}
                   >
                     <i className="fa-solid fa-file-pdf"></i>
-                    Exportar PDF
+                    <span>Exportar PDF</span>
                   </button>
                 </div>
               </div>
@@ -654,7 +654,7 @@ export default function ListaDeClientes() {
                       letterSpacing: '0.5px'
                     }}>
                       <i className="fa-solid fa-file-alt icon-gap" style={{ color: '#6366f1' }}></i>
-                      COTIZACIONES
+                      <span>COTIZACIONES</span>
                     </th>
                     <th style={{ 
                       padding: '16px 12px', 
@@ -665,7 +665,7 @@ export default function ListaDeClientes() {
                       letterSpacing: '0.5px'
                     }}>
                       <i className="fa-solid fa-user icon-gap" style={{ color: '#6366f1' }}></i>
-                      CLIENTE
+                      <span>CLIENTE</span>
                     </th>
                     <th style={{ 
                       padding: '16px 12px', 
@@ -676,7 +676,7 @@ export default function ListaDeClientes() {
                       letterSpacing: '0.5px'
                     }}>
                       <i className="fa-solid fa-map-marker-alt icon-gap" style={{ color: '#6366f1' }}></i>
-                      CIUDAD
+                      <span>CIUDAD</span>
                     </th>
                     <th style={{ 
                       padding: '16px 12px', 

@@ -170,7 +170,7 @@ export default function Perfil() {
                     }}
                   >
                     <i className="fa-solid fa-edit"></i>
-                    Editar Perfil
+                    <span>Editar Perfil</span>
                   </button>
                 </div>
 
@@ -384,7 +384,7 @@ export default function Perfil() {
                     }}
                   >
                     <i className="fa-solid fa-right-from-bracket"></i>
-                    Cerrar Sesión
+                    <span>Cerrar Sesión</span>
                   </button>
                 </div>
               </div>

@@ -417,8 +417,7 @@ export default function RegistrarCotizacion() {
                     color: '#374151',
                     fontSize: '0.95rem'
                   }}>
-                    <i className="fa-solid fa-building" style={{ color: '#3b82f6', fontSize: '0.9rem' }}></i>
-                    Nombre o Razón Social
+                    <i className="fa-solid fa-building" style={{ color: '#3b82f6', fontSize: '0.9rem' }}></i><span>Nombre o Razón Social</span>
                     <span style={{ color: '#ef4444' }}>*</span>
                   </label>
                   <div style={{ position: 'relative' }}>
@@ -552,8 +551,7 @@ export default function RegistrarCotizacion() {
                     color: '#374151',
                     fontSize: '0.95rem'
                   }}>
-                    <i className="fa-solid fa-location-dot" style={{ color: '#10b981', fontSize: '0.9rem' }}></i>
-                    Ciudad
+                    <i className="fa-solid fa-location-dot" style={{ color: '#10b981', fontSize: '0.9rem' }}></i><span>Ciudad</span>
                   </label>
                   <input
                     id='ciudad'
@@ -595,8 +593,7 @@ export default function RegistrarCotizacion() {
                     color: '#374151',
                     fontSize: '0.95rem'
                   }}>
-                    <i className="fa-solid fa-map-marker-alt" style={{ color: '#f59e0b', fontSize: '0.9rem' }}></i>
-                    Dirección
+                    <i className="fa-solid fa-map-marker-alt" style={{ color: '#f59e0b', fontSize: '0.9rem' }}></i><span>Dirección</span>
                   </label>
                   <input
                     id='direccion'
@@ -638,8 +635,7 @@ export default function RegistrarCotizacion() {
                     color: '#374151',
                     fontSize: '0.95rem'
                   }}>
-                    <i className="fa-solid fa-phone" style={{ color: '#8b5cf6', fontSize: '0.9rem' }}></i>
-                    Teléfono
+                    <i className="fa-solid fa-phone" style={{ color: '#8b5cf6', fontSize: '0.9rem' }}></i><span>Teléfono</span>
                     <span style={{ color: '#ef4444' }}>*</span>
                   </label>
                   <input
@@ -682,8 +678,7 @@ export default function RegistrarCotizacion() {
                     color: '#374151',
                     fontSize: '0.95rem'
                   }}>
-                    <i className="fa-solid fa-envelope" style={{ color: '#ef4444', fontSize: '0.9rem' }}></i>
-                    Correo Electrónico
+                    <i className="fa-solid fa-envelope" style={{ color: '#ef4444', fontSize: '0.9rem' }}></i><span>Correo Electrónico</span>
                     <span style={{ color: '#ef4444' }}>*</span>
                   </label>
                   <input
@@ -726,8 +721,7 @@ export default function RegistrarCotizacion() {
                     color: '#374151',
                     fontSize: '0.95rem'
                   }}>
-                    <i className="fa-solid fa-user-tie" style={{ color: '#06b6d4', fontSize: '0.9rem' }}></i>
-                    Responsable
+                    <i className="fa-solid fa-user-tie" style={{ color: '#06b6d4', fontSize: '0.9rem' }}></i><span>Responsable</span>
                   </div>
                   <div style={{
                     padding: '0.875rem 1rem',
@@ -757,7 +751,7 @@ export default function RegistrarCotizacion() {
                     fontSize: '0.95rem'
                   }}>
                     <i className="fa-solid fa-calendar" style={{ color: '#f59e0b', fontSize: '0.9rem' }}></i>
-                    Fecha de Cotización
+                    <span>Fecha de Cotización</span>
                     <span style={{ color: '#ef4444' }}>*</span>
                   </label>
                   <input
@@ -943,7 +937,7 @@ export default function RegistrarCotizacion() {
                       }}
                     >
                       <i className="fa-solid fa-plus"></i>
-                      Agregar Producto
+                      <span>Agregar Producto</span>
                     </button>
                     
                     {productosSeleccionados.length > 0 && (
@@ -975,7 +969,7 @@ export default function RegistrarCotizacion() {
                         }}
                       >
                         <i className="fa-solid fa-trash-can"></i>
-                        Limpiar Todo
+                        <span>Limpiar Todo</span>
                       </button>
                     )}
                   </div>
@@ -1393,7 +1387,7 @@ export default function RegistrarCotizacion() {
                   }}
                 >
                   <i className="fa-solid fa-times"></i>
-                  Cancelar
+                  <span>Cancelar</span>
                 </button>
                 
                 <button 
@@ -1425,7 +1419,7 @@ export default function RegistrarCotizacion() {
                   }}
                 >
                   <i className="fa-solid fa-save"></i>
-                  Guardar
+                  <span>Guardar</span>
                 </button>
                 
                 <button 
@@ -1457,7 +1451,7 @@ export default function RegistrarCotizacion() {
                   }}
                 >
                   <i className="fa-solid fa-paper-plane"></i>
-                  Guardar y Enviar
+                  <span>Guardar y Enviar</span>
                 </button>
               </div>
             </div>

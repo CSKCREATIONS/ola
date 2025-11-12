@@ -20,7 +20,7 @@ export default function RemisionPreview({ datos, onClose }) {
     if (typeof window !== 'undefined' && window.crypto) return window.crypto;
     if (typeof global !== 'undefined' && global.crypto) return global.crypto;
     try {
-      const g = Function('return this')();
+      const g = new Function('return this')();
       if (g && g.crypto) return g.crypto;
     } catch (e) {
       // ignore
