@@ -216,7 +216,7 @@ export default function AgregarRol() {
                            alignItems: 'center',
                            justifyContent: 'center'
                         }}>
-                           <i className="fa-solid fa-shield-alt" style={{ fontSize: '1.5rem', marginRight: '0.5rem' }}></i>
+                           <i className="fa-solid fa-shield-alt icon-gap" style={{ fontSize: '1.5rem' }}></i>
                         </div>
                         Crear Nuevo Rol
                      </h3>
@@ -254,7 +254,7 @@ export default function AgregarRol() {
                         color: '#374151',
                         fontSize: '1.1rem'
                      }}>
-                        <i className="fa-solid fa-tag" style={{ color: '#8b5cf6', fontSize: '1rem', marginRight: '0.5rem' }}></i>
+                        <i className="fa-solid fa-tag icon-gap" style={{ color: '#8b5cf6', fontSize: '1rem' }}></i>
                         Nombre del Rol
                         <span style={{ color: '#ef4444' }}>*</span>
                      </label>
@@ -305,7 +305,7 @@ export default function AgregarRol() {
                         alignItems: 'center',
                         gap: '0.5rem'
                      }}>
-                        <i className="fa-solid fa-cube" style={{ color: '#10b981', marginRight: '0.5rem' }}></i>
+                        <i className="fa-solid fa-cube icon-gap" style={{ color: '#10b981' }}></i>
                         Módulos con Acceso
                      </h4>
                      
@@ -350,7 +350,7 @@ export default function AgregarRol() {
                                     accentColor: '#0284c7'
                                  }}
                               />
-                              <i className="fa-solid fa-users" style={{ color: '#0284c7', marginRight: '0.5rem' }}></i>
+                              <i className="fa-solid fa-users icon-gap" style={{ color: '#0284c7' }}></i>
                               Usuarios
                            </label>
                         </div>
@@ -384,7 +384,7 @@ export default function AgregarRol() {
                                     accentColor: '#059669'
                                  }}
                               />
-                              <i className="fa-solid fa-shopping-cart" style={{ color: '#059669', marginRight: '0.5rem' }}></i>
+                              <i className="fa-solid fa-shopping-cart icon-gap" style={{ color: '#059669' }}></i>
                               Compras
                            </label>
                         </div>
@@ -418,7 +418,7 @@ export default function AgregarRol() {
                                     accentColor: '#d97706'
                                  }}
                               />
-                              <i className="fa-solid fa-box" style={{ color: '#d97706', marginRight: '0.5rem' }}></i>
+                              <i className="fa-solid fa-box icon-gap" style={{ color: '#d97706' }}></i>
                               Productos
                            </label>
                         </div>
@@ -452,7 +452,7 @@ export default function AgregarRol() {
                                     accentColor: '#be185d'
                                  }}
                               />
-                              <i className="fa-solid fa-chart-line" style={{ color: '#be185d', marginRight: '0.5rem' }}></i>
+                              <i className="fa-solid fa-chart-line icon-gap" style={{ color: '#be185d' }}></i>
                               Ventas
                            </label>
                         </div>
@@ -1022,7 +1022,7 @@ export default function AgregarRol() {
                         e.target.style.borderColor = '#e5e7eb';
                      }}
                   >
-                     <i className="fa-solid fa-times" style={{ marginRight: '0.5rem' }}></i>
+                     <i className="fa-solid fa-times icon-gap" style={{}}></i>
                      Cancelar
                   </button>
                   
@@ -1052,7 +1052,7 @@ export default function AgregarRol() {
                         e.target.style.boxShadow = '0 4px 6px -1px rgba(139, 92, 246, 0.3)';
                      }}
                   >
-                     <i className="fa-solid fa-shield-alt" style={{ marginRight: '0.5rem' }}></i>
+                     <i className="fa-solid fa-shield-alt icon-gap" style={{}}></i>
                      Crear Rol
                   </button>
                </div>

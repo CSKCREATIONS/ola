@@ -553,24 +553,24 @@ export default function AgregarUsuario() {
                   }}>
                     {cargandoRoles ? (
                       <span style={{ color: '#3b82f6' }}>
-                        <i className="fa-solid fa-spinner fa-spin" style={{ marginRight: '0.5rem' }}></i>
+                        <i className="fa-solid fa-spinner fa-spin icon-gap" style={{}}></i>
                         Cargando roles...
                       </span>
                     ) : rolesDisponibles.length === 0 ? (
                       rolesForbidden ? (
                         <span style={{ color: '#ef4444' }}>
-                          <i className="fa-solid fa-lock" style={{ marginRight: '0.5rem' }}></i>
+                          <i className="fa-solid fa-lock icon-gap" style={{}}></i>
                           No tienes permiso para ver la lista de roles.
                         </span>
                       ) : (
                         <span style={{ color: '#ef4444' }}>
-                          <i className="fa-solid fa-exclamation-triangle" style={{ marginRight: '0.5rem' }}></i>
+                          <i className="fa-solid fa-exclamation-triangle icon-gap" style={{}}></i>
                           No se encontraron roles. Verifica tu conexión o permisos.
                         </span>
                       )
                     ) : (
                       <span style={{ color: '#10b981' }}>
-                        <i className="fa-solid fa-check-circle" style={{ marginRight: '0.5rem' }}></i>
+                        <i className="fa-solid fa-check-circle icon-gap" style={{}}></i>
                         {rolesDisponibles.filter(r => r.enabled !== false).length} roles disponibles
                       </span>
                     )}

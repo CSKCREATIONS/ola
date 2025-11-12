@@ -534,7 +534,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               overflow: 'auto'
             }}>
               <h3 style={{ marginBottom: '1rem', color: '#fd7e14' }}>
-                <i className="fa-solid fa-envelope" style={{ marginRight: '0.5rem' }}></i>
+                <i className="fa-solid fa-envelope icon-gap" style={{}}></i>
                 Enviar Pedido por Correo
               </h3>
 
@@ -622,7 +622,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                     fontWeight: 'bold'
                   }}
                 >
-                  <i className="fa-solid fa-envelope" style={{ marginRight: '0.5rem' }}></i>
+                  <i className="fa-solid fa-envelope icon-gap" style={{}}></i>
                   Enviar Correo
                 </button>
               </div>

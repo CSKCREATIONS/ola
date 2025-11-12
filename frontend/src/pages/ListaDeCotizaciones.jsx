@@ -600,7 +600,7 @@ export default function ListaDeCotizaciones() {
                     fontWeight: '700',
                     letterSpacing: '-0.5px'
                   }}>
-                    <i className="fa-solid fa-file-invoice" style={{ marginRight: '12px', fontSize: '1.8rem' }}></i>
+                    <i className="fa-solid fa-file-invoice icon-gap" style={{ fontSize: '1.8rem' }}></i>
                     Lista de Cotizaciones
                   </h3>
                   <p style={{
@@ -734,7 +734,7 @@ export default function ListaDeCotizaciones() {
                   fontSize: '14px',
                   fontWeight: '600'
                 }}>
-                  <i className="fa-solid fa-calendar" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                  <i className="fa-solid fa-calendar icon-gap" style={{ color: '#6366f1' }}></i>
                   Fecha:
                 </label>
                 <input
@@ -766,7 +766,7 @@ export default function ListaDeCotizaciones() {
                   fontSize: '14px',
                   fontWeight: '600'
                 }}>
-                  <i className="fa-solid fa-user" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                  <i className="fa-solid fa-user icon-gap" style={{ color: '#6366f1' }}></i>
                   Cliente:
                 </label>
                 <input
@@ -799,7 +799,7 @@ export default function ListaDeCotizaciones() {
                   fontSize: '14px',
                   fontWeight: '600'
                 }}>
-                  <i className="fa-solid fa-envelope" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                  <i className="fa-solid fa-envelope icon-gap" style={{ color: '#6366f1' }}></i>
                   Estado de envío:
                 </label>
                 <select
@@ -889,7 +889,7 @@ export default function ListaDeCotizaciones() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-hashtag" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      <i className="fa-solid fa-hashtag icon-gap" style={{ color: '#6366f1' }}></i>
                       #
                     </th>
                     <th style={{
@@ -900,7 +900,7 @@ export default function ListaDeCotizaciones() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-code" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      <i className="fa-solid fa-code icon-gap" style={{ color: '#6366f1' }}></i>
                       CÓDIGO COTIZACIÓN
                     </th>
                     <th style={{
@@ -911,7 +911,7 @@ export default function ListaDeCotizaciones() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-calendar" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      <i className="fa-solid fa-calendar icon-gap" style={{ color: '#6366f1' }}></i>
                       FECHA ELABORACIÓN
                     </th>
                     <th style={{
@@ -922,7 +922,7 @@ export default function ListaDeCotizaciones() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-user" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      <i className="fa-solid fa-user icon-gap" style={{ color: '#6366f1' }}></i>
                       CLIENTE
                     </th>
                     <th style={{
@@ -933,7 +933,7 @@ export default function ListaDeCotizaciones() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-envelope" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      <i className="fa-solid fa-envelope icon-gap" style={{ color: '#6366f1' }}></i>
                       ENVIADO
                     </th>
                     <th style={{
@@ -944,7 +944,7 @@ export default function ListaDeCotizaciones() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-flag" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      <i className="fa-solid fa-flag icon-gap" style={{ color: '#6366f1' }}></i>
                       ESTADO
                     </th>
                     <th style={{
@@ -955,7 +955,7 @@ export default function ListaDeCotizaciones() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-cogs" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      <i className="fa-solid fa-cogs icon-gap" style={{ color: '#6366f1' }}></i>
                       ACCIONES
                     </th>
                   </tr>

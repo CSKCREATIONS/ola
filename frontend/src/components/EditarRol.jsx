@@ -357,7 +357,7 @@ export default function EditarRol({ rol }) {
                      fontSize: '1.05rem',
                      fontWeight: '600'
                   }}>
-                     <i className="fa-solid fa-cubes" style={{ marginRight: '0.5rem', color: '#8b5cf6' }}></i>
+                     <i className="fa-solid fa-cubes icon-gap" style={{ color: '#8b5cf6' }}></i>
                      Módulos con Acceso
                   </h4>
                   <div style={{

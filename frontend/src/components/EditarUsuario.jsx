@@ -444,7 +444,7 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
                     borderRadius: '10px',
                     border: '2px solid #fecaca'
                   }}>
-                    <i className="fa-solid fa-lock" style={{ marginRight: '0.5rem' }}></i>
+                    <i className="fa-solid fa-lock icon-gap" style={{}}></i>
                     No tienes permiso para ver roles
                   </div>
                 ) : (

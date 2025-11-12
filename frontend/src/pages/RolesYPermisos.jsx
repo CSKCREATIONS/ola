@@ -486,7 +486,7 @@ export default function RolesYPermisos() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-hashtag" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      <i className="fa-solid fa-hashtag icon-gap" style={{ color: '#6366f1' }}></i>
                       #
                     </th>
                     <th style={{ 
@@ -497,7 +497,7 @@ export default function RolesYPermisos() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-shield-alt" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      <i className="fa-solid fa-shield-alt icon-gap" style={{ color: '#6366f1' }}></i>
                       NOMBRE DE ROL
                     </th>
                     <th style={{ 
@@ -508,7 +508,7 @@ export default function RolesYPermisos() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-calendar-plus" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      <i className="fa-solid fa-calendar-plus icon-gap" style={{ color: '#6366f1' }}></i>
                       CREADO
                     </th>
                     <th style={{ 
@@ -519,7 +519,7 @@ export default function RolesYPermisos() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-key" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      <i className="fa-solid fa-key icon-gap" style={{ color: '#6366f1' }}></i>
                       PERMISOS
                     </th>
                     <th style={{ 
@@ -530,7 +530,7 @@ export default function RolesYPermisos() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-toggle-on" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      <i className="fa-solid fa-toggle-on icon-gap" style={{ color: '#6366f1' }}></i>
                       ESTADO
                     </th>
                     <th style={{ 
@@ -541,7 +541,7 @@ export default function RolesYPermisos() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-cogs" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      <i className="fa-solid fa-cogs icon-gap" style={{ color: '#6366f1' }}></i>
                       ACCIONES
                     </th>
                   </tr>

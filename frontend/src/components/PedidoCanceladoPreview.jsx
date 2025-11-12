@@ -533,7 +533,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               overflow: 'auto'
             }}>
               <h3 style={{ marginBottom: '1rem', color: '#dc2626' }}>
-                <i className="fa-solid fa-envelope" style={{ marginRight: '0.5rem' }}></i>
+                <i className="fa-solid fa-envelope icon-gap" style={{}}></i>
                 Enviar Notificación de Cancelación
               </h3>
               
@@ -621,7 +621,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                     fontWeight: 'bold'
                   }}
                 >
-                  <i className="fa-solid fa-envelope" style={{ marginRight: '0.5rem' }}></i>
+                  <i className="fa-solid fa-envelope icon-gap" style={{}}></i>
                   Enviar Notificación
                 </button>
               </div>

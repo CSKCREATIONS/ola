@@ -283,7 +283,7 @@ export default function ListaDeClientes() {
                     fontWeight: '700',
                     letterSpacing: '-0.5px'
                   }}>
-                    <i className="fa-solid fa-users" style={{ marginRight: '12px', fontSize: '1.8rem' }}></i>
+                    <i className="fa-solid fa-users icon-gap" style={{ fontSize: '1.8rem' }}></i>
                     Lista de Clientes
                   </h3>
                   <p style={{
@@ -411,7 +411,7 @@ export default function ListaDeClientes() {
                 fontSize: '14px', 
                 fontWeight: '600' 
               }}>
-                <i className="fa-solid fa-user-search" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                <i className="fa-solid fa-user-search icon-gap" style={{ color: '#6366f1' }}></i>
                 Buscar por nombre o correo:
               </label>
               <input
@@ -500,7 +500,7 @@ export default function ListaDeClientes() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-user" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      <i className="fa-solid fa-user icon-gap" style={{ color: '#6366f1' }}></i>
                       CLIENTES
                     </th>
                     <th style={{ 
@@ -511,7 +511,7 @@ export default function ListaDeClientes() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-map-marker-alt" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      <i className="fa-solid fa-map-marker-alt icon-gap" style={{ color: '#6366f1' }}></i>
                       CIUDAD
                     </th>
                     <th style={{ 
@@ -522,7 +522,7 @@ export default function ListaDeClientes() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-phone" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      <i className="fa-solid fa-phone icon-gap" style={{ color: '#6366f1' }}></i>
                       TELÉFONO
                     </th>
                     <th style={{ 
@@ -533,7 +533,7 @@ export default function ListaDeClientes() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-envelope" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      <i className="fa-solid fa-envelope icon-gap" style={{ color: '#6366f1' }}></i>
                       CORREO
                     </th>
                     <th style={{ 
@@ -544,7 +544,7 @@ export default function ListaDeClientes() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-cogs" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      <i className="fa-solid fa-cogs icon-gap" style={{ color: '#6366f1' }}></i>
                       ACCIONES
                     </th>
                   </tr>
