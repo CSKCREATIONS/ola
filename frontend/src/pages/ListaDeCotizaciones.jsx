@@ -600,8 +600,8 @@ export default function ListaDeCotizaciones() {
                     fontWeight: '700',
                     letterSpacing: '-0.5px'
                   }}>
-                    <i className="fa-solid fa-file-invoice icon-gap" style={{ fontSize: '1.8rem' }}></i>
-                    Lista de Cotizaciones
+                    <i aria-hidden={true} className="fa-solid fa-file-invoice icon-gap" style={{ fontSize: '1.8rem' }}></i>
+                    <span>Lista de Cotizaciones</span>
                   </h3>
                   <p style={{
                     color: 'rgba(255,255,255,0.9)',
@@ -689,7 +689,7 @@ export default function ListaDeCotizaciones() {
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{
+                  <div style={{
                   background: 'linear-gradient(135deg, #667eea, #764ba2)',
                   borderRadius: '12px',
                   padding: '10px',
@@ -697,14 +697,14 @@ export default function ListaDeCotizaciones() {
                   alignItems: 'center',
                   justifyContent: 'center'
                 }}>
-                  <i className="fa-solid fa-filter" style={{ color: 'white', fontSize: '16px' }}></i>
+                  <i aria-hidden={true} className="fa-solid fa-filter" style={{ color: 'white', fontSize: '16px' }}></i>
                 </div>
                 <h4 style={{ margin: 0, color: '#1f2937', fontSize: '1.3rem', fontWeight: '600' }}>
                   Filtros y Controles
                 </h4>
               </div>
 
-              <div style={{
+                <div style={{
                 background: '#f8fafc',
                 padding: '8px 16px',
                 borderRadius: '20px',
@@ -713,7 +713,7 @@ export default function ListaDeCotizaciones() {
                 alignItems: 'center',
                 gap: '8px'
               }}>
-                <i className="fa-solid fa-info-circle" style={{ color: '#3b82f6', fontSize: '14px' }}></i>
+                <i aria-hidden={true} className="fa-solid fa-info-circle" style={{ color: '#3b82f6', fontSize: '14px' }}></i>
                 <span style={{ fontSize: '14px', color: '#475569', fontWeight: '500' }}>
                   {cotizacionesFiltradas.length} cotización{cotizacionesFiltradas.length !== 1 ? 'es' : ''} encontrada{cotizacionesFiltradas.length !== 1 ? 's' : ''}
                 </span>
@@ -727,15 +727,15 @@ export default function ListaDeCotizaciones() {
               alignItems: 'end'
             }}>
               <div>
-                <label htmlFor="filter-fecha" style={{
+                  <label htmlFor="filter-fecha" style={{
                   display: 'block',
                   marginBottom: '8px',
                   color: '#374151',
                   fontSize: '14px',
                   fontWeight: '600'
                 }}>
-                  <i className="fa-solid fa-calendar icon-gap" style={{ color: '#6366f1' }}></i>
-                  Fecha:
+                  <i aria-hidden={true} className="fa-solid fa-calendar icon-gap" style={{ color: '#6366f1' }}></i>
+                  <span>Fecha:</span>
                 </label>
                 <input
                   id="filter-fecha"
@@ -759,15 +759,15 @@ export default function ListaDeCotizaciones() {
               </div>
 
               <div>
-                <label htmlFor="filter-cliente" style={{
+                  <label htmlFor="filter-cliente" style={{
                   display: 'block',
                   marginBottom: '8px',
                   color: '#374151',
                   fontSize: '14px',
                   fontWeight: '600'
                 }}>
-                  <i className="fa-solid fa-user icon-gap" style={{ color: '#6366f1' }}></i>
-                  Cliente:
+                  <i aria-hidden={true} className="fa-solid fa-user icon-gap" style={{ color: '#6366f1' }}></i>
+                  <span>Cliente:</span>
                 </label>
                 <input
                   id="filter-cliente"
@@ -792,15 +792,15 @@ export default function ListaDeCotizaciones() {
               </div>
 
               <div>
-                <label htmlFor="filter-enviado" style={{
+                  <label htmlFor="filter-enviado" style={{
                   display: 'block',
                   marginBottom: '8px',
                   color: '#374151',
                   fontSize: '14px',
                   fontWeight: '600'
                 }}>
-                  <i className="fa-solid fa-envelope icon-gap" style={{ color: '#6366f1' }}></i>
-                  Estado de envío:
+                  <i aria-hidden={true} className="fa-solid fa-envelope icon-gap" style={{ color: '#6366f1' }}></i>
+                  <span>Estado de envío:</span>
                 </label>
                 <select
                   id="filter-enviado"
@@ -889,8 +889,8 @@ export default function ListaDeCotizaciones() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-hashtag icon-gap" style={{ color: '#6366f1' }}></i>
-                      #
+                      <i aria-hidden={true} className="fa-solid fa-hashtag icon-gap" style={{ color: '#6366f1' }}></i>
+                      <span>#</span>
                     </th>
                     <th style={{
                       padding: '16px 12px',
@@ -900,8 +900,8 @@ export default function ListaDeCotizaciones() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-code icon-gap" style={{ color: '#6366f1' }}></i>
-                      CÓDIGO COTIZACIÓN
+                      <i aria-hidden={true} className="fa-solid fa-code icon-gap" style={{ color: '#6366f1' }}></i>
+                      <span>CÓDIGO COTIZACIÓN</span>
                     </th>
                     <th style={{
                       padding: '16px 12px',
@@ -911,8 +911,8 @@ export default function ListaDeCotizaciones() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-calendar icon-gap" style={{ color: '#6366f1' }}></i>
-                      FECHA ELABORACIÓN
+                      <i aria-hidden={true} className="fa-solid fa-calendar icon-gap" style={{ color: '#6366f1' }}></i>
+                      <span>FECHA ELABORACIÓN</span>
                     </th>
                     <th style={{
                       padding: '16px 12px',
@@ -922,8 +922,8 @@ export default function ListaDeCotizaciones() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-user icon-gap" style={{ color: '#6366f1' }}></i>
-                      CLIENTE
+                      <i aria-hidden={true} className="fa-solid fa-user icon-gap" style={{ color: '#6366f1' }}></i>
+                      <span>CLIENTE</span>
                     </th>
                     <th style={{
                       padding: '16px 12px',
@@ -933,8 +933,8 @@ export default function ListaDeCotizaciones() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-envelope icon-gap" style={{ color: '#6366f1' }}></i>
-                      ENVIADO
+                      <i aria-hidden={true} className="fa-solid fa-envelope icon-gap" style={{ color: '#6366f1' }}></i>
+                      <span>ENVIADO</span>
                     </th>
                     <th style={{
                       padding: '16px 12px',
@@ -944,8 +944,8 @@ export default function ListaDeCotizaciones() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-flag icon-gap" style={{ color: '#6366f1' }}></i>
-                      ESTADO
+                      <i aria-hidden={true} className="fa-solid fa-flag icon-gap" style={{ color: '#6366f1' }}></i>
+                      <span>ESTADO</span>
                     </th>
                     <th style={{
                       padding: '16px 12px',
@@ -955,8 +955,8 @@ export default function ListaDeCotizaciones() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-cogs icon-gap" style={{ color: '#6366f1' }}></i>
-                      ACCIONES
+                      <i aria-hidden={true} className="fa-solid fa-cogs icon-gap" style={{ color: '#6366f1' }}></i>
+                      <span>ACCIONES</span>
                     </th>
                   </tr>
                 </thead>
@@ -1020,8 +1020,8 @@ export default function ListaDeCotizaciones() {
                             alignItems: 'center',
                             gap: '4px'
                           }}>
-                            <i className="fa-solid fa-check"></i>
-                            SÍ
+                            <i aria-hidden={true} className="fa-solid fa-check"></i>
+                            <span>SÍ</span>
                           </span>
                         ) : (
                           <span style={{
@@ -1035,8 +1035,8 @@ export default function ListaDeCotizaciones() {
                             alignItems: 'center',
                             gap: '4px'
                           }}>
-                            <i className="fa-solid fa-times"></i>
-                            NO
+                            <i aria-hidden={true} className="fa-solid fa-times"></i>
+                            <span>NO</span>
                           </span>
                         )}
                       </td>
@@ -1055,8 +1055,8 @@ export default function ListaDeCotizaciones() {
                             textTransform: 'uppercase',
                             letterSpacing: '0.5px'
                           }}>
-                            <i className="fa-solid fa-tag" style={{ fontSize: '10px' }}></i>
-                            REMISIONADA
+                            <i aria-hidden={true} className="fa-solid fa-tag" style={{ fontSize: '10px' }}></i>
+                            <span>REMISIONADA</span>
                           </span>
                         ) : isAgendada(cot) ? (
                           <span style={{
@@ -1072,8 +1072,8 @@ export default function ListaDeCotizaciones() {
                             textTransform: 'uppercase',
                             letterSpacing: '0.5px'
                           }}>
-                            <i className="fa-solid fa-calendar-check" style={{ fontSize: '10px' }}></i>
-                            AGENDADA
+                            <i aria-hidden={true} className="fa-solid fa-calendar-check" style={{ fontSize: '10px' }}></i>
+                            <span>AGENDADA</span>
                           </span>
                         ) : (
                           <span style={{
@@ -1089,8 +1089,8 @@ export default function ListaDeCotizaciones() {
                             textTransform: 'uppercase',
                             letterSpacing: '0.5px'
                           }}>
-                            <i className="fa-solid fa-clock" style={{ fontSize: '10px' }}></i>
-                            PENDIENTE
+                            <i aria-hidden={true} className="fa-solid fa-clock" style={{ fontSize: '10px' }}></i>
+                            <span>PENDIENTE</span>
                           </span>
                         )}
                       </td>
@@ -1100,6 +1100,7 @@ export default function ListaDeCotizaciones() {
                             <button
                               onClick={() => intentarEliminarCotizacion(cot._id)}
                               title="Eliminar cotización"
+                              aria-label="Eliminar cotización"
                               style={{
                                 background: 'linear-gradient(135deg, #fef2f2, #fee2e2)',
                                 color: '#dc2626',
@@ -1121,7 +1122,7 @@ export default function ListaDeCotizaciones() {
                                 e.target.style.boxShadow = '0 2px 4px rgba(220, 38, 38, 0.2)';
                               }}
                             >
-                              <i className="fa-solid fa-trash"></i>
+                              <i aria-hidden={true} className="fa-solid fa-trash"></i>
                             </button>
                           )}
 
@@ -1129,6 +1130,7 @@ export default function ListaDeCotizaciones() {
                             <button
                               onClick={() => handleEditCotizacion(cot)}
                               title="Editar cotización"
+                              aria-label="Editar cotización"
                               style={{
                                 background: 'linear-gradient(135deg, #dbeafe, #bfdbfe)',
                                 color: '#1e40af',
@@ -1150,7 +1152,7 @@ export default function ListaDeCotizaciones() {
                                 e.target.style.boxShadow = '0 2px 4px rgba(30, 64, 175, 0.2)';
                               }}
                             >
-                              <i className="fa-solid fa-pen-to-square"></i>
+                              <i aria-hidden={true} className="fa-solid fa-pen-to-square"></i>
                             </button>
                           )}
 
@@ -1158,6 +1160,7 @@ export default function ListaDeCotizaciones() {
                             <button
                               onClick={() => agendarCotizacion(cot)}
                               title="Agendar como pedido"
+                              aria-label="Agendar como pedido"
                               style={{
                                 background: 'linear-gradient(135deg, #dcfce7, #bbf7d0)',
                                 color: '#16a34a',
@@ -1179,7 +1182,7 @@ export default function ListaDeCotizaciones() {
                                 e.target.style.boxShadow = '0 2px 4px rgba(22, 163, 74, 0.2)';
                               }}
                             >
-                              <i className="fa-solid fa-calendar-plus"></i>
+                              <i aria-hidden={true} className="fa-solid fa-calendar-plus"></i>
                             </button>
                           )}
                         </div>
@@ -1316,24 +1319,24 @@ export default function ListaDeCotizaciones() {
                   <h3>Editar Cotización</h3>
                   <span className="cotizacion-codigo">#{cotizacionSeleccionada.codigo}</span>
                   <span className="fecha-cotizacion">
-                    <i className="fa-solid fa-calendar"></i>
-                    {new Date(cotizacionSeleccionada.fecha).toLocaleDateString()}
+                    <i aria-hidden={true} className="fa-solid fa-calendar"></i>
+                    <span>{new Date(cotizacionSeleccionada.fecha).toLocaleDateString()}</span>
                   </span>
                 </div>
-                <button className="close-button" onClick={() => { setModoEdicion(false); setCotizacionSeleccionada(null); }}>
-                  <i className="fa-solid fa-times"></i>
+                <button className="close-button" aria-label="Cerrar modal" onClick={() => { setModoEdicion(false); setCotizacionSeleccionada(null); }}>
+                  <i aria-hidden={true} className="fa-solid fa-times"></i>
                 </button>
               </div>
 
               <div className="modal-body">
                 <div className="form-section">
                   <div className="section-title">
-                    <i className="fa-solid fa-user-circle"></i>
+                    <i aria-hidden={true} className="fa-solid fa-user-circle"></i>
                     <h4>Información del Cliente</h4>
                   </div>
                   <div className="form-row" style={{ display: 'flex', gap: '15px', alignItems: 'end' }}>
                     <div className="form-group" style={{ flex: '1' }}>
-                      <label htmlFor="input-lista-cot-1"><i className="fa-solid fa-id-badge"></i> Nombre Completo *</label>
+                      <label htmlFor="input-lista-cot-1"><i aria-hidden={true} className="fa-solid fa-id-badge"></i> <span>Nombre Completo *</span></label>
                       <input id="input-lista-cot-1"
                         type="text"
                         placeholder="Ingrese el nombre completo del cliente"
@@ -1346,7 +1349,7 @@ export default function ListaDeCotizaciones() {
                       />
                     </div>
                     <div className="form-group" style={{ flex: '1' }}>
-                      <label htmlFor="input-lista-cot-2"><i className="fa-solid fa-at"></i> Correo Electrónico *</label>
+                      <label htmlFor="input-lista-cot-2"><i aria-hidden={true} className="fa-solid fa-at"></i> <span>Correo Electrónico *</span></label>
                       <input id="input-lista-cot-2"
                         type="email"
                         placeholder="cliente@ejemplo.com"
@@ -1359,7 +1362,7 @@ export default function ListaDeCotizaciones() {
                       />
                     </div>
                     <div className="form-group" style={{ flex: '1' }}>
-                      <label htmlFor="input-lista-cot-3"><i className="fa-solid fa-mobile-screen-button"></i> Teléfono</label>
+                      <label htmlFor="input-lista-cot-3"><i aria-hidden={true} className="fa-solid fa-mobile-screen-button"></i> <span>Teléfono</span></label>
                       <input id="input-lista-cot-3"
                         type="tel"
                         placeholder="+57 300 123 4567"
@@ -1371,7 +1374,7 @@ export default function ListaDeCotizaciones() {
                       />
                     </div>
                     <div className="form-group" style={{ flex: '1' }}>
-                      <label htmlFor="input-lista-cot-4"><i className="fa-solid fa-map-location-dot"></i> Ciudad</label>
+                      <label htmlFor="input-lista-cot-4"><i aria-hidden={true} className="fa-solid fa-map-location-dot"></i> <span>Ciudad</span></label>
                       <input id="input-lista-cot-4"
                         type="text"
                         placeholder="Ciudad"
@@ -1384,7 +1387,7 @@ export default function ListaDeCotizaciones() {
                     </div>
                   </div>
                   <div className="form-group" style={{ marginTop: '15px' }}>
-                    <label htmlFor="input-lista-cot-5"><i className="fa-solid fa-location-arrow"></i> Dirección Completa</label>
+                    <label htmlFor="input-lista-cot-5"><i aria-hidden={true} className="fa-solid fa-location-arrow"></i> <span>Dirección Completa</span></label>
                     <input id="input-lista-cot-5"
                       type="text"
                       placeholder="Calle, número, barrio, referencias adicionales"
@@ -1399,12 +1402,12 @@ export default function ListaDeCotizaciones() {
 
                 <div className="form-section">
                   <div className="section-title">
-                    <i className="fa-solid fa-file-contract"></i>
+                    <i aria-hidden={true} className="fa-solid fa-file-contract"></i>
                     <h4>Detalles de la Cotización</h4>
                   </div>
                   <div className="form-row">
                     <div className="form-group">
-                      <label htmlFor="input-lista-cot-6"><i className="fa-solid fa-file-text"></i> Descripción del Proyecto</label>
+                      <label htmlFor="input-lista-cot-6"><i aria-hidden={true} className="fa-solid fa-file-text"></i> <span>Descripción del Proyecto</span></label>
                       <textarea id="input-lista-cot-6"
                         placeholder="Detalle los servicios o productos incluidos en esta cotización..."
                         value={cotizacionSeleccionada.descripcion || ''}
@@ -1416,7 +1419,7 @@ export default function ListaDeCotizaciones() {
                       />
                     </div>
                     <div className="form-group">
-                      <label htmlFor="input-lista-cot-7"><i className="fa-solid fa-hand-holding-dollar"></i> Condiciones de Pago</label>
+                      <label htmlFor="input-lista-cot-7"><i aria-hidden={true} className="fa-solid fa-hand-holding-dollar"></i> <span>Condiciones de Pago</span></label>
                       <textarea id="input-lista-cot-7"
                         placeholder="Ej: 50% anticipo al firmar contrato, 50% contra entrega final..."
                         value={cotizacionSeleccionada.condicionesPago || ''}
@@ -1430,7 +1433,7 @@ export default function ListaDeCotizaciones() {
                   </div>
                   <div className="form-row">
                     <div className="form-group">
-                        <label htmlFor="cotizacion-enviadoCorreo-checkbox"><i className="fa-solid fa-envelope"></i> Estado de Envío</label>
+                        <label htmlFor="cotizacion-enviadoCorreo-checkbox"><i aria-hidden={true} className="fa-solid fa-envelope"></i> <span>Estado de Envío</span></label>
                         <div className="checkbox-group">
                           <label className="checkbox-label">
                             <input
@@ -1452,21 +1455,21 @@ export default function ListaDeCotizaciones() {
                 <div className="form-section products-section">
                   <div className="section-header">
                     <div className="section-title">
-                      <i className="fa-solid fa-shopping-cart"></i>
+                      <i aria-hidden={true} className="fa-solid fa-shopping-cart"></i>
                       <h4>Productos y Servicios</h4>
                       <span className="productos-count">
                         {cotizacionSeleccionada.productos?.length || 0} elemento{(cotizacionSeleccionada.productos?.length || 0) !== 1 ? 's' : ''}
                       </span>
                     </div>
                     <button className="btn-add" onClick={agregarProducto}>
-                      <i className="fa-solid fa-plus-circle"></i>
+                      <i aria-hidden={true} className="fa-solid fa-plus-circle"></i>
                       <span>Agregar Producto</span>
                     </button>
                   </div>
 
                   {(!cotizacionSeleccionada.productos || cotizacionSeleccionada.productos?.length === 0) ? (
                     <div className="empty-products">
-                      <i className="fa-solid fa-shopping-basket"></i>
+                      <i aria-hidden={true} className="fa-solid fa-shopping-basket"></i>
                       <p>No hay productos agregados</p>
                       <p className="empty-subtitle">Comience agregando productos o servicios a esta cotización</p>
                     </div>
@@ -1480,13 +1483,14 @@ export default function ListaDeCotizaciones() {
                               className="btn-remove"
                               onClick={() => eliminarProducto(index)}
                               title="Eliminar producto"
+                              aria-label="Eliminar producto"
                             >
-                              <i className="fa-solid fa-trash"></i>
+                              <i aria-hidden={true} className="fa-solid fa-trash"></i>
                             </button>
                           </div>
                           <div className="producto-row">
                             <div className="form-group producto-select">
-                              <label htmlFor="input-lista-cot-8"><i className="fa-solid fa-box"></i> Producto *</label>
+                              <label htmlFor="input-lista-cot-8"><i aria-hidden={true} className="fa-solid fa-box"></i> <span>Producto *</span></label>
                               <select id="input-lista-cot-8"
                                 value={producto.producto?.id || ''}
                                 onChange={(e) => {
@@ -1516,7 +1520,7 @@ export default function ListaDeCotizaciones() {
                               </select>
                             </div>
                             <div className="form-group">
-                              <label htmlFor="input-lista-cot-9"><i className="fa-solid fa-hashtag"></i> Cantidad *</label>
+                              <label htmlFor="input-lista-cot-9"><i aria-hidden={true} className="fa-solid fa-hashtag"></i> <span>Cantidad *</span></label>
                               <input id="input-lista-cot-9"
                                 type="number"
                                 min="1"
@@ -1538,7 +1542,7 @@ export default function ListaDeCotizaciones() {
                               />
                             </div>
                             <div className="form-group">
-                              <label htmlFor="input-lista-cot-10"><i className="fa-solid fa-dollar-sign"></i> Precio Unitario *</label>
+                              <label htmlFor="input-lista-cot-10"><i aria-hidden={true} className="fa-solid fa-dollar-sign"></i> <span>Precio Unitario *</span></label>
                               <input id="input-lista-cot-10"
                                 type="number"
                                 min="0"
@@ -1560,7 +1564,7 @@ export default function ListaDeCotizaciones() {
                               />
                             </div>
                             <div className="form-group">
-                              <label htmlFor="input-lista-cot-11"><i className="fa-solid fa-percent"></i> Descuento (%)</label>
+                              <label htmlFor="input-lista-cot-11"><i aria-hidden={true} className="fa-solid fa-percent"></i> <span>Descuento (%)</span></label>
                               <input id="input-lista-cot-11"
                                 type="number"
                                 min="0"
@@ -1630,7 +1634,7 @@ export default function ListaDeCotizaciones() {
 
               <div className="modal-footer">
                 <div className="footer-info">
-                  <i className="fa-solid fa-info-circle"></i>
+                  <i aria-hidden={true} className="fa-solid fa-info-circle"></i>
                   <span>Los campos marcados con * son obligatorios</span>
                 </div>
                 <div className="footer-actions">
@@ -1653,8 +1657,8 @@ export default function ListaDeCotizaciones() {
                       });
                     }}
                   >
-                    <i className="fa-solid fa-times"></i>
-                    Cancelar
+                    <i aria-hidden={true} className="fa-solid fa-times"></i>
+                    <span>Cancelar</span>
                   </button>
                   <button
                     className="btn-preview"
@@ -1663,8 +1667,8 @@ export default function ListaDeCotizaciones() {
                       setMostrarPreview(true);
                     }}
                   >
-                    <i className="fa-solid fa-eye"></i>
-                    Vista Previa
+                    <i aria-hidden={true} className="fa-solid fa-eye"></i>
+                    <span>Vista Previa</span>
                   </button>
                   <button
                     className="btn-save"
@@ -1693,8 +1697,8 @@ export default function ListaDeCotizaciones() {
                       await guardarEdicion();
                     }}
                   >
-                    <i className="fa-solid fa-save"></i>
-                    Guardar Cambios
+                    <i aria-hidden={true} className="fa-solid fa-save"></i>
+                    <span>Guardar Cambios</span>
                   </button>
                 </div>
               </div>

@@ -512,6 +512,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
 
             {/* Botón de imprimir */}
             <button
+              aria-label="Imprimir cotización"
               onClick={() => {
                 const printContent = document.querySelector('.pdf-cotizacion');
                 const newWindow = window.open('', '_blank');
@@ -557,7 +558,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               onMouseEnter={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.3)'}
               onMouseLeave={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.2)'}
             >
-              <i className="fa-solid fa-print icon-gap" style={{ fontSize: '1.2rem' }}></i>
+              <i className="fa-solid fa-print icon-gap" style={{ fontSize: '1.2rem' }} aria-hidden={true}></i>
             </button>
 
             {/* Botón de enviar por correo */}
@@ -586,6 +587,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
 
             {/* Botón de cerrar */}
             <button
+              aria-label="Cerrar vista previa"
               onClick={onClose}
               style={{
                 background: 'rgba(255, 255, 255, 0.2)',
@@ -602,7 +604,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               onMouseEnter={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.3)'}
               onMouseLeave={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.2)'}
             >
-              <i className="fa-solid fa-times"></i>
+              <i className="fa-solid fa-times" aria-hidden={true}></i>
             </button>
           </div>
         </div>

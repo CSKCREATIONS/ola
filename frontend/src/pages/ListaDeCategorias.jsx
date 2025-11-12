@@ -4,6 +4,7 @@ import '../App.css';
 import Fijo from '../components/Fijo';
 import NavProductos from '../components/NavProductos'
 import api from '../api/axiosConfig';
+import PropTypes from 'prop-types';
 
 // Base endpoint used in this page
 const API_URL = '/api/categories';
@@ -196,8 +197,6 @@ if (typeof document !== 'undefined') {
     document.head.appendChild(styleElement);
   }
 }
-
-import PropTypes from 'prop-types';
 
 const CategoriaModal = ({ categoria, onClose, onSave }) => {
   const [name, setName] = useState(categoria ? categoria.name : '');
@@ -733,7 +732,7 @@ const ListaDeCategorias = () => {
             onClick={() => { setCategoriaEditando(null); setModalVisible(true); }}
           >
             <i className="fa-solid fa-plus"></i>
-            Nueva Categoría
+           <span>Nueva Categoría</span>
           </button>
 
           {/* Tabla principal con diseño moderno */}
