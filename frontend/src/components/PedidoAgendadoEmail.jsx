@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 import Swal from 'sweetalert2';
 import api from '../api/axiosConfig';
 
@@ -195,3 +196,35 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
     </>
   );
 }
+
+PedidoAgendadoEmail.propTypes = {
+  datos: PropTypes.shape({
+    _id: PropTypes.string,
+    numeroPedido: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    createdAt: PropTypes.string,
+    fecha: PropTypes.string,
+    fechaEntrega: PropTypes.string,
+    cliente: PropTypes.shape({
+      nombre: PropTypes.string,
+      correo: PropTypes.string,
+      telefono: PropTypes.string,
+      ciudad: PropTypes.string,
+    }),
+    productos: PropTypes.arrayOf(
+      PropTypes.shape({
+        cantidad: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+        precioUnitario: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+      })
+    ),
+    total: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+    observacion: PropTypes.string,
+  }),
+  onClose: PropTypes.func,
+  onEmailSent: PropTypes.func,
+};
+
+PedidoAgendadoEmail.defaultProps = {
+  datos: {},
+  onClose: undefined,
+  onEmailSent: undefined,
+};
