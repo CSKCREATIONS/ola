@@ -1795,41 +1795,35 @@ function generarHTMLPedidoCancelado(pedido, mensaje, motivoCancelacion) {
 
 // === FUNCIONES NUEVAS DE ENVÍO DE CORREO ===
 
-// Enviar pedido por correo (general) - Basado en el patrón exitoso de cotizaciones
+// Enviar pedido por correo (general) - implementación delegada y simple
 exports.enviarPedidoPorCorreo = async (req, res) => {
   try {
-    const { correoDestino, asunto, mensaje } = req.body;
-    
+    const { correoDestino, asunto, mensaje } = req.body || {};
+
     // Sanitizar el ID para prevenir inyección NoSQL
     const pedidoId = sanitizarId(req.params.id);
-    if (!pedidoId) {
-      return res.status(400).json({ message: 'ID de pedido inválido' });
-    }
+    if (!pedidoId) return res.status(400).json({ message: 'ID de pedido inválido' });
 
     console.log('🔍 Iniciando envío de correo para pedido:', pedidoId);
-    console.log('📧 Datos de envío:', { correoDestino, asunto });
 
-    // Obtener el pedido con los datos necesarios
+    // Obtener el pedido con relaciones necesarias
     const pedido = await Pedido.findById(pedidoId)
       .populate('cliente')
       .populate('productos.product')
       .exec();
 
-    if (!pedido) {
-      return res.status(404).json({ message: 'Pedido no encontrado' });
-    }
+    if (!pedido) return res.status(404).json({ message: 'Pedido no encontrado' });
 
-    const destinatario = correoDestino || pedido.cliente.correo;
+    const destinatario = correoDestino || pedido.cliente?.correo;
     const asuntoFinal = asunto || `Pedido Agendado ${pedido.numeroPedido} - ${process.env.COMPANY_NAME || 'JLA Global Company'}`;
     const mensajeFinal = mensaje || `Estimado/a ${pedido.cliente?.nombre || 'Cliente'}, le enviamos la confirmación de su pedido agendado ${pedido.numeroPedido}.`;
 
-    // Generar HTML del pedido usando la función corregida
+    // Generar HTML
     const htmlContent = generarHTMLPedidoAgendado(pedido, mensajeFinal);
 
-    // Generar PDF del pedido
+    // Intentar generar PDF (no fatal)
     let pdfAttachment = null;
     try {
-      console.log('📄 Generando PDF del pedido...');
       const pdfService = new PDFService();
       const pdfData = await pdfService.generarPDFPedido(pedido, 'agendado');
       if (pdfData) {
@@ -1838,124 +1832,31 @@ exports.enviarPedidoPorCorreo = async (req, res) => {
           content: pdfData.buffer,
           contentType: pdfData.contentType
         };
-        console.log('✅ PDF generado exitosamente:', pdfData.filename);
       }
-    } catch (pdfError) {
-      console.error('⚠️ Error generando PDF:', pdfError.message);
-      // Continuar sin PDF si hay error
+    } catch (e) {
+      console.error('⚠️ Error generando PDF (continuando sin adjunto):', e?.message || e);
     }
 
-    // Verificar configuraciones disponibles
-    const useGmail = process.env.USE_GMAIL === 'true';
-    const gmailTransporter = createGmailTransporter();
-    const sendgridConfigured = process.env.SENDGRID_API_KEY && process.env.SENDGRID_API_KEY.startsWith('SG.');
+    // Delegar envío al helper centralizado (maneja Gmail/SendGrid/errores)
+    await enviarCorreoConAttachment(destinatario, asuntoFinal, htmlContent, pdfAttachment);
 
-    console.log('⚙️ Configuraciones disponibles:');
-    console.log(`   Gmail configurado: ${gmailTransporter ? 'SÍ' : 'NO'}`);
-    console.log(`   SendGrid configurado: ${sendgridConfigured ? 'SÍ' : 'NO'}`);
-    console.log(`   Usar Gmail prioritario: ${useGmail}`);
-
-    // Intentar envío con Gmail si está configurado y habilitado
-    if (useGmail && gmailTransporter) {
-      try {
-        console.log('📧 Enviando con Gmail...');
-        
-        const mailOptions = {
-          from: `"${process.env.COMPANY_NAME || 'JLA Global Company'}" <${process.env.GMAIL_USER}>`,
-          to: destinatario,
-          subject: asuntoFinal,
-          html: htmlContent,
-          attachments: pdfAttachment ? [{
-            filename: pdfAttachment.filename,
-            content: pdfAttachment.content,
-            contentType: pdfAttachment.contentType
-          }] : []
-        };
-
-        await gmailTransporter.sendMail(mailOptions);
-        
-        console.log('✅ Correo enviado exitosamente con Gmail');
-        
-        // Marcar como enviado por correo si es necesario
-        await Pedido.findByIdAndUpdate(pedidoId, { enviadoCorreo: true });
-
-        return res.status(200).json({ 
-          message: '¡Pedido enviado por correo exitosamente!',
-          details: {
-            destinatario: destinatario,
-            asunto: asuntoFinal,
-            proveedor: 'Gmail',
-            pdfAdjunto: pdfAttachment ? true : false
-          }
-        });
-
-      } catch (gmailError) {
-        console.error('❌ Error con Gmail:', gmailError.message);
-        console.log('🔄 Intentando con SendGrid como fallback...');
-      }
+    // Marcar como enviado (intento no-fatal)
+    try {
+      await Pedido.findByIdAndUpdate(pedidoId, { enviadoCorreo: true });
+    } catch (uErr) {
+      console.warn('⚠️ No se pudo marcar pedido como enviado:', uErr?.message || uErr);
     }
 
-    // Intentar con SendGrid si Gmail falló o no está configurado
-    if (sendgridConfigured) {
-      try {
-        console.log('📧 Enviando con SendGrid...');
-
-        const msg = {
-          to: destinatario,
-          from: {
-            email: process.env.SENDGRID_FROM_EMAIL,
-            name: process.env.SENDGRID_FROM_NAME || process.env.COMPANY_NAME || 'JLA Global Company'
-          },
-          subject: asuntoFinal,
-          html: htmlContent,
-          attachments: pdfAttachment ? [{
-            content: pdfAttachment.content.toString('base64'),
-            filename: pdfAttachment.filename,
-            type: pdfAttachment.contentType,
-            disposition: 'attachment'
-          }] : []
-        };
-
-        await sgMail.send(msg);
-        
-        console.log('✅ Correo enviado exitosamente con SendGrid');
-        
-        // Marcar como enviado por correo
-        await Pedido.findByIdAndUpdate(pedidoId, { enviadoCorreo: true });
-
-        return res.status(200).json({ 
-          message: '¡Pedido enviado por correo exitosamente!',
-          details: {
-            destinatario: destinatario,
-            asunto: asuntoFinal,
-            proveedor: 'SendGrid',
-            pdfAdjunto: pdfAttachment ? true : false
-          }
-        });
-
-      } catch (sendgridError) {
-        console.error('❌ Error con SendGrid:', sendgridError.message);
-        if (sendgridError.response && sendgridError.response.body) {
-          console.error('❌ Detalles SendGrid:', sendgridError.response.body);
-        }
-      }
-    }
-
-    // Si llegamos aquí, ningún proveedor funcionó
-    console.error('❌ No se pudo enviar el correo con ningún proveedor');
-    throw new Error(
-      !sendgridConfigured && !gmailTransporter ? 
-        'No hay proveedores de correo configurados. Configure Gmail SMTP o SendGrid.' : 
-        'Todos los proveedores de correo fallaron'
-    );
+    return res.status(200).json({
+      message: 'Pedido enviado por correo exitosamente',
+      destinatario,
+      asunto: asuntoFinal,
+      pdfAdjunto: !!pdfAttachment
+    });
 
   } catch (error) {
     console.error('❌ Error al enviar pedido por correo:', error);
-    res.status(500).json({ 
-      message: 'Error al enviar pedido por correo', 
-      error: error.message,
-      details: 'Revise la configuración de proveedores de correo y la conectividad'
-    });
+    return res.status(500).json({ message: 'Error al enviar pedido por correo', error: error?.message || String(error) });
   }
 };
 
