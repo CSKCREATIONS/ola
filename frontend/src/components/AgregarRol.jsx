@@ -680,7 +680,7 @@ export default function AgregarRol() {
                            </label>
                            <br />
                            <label>
-                              <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="radio" name="comprasPermissions"
+                              <input className="input-gap" type="radio" name="comprasPermissions"
                                  onClick={() => toggleGrupoPermisos(permisosCompras)}
                                  checked={permisosCompras.every(p => permisos.includes(p))} />
                               Todos los permisos
@@ -700,58 +700,58 @@ export default function AgregarRol() {
 
                         <div className="group">
                            <label>
-                              <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('productos.ver')} onChange={() => { toggleSubMenu('lista-productos'); togglePermiso('productos.ver') }} />
+                              <input className="input-gap" type="checkbox" checked={permisos.includes('productos.ver')} onChange={() => { toggleSubMenu('lista-productos'); togglePermiso('productos.ver') }} />
                               Lista de productos
                            </label>
                            <br />
                            <label>
-                              <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('categorias.ver')} onChange={() => togglePermiso('categorias.ver')} />
+                              <input className="input-gap" type="checkbox" checked={permisos.includes('categorias.ver')} onChange={() => togglePermiso('categorias.ver')} />
                               Ver categorías
                            </label>
                            <br />
                            <label>
-                              <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('categorias.crear')} onChange={() => togglePermiso('categorias.crear')} />
+                              <input className="input-gap" type="checkbox" checked={permisos.includes('categorias.crear')} onChange={() => togglePermiso('categorias.crear')} />
                               Crear categorías
                            </label>
                            <br />
                            <label>
-                              <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('categorias.editar')} onChange={() => togglePermiso('categorias.editar')} />
+                              <input className="input-gap" type="checkbox" checked={permisos.includes('categorias.editar')} onChange={() => togglePermiso('categorias.editar')} />
                               Editar categorías
                            </label>
                            <br />
                            <label>
-                              <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('categorias.inactivar')} onChange={() => togglePermiso('categorias.inactivar')} />
+                              <input className="input-gap" type="checkbox" checked={permisos.includes('categorias.inactivar')} onChange={() => togglePermiso('categorias.inactivar')} />
                               Inactivar categorías
                            </label>
                         </div>
                         <div className="group">
                            <label>
-                              <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('subcategorias.ver')} onChange={() => togglePermiso('subcategorias.ver')} />
+                              <input className="input-gap" type="checkbox" checked={permisos.includes('subcategorias.ver')} onChange={() => togglePermiso('subcategorias.ver')} />
                               Ver subcategorías
                            </label>
                            <br />
                            <label>
-                              <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('subcategorias.crear')} onChange={() => togglePermiso('subcategorias.crear')} />
+                              <input className="input-gap" type="checkbox" checked={permisos.includes('subcategorias.crear')} onChange={() => togglePermiso('subcategorias.crear')} />
                               Crear subcategorías
                            </label>
                            <br />
                            <label>
-                              <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('subcategorias.editar')} onChange={() => togglePermiso('subcategorias.editar')} />
+                              <input className="input-gap" type="checkbox" checked={permisos.includes('subcategorias.editar')} onChange={() => togglePermiso('subcategorias.editar')} />
                               Editar subcategorías
                            </label>
                            <br />
                            <label>
-                              <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('subcategorias.inactivar')} onChange={() => togglePermiso('subcategorias.inactivar')} />
+                              <input className="input-gap" type="checkbox" checked={permisos.includes('subcategorias.inactivar')} onChange={() => togglePermiso('subcategorias.inactivar')} />
                               Inactivar subcategorías
                            </label>
                            <br />
                            <label>
-                              <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('reportesProductos.ver')} onChange={() => togglePermiso('reportesProductos.ver')} />
+                              <input className="input-gap" type="checkbox" checked={permisos.includes('reportesProductos.ver')} onChange={() => togglePermiso('reportesProductos.ver')} />
                               Reportes
                            </label>
                            <br />
                            <label>
-                              <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="radio" name="productosPermissions"
+                              <input className="input-gap" type="radio" name="productosPermissions"
                                  onClick={() => toggleGrupoPermisos(permisosProductos)}
                                  checked={permisosProductos.every(p => permisos.includes(p))} />
                               Todos los permisos
@@ -816,7 +816,7 @@ export default function AgregarRol() {
                            <br />
                            <label>
                               <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" checked={permisos.includes('listaDeVentas.ver')}
-                                 onChange={() => togglePermiso('listaDeVentas.ver')} />
+                                 onChange={() => togglePermiso('listaDeVentas.ver')}/>
                               Lista de ventas
                            </label>
                            <br />
