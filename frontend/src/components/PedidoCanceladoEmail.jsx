@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 import Swal from 'sweetalert2';
 import api from '../api/axiosConfig';
 
@@ -119,11 +120,13 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
           <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center p-6 border-b border-gray-200">
               <h3 className="text-xl font-semibold text-gray-800">
-                ❌ Enviar Notificación de Pedido Cancelado
+                <span aria-hidden={true}>❌</span>
+                <span>Enviar Notificación de Pedido Cancelado</span>
               </h3>
               <button
                 onClick={() => setShowEnviarModal(false)}
                 className="text-gray-400 hover:text-gray-600 text-2xl font-bold"
+                aria-label="Cerrar"
               >
                 ×
               </button>
@@ -207,3 +210,34 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
     </>
   );
 }
+
+PedidoCanceladoEmail.propTypes = {
+  datos: PropTypes.shape({
+    _id: PropTypes.string,
+    numeroPedido: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    createdAt: PropTypes.string,
+    fecha: PropTypes.string,
+    cliente: PropTypes.shape({
+      nombre: PropTypes.string,
+      correo: PropTypes.string,
+      telefono: PropTypes.string,
+      ciudad: PropTypes.string,
+    }),
+    productos: PropTypes.arrayOf(
+      PropTypes.shape({
+        cantidad: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+        precioUnitario: PropTypes.oneOfType([PropTypes.number, PropTypes.string])
+      })
+    ),
+    total: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+    observacion: PropTypes.string,
+  }),
+  onClose: PropTypes.func,
+  onEmailSent: PropTypes.func,
+};
+
+PedidoCanceladoEmail.defaultProps = {
+  datos: {},
+  onClose: undefined,
+  onEmailSent: undefined,
+};
