@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import './FormatoCotizacion.css';
@@ -397,4 +398,47 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
     </div>
   );
 }
+
+FormatoCotizacion.propTypes = {
+  datos: PropTypes.shape({
+    _id: PropTypes.string,
+    numeroPedido: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    codigo: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    fecha: PropTypes.string,
+    descripcion: PropTypes.string,
+    condicionesPago: PropTypes.string,
+    cliente: PropTypes.shape({
+      nombre: PropTypes.string,
+      direccion: PropTypes.string,
+      ciudad: PropTypes.string,
+      telefono: PropTypes.string,
+      correo: PropTypes.string,
+    }),
+    empresa: PropTypes.shape({
+      nombre: PropTypes.string,
+      direccion: PropTypes.string,
+    }),
+    productos: PropTypes.arrayOf(
+      PropTypes.shape({
+        producto: PropTypes.shape({
+          name: PropTypes.string,
+        }),
+        nombre: PropTypes.string,
+        descripcion: PropTypes.string,
+        cantidad: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+        valorUnitario: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+        descuento: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+      })
+    ),
+    productosLista: PropTypes.arrayOf(PropTypes.object),
+    enviadoCorreo: PropTypes.bool,
+  }).isRequired,
+  onClose: PropTypes.func,
+  onEmailSent: PropTypes.func,
+};
+
+FormatoCotizacion.defaultProps = {
+  onClose: () => {},
+  onEmailSent: () => {},
+};
 

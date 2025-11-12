@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import PropTypes from 'prop-types';
 
 const SafeChart = ({ children, data, isReady = true }) => {
   const [mounted, setMounted] = useState(false);
@@ -27,7 +28,7 @@ const SafeChart = ({ children, data, isReady = true }) => {
   if (!isReady || !data || !Array.isArray(data) || data.length === 0 || !mounted || !shouldRender) {
     return (
       <div style={{ textAlign: 'center', padding: '50px', color: '#999' }}>
-        <i className="fa-solid fa-chart-line" style={{ fontSize: '48px', marginBottom: '15px' }}></i>
+        <i className="fa-solid fa-chart-line" style={{ fontSize: '48px', marginBottom: '15px' }} aria-hidden={true}></i>
         <p>Cargando gráfico...</p>
       </div>
     );
@@ -41,3 +42,18 @@ const SafeChart = ({ children, data, isReady = true }) => {
 };
 
 export default SafeChart;
+
+SafeChart.propTypes = {
+  children: PropTypes.node,
+  data: PropTypes.oneOfType([
+    PropTypes.array,
+    PropTypes.object
+  ]),
+  isReady: PropTypes.bool
+};
+
+SafeChart.defaultProps = {
+  children: null,
+  data: [],
+  isReady: true
+};

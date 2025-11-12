@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 import './FormatoCotizacion.css';
 import api from '../api/axiosConfig';
 
@@ -269,7 +270,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               onMouseEnter={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.3)'}
               onMouseLeave={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.2)'}
             >
-              <i className="fa-solid fa-print icon-gap" style={{ fontSize: '1.2rem' }}></i>
+              <i className="fa-solid fa-print icon-gap" style={{ fontSize: '1.2rem' }} aria-hidden={true}></i>
             </button>
 
             {/* Botón de enviar por correo */}
@@ -292,8 +293,8 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               onMouseEnter={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.3)'}
               onMouseLeave={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.2)'}
             >
-              <i className="fa-solid fa-envelope"></i>
-              Enviar
+              <i className="fa-solid fa-envelope" aria-hidden={true}></i>
+              <span>Enviar</span>
             </button>
 
             {/* Botón de cerrar */}
@@ -314,7 +315,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               onMouseEnter={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.3)'}
               onMouseLeave={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.2)'}
             >
-              <i className="fa-solid fa-times"></i>
+              <i className="fa-solid fa-times" aria-hidden={true}></i>
             </button>
           </div>
         </div>
@@ -352,7 +353,6 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               msUserSelect: 'none'
             }}
             onCopy={e => e.preventDefault()}
-            onSelectStart={e => e.preventDefault()}
           >
             <div className="header" style={{
               textAlign: 'center',
@@ -365,7 +365,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               fontWeight: 'bold'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem' }}>
-                <i className="fa-solid fa-truck" style={{ fontSize: '2rem' }}></i>
+                <i className="fa-solid fa-truck" style={{ fontSize: '2rem' }} aria-hidden={true}></i>
                 <div>
                   <div>REMISIÓN</div>
                   <div style={{ fontSize: '1rem', fontWeight: 'normal', marginTop: '0.5rem' }}>
@@ -674,8 +674,8 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               overflow: 'auto'
             }}>
               <h3 style={{ marginBottom: '1rem', color: '#059669' }}>
-                <i className="fa-solid fa-envelope icon-gap" style={{}}></i>
-                Enviar Remisión por Correo
+                <i className="fa-solid fa-envelope icon-gap" style={{}} aria-hidden={true}></i>
+                <span>Enviar Remisión por Correo</span>
               </h3>
               
               <div style={{ marginBottom: '1rem' }}>
@@ -765,8 +765,8 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                     fontWeight: 'bold'
                   }}
                 >
-                  <i className="fa-solid fa-envelope icon-gap" style={{}}></i>
-                  Enviar Remisión
+                    <i className="fa-solid fa-envelope icon-gap" style={{}} aria-hidden={true}></i>
+                    <span>Enviar Remisión</span>
                 </button>
               </div>
             </div>
@@ -775,4 +775,44 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
       </div>
     </div>
   );
+};
+
+RemisionPreview.propTypes = {
+  datos: PropTypes.shape({
+    _id: PropTypes.string,
+    numeroRemision: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    codigoPedido: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    fechaRemision: PropTypes.string,
+    fechaEntrega: PropTypes.string,
+    estado: PropTypes.string,
+    total: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+    cliente: PropTypes.shape({
+      nombre: PropTypes.string,
+      correo: PropTypes.string,
+      telefono: PropTypes.string,
+      direccion: PropTypes.string,
+      ciudad: PropTypes.string,
+      documentoIdentidad: PropTypes.string
+    }),
+    empresa: PropTypes.shape({
+      nombre: PropTypes.string,
+      direccion: PropTypes.string,
+      telefono: PropTypes.string
+    }),
+    productos: PropTypes.arrayOf(PropTypes.shape({
+      nombre: PropTypes.string,
+      codigo: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+      descripcion: PropTypes.string,
+      cantidad: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+      precioUnitario: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+      total: PropTypes.oneOfType([PropTypes.number, PropTypes.string])
+    })),
+    observacion: PropTypes.string,
+    observaciones: PropTypes.string
+  }).isRequired,
+  onClose: PropTypes.func
+};
+
+RemisionPreview.defaultProps = {
+  onClose: () => {}
 };
