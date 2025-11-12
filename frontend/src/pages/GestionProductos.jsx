@@ -237,8 +237,8 @@ const ProductoModal = ({
                 alignItems: 'center',
                 gap: '0.5rem'
               }}>
-                <i className="fa-solid fa-info-circle" style={{ color: '#f59e0b' }}></i>
-                Información Básica
+                <i className="fa-solid fa-info-circle" style={{ color: '#f59e0b' }} aria-hidden={true}></i>
+                <span>Información Básica</span>
               </h4>
 
               <div style={{
@@ -257,8 +257,8 @@ const ProductoModal = ({
                     color: '#374151',
                     fontSize: '0.95rem'
                   }}>
-                    <i className="fa-solid fa-tag" style={{ color: '#3b82f6', fontSize: '0.9rem' }}></i>
-                    Nombre del Producto
+                    <i className="fa-solid fa-tag" style={{ color: '#3b82f6', fontSize: '0.9rem' }} aria-hidden={true}></i>
+                    <span>Nombre del Producto</span>
                     <span style={{ color: '#ef4444' }}>*</span>
                   </label>
                   <input
@@ -300,8 +300,8 @@ const ProductoModal = ({
                     color: '#374151',
                     fontSize: '0.95rem'
                   }}>
-                    <i className="fa-solid fa-dollar-sign" style={{ color: '#10b981', fontSize: '0.9rem' }}></i>
-                    Precio
+                    <i className="fa-solid fa-dollar-sign" style={{ color: '#10b981', fontSize: '0.9rem' }} aria-hidden={true}></i>
+                    <span>Precio</span>
                     <span style={{ color: '#ef4444' }}>*</span>
                   </label>
                   <input
@@ -351,8 +351,8 @@ const ProductoModal = ({
                     color: '#374151',
                     fontSize: '0.95rem'
                   }}>
-                    <i className="fa-solid fa-align-left" style={{ color: '#8b5cf6', fontSize: '0.9rem' }}></i>
-                    Descripción
+                    <i className="fa-solid fa-align-left" style={{ color: '#8b5cf6', fontSize: '0.9rem' }} aria-hidden={true}></i>
+                    <span>Descripción</span>
                     <span style={{ color: '#ef4444' }}>*</span>
                   </label>
                   <input
@@ -394,8 +394,8 @@ const ProductoModal = ({
                     color: '#374151',
                     fontSize: '0.95rem'
                   }}>
-                    <i className="fa-solid fa-warehouse" style={{ color: '#ef4444', fontSize: '0.9rem' }}></i>
-                    Stock
+                    <i className="fa-solid fa-warehouse" style={{ color: '#ef4444', fontSize: '0.9rem' }} aria-hidden={true}></i>
+                    <span>Stock</span>
                     <span style={{ color: '#ef4444' }}>*</span>
                   </label>
                   <input
@@ -448,8 +448,8 @@ const ProductoModal = ({
                 alignItems: 'center',
                 gap: '0.5rem'
               }}>
-                <i className="fa-solid fa-sitemap" style={{ color: '#10b981' }}></i>
-                Clasificación y Proveedor
+                <i className="fa-solid fa-sitemap" style={{ color: '#10b981' }} aria-hidden={true}></i>
+                <span>Clasificación y Proveedor</span>
               </h4>
 
               <div style={{
@@ -467,8 +467,8 @@ const ProductoModal = ({
                     color: '#374151',
                     fontSize: '0.95rem'
                   }}>
-                    <i className="fa-solid fa-folder" style={{ color: '#3b82f6', fontSize: '0.9rem' }}></i>
-                    Categoría
+                    <i className="fa-solid fa-folder" style={{ color: '#3b82f6', fontSize: '0.9rem' }} aria-hidden={true}></i>
+                    <span>Categoría</span>
                     <span style={{ color: '#ef4444' }}>*</span>
                   </label>
                   <select
@@ -514,8 +514,8 @@ const ProductoModal = ({
                     color: '#374151',
                     fontSize: '0.95rem'
                   }}>
-                    <i className="fa-solid fa-folder-open" style={{ color: '#8b5cf6', fontSize: '0.9rem' }}></i>
-                    Subcategoría
+                    <i className="fa-solid fa-folder-open" style={{ color: '#8b5cf6', fontSize: '0.9rem' }} aria-hidden={true}></i>
+                    <span>Subcategoría</span>
                     <span style={{ color: '#ef4444' }}>*</span>
                   </label>
                   <select
@@ -563,8 +563,8 @@ const ProductoModal = ({
                     color: '#374151',
                     fontSize: '0.95rem'
                   }}>
-                    <i className="fa-solid fa-truck" style={{ color: '#f59e0b', fontSize: '0.9rem' }}></i>
-                    Proveedor
+                    <i className="fa-solid fa-truck" style={{ color: '#f59e0b', fontSize: '0.9rem' }} aria-hidden={true}></i>
+                    <span>Proveedor</span>
                     <span style={{ color: '#ef4444' }}>*</span>
                   </label>
                   <select
@@ -642,8 +642,8 @@ const ProductoModal = ({
                 e.target.style.borderColor = '#e5e7eb';
               }}
             >
-              <i className="fa-solid fa-times"></i>
-              Cancelar
+              <i className="fa-solid fa-times" aria-hidden={true}></i>
+              <span>Cancelar</span>
             </button>
 
             <button
@@ -672,8 +672,8 @@ const ProductoModal = ({
                 e.target.style.boxShadow = '0 4px 6px -1px rgba(245, 158, 11, 0.3)';
               }}
             >
-              <i className="fa-solid fa-save"></i>
-              {producto ? 'Actualizar' : 'Guardar'} Producto
+              <i className="fa-solid fa-save" aria-hidden={true}></i>
+              <span>{producto ? 'Actualizar' : 'Guardar'} Producto</span>
             </button>
           </div>
         </form>
@@ -946,8 +946,8 @@ const GestionProductos = () => {
                       e.target.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.4)';
                     }}
                   >
-                    <i className="fa-solid fa-plus"></i>
-                    Agregar Producto
+                    <i className="fa-solid fa-plus" aria-hidden={true}></i>
+                    <span>Agregar Producto</span>
                   </button>
                 </div>
               </div>
