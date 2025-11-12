@@ -369,7 +369,7 @@ export default function RegistrarCompra() {
               <div className="modal-section">
                 <h6>
                   <i className="fa-solid fa-cart-plus icon-gap"></i>
-                  Agregar Productos
+                  <span>Agregar Productos</span>
                 </h6>
 
                 {nuevaCompra.proveedorId ? (
@@ -418,7 +418,7 @@ export default function RegistrarCompra() {
                           fontSize: '0.9rem'
                         }}>
                           <i className="fa-solid fa-info-circle icon-gap"></i>
-                          Este proveedor no tiene productos asociados. Por favor, regístrelos en el módulo de Gestión de Productos.
+                          <span>Este proveedor no tiene productos asociados. Por favor, regístrelos en el módulo de Gestión de Productos.</span>
                         </div>
                       )}
                     </div>

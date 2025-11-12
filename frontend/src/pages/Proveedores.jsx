@@ -952,7 +952,7 @@ const GestionProveedores = () => {
             onClick={() => { setProveedorEditando(null); setModalVisible(true); }}
           >
             <i className="fa-solid fa-plus"></i>
-            Nuevo Proveedor
+            <span>Nuevo Proveedor</span>
           </button>
           {/* Tabla principal con diseño moderno */}
           <div className="proveedor-table-modern">
@@ -1041,7 +1041,7 @@ const GestionProveedores = () => {
                           }}
                         >
                           <i className="fa-solid fa-boxes icon-gap"></i>
-                          Ver ({prov.productos?.length || 0})
+                          <span>Ver ({prov.productos?.length || 0})</span>
                         </button>
                       </td>
                       <td>

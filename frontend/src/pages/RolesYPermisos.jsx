@@ -599,7 +599,7 @@ export default function RolesYPermisos() {
                           }}
                         >
                           <i className="fa-solid fa-key"></i>
-                          Ver permisos
+                          <span>Ver permisos</span>
                         </button>
                       </td>
                       <td style={{ padding: '16px 12px', textAlign: 'center' }}>

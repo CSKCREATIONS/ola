@@ -412,7 +412,7 @@ const SubcategoriaModal = ({ subcategoria, categorias, onClose, onSave }) => {
               fontSize: '1.1rem'
             }}>
               <i className="fa-solid fa-align-left" style={{ color: '#10b981', fontSize: '1rem' }}></i>
-              Descripción
+              <span>Descripción</span>
               <span style={{ color: '#ef4444' }}>*</span>
             </label>
             <input

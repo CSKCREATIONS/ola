@@ -687,7 +687,7 @@ export default function ListaDeClientes() {
                       letterSpacing: '0.5px'
                     }}>
                       <i className="fa-solid fa-phone icon-gap" style={{ color: '#6366f1' }}></i>
-                      TELÉFONO
+                      <span>TELÉFONO</span>
                     </th>
                     <th style={{ 
                       padding: '16px 12px', 
@@ -698,7 +698,7 @@ export default function ListaDeClientes() {
                       letterSpacing: '0.5px'
                     }}>
                       <i className="fa-solid fa-envelope icon-gap" style={{ color: '#6366f1' }}></i>
-                      CORREO
+                      <span>CORREO</span>
                     </th>
                   </tr>
                 </thead>
