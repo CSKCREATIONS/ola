@@ -605,230 +605,128 @@ class PDFService {
     `;
   }
 
-  // Generar HTML para pedido
+  // Generar HTML para pedido (refactorado para menor complejidad)
   generarHTMLPedido(pedido, estado) {
-    const fechaPedido = pedido.fecha ? new Date(pedido.fecha).toLocaleDateString('es-ES') : 
-                       pedido.createdAt ? new Date(pedido.createdAt).toLocaleDateString('es-ES') : 'N/A';
-    const fechaEntrega = pedido.fechaEntrega ? new Date(pedido.fechaEntrega).toLocaleDateString('es-ES') : 'N/A';
-    
-    // Calcular total
-    const total = pedido.total || pedido.productos?.reduce((sum, prod) => {
-      const cantidad = Number.parseFloat(prod.cantidad) || 0;
-      const valorUnitario = Number.parseFloat(prod.precioUnitario || prod.valorUnitario) || 0;
-      const descuento = Number.parseFloat(prod.descuento) || 0;
-      return sum + (cantidad * valorUnitario * (1 - descuento / 100));
-    }, 0) || 0;
+    const formatDate = (d) => (d ? new Date(d).toLocaleDateString('es-ES') : 'N/A');
+    const fechaPedido = formatDate(pedido.fecha || pedido.createdAt);
+    const fechaEntrega = formatDate(pedido.fechaEntrega);
 
-    const estadoTexto = estado === 'agendado' ? 'PEDIDO AGENDADO' : 
-                       estado === 'devuelto' ? 'PEDIDO DEVUELTO' : 
-                       estado === 'cancelado' ? 'PEDIDO CANCELADO' : `PEDIDO ${estado.toUpperCase()}`;
+    const parseNumber = (v) => Number.parseFloat(v) || 0;
+    const calcTotal = () => {
+      if (pedido.total) return Number(pedido.total) || 0;
+      if (!Array.isArray(pedido.productos)) return 0;
+      return pedido.productos.reduce((sum, prod) => {
+        const cantidad = parseNumber(prod.cantidad);
+        const valorUnitario = parseNumber(prod.precioUnitario ?? prod.valorUnitario);
+        const descuento = parseNumber(prod.descuento);
+        return sum + cantidad * valorUnitario * (1 - descuento / 100);
+      }, 0);
+    };
 
+    const total = calcTotal();
+
+    const estadoTexto = (() => {
+      switch (estado) {
+        case 'agendado': return 'PEDIDO AGENDADO';
+        case 'devuelto': return 'PEDIDO DEVUELTO';
+        case 'cancelado': return 'PEDIDO CANCELADO';
+        default: return `PEDIDO ${String(estado || '').toUpperCase()}`;
+      }
+    })();
+
+    const estadoPalette = (() => {
+      if (estado === 'agendado') return { color: '#28a745', bg: '#fef3c7', text: '#f59e0b', border: '#f59e0b' };
+      if (estado === 'devuelto') return { color: '#ff9800', bg: '#fed7aa', text: '#ea580c', border: '#ea580c' };
+      return { color: '#dc3545', bg: '#fecaca', text: '#dc2626', border: '#dc2626' };
+    })();
+
+    const formatCurrency = (n) => Number(n || 0).toLocaleString('es-CO');
+
+    const renderProductsRows = () => {
+      if (!Array.isArray(pedido.productos) || pedido.productos.length === 0) {
+        return `
+              <tr>
+                <td colspan="6" style="padding: 16px; text-align: center; font-size: 13px; color: #6b7280;">
+                  No hay productos disponibles
+                </td>
+              </tr>
+            `;
+      }
+
+      return pedido.productos.map(p => {
+        const cantidad = parseNumber(p.cantidad);
+        const nombre = p.product?.name || p.product?.nombre || p.nombre || 'Producto sin nombre';
+        const descripcion = p.product?.description || p.product?.descripcion || p.descripcion || 'Sin descripción';
+        const valor = parseNumber(p.precioUnitario ?? p.valorUnitario);
+        const descuento = parseNumber(p.descuento);
+        const subtotal = cantidad * valor * (1 - descuento / 100);
+
+        return `
+              <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="font-weight: bold;">${cantidad}</td>
+                <td>${nombre}</td>
+                <td style="color: #6b7280;">${descripcion}</td>
+                <td style="text-align: right;">$${formatCurrency(valor)}</td>
+                <td style="text-align: right;">${descuento}%</td>
+                <td style="text-align: right; font-weight: bold;">$${formatCurrency(subtotal)}</td>
+              </tr>
+            `;
+      }).join('');
+    };
+
+    // Compose HTML using the small helpers above
     return `
     <!DOCTYPE html>
     <html lang="es">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>${estadoTexto} ${pedido.numeroPedido}</title>
+        <title>${estadoTexto} ${pedido.numeroPedido || ''}</title>
         <style>
-            body { 
-                font-family: Arial, sans-serif; 
-                margin: 0; 
-                padding: 24px; 
-                font-size: 14px;
-                line-height: 1.4;
-                background: #fff;
-            }
-            .pdf-pedido {
-                background: #fff;
-                padding: 24px;
-                border-radius: 8px;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-                font-size: 14px;
-            }
-            .pedido-encabezado h2 { 
-                color: ${estado === 'agendado' ? '#28a745' : estado === 'devuelto' ? '#ff9800' : '#dc3545'}; 
-                font-weight: bold; 
-                font-size: 24px; 
-                margin: 0 0 8px 0; 
-            }
-            .info-container { 
-                display: flex; 
-                justify-content: space-between; 
-                align-items: flex-start;
-                font-size: 13px;
-                margin-bottom: 12px;
-            }
-            .info-section { 
-                flex: 1; 
-            }
-            .info-section:first-child { 
-                margin-right: 16px; 
-            }
-            .info-title { 
-                color: #374151; 
-                margin-bottom: 5px; 
-                font-size: 14px;
-                font-weight: normal;
-            }
-            .info-box { 
-                background-color: #f9fafb; 
-                padding: 8px; 
-                border-radius: 4px; 
-                border: 1px solid #e5e7eb; 
-                font-size: 12px; 
-            }
-            .info-box p { 
-                margin: 2px 0; 
-            }
-            .info-box .nombre { 
-                font-weight: bold; 
-                margin-bottom: 2px;
-                font-size: 13px; 
-            }
-            .info-box .ref { 
-                color: #6b7280;
-                font-size: 12px;
-            }
-            hr { 
-                border: none; 
-                border-top: 1px solid #e5e7eb; 
-                margin: 12px 0; 
-            }
-            .descripcion-section { 
-                margin-bottom: 12px; 
-            }
-            .descripcion-title {
-                color: #374151;
-                font-size: 14px;
-                margin-bottom: 5px;
-            }
-            .descripcion-box { 
-                background-color: #fffbeb; 
-                padding: 8px; 
-                border-radius: 4px; 
-                border: 1px solid #fed7aa; 
-                font-size: 12px; 
-            }
-            .estado-section {
-                margin-bottom: 12px;
-            }
-            .estado-badge {
-                padding: 8px 16px;
-                border-radius: 4px;
-                font-weight: bold;
-                font-size: 12px;
-                text-align: center;
-                background-color: ${estado === 'agendado' ? '#fef3c7' : estado === 'devuelto' ? '#fed7aa' : '#fecaca'};
-                color: ${estado === 'agendado' ? '#f59e0b' : estado === 'devuelto' ? '#ea580c' : '#dc2626'};
-                border: 1px solid ${estado === 'agendado' ? '#f59e0b' : estado === 'devuelto' ? '#ea580c' : '#dc2626'};
-            }
-            .tabla-pedido { 
-                width: 100%; 
-                border-collapse: collapse; 
-                margin-bottom: 16px; 
-                font-size: 13px; 
-            }
-            .tabla-pedido thead tr { 
-                background-color: #f3f4f6; 
-            }
-            .tabla-pedido th { 
-                text-align: left;
-                padding: 10px; 
-                font-size: 13px; 
-                font-weight: bold;
-                border-bottom: 1px solid #e5e7eb;
-            }
-            .tabla-pedido td { 
-                padding: 10px; 
-                border-bottom: 1px solid #e5e7eb; 
-                font-size: 13px;
-            }
-            .tabla-pedido tfoot tr { 
-                background-color: #f9fafb; 
-                font-weight: bold; 
-            }
-            .tabla-pedido tfoot td:last-child { 
-                font-size: 16px;
-                color: #059669; 
-            }
-            .tabla-cotizacion { 
-                width: 100%; 
-                border-collapse: collapse; 
-                margin-bottom: 16px; 
-                font-size: 13px; 
-            }
-            .tabla-cotizacion thead tr { 
-                background-color: #f3f4f6; 
-            }
-            .tabla-cotizacion th { 
-                text-align: left;
-                padding: 10px; 
-                font-size: 13px; 
-                font-weight: bold;
-                border-bottom: 1px solid #e5e7eb;
-            }
-            .tabla-cotizacion td { 
-                padding: 10px; 
-                border-bottom: 1px solid #e5e7eb; 
-                font-size: 13px;
-            }
-            .tabla-cotizacion tfoot tr { 
-                background-color: #f9fafb; 
-                font-weight: bold; 
-            }
-            .tabla-cotizacion tfoot td:last-child { 
-                font-size: 16px;
-                color: #059669; 
-            }
+            body { font-family: Arial, sans-serif; margin: 0; padding: 24px; font-size: 14px; line-height: 1.4; background: #fff; }
+            .pdf-pedido { background: #fff; padding: 24px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+            .pedido-encabezado h2 { color: ${estadoPalette.color}; font-weight: bold; font-size: 24px; margin: 0 0 8px 0; }
+            .info-container { display:flex; justify-content:space-between; margin-bottom:12px; }
+            .info-box { background:#f9fafb; padding:8px; border-radius:4px; border:1px solid #e5e7eb; font-size:12px; }
+            .descripcion-box { background:#fffbeb; padding:8px; border-radius:4px; border:1px solid #fed7aa; }
+            .estado-badge { padding:8px 16px; border-radius:4px; font-weight:bold; font-size:12px; text-align:center; background-color:${estadoPalette.bg}; color:${estadoPalette.text}; border:1px solid ${estadoPalette.border}; }
+            .tabla-pedido { width:100%; border-collapse:collapse; margin-bottom:16px; font-size:13px; }
+            .tabla-pedido thead tr { background-color:#f3f4f6; }
+            .tabla-pedido th, .tabla-pedido td { padding:10px; border-bottom:1px solid #e5e7eb; }
+            .tabla-pedido tfoot td:last-child { font-size:16px; color:#059669; }
         </style>
     </head>
     <body>
       <div class="pdf-pedido">
-        <div class="pedido-encabezado">
-          <h2>${estadoTexto}</h2>
-        </div>
+        <div class="pedido-encabezado"><h2>${estadoTexto}</h2></div>
 
-        <div class="estado-section">
-          <div class="estado-badge">
-            Estado del pedido: ${estado.charAt(0).toUpperCase() + estado.slice(1)}
-          </div>
-        </div>
+        <div class="estado-section"><div class="estado-badge">Estado del pedido: ${String(estado || '').charAt(0).toUpperCase() + String(estado || '').slice(1)}</div></div>
 
         <div class="info-container">
-          <div class="info-section">
-            <h4 class="info-title">ENTREGAR A:</h4>
+          <div style="flex:1; margin-right:16px;">
+            <h4>ENTREGAR A:</h4>
             <div class="info-box">
-              <p class="nombre">${pedido.cliente?.nombre || pedido.nombreCliente || 'Cliente no especificado'}</p>
+              <p style="font-weight:bold;">${pedido.cliente?.nombre || pedido.nombreCliente || 'Cliente no especificado'}</p>
               <p>${pedido.cliente?.direccion || 'Dirección no especificada'}</p>
               <p>${pedido.cliente?.ciudad || pedido.ciudadCliente || 'Ciudad no especificada'}</p>
               <p>Tel: ${pedido.cliente?.telefono || pedido.telefonoCliente || 'No especificado'}</p>
               <p>${pedido.cliente?.correo || pedido.correoCliente || 'Sin correo'}</p>
             </div>
           </div>
-          
-          <div class="info-section">
-            <h4 class="info-title">REMITE:</h4>
+
+          <div style="flex:1;">
+            <h4>REMITE:</h4>
             <div class="info-box">
-              <p class="nombre">${process.env.COMPANY_NAME || 'PANGEA'}</p>
+              <p style="font-weight:bold;">${process.env.COMPANY_NAME || 'PANGEA'}</p>
               <p>Responsable: ${pedido.responsable?.firstName || 'Natalia Cardenas'}</p>
-              ${pedido.numeroPedido ? '<p class="ref">Ref. Pedido: ' + pedido.numeroPedido + '</p>' : ''}
-              <p class="ref">Fecha: ${fechaPedido}</p>
-              ${pedido.fechaEntrega ? '<p class="ref">F. Entrega: ' + fechaEntrega + '</p>' : ''}
+              ${pedido.numeroPedido ? `<p style="color:#6b7280;">Ref. Pedido: ${pedido.numeroPedido}</p>` : ''}
+              <p style="color:#6b7280;">Fecha: ${fechaPedido}</p>
+              ${pedido.fechaEntrega ? `<p style="color:#6b7280;">F. Entrega: ${fechaEntrega}</p>` : ''}
             </div>
           </div>
         </div>
 
-        <hr />
-
-        ${pedido.descripcion ? 
-          '<div class="descripcion-section">' +
-            '<h4 class="descripcion-title">Descripción del pedido:</h4>' +
-            '<div class="descripcion-box">' +
-              '<div>' + pedido.descripcion + '</div>' +
-            '</div>' +
-          '</div>'
-        : ''}
+        ${pedido.descripcion ? `<div class="descripcion-box"><strong>Descripción del pedido:</strong><div>${pedido.descripcion}</div></div>` : ''}
 
         <table class="tabla-pedido">
           <thead>
@@ -836,43 +734,18 @@ class PDFService {
               <th>Cant.</th>
               <th>Producto</th>
               <th>Descripción</th>
-              <th style="text-align: right;">Valor Unit.</th>
-              <th style="text-align: right;">% Desc.</th>
-              <th style="text-align: right;">Total</th>
+              <th style="text-align:right;">Valor Unit.</th>
+              <th style="text-align:right;">% Desc.</th>
+              <th style="text-align:right;">Total</th>
             </tr>
           </thead>
           <tbody>
-            ${pedido.productos && pedido.productos.length > 0 ? pedido.productos.map(p => `
-              <tr style="border-bottom: 1px solid #e5e7eb;">
-                <td style="font-weight: bold;">${p.cantidad || 0}</td>
-                <td>${p.product?.name || p.product?.nombre || p.nombre || 'Producto sin nombre'}</td>
-                <td style="color: #6b7280;">${p.product?.description || p.product?.descripcion || p.descripcion || 'Sin descripción'}</td>
-                <td style="text-align: right;">$${(p.precioUnitario || p.valorUnitario || 0).toLocaleString('es-CO')}</td>
-                <td style="text-align: right;">${p.descuento || 0}%</td>
-                <td style="text-align: right; font-weight: bold;">$${(() => {
-                  const cantidad = Number.parseFloat(p.cantidad) || 0;
-                  const valorUnitario = Number.parseFloat(p.precioUnitario || p.valorUnitario) || 0;
-                  const descuento = Number.parseFloat(p.descuento) || 0;
-                  const subtotal = cantidad * valorUnitario * (1 - descuento / 100);
-                  return subtotal.toLocaleString('es-CO');
-                })()}</td>
-              </tr>
-            `).join('') : `
-              <tr>
-                <td colspan="6" style="padding: 16px; text-align: center; font-size: 13px; color: #6b7280;">
-                  No hay productos disponibles
-                </td>
-              </tr>
-            `}
+            ${renderProductsRows()}
           </tbody>
           <tfoot>
             <tr>
-              <td colspan="5" style="padding: 12px; text-align: right; font-size: 14px;">
-                TOTAL PEDIDO:
-              </td>
-              <td style="padding: 12px; text-align: right; font-size: 16px; color: #059669;">
-                $${total.toLocaleString('es-CO')}
-              </td>
+              <td colspan="5" style="padding:12px; text-align:right; font-size:14px;">TOTAL PEDIDO:</td>
+              <td style="padding:12px; text-align:right; font-size:16px;">$${formatCurrency(total)}</td>
             </tr>
           </tfoot>
         </table>
