@@ -520,28 +520,47 @@ export default function AgregarRol() {
                         <div className="form-group-rol" id='lista-usuarios'>
                            <h5 style={{ margin: '0 0 0.5rem 0', fontWeight: '600', color: '#374151' }}>Permisos para lista de usuarios</h5>
                            <div className="radio-options">
-                              <input type="checkbox"
-                                 checked={permisos.includes('usuarios.crear')}
-                                 onChange={() => togglePermiso('usuarios.crear')}
-                              /> Crear usuarios
-                              <input type="checkbox"
-                                 checked={permisos.includes('usuarios.editar')}
-                                 onChange={() => togglePermiso('usuarios.editar')}
-                              /> Editar usuarios
-                              <input type="checkbox"
-                                 checked={permisos.includes('usuarios.inhabilitar')}
-                                 onChange={() => togglePermiso('usuarios.inhabilitar')}
-                              /> Habilitar / Inhabilitar
-                              <input type="checkbox"
-                                 checked={permisos.includes('usuarios.eliminar')}
-                                 onChange={() => togglePermiso('usuarios.eliminar')}
-                              /> Eliminar usuarios
-                              <input
-                                 type="radio"
-                                 name="usersListPermissions"
-                                 onClick={() => toggleGrupoPermisos(permisosUsuarios)}
-                                 checked={permisosUsuarios.every(p => permisos.includes(p))}
-                              /> Todos los permisos
+                              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                                 <input type="checkbox"
+                                    checked={permisos.includes('usuarios.crear')}
+                                    onChange={() => togglePermiso('usuarios.crear')}
+                                 />
+                                 <span>Crear usuarios</span>
+                              </label>
+
+                              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                                 <input type="checkbox"
+                                    checked={permisos.includes('usuarios.editar')}
+                                    onChange={() => togglePermiso('usuarios.editar')}
+                                 />
+                                 <span>Editar usuarios</span>
+                              </label>
+
+                              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                                 <input type="checkbox"
+                                    checked={permisos.includes('usuarios.inhabilitar')}
+                                    onChange={() => togglePermiso('usuarios.inhabilitar')}
+                                 />
+                                 <span>Habilitar / Inhabilitar</span>
+                              </label>
+
+                              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                                 <input type="checkbox"
+                                    checked={permisos.includes('usuarios.eliminar')}
+                                    onChange={() => togglePermiso('usuarios.eliminar')}
+                                 />
+                                 <span>Eliminar usuarios</span>
+                              </label>
+
+                              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                 <input
+                                    type="radio"
+                                    name="usersListPermissions"
+                                    onClick={() => toggleGrupoPermisos(permisosUsuarios)}
+                                    checked={permisosUsuarios.every(p => permisos.includes(p))}
+                                 />
+                                 <span>Todos los permisos</span>
+                              </label>
 
                            </div>
                         </div>
@@ -551,30 +570,42 @@ export default function AgregarRol() {
                         <div className="form-group-rol" id='roles-y-permisos'>
                            <h5 style={{ margin: '0 0 0.5rem 0', fontWeight: '600', color: '#374151' }}>Permisos para roles y permisos</h5>
                            <div className="radio-options">
-                              <input
-                                 type="checkbox"
-                                 checked={permisos.includes('roles.crear')}
-                                 onChange={() => togglePermiso('roles.crear')}
-                              /> Crear roles
+                              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                                 <input
+                                    type="checkbox"
+                                    checked={permisos.includes('roles.crear')}
+                                    onChange={() => togglePermiso('roles.crear')}
+                                 />
+                                 <span>Crear roles</span>
+                              </label>
 
-                              <input
-                                 type="checkbox"
-                                 checked={permisos.includes('roles.editar')}
-                                 onChange={() => togglePermiso('roles.editar')}
-                              /> Editar roles
+                              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                                 <input
+                                    type="checkbox"
+                                    checked={permisos.includes('roles.editar')}
+                                    onChange={() => togglePermiso('roles.editar')}
+                                 />
+                                 <span>Editar roles</span>
+                              </label>
 
-                              <input
-                                 type="checkbox"
-                                 checked={permisos.includes('roles.inhabilitar')}
-                                 onChange={() => togglePermiso('roles.inhabilitar')}
-                              /> Habilitar / Inhabilitar
+                              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                                 <input
+                                    type="checkbox"
+                                    checked={permisos.includes('roles.inhabilitar')}
+                                    onChange={() => togglePermiso('roles.inhabilitar')}
+                                 />
+                                 <span>Habilitar / Inhabilitar</span>
+                              </label>
 
-                              <input
-                                 type="radio"
-                                 name="rolesPermissions"
-                                 onClick={() => toggleGrupoPermisos(permisosRoles)}
-                                 checked={permisosRoles.every(p => permisos.includes(p))}
-                              /> Todos los permisos
+                              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                 <input
+                                    type="radio"
+                                    name="rolesPermissions"
+                                    onClick={() => toggleGrupoPermisos(permisosRoles)}
+                                    checked={permisosRoles.every(p => permisos.includes(p))}
+                                 />
+                                 <span>Todos los permisos</span>
+                              </label>
                            </div>
                         </div>
                      )}
@@ -739,27 +770,39 @@ export default function AgregarRol() {
                      <div className="form-group-rol " id="lista-productos">
                         <h5 style={{ margin: '0 0 0.5rem 0', fontWeight: '600', color: '#374151' }}>Permisos para lista de productos</h5>
                         <div className="radio-options">
-                           <input
-                              type="checkbox"
-                              checked={permisos.includes('productos.crear')}
-                              onChange={() => togglePermiso('productos.crear')}
-                           /> Agregar Productos
+                           <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                              <input
+                                 type="checkbox"
+                                 checked={permisos.includes('productos.crear')}
+                                 onChange={() => togglePermiso('productos.crear')}
+                              />
+                              <span>Agregar Productos</span>
+                           </label>
 
-                           <input
-                              type="checkbox"
-                              checked={permisos.includes('productos.editar')}
-                              onChange={() => togglePermiso('productos.editar')}
-                           /> Editar productos
+                           <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                              <input
+                                 type="checkbox"
+                                 checked={permisos.includes('productos.editar')}
+                                 onChange={() => togglePermiso('productos.editar')}
+                              />
+                              <span>Editar productos</span>
+                           </label>
 
-                           <input
-                              type="checkbox"
-                              checked={permisos.includes('productos.inactivar')}
-                              onChange={() => togglePermiso('productos.inactivar')}
-                           /> Activar/Inactivar
+                           <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                              <input
+                                 type="checkbox"
+                                 checked={permisos.includes('productos.inactivar')}
+                                 onChange={() => togglePermiso('productos.inactivar')}
+                              />
+                              <span>Activar/Inactivar</span>
+                           </label>
 
-                           <input
-                              type="radio"
-                           /> Todos los permisos
+                           <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                              <input
+                                 type="radio"
+                              />
+                              <span>Todos los permisos</span>
+                           </label>
                         </div>
                      </div>
                   </div>
