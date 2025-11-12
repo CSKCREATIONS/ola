@@ -2081,7 +2081,7 @@ exports.enviarRemisionFormalPorCorreo = async (req, res) => {
       
       const pdfData = await pdfService.generarPDFRemision(remisionFormalData);
       pdfAttachment = {
-        filename: `remision-formal-${numeroRemisionFinal.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`,
+        filename: `remision-formal-${numeroRemisionFinal.replaceAll(/[^a-zA-Z0-9]/g, '-')}.pdf`,
         content: pdfData.buffer,
         contentType: pdfData.contentType
       };

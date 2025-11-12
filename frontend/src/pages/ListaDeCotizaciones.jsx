@@ -671,7 +671,7 @@ export default function ListaDeCotizaciones() {
               alignItems: 'end'
             }}>
               <div>
-                <label style={{
+                <label htmlFor="filter-fecha" style={{
                   display: 'block',
                   marginBottom: '8px',
                   color: '#374151',
@@ -682,6 +682,7 @@ export default function ListaDeCotizaciones() {
                   Fecha:
                 </label>
                 <input
+                  id="filter-fecha"
                   type="date"
                   value={filtroFecha}
                   onChange={(e) => setFiltroFecha(e.target.value)}
@@ -702,7 +703,7 @@ export default function ListaDeCotizaciones() {
               </div>
 
               <div>
-                <label style={{
+                <label htmlFor="filter-cliente" style={{
                   display: 'block',
                   marginBottom: '8px',
                   color: '#374151',
@@ -713,6 +714,7 @@ export default function ListaDeCotizaciones() {
                   Cliente:
                 </label>
                 <input
+                  id="filter-cliente"
                   type="text"
                   placeholder="Buscar cliente..."
                   value={filtroCliente}
@@ -734,7 +736,7 @@ export default function ListaDeCotizaciones() {
               </div>
 
               <div>
-                <label style={{
+                <label htmlFor="filter-enviado" style={{
                   display: 'block',
                   marginBottom: '8px',
                   color: '#374151',
@@ -745,6 +747,7 @@ export default function ListaDeCotizaciones() {
                   Estado de envío:
                 </label>
                 <select
+                  id="filter-enviado"
                   value={filtroEnviado}
                   onChange={(e) => setFiltroEnviado(e.target.value)}
                   style={{

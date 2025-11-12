@@ -346,9 +346,9 @@ const ProveedorModal = ({ proveedor, onClose, onSave }) => {
               Información Básica
             </h4>
             
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
               <div>
-                <label style={{
+                <label htmlFor="input-proveedor-nombre" style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.5rem',
@@ -362,6 +362,7 @@ const ProveedorModal = ({ proveedor, onClose, onSave }) => {
                   <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <input
+                  id="input-proveedor-nombre"
                   name="nombre"
                   value={form.nombre}
                   onChange={handleChange}
@@ -390,7 +391,7 @@ const ProveedorModal = ({ proveedor, onClose, onSave }) => {
               </div>
               
               <div>
-                <label style={{
+                <label htmlFor="input-proveedor-empresa" style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.5rem',
@@ -403,6 +404,7 @@ const ProveedorModal = ({ proveedor, onClose, onSave }) => {
                   Empresa (opcional)
                 </label>
                 <input
+                  id="input-proveedor-empresa"
                   name="empresa"
                   value={form.empresa}
                   onChange={handleChange}
@@ -455,7 +457,7 @@ const ProveedorModal = ({ proveedor, onClose, onSave }) => {
             
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
               <div>
-                <label style={{
+                <label htmlFor="input-proveedor-telefono" style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.5rem',
@@ -469,6 +471,7 @@ const ProveedorModal = ({ proveedor, onClose, onSave }) => {
                   <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <input
+                  id="input-proveedor-telefono"
                   name="contacto.telefono"
                   value={form.contacto.telefono}
                   onChange={handleChange}
@@ -497,7 +500,7 @@ const ProveedorModal = ({ proveedor, onClose, onSave }) => {
               </div>
               
               <div>
-                <label style={{
+                <label htmlFor="input-proveedor-correo" style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.5rem',
@@ -511,6 +514,7 @@ const ProveedorModal = ({ proveedor, onClose, onSave }) => {
                   <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <input
+                  id="input-proveedor-correo"
                   name="contacto.correo"
                   type="email"
                   value={form.contacto.correo}
@@ -564,7 +568,7 @@ const ProveedorModal = ({ proveedor, onClose, onSave }) => {
             
             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
               <div>
-                <label style={{
+                <label htmlFor="input-proveedor-calle" style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.5rem',
@@ -578,6 +582,7 @@ const ProveedorModal = ({ proveedor, onClose, onSave }) => {
                   <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <input
+                  id="input-proveedor-calle"
                   name="direccion.calle"
                   value={form.direccion.calle}
                   onChange={handleChange}
@@ -606,7 +611,7 @@ const ProveedorModal = ({ proveedor, onClose, onSave }) => {
               </div>
               
               <div>
-                <label style={{
+                <label htmlFor="input-proveedor-pais" style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.5rem',
@@ -620,6 +625,7 @@ const ProveedorModal = ({ proveedor, onClose, onSave }) => {
                   <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <input
+                  id="input-proveedor-pais"
                   name="direccion.pais"
                   value={form.direccion.pais}
                   onChange={handleChange}
