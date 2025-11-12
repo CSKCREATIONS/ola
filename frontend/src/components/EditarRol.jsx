@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { closeModal } from "../funciones/animaciones";
 import Swal from "sweetalert2";
 import api from '../api/axiosConfig';
+import PropTypes from 'prop-types';
 
 export default function EditarRol({ rol }) {
    const [nombreRol, setNombreRol] = useState('');
@@ -275,9 +276,9 @@ export default function EditarRol({ rol }) {
                      alignItems: 'center',
                      justifyContent: 'center'
                   }}>
-                     <i className="fa-solid fa-shield-alt" style={{ fontSize: '1.5rem' }}></i>
+                     <i className="fa-solid fa-shield-alt" style={{ fontSize: '1.5rem' }} aria-hidden={true}></i>
                   </div>
-                  Editar Rol
+                  <span>Editar Rol</span>
                </h3>
                <p style={{ 
                   margin: '0.5rem 0 0 4rem', 
@@ -313,9 +314,8 @@ export default function EditarRol({ rol }) {
                      color: '#374151',
                      fontSize: '0.95rem'
                   }}>
-                     <i className="fa-solid fa-tag" style={{ color: '#8b5cf6' }}></i>
-                     Nombre del Rol
-                     <span style={{ color: '#ef4444' }}>*</span>
+                     <i className="fa-solid fa-tag" style={{ color: '#8b5cf6' }} aria-hidden={true}></i>
+                    <span>Nombre del Rol <span style={{ color: '#ef4444' }}>*</span></span>
                   </label>
                   <input 
                      id="nombreRol"
@@ -357,8 +357,8 @@ export default function EditarRol({ rol }) {
                      fontSize: '1.05rem',
                      fontWeight: '600'
                   }}>
-                     <i className="fa-solid fa-cubes icon-gap" style={{ color: '#8b5cf6' }}></i>
-                     Módulos con Acceso
+                     <i className="fa-solid fa-cubes icon-gap" style={{ color: '#8b5cf6' }} aria-hidden={true}></i>
+                    <span>Módulos con Acceso</span>
                   </h4>
                   <div style={{
                      display: 'grid',
@@ -382,10 +382,19 @@ export default function EditarRol({ rol }) {
                                     )
                                  );
                               }
+
+                                 EditarRol.propTypes = {
+                                    rol: PropTypes.shape({
+                                       _id: PropTypes.string,
+                                       name: PropTypes.string,
+                                       permissions: PropTypes.arrayOf(PropTypes.string)
+                                    })
+                                 };
+
                            }}
                            style={checkboxStyle}
                         />
-                        <i className="fa-solid fa-users" style={{ color: '#3b82f6' }}></i>
+                        <i className="fa-solid fa-users" style={{ color: '#3b82f6' }} aria-hidden={true}></i>
                         <span style={{ fontWeight: '500' }}>Usuarios</span>
                      </label>
 
@@ -399,7 +408,7 @@ export default function EditarRol({ rol }) {
                            onChange={(e) => setMostrarCompras(e.target.checked)}
                            style={checkboxStyle}
                         />
-                        <i className="fa-solid fa-shopping-cart" style={{ color: '#10b981' }}></i>
+                        <i className="fa-solid fa-shopping-cart" style={{ color: '#10b981' }} aria-hidden={true}></i>
                         <span style={{ fontWeight: '500' }}>Compras</span>
                      </label>
 
@@ -413,7 +422,7 @@ export default function EditarRol({ rol }) {
                            onChange={(e) => setMostrarProductos(e.target.checked)}
                            style={checkboxStyle}
                         />
-                        <i className="fa-solid fa-box" style={{ color: '#f59e0b' }}></i>
+                        <i className="fa-solid fa-box" style={{ color: '#f59e0b' }} aria-hidden={true}></i>
                         <span style={{ fontWeight: '500' }}>Productos</span>
                      </label>
 
@@ -427,7 +436,7 @@ export default function EditarRol({ rol }) {
                            onChange={(e) => setMostrarVentas(e.target.checked)}
                            style={checkboxStyle}
                         />
-                        <i className="fa-solid fa-chart-line" style={{ color: '#ec4899' }}></i>
+                        <i className="fa-solid fa-chart-line" style={{ color: '#ec4899' }} aria-hidden={true}></i>
                         <span style={{ fontWeight: '500' }}>Ventas</span>
                      </label>
                   </div>
@@ -452,8 +461,8 @@ export default function EditarRol({ rol }) {
                         alignItems: 'center',
                         gap: '0.5rem'
                      }}>
-                        <i className="fa-solid fa-users"></i>
-                        Permisos Módulo Usuarios
+                        <i className="fa-solid fa-users" aria-hidden={true}></i>
+                        <span>Permisos Módulo Usuarios</span>
                      </h4>
 
                      <div style={{
@@ -627,8 +636,8 @@ export default function EditarRol({ rol }) {
                         alignItems: 'center',
                         gap: '0.5rem'
                      }}>
-                        <i className="fa-solid fa-shopping-cart"></i>
-                        Permisos Módulo Compras
+                        <i className="fa-solid fa-shopping-cart" aria-hidden={true}></i>
+                        <span>Permisos Módulo Compras</span>
                      </h4>
 
                      <div style={{
@@ -709,8 +718,8 @@ export default function EditarRol({ rol }) {
                         alignItems: 'center',
                         gap: '0.5rem'
                      }}>
-                        <i className="fa-solid fa-box"></i>
-                        Permisos Módulo Productos
+                        <i className="fa-solid fa-box" aria-hidden={true}></i>
+                        <span>Permisos Módulo Productos</span>
                      </h4>
 
                      <div style={{
@@ -827,8 +836,8 @@ export default function EditarRol({ rol }) {
                         alignItems: 'center',
                         gap: '0.5rem'
                      }}>
-                        <i className="fa-solid fa-chart-line"></i>
-                        Permisos Módulo Ventas
+                        <i className="fa-solid fa-chart-line" aria-hidden={true}></i>
+                        <span>Permisos Módulo Ventas</span>
                      </h4>
 
                      <div style={{
@@ -941,8 +950,8 @@ export default function EditarRol({ rol }) {
                      e.target.style.borderColor = '#e5e7eb';
                   }}
                >
-                  <i className="fa-solid fa-times"></i>
-                  Cancelar
+                  <i className="fa-solid fa-times" aria-hidden={true}></i>
+                  <span>Cancelar</span>
                </button>
                
                <button 
@@ -971,8 +980,8 @@ export default function EditarRol({ rol }) {
                      e.target.style.boxShadow = '0 4px 6px -1px rgba(139, 92, 246, 0.3)';
                   }}
                >
-                  <i className="fa-solid fa-save"></i>
-                  Guardar Cambios
+                  <i className="fa-solid fa-save" aria-hidden={true}></i>
+                  <span>Guardar Cambios</span>
                </button>
             </div>
          </form>
