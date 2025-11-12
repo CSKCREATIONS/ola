@@ -193,7 +193,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               onMouseEnter={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.3)'}
               onMouseLeave={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.2)'}
             >
-              <i className="fa-solid fa-print" style={{ fontSize: '1.2rem', marginRight: '8px' }}></i>
+              <i className="fa-solid fa-print icon-gap" style={{ fontSize: '1.2rem' }}></i>
             </button>
 
             {/* Botón de enviar por correo */}

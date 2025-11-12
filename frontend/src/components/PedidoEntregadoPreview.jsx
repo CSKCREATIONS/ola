@@ -47,7 +47,7 @@ export default function PedidoEntregadoPreview({ datos, onClose }) {
           <span className='modal-title'>Pedido Entregado: {datos.numeroPedido || datos.codigo || ''}</span>
           <div className="botones-cotizacion" style={{ display: 'flex', gap: '18px', justifyContent: 'center', marginBottom: '1rem' }}>
             <button className="btn-cotizacion moderno" title="Enviar Comprobante" onClick={() => setShowEnviarModal(true)}>
-              <i className="fa-solid fa-envelope" style={{ fontSize: '1rem', color: '#EA4335', marginRight: '6px' }}></i>
+              <i className="fa-solid fa-envelope icon-gap" style={{ fontSize: '1rem', color: '#EA4335' }}></i>
               Enviar Comprobante
             </button>
             <button className="btn-cotizacion moderno" title="Imprimir" onClick={() => {
@@ -78,7 +78,7 @@ export default function PedidoEntregadoPreview({ datos, onClose }) {
               newWindow.print();
               newWindow.close();
             }}>
-              <i className="fa-solid fa-print" style={{ fontSize: '1.2rem', marginRight: '8px' }}></i>
+              <i className="fa-solid fa-print icon-gap" style={{ fontSize: '1.2rem' }}></i>
               Imprimir
             </button>
           </div>

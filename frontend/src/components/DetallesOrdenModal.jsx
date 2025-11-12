@@ -58,7 +58,7 @@ export default function DetallesOrdenModal({ visible, orden, onClose, onPrint, o
         <div className="modal-header-realista" style={{ cursor: 'move' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', padding: '0.5rem 1rem' }}>
             <h5 style={{ margin: 0 }}>
-              <i className="fa-solid fa-file-invoice" style={{ marginRight: '10px' }}></i>
+              <i className="fa-solid fa-file-invoice icon-gap" style={{}}></i>
               Orden: {orden.numeroOrden}
             </h5>
             <button className="modal-close-realista" onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#666', padding: 0, width: '30px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>&times;</button>
@@ -84,25 +84,25 @@ export default function DetallesOrdenModal({ visible, orden, onClose, onPrint, o
           <div style={{ padding: '1.5rem' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
               <div>
-                <h6 style={{ color: '#2c3e50', marginBottom: '0.5rem', borderBottom: '1px solid #ecf0f1', paddingBottom: '0.25rem' }}><i className="fa-solid fa-truck" style={{ marginRight: '8px' }}></i>Proveedor</h6>
+                <h6 style={{ color: '#2c3e50', marginBottom: '0.5rem', borderBottom: '1px solid #ecf0f1', paddingBottom: '0.25rem' }}><i className="fa-solid fa-truck icon-gap" style={{}}></i>Proveedor</h6>
                 <p style={{ margin: 0, fontWeight: '500' }}>{orden.proveedor || 'No especificado'}</p>
               </div>
               <div>
-                <h6 style={{ color: '#2c3e50', marginBottom: '0.5rem', borderBottom: '1px solid #ecf0f1', paddingBottom: '0.25rem' }}><i className="fa-solid fa-user" style={{ marginRight: '8px' }}></i>Solicitado Por</h6>
+                <h6 style={{ color: '#2c3e50', marginBottom: '0.5rem', borderBottom: '1px solid #ecf0f1', paddingBottom: '0.25rem' }}><i className="fa-solid fa-user icon-gap" style={{}}></i>Solicitado Por</h6>
                 <p style={{ margin: 0, fontWeight: '500' }}>{orden.solicitadoPor || 'No especificado'}</p>
               </div>
               <div>
-                <h6 style={{ color: '#2c3e50', marginBottom: '0.5rem', borderBottom: '1px solid #ecf0f1', paddingBottom: '0.25rem' }}><i className="fa-solid fa-credit-card" style={{ marginRight: '8px' }}></i>Condiciones de Pago</h6>
+                <h6 style={{ color: '#2c3e50', marginBottom: '0.5rem', borderBottom: '1px solid #ecf0f1', paddingBottom: '0.25rem' }}><i className="fa-solid fa-credit-card icon-gap" style={{}}></i>Condiciones de Pago</h6>
                 <p style={{ margin: 0, fontWeight: '500' }}>{orden.condicionesPago || 'Contado'}</p>
               </div>
               <div>
-                <h6 style={{ color: '#2c3e50', marginBottom: '0.5rem', borderBottom: '1px solid #ecf0f1', paddingBottom: '0.25rem' }}><i className="fa-solid fa-flag" style={{ marginRight: '8px' }}></i>Estado</h6>
+                <h6 style={{ color: '#2c3e50', marginBottom: '0.5rem', borderBottom: '1px solid #ecf0f1', paddingBottom: '0.25rem' }}><i className="fa-solid fa-flag icon-gap" style={{}}></i>Estado</h6>
                 <span className={`badge ${orden.estado === 'Pendiente' ? 'bg-warning' : 'bg-success'}`}>{orden.estado}</span>
               </div>
             </div>
 
             <div>
-              <h6 style={{ color: '#2c3e50', marginBottom: '1rem', borderBottom: '2px solid #3498db', paddingBottom: '0.5rem', display: 'flex', alignItems: 'center' }}><i className="fa-solid fa-boxes" style={{ marginRight: '8px' }}></i>Productos ({orden.productos?.length || 0})</h6>
+              <h6 style={{ color: '#2c3e50', marginBottom: '1rem', borderBottom: '2px solid #3498db', paddingBottom: '0.5rem', display: 'flex', alignItems: 'center' }}><i className="fa-solid fa-boxes icon-gap" style={{}}></i>Productos ({orden.productos?.length || 0})</h6>
               {orden.productos && orden.productos.length > 0 ? (
                 <div className="table-responsive">
                   <table className="table" style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -156,7 +156,7 @@ export default function DetallesOrdenModal({ visible, orden, onClose, onPrint, o
         </div>
 
         <div className="modal-footer" style={{ padding: '1rem', borderTop: '1px solid #e0e0e0', background: '#f8f9fa', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ color: '#7f8c8d', fontSize: '0.8rem' }}><i className="fa-solid fa-clock" style={{ marginRight: '5px' }}></i>{new Date(orden.fechaOrden).toLocaleDateString()}</span>
+          <span style={{ color: '#7f8c8d', fontSize: '0.8rem' }}><i className="fa-solid fa-clock icon-gap" style={{}}></i>{new Date(orden.fechaOrden).toLocaleDateString()}</span>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             <button className="btn btn-success" onClick={() => onPrint(orden)} style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}><i className="fa-solid fa-print"></i> Imprimir</button>
             <button className="btn btn-warning" onClick={() => onSendEmail(orden)} style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', color: '#fff' }}><i className="fa-solid fa-envelope"></i> Enviar Correo</button>

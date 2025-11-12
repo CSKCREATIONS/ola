@@ -1040,7 +1040,7 @@ const GestionProveedores = () => {
                             fontSize: '11px'
                           }}
                         >
-                          <i className="fa-solid fa-boxes" style={{ marginRight: '5px' }}></i>
+                          <i className="fa-solid fa-boxes icon-gap"></i>
                           Ver ({prov.productos?.length || 0})
                         </button>
                       </td>

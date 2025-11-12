@@ -1434,7 +1434,7 @@ export default function OrdenCompra() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-hashtag" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      <i className="fa-solid fa-hashtag icon-gap" style={{ color: '#6366f1' }}></i>
                       #
                     </th>
                     <th style={{ 
@@ -1445,7 +1445,7 @@ export default function OrdenCompra() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-file-invoice" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      <i className="fa-solid fa-file-invoice icon-gap" style={{ color: '#6366f1' }}></i>
                       NÚMERO ORDEN
                     </th>
                     <th style={{ 
@@ -1456,7 +1456,7 @@ export default function OrdenCompra() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-truck" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      <i className="fa-solid fa-truck icon-gap" style={{ color: '#6366f1' }}></i>
                       PROVEEDOR
                     </th>
                     <th style={{ 
@@ -1467,7 +1467,7 @@ export default function OrdenCompra() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-dollar-sign" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      <i className="fa-solid fa-dollar-sign icon-gap" style={{ color: '#6366f1' }}></i>
                       TOTAL
                     </th>
                     <th style={{ 
@@ -1478,7 +1478,7 @@ export default function OrdenCompra() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-calendar" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      <i className="fa-solid fa-calendar icon-gap" style={{ color: '#6366f1' }}></i>
                       FECHA
                     </th>
                     <th style={{ 
@@ -1489,7 +1489,7 @@ export default function OrdenCompra() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-user" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      <i className="fa-solid fa-user icon-gap" style={{ color: '#6366f1' }}></i>
                       SOLICITADO POR
                     </th>
                     <th style={{ 
@@ -1500,7 +1500,7 @@ export default function OrdenCompra() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-flag" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      <i className="fa-solid fa-flag icon-gap" style={{ color: '#6366f1' }}></i>
                       ESTADO
                     </th>
                     <th style={{ 
@@ -1511,7 +1511,7 @@ export default function OrdenCompra() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-paper-plane" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      <i className="fa-solid fa-paper-plane icon-gap" style={{ color: '#6366f1' }}></i>
                       ENVIADO
                     </th>
                     <th style={{ 
@@ -1522,7 +1522,7 @@ export default function OrdenCompra() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-cogs" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      <i className="fa-solid fa-cogs icon-gap" style={{ color: '#6366f1' }}></i>
                       ACCIONES
                     </th>
                   </tr>
@@ -1821,7 +1821,7 @@ export default function OrdenCompra() {
                 <div className="modal-header-realista">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                     <h5>
-                      <i className="fa-solid fa-file-invoice-dollar" style={{ marginRight: '10px' }}></i>
+                      <i className="fa-solid fa-file-invoice-dollar icon-gap"></i>
                       Nueva Orden de Compra
                     </h5>
                     <button className="modal-close-realista" onClick={cerrarModalAgregar}>&times;</button>
@@ -1832,7 +1832,7 @@ export default function OrdenCompra() {
                   {/* Información Básica */}
                   <div className="modal-section">
                     <h6>
-                      <i className="fa-solid fa-info-circle" style={{ marginRight: '8px' }}></i>
+                      <i className="fa-solid fa-info-circle icon-gap"></i>
                       Información de la Orden
                     </h6>
                     <div className="form-grid">
@@ -1884,7 +1884,7 @@ export default function OrdenCompra() {
                   {/* Selección de Productos */}
                   <div className="modal-section">
                     <h6>
-                      <i className="fa-solid fa-cart-plus" style={{ marginRight: '8px' }}></i>
+                      <i className="fa-solid fa-cart-plus icon-gap"></i>
                       Agregar Productos
                     </h6>
 
@@ -1932,7 +1932,7 @@ export default function OrdenCompra() {
                               color: '#856404',
                               fontSize: '0.9rem'
                             }}>
-                              <i className="fa-solid fa-info-circle" style={{ marginRight: '5px' }}></i>
+                              <i className="fa-solid fa-info-circle icon-gap"></i>
                               Este proveedor no tiene productos asociados. Por favor, regístrelos en el módulo de Gestión de Productos.
                             </div>
                           )}
@@ -2029,7 +2029,7 @@ export default function OrdenCompra() {
                   {nuevaOrden.productos.length > 0 && (
                     <div className="modal-section">
                       <h6>
-                        <i className="fa-solid fa-list-check" style={{ marginRight: '8px' }}></i>
+                        <i className="fa-solid fa-list-check icon-gap"></i>
                         Productos en la Orden ({nuevaOrden.productos.length})
                       </h6>
                       <div className="table-responsive">
@@ -2146,7 +2146,7 @@ export default function OrdenCompra() {
                 <div className="modal-header-realista">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                     <h5>
-                      <i className="fa-solid fa-edit" style={{ marginRight: '10px' }}></i>
+                      <i className="fa-solid fa-edit icon-gap"></i>
                       Editar Orden de Compra: <span style={{ color: '#f39c12' }}>{ordenEditando.numeroOrden}</span>
                     </h5>
                     <button className="modal-close-realista" onClick={cerrarModalEditar}>&times;</button>
@@ -2157,7 +2157,7 @@ export default function OrdenCompra() {
                   {/* Información Básica */}
                   <div className="modal-section">
                     <h6>
-                      <i className="fa-solid fa-info-circle" style={{ marginRight: '8px' }}></i>
+                      <i className="fa-solid fa-info-circle icon-gap"></i>
                       Información de la Orden
                     </h6>
                     <div className="form-grid">
@@ -2218,7 +2218,7 @@ export default function OrdenCompra() {
                   {/* Selección de Productos para Edición */}
                   <div className="modal-section">
                     <h6>
-                      <i className="fa-solid fa-cart-plus" style={{ marginRight: '8px' }}></i>
+                      <i className="fa-solid fa-cart-plus icon-gap"></i>
                       Agregar Nuevos Productos
                     </h6>
 
@@ -2347,7 +2347,7 @@ export default function OrdenCompra() {
                   {/* Lista de Productos Existente */}
                   <div className="modal-section">
                     <h6>
-                      <i className="fa-solid fa-list-check" style={{ marginRight: '8px' }}></i>
+                      <i className="fa-solid fa-list-check icon-gap"></i>
                       Productos en la Orden ({ordenEditando.productos.length})
                       {errores.productos && <span style={{ color: '#e74c3c', fontSize: '0.8rem', marginLeft: '1rem' }}>{errores.productos}</span>}
                     </h6>
@@ -2528,7 +2528,7 @@ export default function OrdenCompra() {
                     width: '100%'
                   }}>
                     <h5 style={{ margin: 0, display: 'flex', alignItems: 'center' }}>
-                      <i className="fa-solid fa-clipboard-check" style={{ marginRight: '10px' }}></i>
+                      <i className="fa-solid fa-clipboard-check icon-gap"></i>
                       Confirmar Orden de Compra
                     </h5>
                     <button
@@ -2567,7 +2567,7 @@ export default function OrdenCompra() {
                       paddingBottom: '0.5rem',
                       marginBottom: '1rem'
                     }}>
-                      <i className="fa-solid fa-file-lines" style={{ marginRight: '8px' }}></i>
+                      <i className="fa-solid fa-file-lines icon-gap"></i>
                       Vista Previa de la Orden
                     </h6>
 
@@ -2641,7 +2641,7 @@ export default function OrdenCompra() {
                       cursor: 'pointer'
                     }}
                   >
-                    <i className="fa-solid fa-times" style={{ marginRight: '8px' }}></i>
+                    <i className="fa-solid fa-times icon-gap"></i>
                     Cancelar
                   </button>
                   <button

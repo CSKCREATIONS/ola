@@ -296,7 +296,7 @@ export default function RegistrarCompra() {
             <div className="modal-header-realista">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                 <h5>
-                  <i className="fa-solid fa-shopping-cart" style={{ marginRight: '10px' }}></i>
+                  <i className="fa-solid fa-shopping-cart icon-gap"></i>
                   Nueva Compra
                 </h5>
               </div>
@@ -306,7 +306,7 @@ export default function RegistrarCompra() {
               {/* Información Básica */}
               <div className="modal-section">
                 <h6>
-                  <i className="fa-solid fa-info-circle" style={{ marginRight: '8px' }}></i>
+                  <i className="fa-solid fa-info-circle icon-gap"></i>
                   Información de la Compra
                 </h6>
                 <div className="form-grid">
@@ -346,7 +346,7 @@ export default function RegistrarCompra() {
               {/* Selección de Productos */}
               <div className="modal-section">
                 <h6>
-                  <i className="fa-solid fa-cart-plus" style={{ marginRight: '8px' }}></i>
+                  <i className="fa-solid fa-cart-plus icon-gap"></i>
                   Agregar Productos
                 </h6>
 
@@ -395,7 +395,7 @@ export default function RegistrarCompra() {
                           color: '#856404',
                           fontSize: '0.9rem'
                         }}>
-                          <i className="fa-solid fa-info-circle" style={{ marginRight: '5px' }}></i>
+                          <i className="fa-solid fa-info-circle icon-gap"></i>
                           Este proveedor no tiene productos asociados. Por favor, regístrelos en el módulo de Gestión de Productos.
                         </div>
                       )}

@@ -653,7 +653,7 @@ export default function ListaDeClientes() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-file-alt" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      <i className="fa-solid fa-file-alt icon-gap" style={{ color: '#6366f1' }}></i>
                       COTIZACIONES
                     </th>
                     <th style={{ 
