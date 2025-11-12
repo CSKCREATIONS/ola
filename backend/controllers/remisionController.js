@@ -416,3 +416,51 @@ exports.deleteRemision = async (req, res) => {
     res.status(500).json({ message: 'Error al eliminar remisión', error: error.message });
   }
 };
+
+// Obtener estadísticas sencillas de remisiones (conteos por estado)
+exports.getEstadisticasRemisiones = async (req, res) => {
+  try {
+    const pipeline = [
+      { $group: { _id: '$estado', count: { $sum: 1 } } },
+    ];
+    const resultados = await Remision.aggregate(pipeline);
+    const stats = resultados.reduce((acc, item) => {
+      acc[item._id || 'sin_estado'] = item.count;
+      return acc;
+    }, {});
+    return res.json({ stats });
+  } catch (error) {
+    console.error('Error al obtener estadísticas de remisiones:', error);
+    return res.status(500).json({ message: 'Error al obtener estadísticas', error: error.message });
+  }
+};
+
+// Obtener una remisión por ID
+exports.getRemisionById = async (req, res) => {
+  try {
+    const remision = await fetchRemisionOrThrow(req.params.id);
+    return res.json({ remision });
+  } catch (error) {
+    if (error.code === 'REMISION_NOT_FOUND') return res.status(404).json({ message: 'Remisión no encontrada' });
+    console.error('Error al obtener remisión por id:', error);
+    return res.status(500).json({ message: 'Error al obtener remisión', error: error.message });
+  }
+};
+
+// Actualizar estado de una remisión (ej: marcar como entregada/cancelada)
+exports.updateEstadoRemision = async (req, res) => {
+  try {
+    const nuevoEstado = req.body.estado;
+    if (!nuevoEstado || typeof nuevoEstado !== 'string') {
+      return res.status(400).json({ message: 'Estado inválido' });
+    }
+    const remision = await Remision.findById(req.params.id);
+    if (!remision) return res.status(404).json({ message: 'Remisión no encontrada' });
+    remision.estado = nuevoEstado;
+    await remision.save();
+    return res.json({ message: 'Estado actualizado', remision });
+  } catch (error) {
+    console.error('Error al actualizar estado de remisión:', error);
+    return res.status(500).json({ message: 'Error actualizando estado', error: error.message });
+  }
+};

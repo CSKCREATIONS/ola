@@ -6,6 +6,7 @@ import jsPDF from "jspdf";
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import React, { useState, useEffect } from 'react';
+import Swal from 'sweetalert2';
 import api from '../api/axiosConfig';
 import CotizacionPreview from '../components/CotizacionPreview';
 

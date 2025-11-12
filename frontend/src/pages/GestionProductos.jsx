@@ -190,7 +190,8 @@ const ProductoModal = ({
   onSave,
   categorias = [],
   subcategorias = [],
-  proveedores = []
+  proveedores = [],
+  onToggleEstado
 }) => {
 
   const [form, setForm] = useState({
@@ -251,7 +252,7 @@ const ProductoModal = ({
     const tryingToActivate = !prod.activo;
     const subcatId = prod.subcategory?._id || prod.subcategory;
 
-    if (tryingToActivate) {
+  if (tryingToActivate) {
       // Activation: validate subcategory and parent category
       if (subcatId) {
         const { subcategoria, error: subErr } = await fetchSubcategory(subcatId);
@@ -277,7 +278,8 @@ const ProductoModal = ({
         confirmText: 'Sí, activar'
       });
       if (!ok) return;
-      return handleToggleEstado(prod, prod.activo);
+      if (typeof onToggleEstado === 'function') return onToggleEstado(prod, prod.activo);
+      return Swal.fire('Error', 'Operación no disponible', 'error');
     }
 
     // Deactivation flow: try to check subcategory and request confirmation when needed
@@ -290,8 +292,9 @@ const ProductoModal = ({
           icon: 'warning',
           confirmText: 'Sí, desactivar'
         });
-        if (!ok) return;
-        return handleToggleEstado(prod, prod.activo);
+  if (!ok) return;
+  if (typeof onToggleEstado === 'function') return onToggleEstado(prod, prod.activo);
+  return Swal.fire('Error', 'Operación no disponible', 'error');
       }
       if (subErr) {
         // If verification fails, still ask generic confirmation
@@ -301,8 +304,9 @@ const ProductoModal = ({
           icon: 'warning',
           confirmText: 'Sí, desactivar'
         });
-        if (!ok) return;
-        return handleToggleEstado(prod, prod.activo);
+  if (!ok) return;
+  if (typeof onToggleEstado === 'function') return onToggleEstado(prod, prod.activo);
+  return Swal.fire('Error', 'Operación no disponible', 'error');
       }
     }
 
@@ -314,7 +318,8 @@ const ProductoModal = ({
       confirmText: 'Sí, desactivar'
     });
     if (!ok) return;
-    return handleToggleEstado(prod, prod.activo);
+    if (typeof onToggleEstado === 'function') return onToggleEstado(prod, prod.activo);
+    return Swal.fire('Error', 'Operación no disponible', 'error');
   };
 
   const handleSubmit = e => {
@@ -1454,7 +1459,7 @@ const GestionProductos = () => {
                             type="checkbox"
                             checked={!!prod.activo}
                             aria-label={`Estado del producto ${prod.name || prod._id}`}
-                            onChange={() => handleToggleCheckbox(prod)}
+                            onChange={() => handleToggleEstado(prod, prod.activo)}
                           />
                           <span className="slider"></span>
                         </label>
@@ -1481,6 +1486,7 @@ const GestionProductos = () => {
               categorias={categorias || []}
               subcategorias={subcategorias || []}
               proveedores={proveedores || []}
+              onToggleEstado={handleToggleEstado}
             />
           )}
           <div className="pagination">

@@ -5,6 +5,118 @@ import { mostrarMenu, toggleSubMenu, cerrarMenu } from '../funciones/animaciones
 import Swal from 'sweetalert2';
 import api from '../api/axiosConfig';
 
+/**
+ * Resolve a user's role when the stored user has role as a string (id or name).
+ * Tries GET /api/roles/:id first if the string looks like an ObjectId. If that
+ * fails or returns nothing, and the current user has permission to list roles,
+ * tries GET /api/roles and matches by name.
+ * On success, writes the resolved role object back into localStorage.
+ * Returns the possibly-updated user object.
+ */
+export async function resolveRoleForUser(usuario) {
+  try {
+    if (!usuario || !usuario.role || typeof usuario.role !== 'string') return usuario;
+
+    let roleObj = null;
+    const looksLikeObjectId = /^[0-9a-fA-F]{24}$/.test(String(usuario.role));
+    let forbidden = false;
+
+    if (looksLikeObjectId) {
+      try {
+        const res = await api.get(`/api/roles/${usuario.role}`);
+        const d = res.data || res;
+        roleObj = d.role || d.data || (Array.isArray(d) ? d[0] : null);
+      } catch (err) {
+        if (err && err.response && err.response.status === 403) {
+          forbidden = true;
+          console.debug('No tiene permisos para obtener role by id (403)');
+        } else if (err && err.response && err.response.status === 404) {
+          console.debug('Role not found by id (404)');
+        } else {
+          console.debug('Error getting role by id:', err && err.response ? { status: err.response.status, data: err.response.data } : err);
+        }
+      }
+    }
+
+    if (!roleObj && !forbidden && Array.isArray(usuario.permissions) && usuario.permissions.includes('roles.ver')) {
+      try {
+        const listRes = await api.get('/api/roles');
+        const listData = listRes.data || listRes;
+        const rolesArr = Array.isArray(listData) ? listData : (listData.data || []);
+        roleObj = rolesArr.find(r => r.name === usuario.role || (r.name && r.name.toLowerCase() === String(usuario.role).toLowerCase()));
+      } catch (err) {
+        console.debug('Error listing roles:', err && err.response ? { status: err.response.status, data: err.response.data } : err);
+      }
+    }
+
+    if (roleObj) {
+      usuario.role = roleObj;
+      try { localStorage.setItem('user', JSON.stringify(usuario)); } catch (e) { /* ignore storage errors */ }
+    }
+
+    return usuario;
+  } catch (error) {
+    console.error('resolveRoleForUser error:', error);
+    return usuario;
+  }
+}
+
+
+// Helper: intenta resolver el objeto role a partir del valor almacenado en user.role
+// Mantiene la lógica de intentos por id, listado (si hay permiso) y maneja 403/404 sin romper el flujo.
+async function resolveRoleForUser(usuario) {
+  try {
+    if (!usuario || !usuario.role || typeof usuario.role !== 'string') return usuario;
+
+    let roleObj = null;
+    const looksLikeObjectId = /^[0-9a-fA-F]{24}$/.test(String(usuario.role));
+    let forbidden = false;
+
+    if (looksLikeObjectId) {
+      try {
+        const res = await api.get(`/api/roles/${usuario.role}`);
+        const d = res.data || res;
+        roleObj = d.role || d.data || (Array.isArray(d) ? d[0] : null);
+      } catch (err) {
+        if (err && err.response && err.response.status === 403) {
+          forbidden = true;
+          console.debug('No tiene permisos para obtener/listar roles (403). Manteniendo rol como string.');
+        } else if (err && err.response && err.response.status === 404) {
+          console.debug('Rol no encontrado por id (404), intentaremos buscar por nombre si está permitido.');
+        } else {
+          console.debug('Error al obtener role by id:', err && err.response ? { status: err.response.status, data: err.response.data } : err);
+        }
+      }
+    }
+
+    // Solo intentar listar roles si no encontramos roleObj y no fue forbidden y el usuario tiene permiso
+    if (!roleObj && !forbidden && Array.isArray(usuario.permissions) && usuario.permissions.includes('roles.ver')) {
+      try {
+        const listRes = await api.get('/api/roles');
+        const listData = listRes.data || listRes;
+        const rolesArr = Array.isArray(listData) ? listData : (listData.data || []);
+        roleObj = rolesArr.find(r => r.name === usuario.role || (r.name && r.name.toLowerCase() === String(usuario.role).toLowerCase()));
+      } catch (err) {
+        if (err && err.response) {
+          console.debug('Error al listar roles:', err.response.status, err.response.data);
+        } else {
+          console.debug('Error al listar roles:', err);
+        }
+      }
+    }
+
+    if (roleObj) {
+      usuario.role = roleObj;
+      try { localStorage.setItem('user', JSON.stringify(usuario)); } catch (e) { /* ignore */ }
+    }
+
+    return usuario;
+  } catch (error) {
+    console.error('Error al cargar rol:', error);
+    return usuario;
+  }
+}
+
 
 export default function Fijo() {
   const navigate = useNavigate();
@@ -34,90 +146,40 @@ export default function Fijo() {
   useEffect(() => {
     // 1. Cargar datos del usuario y permisos
     const loadUserAndPermissions = async () => {
-
       const storedUser = localStorage.getItem('user');
-      if (storedUser) {
-        const usuario = JSON.parse(storedUser);
+      if (!storedUser) return;
 
-        // Si solo se guarda el ID o nombre del rol (string), intentar resolverlo
-        if (usuario.role && typeof usuario.role === 'string') {
-          try {
-            let roleObj = null;
-            // Determine if the stored role looks like a Mongo ObjectId (24 hex chars)
-            const looksLikeObjectId = /^[0-9a-fA-F]{24}$/.test(String(usuario.role));
-            let forbidden = false;
+      let usuario = JSON.parse(storedUser);
 
-            // If it looks like an id, try the GET /api/roles/:id endpoint; otherwise skip to listing or keep as string
-            if (looksLikeObjectId) {
-              try {
-                const res = await api.get(`/api/roles/${usuario.role}`);
-                const d = res.data || res;
-                roleObj = d.role || d.data || (Array.isArray(d) ? d[0] : null);
-              } catch (err) {
-                if (err && err.response && err.response.status === 403) {
-                  forbidden = true;
-                  console.debug('No tiene permisos para obtener/listar roles (403). Manteniendo rol como string.');
-                } else if (err && err.response && err.response.status === 404) {
-                  // Not found: the stored string might be a name, not an id. We'll try listing below if allowed.
-                  console.debug('Rol no encontrado por id (404), intentaremos buscar por nombre si está permitido.');
-                } else {
-                  console.debug('Error al obtener role by id:', err && err.response ? { status: err.response.status, data: err.response.data } : err);
-                }
-              }
-            }
+      // Resolver role si está como string (id o nombre)
+      usuario = await resolveRoleForUser(usuario);
 
-            // Only attempt to list roles if we didn't find a roleObj and we have explicit permission
-            // in the stored user to view roles. This avoids unnecessary 403 requests to the backend.
-              if (!roleObj && !forbidden && Array.isArray(usuario.permissions) && usuario.permissions.includes('roles.ver')) {
-              try {
-                const listRes = await api.get('/api/roles');
-                const listData = listRes.data || listRes;
-                const rolesArr = Array.isArray(listData) ? listData : (listData.data || []);
-                roleObj = rolesArr.find(r => r.name === usuario.role || (r.name && r.name.toLowerCase() === String(usuario.role).toLowerCase()));
-              } catch (err) {
-                if (err && err.response) {
-                  console.debug('Error al listar roles:', err.response.status, err.response.data);
-                } else {
-                  console.debug('Error al listar roles:', err);
-                }
-              }
-            }
+      setUser(usuario);
 
-            if (roleObj) {
-              usuario.role = roleObj;
-              localStorage.setItem('user', JSON.stringify(usuario));
-            }
-          } catch (error) {
-            console.error("Error al cargar rol:", error);
-          }
-        }
+      const permissions = usuario.permissions || [];
+      const has = (perm) => permissions.includes(perm);
 
-        setUser(usuario);
-
-        const permissions = usuario.permissions || [];
-        setPuedeVerUsuarios(permissions.includes('usuarios.ver'));
-        setPuedeVerRoles(permissions.includes('roles.ver'));
-        setPuedeGenerarOrden(permissions.includes('ordenes.generar'));
-        setPuedeVerOrdenes(permissions.includes('ordenesCompra.ver'));
-        setPuedeRegistrarCompras(permissions.includes('compras.crear'));
-        setPuedeVerProveedores(permissions.includes('proveedores.ver'));
-        setPuedeVerHCompras(permissions.includes('hcompras.ver'));
-        setPuedeVerReportesCompras(permissions.includes('reportesCompras.ver'));
-        setPuedeVerCategorias(permissions.includes('categorias.ver'));
-        setPuedeVerSubcategorias(permissions.includes('subcategorias.ver'));
-        setPuedeVerProductos(permissions.includes('productos.ver'));
-        setPuedeVerReportesProductos(usuario.permissions.includes('reportesProductos.ver'));
-        setPuedeRegistrarCotizacion(permissions.includes('cotizaciones.crear'));
-        setPuedeVerCotizaciones(permissions.includes('cotizaciones.ver'));
-        setPuedeVerVentasAgendadas(permissions.includes('pedidosAgendados.ver'));
-        setPuedeVerPedidosEntregados(permissions.includes('pedidosEntregados.ver'));
-        setPuedeVerPedidosCancelados(permissions.includes('pedidosCancelados.ver'));
-        setPuedeVerPedidosDevueltos(permissions.includes('pedidosDevueltos.ver'));
-        setPuedeVerListaDeClientes(permissions.includes('clientes.ver'));
-        setPuedeVerProspectos(permissions.includes('prospectos.ver'));
-        setPuedeVerReportesVentas(permissions.includes('reportesVentas.ver'));
-
-      }
+      setPuedeVerUsuarios(has('usuarios.ver'));
+      setPuedeVerRoles(has('roles.ver'));
+      setPuedeGenerarOrden(has('ordenes.generar'));
+      setPuedeVerOrdenes(has('ordenesCompra.ver'));
+      setPuedeRegistrarCompras(has('compras.crear'));
+      setPuedeVerProveedores(has('proveedores.ver'));
+      setPuedeVerHCompras(has('hcompras.ver'));
+      setPuedeVerReportesCompras(has('reportesCompras.ver'));
+      setPuedeVerCategorias(has('categorias.ver'));
+      setPuedeVerSubcategorias(has('subcategorias.ver'));
+      setPuedeVerProductos(has('productos.ver'));
+      setPuedeVerReportesProductos(has('reportesProductos.ver'));
+      setPuedeRegistrarCotizacion(has('cotizaciones.crear'));
+      setPuedeVerCotizaciones(has('cotizaciones.ver'));
+      setPuedeVerVentasAgendadas(has('pedidosAgendados.ver'));
+      setPuedeVerPedidosEntregados(has('pedidosEntregados.ver'));
+      setPuedeVerPedidosCancelados(has('pedidosCancelados.ver'));
+      setPuedeVerPedidosDevueltos(has('pedidosDevueltos.ver'));
+      setPuedeVerListaDeClientes(has('clientes.ver'));
+      setPuedeVerProspectos(has('prospectos.ver'));
+      setPuedeVerReportesVentas(has('reportesVentas.ver'));
     };
 
     // Cargar datos iniciales
