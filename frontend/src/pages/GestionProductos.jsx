@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import PropTypes from 'prop-types';
 import Swal from 'sweetalert2';
 import '../App.css';
 import Fijo from '../components/Fijo';
@@ -121,7 +122,6 @@ const ProductoModal = ({
   proveedores = [],
   onToggleEstado
 }) => {
-
   const [form, setForm] = useState({
     name: producto?.name || '',
     description: producto?.description || '',
@@ -680,6 +680,35 @@ const ProductoModal = ({
       </div>
     </div>
   );
+};
+
+// PropTypes for ProductoModal (moved outside to avoid redefining on each render)
+ProductoModal.propTypes = {
+  producto: PropTypes.shape({
+    _id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    name: PropTypes.string,
+    description: PropTypes.string,
+    price: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    stock: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    category: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
+    subcategory: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
+    proveedor: PropTypes.oneOfType([PropTypes.string, PropTypes.object])
+  }),
+  onClose: PropTypes.func,
+  onSave: PropTypes.func.isRequired,
+  categorias: PropTypes.array,
+  subcategorias: PropTypes.array,
+  proveedores: PropTypes.array,
+  onToggleEstado: PropTypes.func
+};
+
+ProductoModal.defaultProps = {
+  producto: null,
+  onClose: () => {},
+  categorias: [],
+  subcategorias: [],
+  proveedores: [],
+  onToggleEstado: () => {}
 };
 
 const GestionProductos = () => {
