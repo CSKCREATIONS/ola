@@ -197,6 +197,8 @@ if (typeof document !== 'undefined') {
   }
 }
 
+import PropTypes from 'prop-types';
+
 const CategoriaModal = ({ categoria, onClose, onSave }) => {
   const [name, setName] = useState(categoria ? categoria.name : '');
   const [description, setDescription] = useState(categoria ? categoria.description : '');
@@ -488,6 +490,22 @@ const CategoriaModal = ({ categoria, onClose, onSave }) => {
     </div>
   );
 };
+  // PropTypes for CategoriaModal
+  CategoriaModal.propTypes = {
+    categoria: PropTypes.shape({
+      _id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+      name: PropTypes.string,
+      description: PropTypes.string,
+      activo: PropTypes.bool
+    }),
+    onClose: PropTypes.func,
+    onSave: PropTypes.func.isRequired
+  };
+
+  CategoriaModal.defaultProps = {
+    categoria: null,
+    onClose: () => {}
+  };
 
 const ListaDeCategorias = () => {
   const [categorias, setCategorias] = useState([]);
