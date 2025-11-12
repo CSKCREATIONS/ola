@@ -201,97 +201,46 @@ const enviarCompraPorCorreo = async (req, res) => {
     const { id } = req.params;
     const { destinatario, asunto, mensaje } = req.body;
 
-    // Sanitizar el ID para prevenir inyección NoSQL
-    const compraId = typeof id === 'string' ? id.trim() : '';
-    
-    if (!compraId) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'ID de compra inválido' 
-      });
-    }
+    const compraId = validateId(id);
+    if (!compraId) return res.status(400).json({ success: false, message: 'ID de compra inválido' });
 
     console.log('🔍 Iniciando envío de correo para compra:', compraId);
     console.log('📧 Destinatario:', destinatario);
 
-    if (!destinatario) {
-      return res.status(400).json({ success: false, message: 'Destinatario es requerido' });
-    }
+    if (!destinatario) return res.status(400).json({ success: false, message: 'Destinatario es requerido' });
 
-    const compra = await Compra.findById(compraId)
-      .populate('proveedor', 'nombre email telefono')
-      .populate('productos.producto', 'name price');
+    let compra = await Compra.findById(compraId).populate('proveedor', 'nombre email telefono');
+    if (!compra) return res.status(404).json({ success: false, message: 'Compra no encontrada' });
 
-    if (!compra) {
-      return res.status(404).json({ success: false, message: 'Compra no encontrada' });
-    }
+    // Asegurar que cada producto tenga datos (best-effort)
+    compra = await populateProductosIfNeeded(compra);
 
-    // Crear transporter usando la función helper
+    // Crear transporter
     const transporter = createGmailTransporter();
-    
-    if (!transporter) {
-      return res.status(500).json({ 
-        success: false, 
-        message: 'Servicio de correo no configurado. Verifica las credenciales de Gmail en el archivo .env' 
-      });
-    }
+    if (!transporter) return res.status(500).json({ success: false, message: 'Servicio de correo no configurado. Verifica las credenciales de Gmail en el archivo .env' });
 
-    // Generar HTML profesional de la compra (igual al módulo de ventas)
     const compraHTML = generarHTMLCompra(compra, mensaje);
-
-    // Generar PDF de la compra
-    let pdfAttachment = null;
-    try {
-      console.log('📄 Generando PDF de la compra...');
-      const pdfService = new PDFService();
-      const pdfData = await pdfService.generarPDFCompra(compra);
-      pdfAttachment = {
-        filename: pdfData.filename,
-        content: pdfData.buffer,
-        contentType: pdfData.contentType
-      };
-      console.log('✅ PDF generado exitosamente:', pdfData.filename);
-    } catch (pdfError) {
-      console.error('⚠️ Error generando PDF:', pdfError.message);
-      // Continuar sin PDF si hay error
-    }
+    const pdfAttachment = await generatePdfAttachmentSafe(compra);
 
     const asuntoFinal = asunto || `Compra Confirmada - N° ${compra.numeroOrden || 'N/A'} - JLA Global Company`;
-
     const mailOptions = {
       from: `"JLA Global Company" <${process.env.GMAIL_USER || process.env.EMAIL_USER}>`,
       to: destinatario,
       subject: asuntoFinal,
       html: compraHTML,
-      attachments: pdfAttachment ? [{
-        filename: pdfAttachment.filename,
-        content: pdfAttachment.content,
-        contentType: pdfAttachment.contentType
-      }] : []
+      attachments: pdfAttachment ? [{ filename: pdfAttachment.filename, content: pdfAttachment.content, contentType: pdfAttachment.contentType }] : []
     };
 
-    await transporter.sendMail(mailOptions);
+    const result = await sendMailSafe(transporter, mailOptions);
+    if (!result.ok) {
+      return res.status(500).json({ success: false, message: 'Error al enviar correo', error: result.error?.message || 'Enviar fallo' });
+    }
 
     console.log('✅ Correo enviado exitosamente' + (pdfAttachment ? ' con PDF adjunto' : ''));
-
-    res.status(200).json({ 
-      success: true, 
-      message: '¡Compra enviada por correo exitosamente!' + (pdfAttachment ? ' con PDF adjunto' : ''),
-      details: {
-        destinatario: destinatario,
-        asunto: asuntoFinal,
-        numeroOrden: compra.numeroOrden,
-        pdfAdjunto: !!pdfAttachment,
-        fecha: new Date().toLocaleString('es-CO')
-      }
-    });
+    res.status(200).json({ success: true, message: '¡Compra enviada por correo exitosamente!' + (pdfAttachment ? ' con PDF adjunto' : ''), details: { destinatario, asunto: asuntoFinal, numeroOrden: compra.numeroOrden, pdfAdjunto: !!pdfAttachment, fecha: new Date().toLocaleString('es-CO') } });
   } catch (error) {
     console.error('❌ Error al enviar correo:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Error al enviar correo', 
-      error: error.message 
-    });
+    res.status(500).json({ success: false, message: 'Error al enviar correo', error: error.message });
   }
 };
 
@@ -594,3 +543,53 @@ module.exports = {
   actualizarCompra,
   enviarCompraPorCorreo
 };
+
+// Helper: validate and return trimmed id or null
+function validateId(raw) {
+  return typeof raw === 'string' && raw.trim() ? raw.trim() : null;
+}
+
+// Helper: ensure productos entries have producto populated objects (best-effort)
+async function populateProductosIfNeeded(compra) {
+  if (!compra || !Array.isArray(compra.productos)) return compra;
+  const Producto = require('../models/Products');
+  for (let i = 0; i < compra.productos.length; i++) {
+    const item = compra.productos[i];
+    if (item.producto && typeof item.producto === 'string') {
+      try {
+        const producto = await Producto.findById(item.producto);
+        if (producto) {
+          compra.productos[i].producto = { _id: producto._id, name: producto.name, description: producto.description };
+        }
+      } catch (err) {
+        console.warn('⚠️ No se pudo poblar el producto:', item.producto);
+      }
+    }
+  }
+  return compra;
+}
+
+// Helper: generate PDF attachment safely
+async function generatePdfAttachmentSafe(compra) {
+  try {
+    console.log('📄 Generando PDF de la compra...');
+    const pdfService = new PDFService();
+    const pdfData = await pdfService.generarPDFCompra(compra);
+    console.log('✅ PDF generado exitosamente:', pdfData.filename);
+    return { filename: pdfData.filename, content: pdfData.buffer, contentType: pdfData.contentType };
+  } catch (err) {
+    console.error('⚠️ Error generando PDF:', err.message);
+    return null;
+  }
+}
+
+// Helper: send mail with transporter and options, returns {ok, error}
+async function sendMailSafe(transporter, mailOptions) {
+  try {
+    await transporter.sendMail(mailOptions);
+    return { ok: true };
+  } catch (err) {
+    console.error('❌ Error al enviar correo:', err.message);
+    return { ok: false, error: err };
+  }
+}

@@ -20,6 +20,138 @@ const sanitizarId = (id) => {
   return idSanitizado;
 };
 
+// Helper: resolver o crear cliente a partir del payload recibido
+async function resolveClienteId(cliente) {
+  if (!cliente) throw new Error('Falta información del cliente');
+
+  // Si ya es un ID válido
+  if (typeof cliente === 'string' && mongoose.Types.ObjectId.isValid(cliente)) {
+    return cliente;
+  }
+
+  // Si es un objeto con _id válido
+  if (cliente && typeof cliente === 'object') {
+    if (cliente._id && mongoose.Types.ObjectId.isValid(cliente._id)) {
+      return cliente._id;
+    }
+
+    // Buscar por correo si existe
+    if (cliente.correo) {
+      const correo = (cliente.correo || '').toLowerCase();
+      let clienteExistente = await Cliente.findOne({ correo });
+      if (!clienteExistente) {
+        const nuevoCliente = new Cliente({
+          nombre: cliente.nombre || cliente.nombreCliente || '',
+          correo,
+          telefono: cliente.telefono || '',
+          direccion: cliente.direccion || '',
+          ciudad: cliente.ciudad || '',
+          esCliente: false
+        });
+        clienteExistente = await nuevoCliente.save();
+      }
+      return clienteExistente._id;
+    }
+
+    // Si no hay correo, crear cliente mínimo
+    const nuevoCliente = new Cliente({
+      nombre: cliente.nombre || '',
+      correo: cliente.correo || '',
+      telefono: cliente.telefono || '',
+      direccion: cliente.direccion || '',
+      ciudad: cliente.ciudad || '',
+      esCliente: false
+    });
+    const creado = await nuevoCliente.save();
+    return creado._id;
+  }
+
+  throw new Error('Cliente inválido');
+}
+
+// Helper: mapear productos desde el payload al esquema esperado
+function mapearProductos(productos) {
+  return (productos || []).map(item => {
+    const prodId = (item.producto && (item.producto.id || item.producto)) || item.product || null;
+    return {
+      product: prodId,
+      cantidad: (item.cantidad !== undefined && item.cantidad !== null) ? item.cantidad : 0,
+      precioUnitario: item.precioUnitario || item.valorUnitario || 0
+    };
+  });
+}
+
+// Helper: intentar guardar pedido con reintento en caso de duplicado de numero
+async function savePedidoWithRetry(nuevoPedido) {
+  try {
+    return await nuevoPedido.save();
+  } catch (saveErr) {
+    if (saveErr && saveErr.code === 11000) {
+      const counter2 = await Counter.findOneAndUpdate(
+        { _id: 'pedido' },
+        { $inc: { seq: 1 } },
+        { new: true }
+      );
+      const numeroPedido2 = `PED-${String(counter2.seq).padStart(5, '0')}`;
+      nuevoPedido.numeroPedido = numeroPedido2;
+      return await nuevoPedido.save();
+    }
+    throw saveErr;
+  }
+}
+
+// Helper: marcar cotización como agendada (no fallamos si falla)
+async function safeMarkCotizacionAgendada(cotizacionReferenciada, pedidoId, cotizacionCodigo) {
+  try {
+    if (!cotizacionReferenciada) return;
+    await Cotizacion.findByIdAndUpdate(
+      cotizacionReferenciada,
+      { estado: 'Agendada', pedidoReferencia: pedidoId }
+    );
+    console.log(`✅ Cotización ${cotizacionCodigo} marcada como agendada (estado updated)`);
+  } catch (cotError) {
+    console.error('⚠️ Error al marcar cotización como agendada (estado):', cotError);
+  }
+}
+
+// Helper: actualizar campo esCliente del cliente (no bloquear flujo)
+async function safeSetClienteEsCliente(clienteId) {
+  try {
+    if (!clienteId) return;
+    await Cliente.findByIdAndUpdate(clienteId, { esCliente: true }, { new: true });
+    console.log(`✅ Cliente ${clienteId} marcado como cliente activo (esCliente: true)`);
+  } catch (clienteError) {
+    console.error('⚠️ Error al actualizar estado del cliente:', clienteError);
+  }
+}
+
+// Helper: actualizar stock de productos cuando el pedido se entrega
+// Retorna { ok: true } o { ok: false, status, message }
+async function updateStockIfEntregado(pedido) {
+  const Products = require('../models/Products');
+
+  for (const item of pedido.productos) {
+    if (!item.product) continue;
+
+    const producto = await Products.findById(item.product._id || item.product);
+    if (!producto) continue; // si no existe el producto, lo omitimos
+
+    if (producto.stock < item.cantidad) {
+      return {
+        ok: false,
+        status: 400,
+        message: `Stock insuficiente para ${producto.name}. Stock actual: ${producto.stock}, requerido: ${item.cantidad}`
+      };
+    }
+
+    producto.stock -= item.cantidad;
+    await producto.save();
+    console.log(`📦 Stock actualizado: ${producto.name} - Stock anterior: ${producto.stock + item.cantidad}, Stock nuevo: ${producto.stock}`);
+  }
+
+  return { ok: true };
+}
+
 // Configurar SendGrid de forma segura para no bloquear el arranque
 try {
   const apiKey = process.env.SENDGRID_API_KEY;
@@ -96,70 +228,28 @@ exports.getPedidos = async (req, res) => {
 };
 
 
-// Crear pedido
+// Crear pedido (refactor: delegar pasos a helpers para bajar complejidad)
 exports.createPedido = async (req, res) => {
   try {
-    let { cliente, productos, fechaEntrega, observacion, cotizacionReferenciada, cotizacionCodigo } = req.body;
+    const { cliente, productos, fechaEntrega, observacion, cotizacionReferenciada, cotizacionCodigo } = req.body;
 
-    // If cliente is an object (not an ID), find or create the Cliente and get its _id
-    let clienteId = null;
-    if (!cliente) {
-      return res.status(400).json({ message: 'Falta información del cliente' });
+    // Resolver / crear cliente
+    let clienteId;
+    try {
+      clienteId = await resolveClienteId(cliente);
+    } catch (cErr) {
+      return res.status(400).json({ message: cErr.message || 'Falta información del cliente' });
     }
 
-    if (typeof cliente === 'string' && mongoose.Types.ObjectId.isValid(cliente)) {
-      clienteId = cliente;
-    } else if (cliente && typeof cliente === 'object') {
-      // Prefer finding by correo if provided
-      if (cliente._id && mongoose.Types.ObjectId.isValid(cliente._id)) {
-        clienteId = cliente._id;
-      } else if (cliente.correo) {
-        let clienteExistente = await Cliente.findOne({ correo: cliente.correo.toLowerCase() });
-        if (!clienteExistente) {
-          const nuevoCliente = new Cliente({
-            nombre: cliente.nombre || cliente.nombreCliente || '',
-            correo: (cliente.correo || '').toLowerCase(),
-            telefono: cliente.telefono || clienteTelefono || '',
-            direccion: cliente.direccion || '',
-            ciudad: cliente.ciudad || '',
-            esCliente: false
-          });
-          clienteExistente = await nuevoCliente.save();
-        }
-        clienteId = clienteExistente._id;
-      } else {
-        // If no correo, create a new Cliente document
-        const nuevoCliente = new Cliente({
-          nombre: cliente.nombre || '',
-          correo: cliente.correo || '',
-          telefono: cliente.telefono || '',
-          direccion: cliente.direccion || '',
-          ciudad: cliente.ciudad || '',
-          esCliente: false
-        });
-        const creado = await nuevoCliente.save();
-        clienteId = creado._id;
-      }
-    }
+    // Mapear productos
+    const productosMapped = mapearProductos(productos);
 
-    // Map productos payload to schema expected by Pedido model
-    const productosMapped = (productos || []).map(item => {
-      // frontend may send producto: { id: '...', name: '...' } or producto: 'id'
-      const prodId = (item.producto && (item.producto.id || item.producto)) || item.product || null;
-      return {
-        product: prodId,
-        cantidad: item.cantidad || item.cantidad === 0 ? item.cantidad : (item.cantidad || 0),
-        precioUnitario: item.precioUnitario || item.valorUnitario || 0
-      };
-    });
-
-    // Generar número de pedido único de forma atómica usando colección Counter
+    // Generar número de pedido atómico
     const counter = await Counter.findOneAndUpdate(
       { _id: 'pedido' },
       { $inc: { seq: 1 } },
       { new: true, upsert: true }
     );
-
     const numeroPedido = `PED-${String(counter.seq).padStart(5, '0')}`;
 
     const nuevoPedido = new Pedido({
@@ -172,60 +262,19 @@ exports.createPedido = async (req, res) => {
       cotizacionCodigo
     });
 
-    let pedidoGuardado;
-    try {
-      pedidoGuardado = await nuevoPedido.save();
-    } catch (saveErr) {
-      // En caso de duplicado (raro), reintentar generando nuevo seq
-      if (saveErr && saveErr.code === 11000) {
-        const counter2 = await Counter.findOneAndUpdate(
-          { _id: 'pedido' },
-          { $inc: { seq: 1 } },
-          { new: true }
-        );
-        const numeroPedido2 = `PED-${String(counter2.seq).padStart(5, '0')}`;
-        nuevoPedido.numeroPedido = numeroPedido2;
-        pedidoGuardado = await nuevoPedido.save();
-      } else {
-        throw saveErr;
-      }
-    }
+    // Guardar con reintento si por alguna razón hubo duplicado de numero
+    const pedidoGuardado = await savePedidoWithRetry(nuevoPedido);
 
-    // Si el pedido se creó desde una cotización, marcarla como agendada
-    if (cotizacionReferenciada) {
-      try {
-        // Marcar la cotización como agendada usando el campo 'estado'
-        await Cotizacion.findByIdAndUpdate(
-          cotizacionReferenciada,
-          {
-            estado: 'Agendada',
-            pedidoReferencia: pedidoGuardado._id
-          }
-        );
-        console.log(`✅ Cotización ${cotizacionCodigo} marcada como agendada (estado updated)`);
-      } catch (cotError) {
-        console.error('⚠️ Error al marcar cotización como agendada (estado):', cotError);
-        // No fallar el pedido por este error
-      }
-    }
+    // Si vino de una cotización, intentar marcar (no bloqueante)
+    await safeMarkCotizacionAgendada(cotizacionReferenciada, pedidoGuardado._id, cotizacionCodigo);
 
-    // Actualizar el estado del cliente a "esCliente: true" cuando se agenda un pedido
-    try {
-      await Cliente.findByIdAndUpdate(
-        clienteId,
-        { esCliente: true },
-        { new: true }
-      );
-      console.log(`✅ Cliente ${clienteId} marcado como cliente activo (esCliente: true)`);
-    } catch (clienteError) {
-      console.error('⚠️ Error al actualizar estado del cliente:', clienteError);
-      // No fallar el pedido por este error
-    }
+    // Actualizar cliente a esCliente: true (no bloqueante)
+    await safeSetClienteEsCliente(clienteId);
 
-    res.status(201).json(pedidoGuardado);
+    return res.status(201).json(pedidoGuardado);
   } catch (err) {
     console.error('❌ Error al crear pedido:', err);
-    res.status(500).json({ message: 'Error al crear el pedido', error: err.message });
+    return res.status(500).json({ message: 'Error al crear el pedido', error: err.message });
   }
 };
 
@@ -267,42 +316,23 @@ exports.cambiarEstadoPedido = async (req, res) => {
     const { estado } = req.body;
 
     const pedido = await Pedido.findById(id).populate('productos.product');
-    if (!pedido) {
-      return res.status(404).json({ message: 'Pedido no encontrado' });
-    }
+    if (!pedido) return res.status(404).json({ message: 'Pedido no encontrado' });
 
-    // Si el nuevo estado es 'entregado', actualizar el stock de los productos
+    // Si el nuevo estado es 'entregado', actualizar el stock (helper maneja validaciones)
     if (estado === 'entregado') {
-      const Products = require('../models/Products');
-      
-      for (const item of pedido.productos) {
-        if (item.product) {
-          const producto = await Products.findById(item.product._id);
-          if (producto) {
-            // Verificar que hay suficiente stock
-            if (producto.stock < item.cantidad) {
-              return res.status(400).json({ 
-                message: `Stock insuficiente para ${producto.name}. Stock actual: ${producto.stock}, requerido: ${item.cantidad}` 
-              });
-            }
-            
-            // Disminuir el stock
-            producto.stock -= item.cantidad;
-            await producto.save();
-            
-            console.log(`📦 Stock actualizado: ${producto.name} - Stock anterior: ${producto.stock + item.cantidad}, Stock nuevo: ${producto.stock}`);
-          }
-        }
+      const result = await updateStockIfEntregado(pedido);
+      if (!result.ok) {
+        return res.status(result.status || 400).json({ message: result.message || 'Error actualizando stock' });
       }
     }
 
     pedido.estado = estado;
     await pedido.save();
 
-    res.json({ message: 'Estado del pedido actualizado', pedido });
+    return res.json({ message: 'Estado del pedido actualizado', pedido });
   } catch (err) {
     console.error('Error al cambiar el estado del pedido:', err);
-    res.status(500).json({ message: 'Error interno al cambiar estado del pedido', error: err.message });
+    return res.status(500).json({ message: 'Error interno al cambiar estado del pedido', error: err.message });
   }
 };
 
