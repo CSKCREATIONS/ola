@@ -98,6 +98,8 @@ export default function RegistrarCotizacion() {
       producto: value,
       descripcion: producto?.description || '',
       valorUnitario: producto?.price || '',
+      // store stock for this selected product so we can validate cantidad against it
+      stock: producto?.stock ?? 0,
       cantidad: '',
       descuento: '',
       valorTotal: ''
@@ -1029,7 +1031,7 @@ export default function RegistrarCotizacion() {
                               onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
                             >
                               <option value="">Seleccione un producto</option>
-                              {productos.map(p => (
+                              {productos.filter(p => p.activo !== false && p.activo !== 'false').map(p => (
                                 <option key={p._id} value={p._id}>
                                   {p.name}
                                 </option>
@@ -1074,6 +1076,9 @@ export default function RegistrarCotizacion() {
                               onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
                               onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
                             />
+                              <span style={{ color: '#ef4444', marginLeft: '0.5rem', fontSize: '0.85rem' }}>
+                                {prod.cantidad && prod.stock !== undefined && Number(prod.cantidad) > Number(prod.stock) ? 'cantidad no disponible' : ''}
+                              </span>
                           </td>
                           <td style={{ padding: '0.5rem 0.75rem' }}>
                             <input 
@@ -1246,7 +1251,7 @@ export default function RegistrarCotizacion() {
                           onChange={(e) => handleProductoChange(index, e.target.value)}
                         >
                           <option value="">Seleccione un producto</option>
-                          {productos.map(p => (
+                          {productos.filter(p => p.activo !== false && p.activo !== 'false').map(p => (
                             <option key={p._id} value={p._id}>
                               {p.name}
                             </option>
@@ -1254,7 +1259,10 @@ export default function RegistrarCotizacion() {
                         </select>
                       </td>
                       <td><input type="text" name="descripcion" className='cuadroTexto' value={prod.descripcion} onChange={(e) => handleChange(index, e)} /></td>
-                      <td><input type="number" name="cantidad" className='cuadroTexto' value={prod.cantidad} onChange={(e) => handleChange(index, e)} /></td>
+                      <td>
+                        <input type="number" name="cantidad" className='cuadroTexto' value={prod.cantidad} onChange={(e) => handleChange(index, e)} />
+                        <span style={{ color: '#ef4444', marginLeft: '0.5rem', fontSize: '0.85rem' }}>{prod.cantidad && prod.stock !== undefined && Number(prod.cantidad) > Number(prod.stock) ? 'cantidad no disponible' : ''}</span>
+                      </td>
                       <td><input type="number" name="valorUnitario" className='cuadroTexto' value={prod.valorUnitario} onChange={(e) => handleChange(index, e)} readOnly /></td>
                       <td><input type="number" name="descuento" className='cuadroTexto' value={prod.descuento} onChange={(e) => handleChange(index, e)} /></td>
                       <td><input type="number" name="subtotal" className='cuadroTexto' value={prod.subtotal} readOnly /></td>

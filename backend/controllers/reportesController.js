@@ -4,7 +4,6 @@ const Product = require('../models/Products');
 const Cotizacion = require('../models/cotizaciones');
 const Cliente = require('../models/Cliente');
 const Pedido = require('../models/Pedido');
-const Venta = require('../models/venta');
 const Proveedor = require('../models/proveedores');
 
 // Reporte de categorías con estadísticas

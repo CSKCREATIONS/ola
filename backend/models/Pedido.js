@@ -10,10 +10,6 @@ const PedidoSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Cotizacion',
   },
-  cotizacionCodigo: {
-    type: String,
-    default: ''
-  },
    productos: [{
     product: {
       type: mongoose.Schema.Types.ObjectId,
@@ -26,13 +22,17 @@ const PedidoSchema = new mongoose.Schema({
       required: true
     }
   }],
+  remisionGenerada: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Remision'
+  },
 
   fechaEntrega: { type: Date, required: true },
   observacion: { type: String, default: '' },
   motivoDevolucion: { type: String, default: '' },
   estado: {
     type: String,
-    enum: ['agendado', 'despachado', 'entregado', 'cancelado', 'devuelto'],
+    enum: ['agendado', 'entregado', 'cancelado'],
     default: 'agendado'
   },
   cliente: {

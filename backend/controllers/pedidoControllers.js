@@ -1,6 +1,5 @@
 // controllers/pedidoController.js
 const Pedido = require('../models/Pedido');
-const Venta = require('../models/venta'); // Asegúrate de tener el modelo importado
 const Product = require('../models/Products'); // para calcular precios
 const Cotizacion = require('../models/cotizaciones');
 const Counter = require('../models/Counter');

@@ -5,7 +5,6 @@ const Pedido = require('../models/Pedido');
 const { verifyToken } = require('../middlewares/authJwt');
 const pedidoController = require('../controllers/pedidoControllers');
 const { checkRole } = require('../middlewares/role');
-const Venta = require('../models/venta');
 const { checkPermission } = require('../middlewares/role');
 
 // Función para generar número de pedido usando Counter

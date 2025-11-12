@@ -62,11 +62,16 @@ const CotizacionSchema = new mongoose.Schema({
   },
   estado: {
     type: String,
+    enum: ['Pendiente', 'Agendada', 'Remisionada'],
     default: 'Pendiente'
   },
   pedidoReferencia: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Pedido'
+  },
+  remisionReferencia: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Remision'
   }
 }, {
   timestamps: true

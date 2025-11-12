@@ -8,7 +8,6 @@ const { verifyToken } = require('../middlewares/authJwt');
 // Estas rutas deben ir ANTES que las rutas con autenticación
 
 // Estadísticas básicas de ventas
-router.get('/estadisticas', reportesController.estadisticasVentas);
 router.get('/estados', reportesController.estadosPedidos);
 router.get('/clientes', reportesController.clientes);
 router.get('/productos', reportesController.productos);
