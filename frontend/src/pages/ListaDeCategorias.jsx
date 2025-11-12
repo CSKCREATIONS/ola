@@ -291,9 +291,9 @@ const CategoriaModal = ({ categoria, onClose, onSave }) => {
               alignItems: 'center',
               justifyContent: 'center'
             }}>
-              <i className="fa-solid fa-tags" style={{ fontSize: '1.5rem' }}></i>
+              <i className="fa-solid fa-tags" style={{ fontSize: '1.5rem' }} aria-hidden={true}></i>
             </div>
-            {categoria ? 'Editar Categoría' : 'Nueva Categoría'}
+            <span>{categoria ? 'Editar Categoría' : 'Nueva Categoría'}</span>
           </h3>
           <p style={{
             margin: '0.5rem 0 0 4rem',
@@ -329,8 +329,8 @@ const CategoriaModal = ({ categoria, onClose, onSave }) => {
               color: '#374151',
               fontSize: '1.1rem'
             }}>
-              <i className="fa-solid fa-tag" style={{ color: '#f59e0b', fontSize: '1rem' }}></i>
-              Nombre de la Categoría
+              <i className="fa-solid fa-tag" style={{ color: '#f59e0b', fontSize: '1rem' }} aria-hidden={true}></i>
+              <span>Nombre de la Categoría</span>
               <span style={{ color: '#ef4444' }}>*</span>
             </label>
             <input
@@ -379,8 +379,8 @@ const CategoriaModal = ({ categoria, onClose, onSave }) => {
               color: '#374151',
               fontSize: '1.1rem'
             }}>
-              <i className="fa-solid fa-align-left" style={{ color: '#10b981', fontSize: '1rem' }}></i>
-              Descripción
+              <i className="fa-solid fa-align-left" style={{ color: '#10b981', fontSize: '1rem' }} aria-hidden={true}></i>
+              <span>Descripción</span>
               <span style={{ color: '#ef4444' }}>*</span>
             </label>
             <textarea
@@ -452,8 +452,8 @@ const CategoriaModal = ({ categoria, onClose, onSave }) => {
               e.target.style.borderColor = '#e5e7eb';
             }}
           >
-            <i className="fa-solid fa-times"></i>
-            Cancelar
+            <i className="fa-solid fa-times" aria-hidden={true}></i>
+            <span>Cancelar</span>
           </button>
 
           <button
@@ -667,7 +667,7 @@ const ListaDeCategorias = () => {
                   alignItems: 'center',
                   justifyContent: 'center'
                 }}>
-                  <i className="fa-solid fa-tags" style={{ color: 'white', fontSize: '1.5rem' }}></i>
+                  <i className="fa-solid fa-tags" style={{ color: 'white', fontSize: '1.5rem' }} aria-hidden={true}></i>
                 </div>
                 <div>
                   <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
@@ -690,7 +690,7 @@ const ListaDeCategorias = () => {
                   alignItems: 'center',
                   justifyContent: 'center'
                 }}>
-                  <i className="fa-solid fa-check-circle" style={{ color: 'white', fontSize: '1.5rem' }}></i>
+                  <i className="fa-solid fa-check-circle" style={{ color: 'white', fontSize: '1.5rem' }} aria-hidden={true}></i>
                 </div>
                 <div>
                   <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
@@ -713,7 +713,7 @@ const ListaDeCategorias = () => {
                   alignItems: 'center',
                   justifyContent: 'center'
                 }}>
-                  <i className="fa-solid fa-pause-circle" style={{ color: 'white', fontSize: '1.5rem' }}></i>
+                  <i className="fa-solid fa-pause-circle" style={{ color: 'white', fontSize: '1.5rem' }} aria-hidden={true}></i>
                 </div>
                 <div>
                   <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
@@ -782,7 +782,7 @@ const ListaDeCategorias = () => {
                               justifyContent: 'center',
                               minWidth: '35px'
                             }}>
-                              <i className="fa-solid fa-tag" style={{ color: 'white', fontSize: '12px' }}></i>
+                              <i className="fa-solid fa-tag" style={{ color: 'white', fontSize: '12px' }} aria-hidden={true}></i>
                             </div>
                             {cat.name}
                           </div>
@@ -806,8 +806,9 @@ const ListaDeCategorias = () => {
                             <button
                               className="categoria-action-btn"
                               onClick={() => handleEdit(cat)}
+                              aria-label={`Editar categoría ${cat.name || cat._id}`}
                             >
-                              <i className="fa-solid fa-pen-to-square"></i>
+                              <i className="fa-solid fa-pen-to-square" aria-hidden={true}></i>
                             </button>
                           </div>
                         </td>
