@@ -775,10 +775,11 @@ const ListaDeCategorias = () => {
                         <td>
                           <label className="switch">
                             <input
-                              type="checkbox"
-                              checked={!!cat.activo}
-                              onChange={(e) => toggleEstadoCategoria(cat._id, e.target.checked)}
-                            />
+                                type="checkbox"
+                                checked={!!cat.activo}
+                                aria-label={`Estado de la categoría ${cat.name || cat._id}`}
+                                onChange={(e) => toggleEstadoCategoria(cat._id, e.target.checked)}
+                              />
                             <span className="slider"></span>
                           </label>
                         </td>

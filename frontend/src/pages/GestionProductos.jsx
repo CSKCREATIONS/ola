@@ -1344,6 +1344,7 @@ const GestionProductos = () => {
                           <input
                             type="checkbox"
                             checked={!!prod.activo}
+                            aria-label={`Estado del producto ${prod.name || prod._id}`}
                             onChange={async () => {
                               const tryingToActivate = !prod.activo;
                               const subcatId = prod.subcategory?._id || prod.subcategory;

@@ -607,6 +607,7 @@ export default function RolesYPermisos() {
                           <input
                             type="checkbox"
                             checked={rol.enabled}
+                            aria-label={`Estado del rol ${rol.name || rol._id}`}
                             onChange={() => {
                               if (puedeInhabilitarRol) {
                                 toggleEstadoRol(rol._id, !rol.enabled);

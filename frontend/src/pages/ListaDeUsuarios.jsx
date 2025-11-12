@@ -1092,6 +1092,7 @@ export default function ListaDeUsuarios() {
                           <input
                             type="checkbox"
                             checked={usuario.enabled}
+                            aria-label={`Estado del usuario ${usuario.username || usuario._id}`}
                             onChange={() => {
                               if (puedeInhabilitarUsuario) {
                                 toggleEstadoUsuario(usuario._id, usuario.enabled, usuario.username);

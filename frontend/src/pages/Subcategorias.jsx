@@ -811,6 +811,7 @@ const GestionSubcategorias = () => {
                           <input
                             type="checkbox"
                             checked={!!subcat.activo}
+                            aria-label={`Estado de la subcategoría ${subcat.name || subcat._id}`}
                             onChange={(e) => handleToggleWithParentCheck(subcat._id, e.target.checked)}
                           />
                           <span className="slider"></span>
