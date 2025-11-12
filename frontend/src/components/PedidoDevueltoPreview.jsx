@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
 
 
@@ -14,13 +15,13 @@ export default function PedidoDevueltoPreview({ datos, onClose }) {
   return (
     <div className="modal-cotizacion-overlay" style={{ alignItems: 'flex-start', paddingTop: '50px', overflow: 'auto' }}>
       <div className="modal-cotizacion" style={{ maxWidth: '95vw', maxHeight: 'none', width: '900px', height: 'auto', marginBottom: '50px' }}>
-        <button className="close-modal" onClick={onClose}>×</button>
+    <button className="close-modal" onClick={onClose} aria-label="Cerrar">×</button>
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
           <span className='modal-title'>Pedido Devuelto {datos.numeroPedido}</span>
           <div className="botones-cotizacion" style={{ display: 'flex', gap: '18px', justifyContent: 'center', marginBottom: '1rem' }}>
-            <button className="btn-cotizacion moderno" title="Enviar" onClick={() => setShowEnviarModal(true)}>
-              <i className="fa-solid fa-envelope icon-gap" style={{ fontSize: '1rem', color: '#EA4335' }}></i>
-              Enviar
+            <button className="btn-cotizacion moderno" title="Enviar" onClick={() => setShowEnviarModal(true)} aria-label="Enviar pedido devuelto">
+              <i className="fa-solid fa-envelope icon-gap" style={{ fontSize: '1rem', color: '#EA4335' }} aria-hidden={true}></i>
+              <span>Enviar</span>
             </button>
             <button className="btn-cotizacion moderno" title="Imprimir" onClick={() => {
               // Método seguro de impresión sin manipular DOM
@@ -50,7 +51,7 @@ export default function PedidoDevueltoPreview({ datos, onClose }) {
               newWindow.print();
               newWindow.close();
             }}>
-              <i className="fa-solid fa-print icon-gap" style={{ fontSize: '1.2rem' }}></i>
+              <i className="fa-solid fa-print icon-gap" style={{ fontSize: '1.2rem' }} aria-hidden={true}></i>
             </button>
           </div>
         </div>
@@ -257,3 +258,39 @@ export default function PedidoDevueltoPreview({ datos, onClose }) {
     </div>
   );
 }
+
+PedidoDevueltoPreview.propTypes = {
+  datos: PropTypes.shape({
+    _id: PropTypes.string,
+    numeroPedido: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    createdAt: PropTypes.string,
+    fecha: PropTypes.string,
+    cliente: PropTypes.shape({
+      nombre: PropTypes.string,
+      direccion: PropTypes.string,
+      ciudad: PropTypes.string,
+      telefono: PropTypes.string,
+      correo: PropTypes.string,
+    }),
+    empresa: PropTypes.shape({
+      nombre: PropTypes.string,
+      direccion: PropTypes.string,
+    }),
+    productos: PropTypes.arrayOf(
+      PropTypes.shape({
+        cantidad: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+        precioUnitario: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+        valorUnitario: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+        product: PropTypes.object,
+      })
+    ),
+    motivoDevolucion: PropTypes.string,
+    observacion: PropTypes.string,
+  }),
+  onClose: PropTypes.func,
+};
+
+PedidoDevueltoPreview.defaultProps = {
+  datos: {},
+  onClose: () => {},
+};

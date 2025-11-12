@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import PropTypes from 'prop-types';
 import Swal from 'sweetalert2';
 import api from '../api/axiosConfig';
 
@@ -157,8 +158,8 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
           justifyContent: 'space-between',
           alignItems: 'center'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <i className="fa-solid fa-ban" style={{ fontSize: '1.8rem' }}></i>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <i className="fa-solid fa-ban" style={{ fontSize: '1.8rem' }} aria-hidden={true}></i>
             <div>
               <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 'bold' }}>
                 Vista Previa - Pedido Cancelado
@@ -175,21 +176,22 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                 const printContent = document.querySelector('.pdf-pedido-cancelado');
                 const newWindow = window.open('', '_blank');
                 newWindow.document.write(`
-                  <html>
-                    <head>
-                      <title>Pedido Cancelado - ${datos?.numeroPedido}</title>
-                      <style>
-                        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
-                        .header { text-align: center; margin-bottom: 30px; padding: 20px; background: linear-gradient(135deg, #dc2626, #b91c1c); color: white; border-radius: 10px; }
-                        .info-section { margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; }
-                        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-                        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-                        th { background: linear-gradient(135deg, #dc2626, #b91c1c); color: white; font-weight: bold; }
-                        .total-row { background: #fee2e2; font-weight: bold; }
-                        .status-badge { background: #dc2626; color: white; padding: 8px 16px; border-radius: 20px; display: inline-block; }
-                      </style>
-                    </head>
-                    <body>
+                  <button
+                    onClick={enviarPorCorreo}
+                    aria-label="Enviar notificación de cancelación"
+                    style={{
+                      padding: '0.75rem 1.5rem',
+                      border: 'none',
+                      borderRadius: '6px',
+                      backgroundColor: '#dc2626',
+                      color: 'white',
+                      cursor: 'pointer',
+                      fontWeight: 'bold'
+                    }}
+                  >
+                    <i className="fa-solid fa-envelope icon-gap" style={{}} aria-hidden={true}></i>
+                    <span>Enviar Notificación</span>
+                  </button>
                       ${printContent.innerHTML}
                     </body>
                   </html>
@@ -216,7 +218,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               onMouseEnter={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.3)'}
               onMouseLeave={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.2)'}
             >
-              <i className="fa-solid fa-print icon-gap" style={{ fontSize: '1.2rem' }}></i>
+              <i className="fa-solid fa-print icon-gap" style={{ fontSize: '1.2rem' }} aria-hidden={true}></i>
             </button>
 
             {/* Botón de enviar por correo */}
@@ -239,8 +241,8 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               onMouseEnter={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.3)'}
               onMouseLeave={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.2)'}
             >
-              <i className="fa-solid fa-envelope"></i>
-              Enviar
+              <i className="fa-solid fa-envelope" aria-hidden={true}></i>
+              <span>Enviar</span>
             </button>
 
             {/* Botón de cerrar */}
@@ -261,7 +263,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               onMouseEnter={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.3)'}
               onMouseLeave={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.2)'}
             >
-              <i className="fa-solid fa-times"></i>
+              <i className="fa-solid fa-times" aria-hidden={true}></i>
             </button>
           </div>
         </div>
@@ -291,7 +293,6 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               msUserSelect: 'none'
             }}
             onCopy={e => e.preventDefault()}
-            onSelectStart={e => e.preventDefault()}
           >
             <div className="header" style={{
               textAlign: 'center',
@@ -621,8 +622,8 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                     fontWeight: 'bold'
                   }}
                 >
-                  <i className="fa-solid fa-envelope icon-gap" style={{}}></i>
-                  Enviar Notificación
+                  <i className="fa-solid fa-envelope icon-gap" style={{}} aria-hidden={true}></i>
+                  <span>Enviar Notificación</span>
                 </button>
               </div>
             </div>
@@ -632,3 +633,39 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
     </div>
   );
 }
+
+PedidoCanceladoPreview.propTypes = {
+  datos: PropTypes.shape({
+    _id: PropTypes.string,
+    numeroPedido: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    codigo: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    createdAt: PropTypes.string,
+    fecha: PropTypes.string,
+    cliente: PropTypes.shape({
+      nombre: PropTypes.string,
+      correo: PropTypes.string,
+      telefono: PropTypes.string,
+      direccion: PropTypes.string,
+      ciudad: PropTypes.string,
+    }),
+    productos: PropTypes.arrayOf(
+      PropTypes.shape({
+        cantidad: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+        precioUnitario: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+        product: PropTypes.object,
+        nombre: PropTypes.string,
+      })
+    ),
+    estado: PropTypes.string,
+    motivoCancelacion: PropTypes.string,
+    enviadoCorreo: PropTypes.bool,
+  }),
+  onClose: PropTypes.func,
+  onEmailSent: PropTypes.func,
+};
+
+PedidoCanceladoPreview.defaultProps = {
+  datos: {},
+  onClose: () => {},
+  onEmailSent: undefined,
+};

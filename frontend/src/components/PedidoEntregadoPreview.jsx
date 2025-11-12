@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
+import api from '../api/axiosConfig';
 import './FormatoCotizacion.css';
 import api from '../api/axiosConfig';
 
@@ -46,9 +49,9 @@ export default function PedidoEntregadoPreview({ datos, onClose }) {
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
           <span className='modal-title'>Pedido Entregado: {datos.numeroPedido || datos.codigo || ''}</span>
           <div className="botones-cotizacion" style={{ display: 'flex', gap: '18px', justifyContent: 'center', marginBottom: '1rem' }}>
-            <button className="btn-cotizacion moderno" title="Enviar Comprobante" onClick={() => setShowEnviarModal(true)}>
-              <i className="fa-solid fa-envelope icon-gap" style={{ fontSize: '1rem', color: '#EA4335' }}></i>
-              Enviar Comprobante
+            <button className="btn-cotizacion moderno" title="Enviar Comprobante" onClick={() => setShowEnviarModal(true)} aria-label="Enviar comprobante">
+              <i className="fa-solid fa-envelope icon-gap" style={{ fontSize: '1rem', color: '#EA4335' }} aria-hidden={true}></i>
+              <span>Enviar Comprobante</span>
             </button>
             <button className="btn-cotizacion moderno" title="Imprimir" onClick={() => {
               const printContent = document.getElementById('pdf-pedido-entregado-block');
@@ -78,13 +81,13 @@ export default function PedidoEntregadoPreview({ datos, onClose }) {
               newWindow.print();
               newWindow.close();
             }}>
-              <i className="fa-solid fa-print icon-gap" style={{ fontSize: '1.2rem' }}></i>
-              Imprimir
+                <i className="fa-solid fa-print icon-gap" style={{ fontSize: '1.2rem' }} aria-hidden={true}></i>
+                <span>Imprimir</span>
             </button>
           </div>
         </div>
 
-        <div id="pdf-pedido-entregado-block">
+  <div id="pdf-pedido-entregado-block">
           <div className="cotizacion-contenido">
             <div className="encabezado-empresa">
               <div className="logo-empresa">
@@ -92,7 +95,9 @@ export default function PedidoEntregadoPreview({ datos, onClose }) {
                 <p style={{ margin: '5px 0', fontSize: '12px' }}>Sistema de Gestión Empresarial</p>
               </div>
               <div className="info-empresa">
-                <h2 style={{ color: '#10b981', margin: '0 0 10px 0' }}>COMPROBANTE DE ENTREGA</h2>
+                <h2 style={{ color: '#10b981', margin: '0 0 10px 0' }}>
+                  <span aria-hidden={true} className="sr-only-decorative"/>COMPROBANTE DE ENTREGA
+                </h2>
                 <p><strong>Pedido:</strong> {datos.numeroPedido || datos.codigo || 'N/A'}</p>
                 <p><strong>Fecha de entrega:</strong> {new Date(datos.updatedAt).toLocaleDateString()}</p>
                 <p><strong>Estado:</strong> <span className="entregado-badge">ENTREGADO</span></p>
@@ -226,3 +231,29 @@ export default function PedidoEntregadoPreview({ datos, onClose }) {
     </div>
   );
 }
+
+    PedidoEntregadoPreview.propTypes = {
+      datos: PropTypes.shape({
+        _id: PropTypes.string,
+        numeroPedido: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+        codigo: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+        updatedAt: PropTypes.string,
+        cliente: PropTypes.shape({
+          nombre: PropTypes.string,
+          documento: PropTypes.string,
+          telefono: PropTypes.string,
+          email: PropTypes.string,
+          direccion: PropTypes.string,
+          ciudad: PropTypes.string,
+        }),
+        productos: PropTypes.arrayOf(PropTypes.object),
+        productosLista: PropTypes.arrayOf(PropTypes.object),
+        total: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+        observacion: PropTypes.string,
+      }).isRequired,
+      onClose: PropTypes.func,
+    };
+
+    PedidoEntregadoPreview.defaultProps = {
+      onClose: () => {},
+    };
