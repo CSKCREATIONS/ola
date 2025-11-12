@@ -26,6 +26,19 @@ export default function EditarPerfil() {
     });
   }, []);
 
+  // Attach Escape key handler at document level to avoid adding keyboard
+  // listeners directly to non-interactive elements (satisfies a11y lint rules)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' || e.key === 'Esc') {
+        closeModal('editar-perfil');
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -120,14 +133,8 @@ export default function EditarPerfil() {
       role="dialog"
       aria-modal="true"
       aria-labelledby="edit-profile-title"
-      // Make the backdrop keyboard-accessible so attaching onClick is allowed by a11y linters
-      tabIndex={-1}
-      onKeyDown={(e) => {
-        // Close modal on Escape key press
-        if (e.key === 'Escape' || e.key === 'Esc') {
-          closeModal('editar-perfil');
-        }
-      }}
+      // Backdrop: keep role=dialog and a click handler for backdrop clicks.
+      // Keyboard handling is attached at document level via useEffect.
       style={{
         position: 'fixed',
         top: 0,
