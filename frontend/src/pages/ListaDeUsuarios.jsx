@@ -551,8 +551,7 @@ export default function ListaDeUsuarios() {
                       e.target.style.transform = 'translateY(0)';
                     }}
                   >
-                    <i className="fa-solid fa-file-excel"></i>
-                    Exportar Excel
+                    <i className="fa-solid fa-file-excel"></i><span>Exportar Excel</span>
                   </button>
                   <button
                     onClick={exportarPDF}
@@ -579,9 +578,8 @@ export default function ListaDeUsuarios() {
                       e.target.style.background = 'rgba(255,255,255,0.2)';
                       e.target.style.transform = 'translateY(0)';
                     }}
-                  >
-                    <i className="fa-solid fa-file-pdf"></i>
-                    Exportar PDF
+                   >
+                    <i className="fa-solid fa-file-pdf"></i><span>Exportar PDF</span>
                   </button>
                   {puedeCrearUsuario && (
                     <button 
@@ -609,9 +607,8 @@ export default function ListaDeUsuarios() {
                         e.target.style.transform = 'translateY(0)';
                         e.target.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.4)';
                       }}
-                    >
-                      <i className="fa-solid fa-plus"></i>
-                      Crear Usuario
+               >
+                 <i className="fa-solid fa-plus"></i><span>Crear Usuario</span>
                     </button>
                   )}
                 </div>
@@ -953,8 +950,7 @@ export default function ListaDeUsuarios() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-hashtag icon-gap" style={{ color: '#6366f1' }}></i>
-                      #
+                      <i className="fa-solid fa-hashtag icon-gap" style={{ color: '#6366f1' }}></i><span>#</span>
                     </th>
                     <th style={{ 
                       padding: '16px 12px', 
@@ -964,8 +960,7 @@ export default function ListaDeUsuarios() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-user icon-gap" style={{}}></i>
-                      NOMBRE COMPLETO
+                      <i className="fa-solid fa-user icon-gap" style={{}}></i><span>NOMBRE COMPLETO</span>
                     </th>
                     <th style={{ 
                       padding: '16px 12px', 
@@ -975,8 +970,7 @@ export default function ListaDeUsuarios() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-shield-alt icon-gap" style={{}}></i>
-                      ROL
+                      <i className="fa-solid fa-shield-alt icon-gap" style={{}}></i><span>ROL</span>
                     </th>
                     <th style={{ 
                       padding: '16px 12px', 
@@ -986,8 +980,7 @@ export default function ListaDeUsuarios() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-envelope icon-gap" style={{ color: '#6366f1' }}></i>
-                      CORREO
+                      <i className="fa-solid fa-envelope icon-gap" style={{ color: '#6366f1' }}></i><span>CORREO</span>
                     </th>
                     <th style={{ 
                       padding: '16px 12px', 
@@ -997,8 +990,7 @@ export default function ListaDeUsuarios() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-at icon-gap" style={{ color: '#6366f1' }}></i>
-                      USUARIO
+                      <i className="fa-solid fa-at icon-gap" style={{ color: '#6366f1' }}></i><span>USUARIO</span>
                     </th>
                     <th style={{ 
                       padding: '16px 12px', 
@@ -1008,8 +1000,7 @@ export default function ListaDeUsuarios() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-toggle-on icon-gap" style={{ color: '#6366f1' }}></i>
-                      ESTADO
+                      <i className="fa-solid fa-toggle-on icon-gap" style={{ color: '#6366f1' }}></i><span>ESTADO</span>
                     </th>
                     <th style={{ 
                       padding: '16px 12px', 
@@ -1019,8 +1010,7 @@ export default function ListaDeUsuarios() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-calendar-plus icon-gap" style={{ color: '#6366f1' }}></i>
-                      CREADO
+                      <i className="fa-solid fa-calendar-plus icon-gap" style={{ color: '#6366f1' }}></i><span>CREADO</span>
                     </th>
                     <th style={{ 
                       padding: '16px 12px', 
@@ -1030,8 +1020,7 @@ export default function ListaDeUsuarios() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-clock icon-gap" style={{ color: '#6366f1' }}></i>
-                      ÚLTIMO ACCESO
+                      <i className="fa-solid fa-clock icon-gap" style={{ color: '#6366f1' }}></i><span>ÚLTIMO ACCESO</span>
                     </th>
                     <th style={{ 
                       padding: '16px 12px', 
@@ -1041,8 +1030,7 @@ export default function ListaDeUsuarios() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-cogs icon-gap" style={{ color: '#6366f1' }}></i>
-                      ACCIONES
+                      <i className="fa-solid fa-cogs icon-gap" style={{ color: '#6366f1' }}></i><span>ACCIONES</span>
                     </th>
                   </tr>
                 </thead>
