@@ -14,108 +14,66 @@ import api from '../api/axiosConfig';
  * Returns the possibly-updated user object.
  */
 export async function resolveRoleForUser(usuario) {
-  try {
-    if (!usuario || !usuario.role || typeof usuario.role !== 'string') return usuario;
+  // Quick guard: nothing to do for missing/non-string role
+  if (!usuario || !usuario.role || typeof usuario.role !== 'string') return usuario;
 
+  const roleStr = String(usuario.role);
+  const looksLikeObjectId = /^[0-9a-fA-F]{24}$/.test(roleStr);
+
+  // Helper: try to get role by id. Returns role object, null, or { forbidden: true }
+  const getRoleById = async (id) => {
+    try {
+      const res = await api.get(`/api/roles/${id}`);
+      const d = res.data || res;
+      return d.role || d.data || (Array.isArray(d) ? d[0] : null);
+    } catch (err) {
+      if (err && err.response && err.response.status === 403) return { forbidden: true };
+      // Log and return null for 404 or other errors
+      console.debug('getRoleById error:', err && err.response ? { status: err.response.status, data: err.response.data } : err);
+      return null;
+    }
+  };
+
+  // Helper: list roles and find by name (case-insensitive)
+  const listAndFindRole = async (name) => {
+    try {
+      const res = await api.get('/api/roles');
+      const d = res.data || res;
+      const arr = Array.isArray(d) ? d : (d.data || []);
+      return arr.find(r => r.name === name || (r.name && r.name.toLowerCase() === name.toLowerCase())) || null;
+    } catch (err) {
+      console.debug('listAndFindRole error:', err && err.response ? { status: err.response.status, data: err.response.data } : err);
+      return null;
+    }
+  };
+
+  try {
     let roleObj = null;
-    const looksLikeObjectId = /^[0-9a-fA-F]{24}$/.test(String(usuario.role));
     let forbidden = false;
 
     if (looksLikeObjectId) {
-      try {
-        const res = await api.get(`/api/roles/${usuario.role}`);
-        const d = res.data || res;
-        roleObj = d.role || d.data || (Array.isArray(d) ? d[0] : null);
-      } catch (err) {
-        if (err && err.response && err.response.status === 403) {
-          forbidden = true;
-          console.debug('No tiene permisos para obtener role by id (403)');
-        } else if (err && err.response && err.response.status === 404) {
-          console.debug('Role not found by id (404)');
-        } else {
-          console.debug('Error getting role by id:', err && err.response ? { status: err.response.status, data: err.response.data } : err);
-        }
-      }
+      const byId = await getRoleById(roleStr);
+      if (byId && byId.forbidden) forbidden = true;
+      else if (byId) roleObj = byId;
     }
 
-    if (!roleObj && !forbidden && Array.isArray(usuario.permissions) && usuario.permissions.includes('roles.ver')) {
-      try {
-        const listRes = await api.get('/api/roles');
-        const listData = listRes.data || listRes;
-        const rolesArr = Array.isArray(listData) ? listData : (listData.data || []);
-        roleObj = rolesArr.find(r => r.name === usuario.role || (r.name && r.name.toLowerCase() === String(usuario.role).toLowerCase()));
-      } catch (err) {
-        console.debug('Error listing roles:', err && err.response ? { status: err.response.status, data: err.response.data } : err);
-      }
+    const canListRoles = Array.isArray(usuario.permissions) && usuario.permissions.includes('roles.ver');
+    if (!roleObj && !forbidden && canListRoles) {
+      roleObj = await listAndFindRole(roleStr);
     }
 
     if (roleObj) {
       usuario.role = roleObj;
       try { localStorage.setItem('user', JSON.stringify(usuario)); } catch (e) { /* ignore storage errors */ }
     }
-
-    return usuario;
-  } catch (error) {
-    console.error('resolveRoleForUser error:', error);
-    return usuario;
+  } catch (err) {
+    console.error('resolveRoleForUser error:', err);
   }
+
+  return usuario;
 }
 
 
-// Helper: intenta resolver el objeto role a partir del valor almacenado en user.role
-// Mantiene la lógica de intentos por id, listado (si hay permiso) y maneja 403/404 sin romper el flujo.
-async function resolveRoleForUser(usuario) {
-  try {
-    if (!usuario || !usuario.role || typeof usuario.role !== 'string') return usuario;
-
-    let roleObj = null;
-    const looksLikeObjectId = /^[0-9a-fA-F]{24}$/.test(String(usuario.role));
-    let forbidden = false;
-
-    if (looksLikeObjectId) {
-      try {
-        const res = await api.get(`/api/roles/${usuario.role}`);
-        const d = res.data || res;
-        roleObj = d.role || d.data || (Array.isArray(d) ? d[0] : null);
-      } catch (err) {
-        if (err && err.response && err.response.status === 403) {
-          forbidden = true;
-          console.debug('No tiene permisos para obtener/listar roles (403). Manteniendo rol como string.');
-        } else if (err && err.response && err.response.status === 404) {
-          console.debug('Rol no encontrado por id (404), intentaremos buscar por nombre si está permitido.');
-        } else {
-          console.debug('Error al obtener role by id:', err && err.response ? { status: err.response.status, data: err.response.data } : err);
-        }
-      }
-    }
-
-    // Solo intentar listar roles si no encontramos roleObj y no fue forbidden y el usuario tiene permiso
-    if (!roleObj && !forbidden && Array.isArray(usuario.permissions) && usuario.permissions.includes('roles.ver')) {
-      try {
-        const listRes = await api.get('/api/roles');
-        const listData = listRes.data || listRes;
-        const rolesArr = Array.isArray(listData) ? listData : (listData.data || []);
-        roleObj = rolesArr.find(r => r.name === usuario.role || (r.name && r.name.toLowerCase() === String(usuario.role).toLowerCase()));
-      } catch (err) {
-        if (err && err.response) {
-          console.debug('Error al listar roles:', err.response.status, err.response.data);
-        } else {
-          console.debug('Error al listar roles:', err);
-        }
-      }
-    }
-
-    if (roleObj) {
-      usuario.role = roleObj;
-      try { localStorage.setItem('user', JSON.stringify(usuario)); } catch (e) { /* ignore */ }
-    }
-
-    return usuario;
-  } catch (error) {
-    console.error('Error al cargar rol:', error);
-    return usuario;
-  }
-}
 
 
 export default function Fijo() {
