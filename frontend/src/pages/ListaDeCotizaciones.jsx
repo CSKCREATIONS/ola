@@ -286,6 +286,34 @@ export default function ListaDeCotizaciones() {
     }
   };
 
+  // Handler para abrir preview de una cotización (extraído para evitar async inline)
+  const handleOpenPreview = async (cot) => {
+    try {
+      const res = await api.get(`/api/cotizaciones/${cot._id}`);
+      const data = res.data || res;
+      const cotizacionCompleta = data.data || data;
+      setCotizacionSeleccionada(cotizacionCompleta);
+      setMostrarPreview(true);
+    } catch (err) {
+      console.error('Error loading cotizacion:', err);
+      Swal.fire('Error', 'No se pudo cargar la cotización completa.', 'error');
+    }
+  };
+
+  // Handler para abrir edición de una cotización (extraído para evitar async inline)
+  const handleEditCotizacion = async (cot) => {
+    try {
+      const res = await api.get(`/api/cotizaciones/${cot._id}`);
+      const data = res.data || res;
+      const cotizacionCompleta = data.data || data;
+      setCotizacionSeleccionada(cotizacionCompleta);
+      setModoEdicion(true);
+    } catch (err) {
+      console.error('Error loading cotizacion for edit:', err);
+      Swal.fire('Error', 'No se pudo cargar la cotización completa.', 'error');
+    }
+  };
+
   const guardarEdicion = async () => {
     // token eliminado por no usarse directamente
 
@@ -964,18 +992,7 @@ export default function ListaDeCotizaciones() {
                             padding: 0,
                             font: 'inherit'
                           }}
-                          onClick={async () => {
-                            try {
-                              const res = await api.get(`/api/cotizaciones/${cot._id}`);
-                              const data = res.data || res;
-                              const cotizacionCompleta = data.data || data;
-                              setCotizacionSeleccionada(cotizacionCompleta);
-                              setMostrarPreview(true);
-                            } catch (err) {
-                              console.error('Error loading cotizacion:', err);
-                              Swal.fire('Error', 'No se pudo cargar la cotización completa.', 'error');
-                            }
-                          }}
+                          onClick={() => handleOpenPreview(cot)}
                           onMouseEnter={(e) => e.target.style.color = '#1e40af'}
                           onMouseLeave={(e) => e.target.style.color = '#3b82f6'}
                         >
@@ -1110,18 +1127,7 @@ export default function ListaDeCotizaciones() {
 
                           {!isAgendada(cot) && !isRemisionada(cot) && (
                             <button
-                              onClick={async () => {
-                                try {
-                                  const res = await api.get(`/api/cotizaciones/${cot._id}`);
-                                  const data = res.data || res;
-                                  const cotizacionCompleta = data.data || data;
-                                  setCotizacionSeleccionada(cotizacionCompleta);
-                                  setModoEdicion(true);
-                                } catch (err) {
-                                  console.error('Error loading cotizacion for edit:', err);
-                                  Swal.fire('Error', 'No se pudo cargar la cotización completa.', 'error');
-                                }
-                              }}
+                              onClick={() => handleEditCotizacion(cot)}
                               title="Editar cotización"
                               style={{
                                 background: 'linear-gradient(135deg, #dbeafe, #bfdbfe)',
@@ -1150,90 +1156,7 @@ export default function ListaDeCotizaciones() {
 
                           {!isAgendada(cot) && !isRemisionada(cot) && (
                             <button
-                              onClick={async () => {
-                                try {
-                                  // Obtener cotización completa para asegurar productos y cliente
-                                  const res = await api.get(`/api/cotizaciones/${cot._id}`);
-                                  const data = res.data || res;
-                                  const cotizacion = data.data || data;
-
-                                  const confirm = await Swal.fire({
-                                    title: `¿Agendar la cotización '${cotizacion.codigo}' como pedido?`,
-                                    icon: 'question',
-                                    showCancelButton: true,
-                                    confirmButtonText: 'Sí, agendar',
-                                    cancelButtonText: 'No'
-                                  });
-                                  if (!confirm.isConfirmed) return;
-
-
-                                  const clienteId = (
-                                    cotizacion?.cliente?.referencia?._id ||
-                                    cotizacion?.cliente?.referencia ||
-                                    cot?.cliente?._id ||
-                                    cot?.cliente?.referencia?._id ||
-                                    cot?.cliente?.referencia
-                                  );
-
-
-                                  // Mapear productos al formato de pedido
-                                  const productosPedido = (cotizacion.productos || []).map(p => {
-                                    const productId = (p?.producto?.id && (p.producto.id._id || p.producto.id)) || p?.producto;
-                                    if (!productId) return null;
-                                    const cantidadNum = Number(p?.cantidad);
-                                    const precioNum = p?.valorUnitario != null ? Number(p.valorUnitario) : Number(p?.producto?.price);
-                                    return {
-                                      product: productId,
-                                      cantidad: Number.isFinite(cantidadNum) && cantidadNum > 0 ? cantidadNum : 1,
-                                      precioUnitario: Number.isFinite(precioNum) ? precioNum : 0,
-                                    };
-                                  }).filter(Boolean);
-
-                                  if (productosPedido.length === 0) {
-                                    return Swal.fire('Error', 'La cotización no tiene productos.', 'warning');
-                                  }
-
-                                  // Pedir al usuario la fecha de entrega antes de crear el pedido
-                                  const baseDate = cotizacion.fecha ? new Date(cotizacion.fecha) : new Date();
-                                  const defaultDate = baseDate.toISOString().slice(0, 10); // YYYY-MM-DD
-                                  const { value: fechaSeleccionada } = await Swal.fire({
-                                    title: 'Seleccione la fecha de entrega',
-                                    input: 'date',
-                                    inputLabel: 'Fecha de entrega',
-                                    inputValue: defaultDate,
-                                    showCancelButton: true,
-                                    confirmButtonText: 'Confirmar',
-                                    cancelButtonText: 'Cancelar'
-                                  });
-
-                                  if (!fechaSeleccionada) {
-                                    // Usuario canceló la selección
-                                    return;
-                                  }
-
-                                  const fechaEntrega = new Date(fechaSeleccionada).toISOString();
-
-                                  await api.post('/api/pedidos', {
-                                    cliente: clienteId,
-                                    productos: productosPedido,
-                                    fechaEntrega,
-                                    observacion: `Agendado desde cotización ${cotizacion.codigo}`,
-                                    cotizacionReferenciada: cotizacion._id,
-                                    cotizacionCodigo: cotizacion.codigo
-                                  });
-
-                                  // Actualizar el estado local de la cotización (usar campo 'estado')
-                                  setCotizaciones(prev => prev.map(c =>
-                                    c._id === cot._id ? { ...c, estado: 'Agendada' } : c
-                                  ));
-
-                                  await Swal.fire('Agendado', 'La cotización fue agendada como pedido.', 'success');
-                                  navigate('/PedidosAgendados');
-                                } catch (error) {
-                                  console.error(error);
-                                  Swal.fire('Error', error.message || 'Hubo un problema al agendar la cotización', 'error');
-                                }
-                              }}
+                              onClick={() => agendarCotizacion(cot)}
                               title="Agendar como pedido"
                               style={{
                                 background: 'linear-gradient(135deg, #dcfce7, #bbf7d0)',

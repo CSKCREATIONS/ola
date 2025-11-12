@@ -180,6 +180,149 @@ function calcularTotalesOrdenProductos(productos = []) {
   return { subtotal, impuestos, total };
 }
 
+// Helper: calcular totales genérico (subtotal basado en valorTotal)
+function calcularTotalesProductos(productos = []) {
+  const subtotal = (productos || []).reduce((acc, p) => acc + (p.valorTotal || 0), 0);
+  const impuestos = subtotal * 0.19;
+  const total = subtotal + impuestos;
+  return { subtotal, impuestos, total };
+}
+
+// Helper: fetch órdenes (mueve la lógica fuera del componente)
+async function fetchOrdenesHelper(setOrdenes) {
+  try {
+    const res = await api.get('/api/ordenes-compra');
+    const data = res.data || res;
+    if (data.success || Array.isArray(data)) {
+      const ordenesOrdenadas = (data.data || data).sort((a, b) =>
+        new Date(b.createdAt || b.fechaCreacion) - new Date(a.createdAt || a.fechaCreacion)
+      );
+      setOrdenes(ordenesOrdenadas);
+    } else {
+      Swal.fire('Error', data.message || 'No se pudieron cargar las órdenes', 'error');
+    }
+  } catch (err) {
+    console.error('Error fetchOrdenes:', err);
+    Swal.fire('Error', 'No se pudo conectar con el servidor', 'error');
+  }
+}
+
+// Helper: fetch proveedores
+async function fetchProveedoresHelper(setProveedores) {
+  try {
+    const res = await api.get('/api/proveedores');
+    const data = res.data || res;
+    if (data.success || data.proveedores || Array.isArray(data)) {
+      setProveedores(data.data || data.proveedores || data);
+    } else {
+      console.error('Formato de respuesta inesperado:', data);
+    }
+  } catch (error) {
+    console.error('Error al cargar proveedores:', error);
+  }
+}
+
+// Helper: fetch productos por proveedor (mira distintas estructuras de respuesta)
+async function fetchProductosPorProveedorHelper(proveedorId, setProductosProveedor, setCargandoProductos) {
+  if (!proveedorId) {
+    setProductosProveedor([]);
+    return;
+  }
+
+  try {
+    setCargandoProductos(true);
+    // Cargar TODOS los productos
+    const res = await api.get('/api/products');
+    const data = res.data || res;
+
+    // Obtener el array de productos (diferentes estructuras posibles)
+    let todosProductos = [];
+    if (data.products) {
+      todosProductos = data.products;
+    } else if (data.data) {
+      todosProductos = data.data;
+    } else if (Array.isArray(data)) {
+      todosProductos = data;
+    }
+
+    // Filtrar productos por proveedor
+    const productosFiltrados = todosProductos.filter(producto => {
+      const proveedorProducto = producto.proveedor;
+      if (proveedorProducto && typeof proveedorProducto === 'object' && proveedorProducto._id) {
+        return proveedorProducto._id === proveedorId;
+      } else if (proveedorProducto && typeof proveedorProducto === 'string') {
+        return proveedorProducto === proveedorId;
+      } else if (proveedorProducto && typeof proveedorProducto === 'object' && proveedorProducto.id) {
+        return proveedorProducto.id === proveedorId;
+      } else if (producto.proveedorId) {
+        return producto.proveedorId === proveedorId;
+      }
+      return false;
+    });
+
+    setProductosProveedor(productosFiltrados);
+  } catch (error) {
+    console.error('Error al cargar productos:', error);
+    Swal.fire('Error', 'No se pudieron cargar los productos', 'error');
+    setProductosProveedor([]);
+  } finally {
+    setCargandoProductos(false);
+  }
+}
+
+// Helper: marcar orden como completada (delegado fuera del componente)
+async function marcarComoCompletadaHelper(orden, fetchOrdenesFn) {
+  const confirm = await Swal.fire({
+    title: '¿Confirmar orden de compra?',
+    text: `Esta acción completará la orden ${orden.numeroOrden} y actualizará el stock de los productos.`,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'Sí, completar orden',
+    cancelButtonText: 'Cancelar',
+    confirmButtonColor: '#28a745',
+    cancelButtonColor: '#dc3545'
+  });
+
+  if (!confirm.isConfirmed) return;
+
+  try {
+    const resCompletar = await api.put(`/api/ordenes-compra/${orden._id}/completar`);
+    const dataCompletar = resCompletar.data || resCompletar;
+
+    if (!dataCompletar.success) {
+      throw new Error(dataCompletar.message || 'No se pudo completar la orden');
+    }
+
+    Swal.fire({
+      title: '¡Éxito!',
+      html: `
+        <div>
+          <p><strong>✅ Orden de compra completada correctamente</strong></p>
+          <p><strong>Número:</strong> ${orden.numeroOrden}</p>
+          <p><strong>Stock actualizado para ${orden.productos.length} producto(s)</strong></p>
+          <div style="margin-top: 10px; background: #f8f9fa; padding: 10px; border-radius: 5px;">
+            <strong>Productos recibidos:</strong><br>
+            ${orden.productos.map(p => `• ${p.producto}: ${p.cantidad} unidades`).join('<br>')}
+          </div>
+        </div>
+      `,
+      icon: 'success',
+      confirmButtonText: 'Aceptar'
+    });
+
+    // Actualizar la lista de órdenes
+    if (typeof fetchOrdenesFn === 'function') fetchOrdenesFn();
+  } catch (error) {
+    console.error('Error al completar la orden:', error);
+    Swal.fire({
+      title: 'Error',
+      text: error.message || 'No se pudo completar la orden. Verifica la conexión con el servidor.',
+      icon: 'error',
+      confirmButtonText: 'Aceptar'
+    });
+  }
+}
+
 // Helper: imprimir orden en nueva ventana
 function imprimirOrdenHelper(orden) {
   if (!orden) {
@@ -432,120 +575,19 @@ export default function OrdenCompra() {
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
-  // Función para obtener órdenes de compra
+  // Delegador: obtener órdenes de compra (usa el helper top-level)
   const fetchOrdenes = async () => {
-    try {
-      const res = await api.get('/api/ordenes-compra');
-      const data = res.data || res;
-      if (data.success || Array.isArray(data)) {
-        const ordenesOrdenadas = (data.data || data).sort((a, b) => 
-          new Date(b.createdAt || b.fechaCreacion) - new Date(a.createdAt || a.fechaCreacion)
-        );
-        setOrdenes(ordenesOrdenadas);
-      }
-      else Swal.fire('Error', data.message || 'No se pudieron cargar las órdenes', 'error');
-    } catch (err) {
-      console.error('Error fetchOrdenes:', err);
-      Swal.fire('Error', 'No se pudo conectar con el servidor', 'error');
-    }
+    await fetchOrdenesHelper(setOrdenes);
   };
 
-  // Función para obtener proveedores
+  // Delegador: obtener proveedores
   const fetchProveedores = async () => {
-    try {
-      const res = await api.get('/api/proveedores');
-      const data = res.data || res;
-      if (data.success || data.proveedores || Array.isArray(data)) {
-        setProveedores(data.data || data.proveedores || data);
-      } else {
-        console.error('Formato de respuesta inesperado:', data);
-      }
-    } catch (error) {
-      console.error('Error al cargar proveedores:', error);
-    }
+    await fetchProveedoresHelper(setProveedores);
   };
 
-  // Función para obtener productos por proveedor
+  // Delegador: obtener productos por proveedor
   const fetchProductosPorProveedor = async (proveedorId) => {
-    if (!proveedorId) {
-      setProductosProveedor([]);
-      return;
-    }
-
-    try {
-      setCargandoProductos(true);
-      console.log('Buscando productos para proveedor ID:', proveedorId);
-
-  // token eliminado por no usarse
-
-      // Cargar TODOS los productos
-      const res = await api.get('/api/products');
-      const data = res.data || res;
-      console.log('Todos los productos cargados:', data);
-
-      // Obtener el array de productos (diferentes estructuras posibles)
-      let todosProductos = [];
-
-      if (data.products) {
-        todosProductos = data.products;
-      } else if (data.data) {
-        todosProductos = data.data;
-      } else if (Array.isArray(data)) {
-        todosProductos = data;
-      }
-
-      console.log('Productos extraídos:', todosProductos);
-
-      // Filtrar productos por proveedor
-      const productosFiltrados = todosProductos.filter(producto => {
-        console.log('Analizando producto:', {
-          nombre: producto.name,
-          proveedor: producto.proveedor,
-          tipo: typeof producto.proveedor
-        });
-
-        // Diferentes formas en que puede estar el proveedor
-        const proveedorProducto = producto.proveedor;
-
-        // Caso 1: proveedor es objeto con _id
-        if (proveedorProducto && typeof proveedorProducto === 'object' && proveedorProducto._id) {
-          const coincide = proveedorProducto._id === proveedorId;
-          console.log('Caso objeto con _id:', coincide);
-          return coincide;
-        }
-        // Caso 2: proveedor es string ID
-        else if (proveedorProducto && typeof proveedorProducto === 'string') {
-          const coincide = proveedorProducto === proveedorId;
-          console.log('Caso string ID:', coincide);
-          return coincide;
-        }
-        // Caso 3: proveedor es objeto con id (sin underscore)
-        else if (proveedorProducto && typeof proveedorProducto === 'object' && proveedorProducto.id) {
-          const coincide = proveedorProducto.id === proveedorId;
-          console.log('Caso objeto con id:', coincide);
-          return coincide;
-        }
-        // Caso 4: campo proveedorId directo
-        else if (producto.proveedorId) {
-          const coincide = producto.proveedorId === proveedorId;
-          console.log('Caso proveedorId:', coincide);
-          return coincide;
-        }
-
-        console.log('No coincide');
-        return false;
-      });
-
-      console.log('Productos filtrados encontrados:', productosFiltrados);
-      setProductosProveedor(productosFiltrados);
-
-    } catch (error) {
-      console.error('Error al cargar productos:', error);
-      Swal.fire('Error', 'No se pudieron cargar los productos', 'error');
-      setProductosProveedor([]);
-    } finally {
-      setCargandoProductos(false);
-    }
+    await fetchProductosPorProveedorHelper(proveedorId, setProductosProveedor, setCargandoProductos);
   };
 
   useEffect(() => {
@@ -862,63 +904,9 @@ export default function OrdenCompra() {
   // Función para verificar stock antes de completar
 // verificarStockDisponible eliminado por no utilizarse
 
-  // Función para marcar orden como completada - CORREGIDA
+  // Delegador: marcar orden como completada
   const marcarComoCompletada = async (orden) => {
-    const confirm = await Swal.fire({
-      title: '¿Confirmar orden de compra?',
-      text: `Esta acción completará la orden ${orden.numeroOrden} y actualizará el stock de los productos.`,
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonText: 'Sí, completar orden',
-      cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#28a745',
-      cancelButtonColor: '#dc3545'
-    });
-
-    if (!confirm.isConfirmed) return;
-
-    try {
-  // token eliminado por no usarse
-
-      // 1. Completar la orden en el backend (esto actualiza el stock)
-      const resCompletar = await api.put(`/api/ordenes-compra/${orden._id}/completar`);
-      const dataCompletar = resCompletar.data || resCompletar;
-
-      if (!dataCompletar.success) {
-        throw new Error(dataCompletar.message || 'No se pudo completar la orden');
-      }
-
-
-      // Mostrar resultado (solo una vez, ya que el backend crea la compra y elimina la orden)
-      Swal.fire({
-        title: '¡Éxito!',
-        html: `
-        <div>
-          <p><strong>✅ Orden de compra completada correctamente</strong></p>
-          <p><strong>Número:</strong> ${orden.numeroOrden}</p>
-          <p><strong>Stock actualizado para ${orden.productos.length} producto(s)</strong></p>
-          <div style="margin-top: 10px; background: #f8f9fa; padding: 10px; border-radius: 5px;">
-            <strong>Productos recibidos:</strong><br>
-            ${orden.productos.map(p => `• ${p.producto}: ${p.cantidad} unidades`).join('<br>')}
-          </div>
-        </div>
-      `,
-        icon: 'success',
-        confirmButtonText: 'Aceptar'
-      });
-
-      // Actualizar la lista de órdenes
-      fetchOrdenes();
-
-    } catch (error) {
-      console.error('Error al completar la orden:', error);
-      Swal.fire({
-        title: 'Error',
-        text: error.message || 'No se pudo completar la orden. Verifica la conexión con el servidor.',
-        icon: 'error',
-        confirmButtonText: 'Aceptar'
-      });
-    }
+    await marcarComoCompletadaHelper(orden, fetchOrdenes);
   };
 
   const abrirModalAgregar = () => {
