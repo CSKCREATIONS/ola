@@ -11,11 +11,39 @@ export default function FormatoCotizacion({ datos, onClose, onEmailSent }) {
   const [showEnviarModal, setShowEnviarModal] = useState(false);
   
   // Función para verificar si el HTML está vacío o contiene solo etiquetas vacías
+  // Uses a DOM parser when available (browser) and a linear-time fallback to avoid regex backtracking.
   const isEmptyHTML = (html) => {
     if (!html || html.trim() === '') return true;
-    // Remover etiquetas HTML y verificar si queda contenido
-    const textContent = html.replace(/<[^>]*>/g, '').trim();
-    return textContent === '';
+
+    // If running in a browser, use innerText/textContent which is reliable and fast.
+    if (typeof document !== 'undefined' && document.createElement) {
+      try {
+        const tmp = document.createElement('div');
+        tmp.innerHTML = html;
+        const text = (tmp.textContent || tmp.innerText || '').trim();
+        return text === '';
+      } catch (e) {
+        // fallthrough to safe fallback
+        console.warn('isEmptyHTML: DOM parsing failed, using fallback stripper', e);
+      }
+    }
+
+    // Fallback: linear-time HTML tag stripper (no regex/backtracking)
+    let inTag = false;
+    let out = '';
+    for (let i = 0; i < html.length; i++) {
+      const ch = html[i];
+      if (ch === '<') {
+        inTag = true;
+        continue;
+      }
+      if (ch === '>') {
+        inTag = false;
+        continue;
+      }
+      if (!inTag) out += ch;
+    }
+    return out.trim() === '';
   };
   
   // Estados para el formulario de envío de correo

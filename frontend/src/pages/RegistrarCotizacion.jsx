@@ -167,6 +167,38 @@ export default function RegistrarCotizacion() {
     const day = date.getDate().toString().padStart(2, '0');
     return `${year}-${month}-${day}`;
   }
+  
+  // Deterministic, linear-time email validator to avoid catastrophic backtracking
+  function isValidEmail(email) {
+    if (typeof email !== 'string') return false;
+    const trimmed = email.trim();
+    if (trimmed.length === 0 || trimmed.length > 254) return false;
+
+    const at = trimmed.indexOf('@');
+    if (at <= 0 || trimmed.indexOf('@', at + 1) !== -1) return false;
+
+    const local = trimmed.slice(0, at);
+    const domain = trimmed.slice(at + 1);
+    if (!local || !domain) return false;
+    if (local.length > 64) return false;
+    if (domain.length > 253) return false;
+
+    if (local.startsWith('.') || local.endsWith('.')) return false;
+    if (local.indexOf('..') !== -1) return false;
+    if (!/^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+$/.test(local)) return false;
+
+    if (domain.indexOf('..') !== -1) return false;
+    const labels = domain.split('.');
+    if (labels.length < 2) return false;
+    for (let i = 0; i < labels.length; i++) {
+      const lab = labels[i];
+      if (!lab || lab.length > 63) return false;
+      if (lab.startsWith('-') || lab.endsWith('-')) return false;
+      if (!/^[A-Za-z0-9-]+$/.test(lab)) return false;
+    }
+
+    return true;
+  }
   // Helpers to reduce cognitive complexity of guardar flow
   const validarClienteYProductos = () => {
     const inputs = document.querySelectorAll('.cuadroTexto');
@@ -182,8 +214,8 @@ export default function RegistrarCotizacion() {
       return null;
     }
 
-    const emailRegex = /^\S+@\S+\.\S+$/;
-    if (!emailRegex.test(correo)) {
+    // Use deterministic validator to avoid regex backtracking
+    if (!isValidEmail(correo)) {
       Swal.fire('Error', 'El correo del cliente debe tener un formato válido.', 'warning');
       return null;
     }

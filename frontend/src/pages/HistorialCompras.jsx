@@ -8,6 +8,23 @@ import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import api from '../api/axiosConfig';
 
+// Deterministic email validator to avoid catastrophic regex backtracking
+function isValidEmail(email) {
+  if (typeof email !== 'string') return false;
+  if (email.length === 0 || email.length > 320) return false;
+  if (/\s/.test(email)) return false;
+  const parts = email.split('@');
+  if (parts.length !== 2) return false;
+  const [local, domain] = parts;
+  if (!local || local.length > 64) return false;
+  if (!domain || domain.length > 255) return false;
+  if (domain.startsWith('.') || domain.endsWith('.')) return false;
+  if (domain.indexOf('.') === -1) return false;
+  if (!/^[A-Za-z0-9.-]+$/.test(domain)) return false;
+  if (!/^[A-Za-z0-9!#$%&'*+\/=?^_`{|}~.\-]+$/.test(local)) return false;
+  return true;
+}
+
 // CSS inyectado para diseño avanzado
 const advancedStyles = `
   .historial-compras-advanced-table {
@@ -619,8 +636,7 @@ JLA Global Company</textarea>
           return false;
         }
         
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
+        if (!isValidEmail(email)) {
           Swal.showValidationMessage('Por favor ingresa un correo electrónico válido');
           return false;
         }

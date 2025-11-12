@@ -189,6 +189,42 @@ function calcularTotalesProductos(productos = []) {
   return { subtotal, impuestos, total };
 }
 
+// Deterministic, linear-time email validator to avoid catastrophic backtracking
+function isValidEmail(email) {
+  if (typeof email !== 'string') return false;
+  const trimmed = email.trim();
+  if (trimmed.length === 0 || trimmed.length > 254) return false;
+
+  const at = trimmed.indexOf('@');
+  // must contain exactly one @
+  if (at <= 0 || trimmed.indexOf('@', at + 1) !== -1) return false;
+
+  const local = trimmed.slice(0, at);
+  const domain = trimmed.slice(at + 1);
+
+  if (!local || !domain) return false;
+  if (local.length > 64) return false; // local part max length
+  if (domain.length > 253) return false;
+
+  // local part checks: no leading/trailing dot, no consecutive dots, allowed chars (simple conservative set)
+  if (local.startsWith('.') || local.endsWith('.')) return false;
+  if (local.indexOf('..') !== -1) return false;
+  if (!/^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+$/.test(local)) return false;
+
+  // domain checks: must have at least one dot, no empty labels, labels <=63, allowed chars, no leading/trailing hyphen
+  if (domain.indexOf('..') !== -1) return false;
+  const labels = domain.split('.');
+  if (labels.length < 2) return false;
+  for (let i = 0; i < labels.length; i++) {
+    const lab = labels[i];
+    if (!lab || lab.length > 63) return false;
+    if (lab.startsWith('-') || lab.endsWith('-')) return false;
+    if (!/^[A-Za-z0-9-]+$/.test(lab)) return false;
+  }
+
+  return true;
+}
+
 // Helper: fetch órdenes (mueve la lógica fuera del componente)
 async function fetchOrdenesHelper(setOrdenes) {
   try {
@@ -584,8 +620,8 @@ async function enviarOrdenPorCorreoHelper(orden) {
       const asunto = document.getElementById('asuntoEmail').value;
       const mensaje = document.getElementById('mensajeEmail').value;
       if (!email) { Swal.showValidationMessage('Por favor ingresa un correo electrónico'); return false; }
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) { Swal.showValidationMessage('Por favor ingresa un correo electrónico válido'); return false; }
+      // Use deterministic validator to avoid any regex backtracking issues
+      if (!isValidEmail(email)) { Swal.showValidationMessage('Por favor ingresa un correo electrónico válido'); return false; }
       if (!asunto || asunto.trim() === '') { Swal.showValidationMessage('Por favor ingresa un asunto'); return false; }
       return { email, asunto, mensaje };
     }

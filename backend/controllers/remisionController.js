@@ -7,12 +7,46 @@ const sgMail = require('@sendgrid/mail');
 
 // --- Helpers (moved to top-level) ---
 function isValidEmail(email) {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return typeof email === 'string' && emailRegex.test(email);
+  // Avoid complex regexes that may lead to catastrophic backtracking.
+  // Use a simple deterministic validation: type, length limits, single '@', and basic domain checks.
+  if (typeof email !== 'string') return false;
+  // RFC limits: local part up to 64, whole address up to 320 - enforce a safe cap
+  if (email.length === 0 || email.length > 320) return false;
+
+  // No whitespace allowed
+  if (/\s/.test(email)) return false;
+
+  const parts = email.split('@');
+  if (parts.length !== 2) return false; // must contain exactly one @
+
+  const [local, domain] = parts;
+  if (!local || local.length > 64) return false;
+
+  // Domain must include at least one dot and not start or end with a dot
+  if (!domain || domain.length > 255) return false;
+  if (domain.startsWith('.') || domain.endsWith('.')) return false;
+  if (domain.indexOf('.') === -1) return false;
+
+  // Basic allowed chars checks (conservative): letters, digits, - and . in domain
+  if (!/^[A-Za-z0-9.-]+$/.test(domain)) return false;
+
+  // Local part: avoid dangerous patterns; allow most common chars but keep it simple
+  // Accept: letters, digits and these punctuation: !#$%&'*+/=?^_`{|}~.-
+  if (!/^[A-Za-z0-9!#$%&'*+/=?^_`{|}~.\-]+$/.test(local)) return false;
+
+  return true;
 }
 
 async function fetchRemisionOrThrow(id) {
-  const remision = await Remision.findById(id)
+  // Validate id early to avoid costly DB lookups with invalid input
+  const idStr = typeof id === 'string' ? id.trim() : '';
+  if (!idStr || !idStr.match(/^[0-9a-fA-F]{24}$/)) {
+    const err = new Error('ID inválido para remisión');
+    err.code = 'INVALID_ID';
+    throw err;
+  }
+
+  const remision = await Remision.findById(idStr)
     .populate('responsable', 'username firstName surname')
     .populate('cotizacionReferencia', 'codigo');
   if (!remision) {
@@ -120,6 +154,7 @@ exports.enviarRemisionPorCorreo = async (req, res) => {
     try {
       remision = await fetchRemisionOrThrow(req.params.id);
     } catch (e) {
+      if (e.code === 'INVALID_ID') return res.status(400).json({ message: 'ID de remisión inválido', id: req.params.id });
       if (e.code === 'REMISION_NOT_FOUND') return res.status(404).json({ message: 'Remisión no encontrada', id: req.params.id });
       throw e;
     }
@@ -441,6 +476,7 @@ exports.getRemisionById = async (req, res) => {
     const remision = await fetchRemisionOrThrow(req.params.id);
     return res.json({ remision });
   } catch (error) {
+    if (error.code === 'INVALID_ID') return res.status(400).json({ message: 'ID de remisión inválido' });
     if (error.code === 'REMISION_NOT_FOUND') return res.status(404).json({ message: 'Remisión no encontrada' });
     console.error('Error al obtener remisión por id:', error);
     return res.status(500).json({ message: 'Error al obtener remisión', error: error.message });
