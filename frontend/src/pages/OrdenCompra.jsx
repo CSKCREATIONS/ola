@@ -236,7 +236,7 @@ function secureRandomString(length) {
     if (typeof window !== 'undefined' && window.crypto) return window.crypto;
     if (typeof global !== 'undefined' && global.crypto) return global.crypto;
     try {
-      const g = Function('return this')();
+      const g = new Function('return this')();
       if (g && g.crypto) return g.crypto;
     } catch (e) {
       // ignore
@@ -1317,8 +1317,7 @@ export default function OrdenCompra() {
                       e.target.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.4)';
                     }}
                   >
-                    <i className="fa-solid fa-plus"></i>
-                    Agregar Orden de Compra
+                    <i className="fa-solid fa-plus"></i><span>Agregar Orden de Compra</span>
                   </button>
                 </div>
               </div>
@@ -1506,8 +1505,7 @@ export default function OrdenCompra() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-hashtag icon-gap" style={{ color: '#6366f1' }}></i>
-                      #
+                      <i className="fa-solid fa-hashtag icon-gap" style={{ color: '#6366f1' }}></i><span>#</span>
                     </th>
                     <th style={{ 
                       padding: '16px 12px', 
@@ -1517,8 +1515,7 @@ export default function OrdenCompra() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-file-invoice icon-gap" style={{ color: '#6366f1' }}></i>
-                      NÚMERO ORDEN
+                      <i className="fa-solid fa-file-invoice icon-gap" style={{ color: '#6366f1' }}></i><span>NÚMERO ORDEN</span>
                     </th>
                     <th style={{ 
                       padding: '16px 12px', 
@@ -1528,8 +1525,7 @@ export default function OrdenCompra() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-truck icon-gap" style={{ color: '#6366f1' }}></i>
-                      PROVEEDOR
+                      <i className="fa-solid fa-truck icon-gap" style={{ color: '#6366f1' }}></i><span>PROVEEDOR</span>
                     </th>
                     <th style={{ 
                       padding: '16px 12px', 
@@ -1539,8 +1535,7 @@ export default function OrdenCompra() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-dollar-sign icon-gap" style={{ color: '#6366f1' }}></i>
-                      TOTAL
+                      <i className="fa-solid fa-dollar-sign icon-gap" style={{ color: '#6366f1' }}></i><span>TOTAL</span>
                     </th>
                     <th style={{ 
                       padding: '16px 12px', 
@@ -1550,8 +1545,7 @@ export default function OrdenCompra() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-calendar icon-gap" style={{ color: '#6366f1' }}></i>
-                      FECHA
+                      <i className="fa-solid fa-calendar icon-gap" style={{ color: '#6366f1' }}></i><span>FECHA</span>
                     </th>
                     <th style={{ 
                       padding: '16px 12px', 
@@ -1561,8 +1555,7 @@ export default function OrdenCompra() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-user icon-gap" style={{ color: '#6366f1' }}></i>
-                      SOLICITADO POR
+                      <i className="fa-solid fa-user icon-gap" style={{ color: '#6366f1' }}></i><span>SOLICITADO POR</span>
                     </th>
                     <th style={{ 
                       padding: '16px 12px', 
@@ -1572,8 +1565,7 @@ export default function OrdenCompra() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-flag icon-gap" style={{ color: '#6366f1' }}></i>
-                      ESTADO
+                      <i className="fa-solid fa-flag icon-gap" style={{ color: '#6366f1' }}></i><span>ESTADO</span>
                     </th>
                     <th style={{ 
                       padding: '16px 12px', 
@@ -1583,8 +1575,7 @@ export default function OrdenCompra() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-paper-plane icon-gap" style={{ color: '#6366f1' }}></i>
-                      ENVIADO
+                      <i className="fa-solid fa-paper-plane icon-gap" style={{ color: '#6366f1' }}></i><span>ENVIADO</span>
                     </th>
                     <th style={{ 
                       padding: '16px 12px', 
@@ -1594,8 +1585,7 @@ export default function OrdenCompra() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-cogs icon-gap" style={{ color: '#6366f1' }}></i>
-                      ACCIONES
+                      <i className="fa-solid fa-cogs icon-gap" style={{ color: '#6366f1' }}></i><span>ACCIONES</span>
                     </th>
                   </tr>
                 </thead>
@@ -1893,8 +1883,7 @@ export default function OrdenCompra() {
                 <div className="modal-header-realista">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                     <h5>
-                      <i className="fa-solid fa-file-invoice-dollar icon-gap"></i>
-                      Nueva Orden de Compra
+                      <i className="fa-solid fa-file-invoice-dollar icon-gap"></i><span>Nueva Orden de Compra</span>
                     </h5>
                     <button className="modal-close-realista" onClick={cerrarModalAgregar}>&times;</button>
                   </div>
@@ -1904,8 +1893,7 @@ export default function OrdenCompra() {
                   {/* Información Básica */}
                   <div className="modal-section">
                     <h6>
-                      <i className="fa-solid fa-info-circle icon-gap"></i>
-                      Información de la Orden
+                      <i className="fa-solid fa-info-circle icon-gap"></i><span>Información de la Orden</span>
                     </h6>
                     <div className="form-grid">
                       <div className="form-group-profesional">
@@ -1956,8 +1944,7 @@ export default function OrdenCompra() {
                   {/* Selección de Productos */}
                   <div className="modal-section">
                     <h6>
-                      <i className="fa-solid fa-cart-plus icon-gap"></i>
-                      Agregar Productos
+                      <i className="fa-solid fa-cart-plus icon-gap"></i><span>Agregar Productos</span>
                     </h6>
 
                     {nuevaOrden.proveedorId ? (
@@ -2004,8 +1991,7 @@ export default function OrdenCompra() {
                               color: '#856404',
                               fontSize: '0.9rem'
                             }}>
-                              <i className="fa-solid fa-info-circle icon-gap"></i>
-                              Este proveedor no tiene productos asociados. Por favor, regístrelos en el módulo de Gestión de Productos.
+                              <i className="fa-solid fa-info-circle icon-gap"></i><span>Este proveedor no tiene productos asociados. Por favor, regístrelos en el módulo de Gestión de Productos.</span>
                             </div>
                           )}
                         </div>
@@ -2076,8 +2062,7 @@ export default function OrdenCompra() {
                               onClick={agregarProductoDesdeLista}
                               disabled={!productoTemp.productoId || productoTemp.cantidad < 1}
                             >
-                              <i className="fa-solid fa-plus"></i>
-                              Agregar Producto
+                              <i className="fa-solid fa-plus"></i><span>Agregar Producto</span>
                             </button>
                           </div>
                         </div>
@@ -2101,8 +2086,7 @@ export default function OrdenCompra() {
                   {nuevaOrden.productos.length > 0 && (
                     <div className="modal-section">
                       <h6>
-                        <i className="fa-solid fa-list-check icon-gap"></i>
-                        Productos en la Orden ({nuevaOrden.productos.length})
+                        <i className="fa-solid fa-list-check icon-gap"></i><span>Productos en la Orden ({nuevaOrden.productos.length})</span>
                       </h6>
                       <div className="table-responsive">
                         <table className="table-profesional">
@@ -2193,16 +2177,14 @@ export default function OrdenCompra() {
                         onClick={cerrarModalAgregar}
                         style={{ background: '#95a5a6', color: 'white' }}
                       >
-                        <i className="fa-solid fa-times"></i>
-                        Cancelar
+                        <i className="fa-solid fa-times"></i><span>Cancelar</span>
                       </button>
                       <button
                         className="btn-profesional btn-success-profesional"
                         onClick={guardarOrden}
                         disabled={nuevaOrden.productos.length === 0}
                       >
-                        <i className="fa-solid fa-check"></i>
-                        Guardar Orden
+                        <i className="fa-solid fa-check"></i><span>Guardar Orden</span>
                       </button>
                     </div>
                   </div>
@@ -2218,8 +2200,7 @@ export default function OrdenCompra() {
                 <div className="modal-header-realista">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                     <h5>
-                      <i className="fa-solid fa-edit icon-gap"></i>
-                      Editar Orden de Compra: <span style={{ color: '#f39c12' }}>{ordenEditando.numeroOrden}</span>
+                      <i className="fa-solid fa-edit icon-gap"></i><span>Editar Orden de Compra: </span><span style={{ color: '#f39c12' }}>{ordenEditando.numeroOrden}</span>
                     </h5>
                     <button className="modal-close-realista" onClick={cerrarModalEditar}>&times;</button>
                   </div>
@@ -2229,8 +2210,7 @@ export default function OrdenCompra() {
                   {/* Información Básica */}
                   <div className="modal-section">
                     <h6>
-                      <i className="fa-solid fa-info-circle icon-gap"></i>
-                      Información de la Orden
+                      <i className="fa-solid fa-info-circle icon-gap"></i><span>Información de la Orden</span>
                     </h6>
                     <div className="form-grid">
                       <div className="form-group-profesional">
@@ -2290,8 +2270,7 @@ export default function OrdenCompra() {
                   {/* Selección de Productos para Edición */}
                   <div className="modal-section">
                     <h6>
-                      <i className="fa-solid fa-cart-plus icon-gap"></i>
-                      Agregar Nuevos Productos
+                      <i className="fa-solid fa-cart-plus icon-gap"></i><span>Agregar Nuevos Productos</span>
                     </h6>
 
                     {ordenEditando.proveedorId ? (
@@ -2395,8 +2374,7 @@ export default function OrdenCompra() {
                               onClick={agregarProductoEdicion}
                               disabled={!productoTemp.productoId || productoTemp.cantidad < 1}
                             >
-                              <i className="fa-solid fa-plus"></i>
-                              Agregar Producto
+                              <i className="fa-solid fa-plus"></i><span>Agregar Producto</span>
                             </button>
                           </div>
                         </div>
@@ -2419,8 +2397,7 @@ export default function OrdenCompra() {
                   {/* Lista de Productos Existente */}
                   <div className="modal-section">
                     <h6>
-                      <i className="fa-solid fa-list-check icon-gap"></i>
-                      Productos en la Orden ({ordenEditando.productos.length})
+                      <i className="fa-solid fa-list-check icon-gap"></i><span>Productos en la Orden ({ordenEditando.productos.length})</span>
                       {errores.productos && <span style={{ color: '#e74c3c', fontSize: '0.8rem', marginLeft: '1rem' }}>{errores.productos}</span>}
                     </h6>
 
@@ -2540,8 +2517,7 @@ export default function OrdenCompra() {
                         onClick={cerrarModalEditar}
                         style={{ background: '#95a5a6', color: 'white' }}
                       >
-                        <i className="fa-solid fa-times"></i>
-                        Cancelar
+                        <i className="fa-solid fa-times"></i><span>Cancelar</span>
                       </button>
                       <button
                         className="btn-profesional btn-success-profesional"
@@ -2550,13 +2526,11 @@ export default function OrdenCompra() {
                       >
                         {cargando ? (
                           <>
-                            <i className="fa-solid fa-spinner fa-spin"></i>
-                            Guardando...
+                            <i className="fa-solid fa-spinner fa-spin"></i><span>Guardando...</span>
                           </>
                         ) : (
                           <>
-                            <i className="fa-solid fa-check"></i>
-                            Actualizar Orden
+                            <i className="fa-solid fa-check"></i><span>Actualizar Orden</span>
                           </>
                         )}
                       </button>
@@ -2600,8 +2574,7 @@ export default function OrdenCompra() {
                     width: '100%'
                   }}>
                     <h5 style={{ margin: 0, display: 'flex', alignItems: 'center' }}>
-                      <i className="fa-solid fa-clipboard-check icon-gap"></i>
-                      Confirmar Orden de Compra
+                      <i className="fa-solid fa-clipboard-check icon-gap"></i><span>Confirmar Orden de Compra</span>
                     </h5>
                     <button
                       className="modal-close-realista"
@@ -2639,8 +2612,7 @@ export default function OrdenCompra() {
                       paddingBottom: '0.5rem',
                       marginBottom: '1rem'
                     }}>
-                      <i className="fa-solid fa-file-lines icon-gap"></i>
-                      Vista Previa de la Orden
+                      <i className="fa-solid fa-file-lines icon-gap"></i><span>Vista Previa de la Orden</span>
                     </h6>
 
                     <div style={{ display: 'grid', gap: '0.75rem' }}>
@@ -2713,8 +2685,7 @@ export default function OrdenCompra() {
                       cursor: 'pointer'
                     }}
                   >
-                    <i className="fa-solid fa-times icon-gap"></i>
-                    Cancelar
+                    <i className="fa-solid fa-times icon-gap"></i><span>Cancelar</span>
                   </button>
                   <button
                     onClick={confirmarCompletada}
@@ -2730,8 +2701,7 @@ export default function OrdenCompra() {
                       boxShadow: '0 2px 4px rgba(39, 174, 96, 0.3)'
                     }}
                   >
-                    <i className="fa-solid fa-check icon-gap"></i>
-                    Marcar como Completada
+                    <i className="fa-solid fa-check icon-gap"></i><span>Marcar como Completada</span>
                   </button>
                 </div>
               </div>
