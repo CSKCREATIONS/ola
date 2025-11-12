@@ -2658,7 +2658,7 @@ export default function OrdenCompra() {
                       boxShadow: '0 2px 4px rgba(39, 174, 96, 0.3)'
                     }}
                   >
-                    <i className="fa-solid fa-check" style={{ marginRight: '8px' }}></i>
+                    <i className="fa-solid fa-check icon-gap"></i>
                     Marcar como Completada
                   </button>
                 </div>

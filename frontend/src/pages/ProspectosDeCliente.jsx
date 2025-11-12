@@ -664,7 +664,7 @@ export default function ListaDeClientes() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-user" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      <i className="fa-solid fa-user icon-gap" style={{ color: '#6366f1' }}></i>
                       CLIENTE
                     </th>
                     <th style={{ 
@@ -675,7 +675,7 @@ export default function ListaDeClientes() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-map-marker-alt" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      <i className="fa-solid fa-map-marker-alt icon-gap" style={{ color: '#6366f1' }}></i>
                       CIUDAD
                     </th>
                     <th style={{ 
@@ -686,7 +686,7 @@ export default function ListaDeClientes() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-phone" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      <i className="fa-solid fa-phone icon-gap" style={{ color: '#6366f1' }}></i>
                       TELÉFONO
                     </th>
                     <th style={{ 
@@ -697,7 +697,7 @@ export default function ListaDeClientes() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-envelope" style={{ marginRight: '6px', color: '#6366f1' }}></i>
+                      <i className="fa-solid fa-envelope icon-gap" style={{ color: '#6366f1' }}></i>
                       CORREO
                     </th>
                   </tr>

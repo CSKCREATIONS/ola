@@ -138,15 +138,15 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
           <span className='modal-title'>{datos.codigo ? datos.codigo : ''}</span>
           <div className="botones-cotizacion" style={{ display: 'flex', gap: '18px', justifyContent: 'center', marginBottom: '1rem' }}>
             <button className="btn-cotizacion moderno" title="Editar" onClick={() => { onClose(); navigate('/RegistrarCotizacion', { state: { datos } }); }}>
-              <i className="fa-solid fa-pen" style={{ fontSize: '1.2rem', marginRight: '8px' }}></i>
+              <i className="fa-solid fa-pen icon-gap" style={{ fontSize: '1.2rem' }}></i>
               Editar
             </button>
             <button className="btn-cotizacion moderno" title="Remisionar" onClick={() => { }}>
-              <i className="fa-solid fa-file-invoice" style={{ fontSize: '1.2rem', marginRight: '8px' }}></i>
+              <i className="fa-solid fa-file-invoice icon-gap" style={{ fontSize: '1.2rem' }}></i>
               Remisionar
             </button>
             <button className="btn-cotizacion moderno" title="Enviar" onClick={abrirModalEnvio}>
-              <i className="fa-solid fa-envelope" style={{ fontSize: '1rem', color: '#EA4335', marginRight: '6px' }}></i>
+              <i className="fa-solid fa-envelope icon-gap" style={{ fontSize: '1rem', color: '#EA4335' }}></i>
               Enviar
             </button>
             <button className="btn-cotizacion moderno" title="Imprimir" onClick={() => {
@@ -177,7 +177,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               newWindow.print();
               newWindow.close();
             }}>
-              <i className="fa-solid fa-print" style={{ fontSize: '1.2rem', marginRight: '8px' }}></i>
+              <i className="fa-solid fa-print icon-gap" style={{ fontSize: '1.2rem' }}></i>
             </button>
           </div>
         </div>

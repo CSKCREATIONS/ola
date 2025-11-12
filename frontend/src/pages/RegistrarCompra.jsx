@@ -477,7 +477,7 @@ export default function RegistrarCompra() {
               {nuevaCompra.productos.length > 0 && (
                 <div className="modal-section">
                   <h6>
-                    <i className="fa-solid fa-list-check" style={{ marginRight: '8px' }}></i>
+                    <i className="fa-solid fa-list-check icon-gap"></i>
                     Productos en la Compra ({nuevaCompra.productos.length})
                   </h6>
                   <div className="table-responsive">
