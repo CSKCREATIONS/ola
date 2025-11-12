@@ -250,6 +250,51 @@ export default function PedidosEntregados() {
     }
   };
 
+  // Función para ver/obtener remisión (separada para reducir anidamiento en JSX)
+  const verRemisionPreview = async (pedido) => {
+    try {
+      // Primero intentar obtener remisión existente desde el pedido
+      const res = await api.post(`/api/remisiones/crear-desde-pedido/${pedido._id}`);
+      const data = res.data || res;
+      if (data.remision) {
+        // actualizar estado local para mostrar numeroRemision en la tabla
+        setPedidosEntregados(prev => prev.map(p => p._id === pedido._id ? { ...p, numeroRemision: data.remision.numeroRemision } : p));
+        setRemisionPreview(data.remision);
+        return;
+      }
+
+      // Si no viene remision detallada, intentar fallback obtener pedido completo y mapear estructura mínima
+      const pedidoRes = await api.get(`/api/pedidos/${pedido._id}?populate=true`);
+      const pedidoData = (pedidoRes.data || pedidoRes).data || (pedidoRes.data || pedidoRes);
+      const remisionLike = {
+        numeroRemision: 'REM-PED-' + (pedidoData.numeroPedido || pedidoData._id?.slice(-6)),
+        codigoPedido: pedidoData.numeroPedido,
+        fechaRemision: pedidoData.updatedAt || pedidoData.createdAt,
+        fechaEntrega: pedidoData.fechaEntrega,
+        estado: 'activa',
+        cliente: pedidoData.cliente || {},
+        productos: (pedidoData.productos || []).map(p => ({
+          nombre: p.product?.name || p.product?.nombre || p.nombre || 'Producto',
+          cantidad: p.cantidad,
+          precioUnitario: p.precioUnitario,
+          total: p.cantidad * (p.precioUnitario || 0),
+          descripcion: p.product?.description || p.product?.descripcion || '',
+          codigo: p.product?.code || p.product?.codigo || ''
+        })),
+        total: (pedidoData.productos || []).reduce((sum, pr) => sum + pr.cantidad * (pr.precioUnitario || 0), 0),
+        observaciones: pedidoData.observacion || '',
+      };
+
+      // actualizar estado local con número de remisión estimado
+      setPedidosEntregados(prev => prev.map(p => p._id === pedido._id ? { ...p, numeroRemision: remisionLike.numeroRemision } : p));
+      setRemisionPreview(remisionLike);
+
+    } catch (error) {
+      console.error('Error cargando remisión/pedido para vista previa:', error);
+      Swal.fire('Error', 'No se pudo cargar la remisión del pedido', 'error');
+    }
+  };
+
   // 🆕 Función para crear remisión desde pedido
   const crearRemisionDesdePedido = async (pedidoId) => {
     try {
@@ -519,47 +564,7 @@ export default function PedidosEntregados() {
                               padding: 0,
                               font: 'inherit'
                             }} 
-                            onClick={async () => {
-                              try {
-                                // Primero intentar obtener remisión existente desde el pedido
-                                // Estrategia: buscar remisión llamando endpoint crear-desde-pedido (que retorna existente si ya hay)
-                                const res = await api.post(`/api/remisiones/crear-desde-pedido/${pedido._id}`);
-                                const data = res.data || res;
-                                if (data.remision) {
-                                  // actualizar estado local para mostrar numeroRemision en la tabla
-                                  setPedidosEntregados(prev => prev.map(p => p._id === pedido._id ? { ...p, numeroRemision: data.remision.numeroRemision } : p));
-                                  setRemisionPreview(data.remision);
-                                } else {
-                                  // Si no viene remision detallada, intentar fallback obtener pedido completo y mapear estructura mínima
-                                  const pedidoRes = await api.get(`/api/pedidos/${pedido._id}?populate=true`);
-                                  const pedidoData = (pedidoRes.data || pedidoRes).data || (pedidoRes.data || pedidoRes);
-                                  const remisionLike = {
-                                    numeroRemision: 'REM-PED-' + (pedidoData.numeroPedido || pedidoData._id?.slice(-6)),
-                                    codigoPedido: pedidoData.numeroPedido,
-                                    fechaRemision: pedidoData.updatedAt || pedidoData.createdAt,
-                                    fechaEntrega: pedidoData.fechaEntrega,
-                                    estado: 'activa',
-                                    cliente: pedidoData.cliente || {},
-                                    productos: (pedidoData.productos || []).map(p => ({
-                                      nombre: p.product?.name || p.product?.nombre || p.nombre || 'Producto',
-                                      cantidad: p.cantidad,
-                                      precioUnitario: p.precioUnitario,
-                                      total: p.cantidad * (p.precioUnitario || 0),
-                                      descripcion: p.product?.description || p.product?.descripcion || '',
-                                      codigo: p.product?.code || p.product?.codigo || ''
-                                    })),
-                                    total: (pedidoData.productos || []).reduce((sum, pr) => sum + pr.cantidad * (pr.precioUnitario || 0), 0),
-                                    observaciones: pedidoData.observacion || '',
-                                  };
-                                  // actualizar estado local con número de remisión estimado
-                                  setPedidosEntregados(prev => prev.map(p => p._id === pedido._id ? { ...p, numeroRemision: remisionLike.numeroRemision } : p));
-                                  setRemisionPreview(remisionLike);
-                                }
-                              } catch (error) {
-                                console.error('Error cargando remisión/pedido para vista previa:', error);
-                                Swal.fire('Error', 'No se pudo cargar la remisión del pedido', 'error');
-                              }
-                            }}
+                            onClick={() => verRemisionPreview(pedido)}
                           >
                             {pedido.numeroRemision || '---'}
                           </button>

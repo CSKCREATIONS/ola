@@ -260,6 +260,59 @@ export default function ListaDeClientes() {
     }
   };
 
+  // Manejar apertura de preview de cotización (extraído para reducir anidamiento)
+  const abrirCotizacionPreview = async (cotId) => {
+    try {
+      const res = await api.get(`/api/cotizaciones/${cotId}`);
+      const data = res.data || res;
+      setCotizacionSeleccionada(data);
+      setMostrarPreview(true);
+    } catch (err) {
+      console.warn('No se pudo cargar la cotización', err);
+      Swal.fire('Error', 'No se pudo cargar la cotización', 'error');
+    }
+  };
+
+  const toggleExpandEmails = (emailKey) => {
+    setExpandedEmails(prev => ({ ...prev, [emailKey]: !prev[emailKey] }));
+  };
+
+  // Renderizar lista de cotizaciones para un cliente (extraído para mantener JSX limpio)
+  const renderCotizacionesForCliente = (cliente) => {
+    const emailKey = (cliente.correo || '').toLowerCase();
+    const list = cotizacionesMap[emailKey] || [];
+    const isExpanded = !!expandedEmails[emailKey];
+    const toShow = isExpanded ? list : list.slice(0, 3);
+
+    return (
+      <div>
+        {toShow.map((c) => (
+          <div key={c.id} style={{ display: 'block', marginBottom: 6 }}>
+            <a
+              href="#"
+              onClick={(e) => { e.preventDefault(); abrirCotizacionPreview(c.id); }}
+              className="prospectos-cotizacion-link"
+            >
+              {c.codigo}
+            </a>
+          </div>
+        ))}
+
+        {list.length > 3 && (
+          <div>
+            <a
+              href="#"
+              onClick={(e) => { e.preventDefault(); toggleExpandEmails(emailKey); }}
+              className="prospectos-expand-link"
+            >
+              {isExpanded ? 'mostrar menos' : `...ver ${list.length - 3} más`}
+            </a>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   useEffect(() => {
     fetchProspectos();
   }, [location]);
@@ -705,53 +758,7 @@ export default function ListaDeClientes() {
                           }}
                       >
                         <td style={{ padding: '16px 12px', whiteSpace: 'nowrap' }}>
-                          {(() => {
-                            const emailKey = (cliente.correo || '').toLowerCase();
-                            const list = cotizacionesMap[emailKey] || [];
-                            const isExpanded = !!expandedEmails[emailKey];
-                            const toShow = isExpanded ? list : list.slice(0, 3);
-
-                            return (
-                              <div>
-                                {toShow.map((c) => (
-                                  <div key={c.id} style={{ display: 'block', marginBottom: 6 }}>
-                                    <a 
-                                      href="#" 
-                                      onClick={async (e) => {
-                                        e.preventDefault();
-                                        try {
-                                          const res = await api.get(`/api/cotizaciones/${c.id}`);
-                                          const data = res.data;
-                                          setCotizacionSeleccionada(data);
-                                          setMostrarPreview(true);
-                                        } catch (err) {
-                                          console.warn('No se pudo cargar la cotización', err);
-                                        }
-                                      }} 
-                                      className="prospectos-cotizacion-link"
-                                    >
-                                      {c.codigo}
-                                    </a>
-                                  </div>
-                                ))}
-
-                                {list.length > 3 && (
-                                  <div>
-                                    <a 
-                                      href="#" 
-                                      onClick={(e) => { 
-                                        e.preventDefault(); 
-                                        setExpandedEmails(prev => ({ ...prev, [emailKey]: !prev[emailKey] })); 
-                                      }} 
-                                      className="prospectos-expand-link"
-                                    >
-                                      {isExpanded ? 'mostrar menos' : `...ver ${list.length - 3} más`}
-                                    </a>
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })()}
+                          {renderCotizacionesForCliente(cliente)}
                         </td>
                         <td style={{ padding: '16px 12px' }}>
                           <div style={{ fontWeight: '600', color: '#1f2937', fontSize: '14px' }}>

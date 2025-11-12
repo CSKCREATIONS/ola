@@ -4,81 +4,50 @@ import Fijo from '../components/Fijo';
 import NavVentas from '../components/NavVentas';
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
-import Swal from 'sweetalert2';
 import api from '../api/axiosConfig';
+import Swal from 'sweetalert2';
+import '../App.css';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import CotizacionPreview from '../components/CotizacionPreview';
-import '../cotizaciones-modal.css';
-
-// CSS para diseño avanzado
-const advancedStyles = `
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
-  
-  @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translateY(30px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  
-  .cotizaciones-container * {
-    box-sizing: border-box;
-  }
-  
-  .fade-in-up {
-    animation: fadeInUp 0.6s ease-out;
-  }
-  
-  .glassmorphism {
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
-  }
-`;
-
-// Inyectar estilos una sola vez
-if (!document.querySelector('#cotizaciones-advanced-styles')) {
-  const styleSheet = document.createElement('style');
-  styleSheet.id = 'cotizaciones-advanced-styles';
-  styleSheet.textContent = advancedStyles;
-  document.head.appendChild(styleSheet);
-}
 
 export default function ListaDeCotizaciones() {
   const [cotizaciones, setCotizaciones] = useState([]);
   const [productos, setProductos] = useState([]);
   const [cotizacionSeleccionada, setCotizacionSeleccionada] = useState(null);
-  const [modoEdicion, setModoEdicion] = useState(false);
   const [mostrarPreview, setMostrarPreview] = useState(false);
-  const modalRef = useRef();
-  const navigate = useNavigate();
-  const location = useLocation();
+  const [modoEdicion, setModoEdicion] = useState(false);
   const [highlightId, setHighlightId] = useState(null);
   const [blinkOn, setBlinkOn] = useState(false);
-  // pendingHighlightId eliminado (se establecía pero nunca se utilizaba)
+  const location = useLocation();
+  const navigate = useNavigate();
 
-
-
+  const exportToExcel = () => {
+    const table = document.getElementById('tabla_cotizaciones');
+    if (!table) return;
+    const workbook = XLSX.utils.table_to_book(table);
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    const data = new Blob([excelBuffer], { type: 'application/octet-stream' });
+    saveAs(data, 'listaCotizaciones.xlsx');
+  };
 
   const exportarPDF = () => {
     const input = document.getElementById('tabla_cotizaciones');
+    if (!input) return;
+
     html2canvas(input).then((canvas) => {
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF('p', 'mm', 'a4');
+
       const imgWidth = 190;
       const pageHeight = 297;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
       let heightLeft = imgHeight;
       let position = 10;
 
       pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+
       heightLeft -= pageHeight;
 
       while (heightLeft > 0) {
@@ -90,16 +59,6 @@ export default function ListaDeCotizaciones() {
 
       pdf.save('listaCotizaciones.pdf');
     });
-  };
-
-
-  const exportToExcel = () => {
-    const table = document.getElementById('tabla_cotizaciones');
-    if (!table) return;
-    const workbook = XLSX.utils.table_to_book(table);
-    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-    const data = new Blob([excelBuffer], { type: 'application/octet-stream' });
-    saveAs(data, 'listaCotizaciones.xlsx');
   };
 
 
@@ -136,41 +95,33 @@ export default function ListaDeCotizaciones() {
 
   // Helper para detectar si una cotización está marcada como agendada.
   // Acepta tanto el objeto cotización completo como valores primitivos (compatibilidad backwards).
-  const isAgendada = (valOrCot) => {
-    if (!valOrCot && valOrCot !== false && valOrCot !== 0) return false;
+  const parseBoolLike = (v) => {
+    if (v === true || v === 1) return true;
+    if (v === false || v === 0 || v === undefined || v === null) return false;
+    if (typeof v === 'string') {
+      const s = v.trim().toLowerCase();
+      return ['true', '1', 'si', 'yes', 'agendada', 'agendado', 'agendar'].includes(s);
+    }
+    return Boolean(v);
+  };
 
-    // Si se pasó el objeto completo
+  const isEstadoAgendadoString = (estado) => {
+    if (!estado || typeof estado !== 'string') return false;
+    const s = estado.trim().toLowerCase();
+    return s.includes('agend');
+  };
+
+  const isAgendada = (valOrCot) => {
+    if (valOrCot === undefined || valOrCot === null) return false;
+    // objeto cotización
     if (typeof valOrCot === 'object') {
       const cot = valOrCot;
-      if (cot.estado && typeof cot.estado === 'string') {
-        const s = cot.estado.trim().toLowerCase();
-        return s === 'agendada' || s === 'agendado' || s === 'agendar';
-      }
-
-      // Fallback: si aún existe la propiedad agendada en algún documento antiguo
-      if ('agendada' in cot) {
-        const v = cot.agendada;
-        if (v === true || v === 1) return true;
-        if (v === false || v === 0 || v === undefined || v === null) return false;
-        if (typeof v === 'string') {
-          const s = v.trim().toLowerCase();
-          return s === 'true' || s === '1' || s === 'si' || s === 'yes' || s === 'agendada';
-        }
-        return Boolean(v);
-      }
-
+      if (isEstadoAgendadoString(cot.estado)) return true;
+      if ('agendada' in cot) return parseBoolLike(cot.agendada);
       return false;
     }
-
-    // Si se pasó un valor primitivo (compatibilidad)
-    const val = valOrCot;
-    if (val === true || val === 1) return true;
-    if (val === false || val === 0 || val === undefined || val === null) return false;
-    if (typeof val === 'string') {
-      const s = val.trim().toLowerCase();
-      return s === 'true' || s === '1' || s === 'si' || s === 'yes' || s === 'agendada';
-    }
-    return Boolean(val);
+    // primitivo
+    return parseBoolLike(valOrCot);
   };
 
   // Helper para detectar si una cotización ya fue remisionada
@@ -197,33 +148,30 @@ export default function ListaDeCotizaciones() {
     }
   };
 
-  const handleEliminarCotizacion = (id) => {
-    Swal.fire({
-      title: '¿Estás seguro?',
-      text: 'Esta Cotización se cancelará y no podrás revertirlo',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'Sí, cancelar',
-      cancelButtonText: 'No, mantener',
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
-    }).then((result) => {
-      if (result.isConfirmed) {
-        (async () => {
-          try {
-            await api.delete(`/api/cotizaciones/${id}`);
+  const handleEliminarCotizacion = async (id) => {
+    try {
+      const result = await Swal.fire({
+        title: '¿Estás seguro?',
+        text: 'Esta Cotización se cancelará y no podrás revertirlo',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, cancelar',
+        cancelButtonText: 'No, mantener',
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+      });
 
-            // Si el backend confirma la eliminación, actualizar estado local
-            setCotizaciones(prev => prev.filter(c => c._id !== id));
-            Swal.fire('Perfecto', 'Se ha eliminado la cotización.', 'success');
-          } catch (err) {
-            console.error('Error deleting cotizacion:', err);
-            const msg = err?.response?.data?.message || err?.response?.data || err.message;
-            Swal.fire('Error', msg || 'No se pudo eliminar la cotización.', 'error');
-          }
-        })();
-      }
-    });
+      if (!result.isConfirmed) return;
+
+      await api.delete(`/api/cotizaciones/${id}`);
+      // Si el backend confirma la eliminación, actualizar estado local
+      setCotizaciones(prev => prev.filter(c => c._id !== id));
+      Swal.fire('Perfecto', 'Se ha eliminado la cotización.', 'success');
+    } catch (err) {
+      console.error('Error deleting cotizacion:', err);
+      const msg = err?.response?.data?.message || err?.response?.data || err.message;
+      Swal.fire('Error', msg || 'No se pudo eliminar la cotización.', 'error');
+    }
   };
 
   // Intentar eliminar: primero validar antigüedad (15 días) en el frontend
@@ -255,6 +203,86 @@ export default function ListaDeCotizaciones() {
     } catch (err) {
       console.error('Error en intentarEliminarCotizacion:', err);
       Swal.fire('Error', 'No se pudo verificar la cotización antes de eliminar.', 'error');
+    }
+  };
+
+  // Agendar una cotización como pedido (extraído para evitar nesting profundo en JSX)
+  const agendarCotizacion = async (cot) => {
+    try {
+      const res = await api.get(`/api/cotizaciones/${cot._id}`);
+      const data = res.data || res;
+      const cotizacion = data.data || data;
+
+      const confirm = await Swal.fire({
+        title: `¿Agendar la cotización '${cotizacion.codigo}' como pedido?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, agendar',
+        cancelButtonText: 'No'
+      });
+      if (!confirm.isConfirmed) return;
+
+      const clienteId = (
+        cotizacion?.cliente?.referencia?._id ||
+        cotizacion?.cliente?.referencia ||
+        cot?.cliente?._id ||
+        cot?.cliente?.referencia?._id ||
+        cot?.cliente?.referencia
+      );
+
+      // Mapear productos al formato de pedido
+      const productosPedido = (cotizacion.productos || []).map(p => {
+        const productId = (p?.producto?.id && (p.producto.id._id || p.producto.id)) || p?.producto;
+        if (!productId) return null;
+        const cantidadNum = Number(p?.cantidad);
+        const precioNum = p?.valorUnitario != null ? Number(p.valorUnitario) : Number(p?.producto?.price);
+        return {
+          product: productId,
+          cantidad: Number.isFinite(cantidadNum) && cantidadNum > 0 ? cantidadNum : 1,
+          precioUnitario: Number.isFinite(precioNum) ? precioNum : 0,
+        };
+      }).filter(Boolean);
+
+      if (productosPedido.length === 0) {
+        return Swal.fire('Error', 'La cotización no tiene productos.', 'warning');
+      }
+
+      // Pedir al usuario la fecha de entrega antes de crear el pedido
+      const baseDate = cotizacion.fecha ? new Date(cotizacion.fecha) : new Date();
+      const defaultDate = baseDate.toISOString().slice(0, 10); // YYYY-MM-DD
+      const { value: fechaSeleccionada } = await Swal.fire({
+        title: 'Seleccione la fecha de entrega',
+        input: 'date',
+        inputLabel: 'Fecha de entrega',
+        inputValue: defaultDate,
+        showCancelButton: true,
+        confirmButtonText: 'Confirmar',
+        cancelButtonText: 'Cancelar'
+      });
+
+      if (!fechaSeleccionada) return;
+
+      const fechaEntrega = new Date(fechaSeleccionada).toISOString();
+
+      await api.post('/api/pedidos', {
+        cliente: clienteId,
+        productos: productosPedido,
+        fechaEntrega,
+        observacion: `Agendado desde cotización ${cotizacion.codigo}`,
+        cotizacionReferenciada: cotizacion._id,
+        cotizacionCodigo: cotizacion.codigo
+      });
+
+      // Actualizar el estado local de la cotización (usar campo 'estado')
+      setCotizaciones(prev => prev.map(c =>
+        c._id === cot._id ? { ...c, estado: 'Agendada' } : c
+      ));
+
+      await Swal.fire('Agendado', 'La cotización fue agendada como pedido.', 'success');
+      navigate('/PedidosAgendados');
+    } catch (error) {
+      console.error(error);
+      Swal.fire('Error', error.message || 'Hubo un problema al agendar la cotización', 'error');
     }
   };
 
@@ -1769,5 +1797,5 @@ export default function ListaDeCotizaciones() {
 
     </div >
   )
-};
+}
 

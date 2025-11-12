@@ -208,6 +208,115 @@ const ProductoModal = ({
     setForm({ ...form, [name]: value });
   };
 
+  // Helpers to reduce cognitive complexity of the inline checkbox handler
+  const fetchSubcategory = async (subcatId) => {
+    try {
+      const subRes = await api.get(`/api/subcategories/${subcatId}`);
+      if (!(subRes.status >= 200 && subRes.status < 300)) {
+        return { error: subRes.data?.message || 'No se pudo verificar la subcategoría' };
+      }
+      const subcategoria = subRes.data?.data || subRes.data || subRes;
+      return { subcategoria };
+    } catch (err) {
+      return { error: 'Error verificando subcategoría/categoría' };
+    }
+  };
+
+  const fetchCategory = async (catId) => {
+    try {
+      const catRes = await api.get(`/api/categories/${catId}`);
+      if (!(catRes.status >= 200 && catRes.status < 300)) {
+        return { error: catRes.data?.message || 'No se pudo verificar la categoría padre' };
+      }
+      const categoria = catRes.data?.data || catRes.data || catRes;
+      return { categoria };
+    } catch (err) {
+      return { error: 'Error verificando categoría padre' };
+    }
+  };
+
+  const confirmAction = async ({ title, text, icon = 'question', confirmText = 'Sí', cancelText = 'Cancelar' }) => {
+    const result = await Swal.fire({
+      title,
+      text,
+      icon,
+      showCancelButton: true,
+      confirmButtonText: confirmText,
+      cancelButtonText: cancelText
+    });
+    return result.isConfirmed;
+  };
+
+  const handleToggleCheckbox = async (prod) => {
+    const tryingToActivate = !prod.activo;
+    const subcatId = prod.subcategory?._id || prod.subcategory;
+
+    if (tryingToActivate) {
+      // Activation: validate subcategory and parent category
+      if (subcatId) {
+        const { subcategoria, error: subErr } = await fetchSubcategory(subcatId);
+        if (subErr) return Swal.fire('Error', subErr, 'error');
+        if (subcategoria && subcategoria.activo === false) {
+          return Swal.fire('Acción no permitida', 'No se puede activar el producto porque su subcategoría está desactivada', 'error');
+        }
+
+        const parentCatId = subcategoria?.category?._id || subcategoria?.category;
+        if (parentCatId) {
+          const { categoria, error: catErr } = await fetchCategory(parentCatId);
+          if (catErr) return Swal.fire('Error', catErr, 'error');
+          if (categoria && categoria.activo === false) {
+            return Swal.fire('Acción no permitida', 'No se puede activar el producto porque la categoría padre está desactivada', 'error');
+          }
+        }
+      }
+
+      const ok = await confirmAction({
+        title: `¿Está seguro de activar el producto "${prod.name}"?`,
+        text: 'Estará nuevamente disponible en cotizaciones y ventas',
+        icon: 'question',
+        confirmText: 'Sí, activar'
+      });
+      if (!ok) return;
+      return handleToggleEstado(prod, prod.activo);
+    }
+
+    // Deactivation flow: try to check subcategory and request confirmation when needed
+    if (subcatId) {
+      const { subcategoria, error: subErr } = await fetchSubcategory(subcatId);
+      if (!subErr && subcategoria && subcategoria.activo) {
+        const ok = await confirmAction({
+          title: `¿Está seguro de desactivar el producto "${prod.name}"?`,
+          text: 'No estará disponible para cotizaciones ni ventas',
+          icon: 'warning',
+          confirmText: 'Sí, desactivar'
+        });
+        if (!ok) return;
+        return handleToggleEstado(prod, prod.activo);
+      }
+      if (subErr) {
+        // If verification fails, still ask generic confirmation
+        const ok = await confirmAction({
+          title: `¿Está seguro de desactivar el producto "${prod.name}"?`,
+          text: 'No estará disponible para cotizaciones ni ventas',
+          icon: 'warning',
+          confirmText: 'Sí, desactivar'
+        });
+        if (!ok) return;
+        return handleToggleEstado(prod, prod.activo);
+      }
+    }
+
+    // No subcategory: ask confirmation
+    const ok = await confirmAction({
+      title: `¿Está seguro de desactivar el producto "${prod.name}"?`,
+      text: 'No estará disponible para cotizaciones ni ventas',
+      icon: 'warning',
+      confirmText: 'Sí, desactivar'
+    });
+    if (!ok) return;
+    return handleToggleEstado(prod, prod.activo);
+  };
+
   const handleSubmit = e => {
     e.preventDefault();
     if (Object.values(form).some(field => field === '')) {
@@ -1345,97 +1454,7 @@ const GestionProductos = () => {
                             type="checkbox"
                             checked={!!prod.activo}
                             aria-label={`Estado del producto ${prod.name || prod._id}`}
-                            onChange={async () => {
-                              const tryingToActivate = !prod.activo;
-                              const subcatId = prod.subcategory?._id || prod.subcategory;
-
-                              if (tryingToActivate) {
-                                // Activación: validar subcategoría y categoría padre activas
-                                if (subcatId) {
-                                  try {
-                                    const subRes = await api.get(`/api/subcategories/${subcatId}`);
-                                    if (!(subRes.status >= 200 && subRes.status < 300)) {
-                                      const err = subRes.data || {};
-                                      return Swal.fire('Error', err.message || 'No se pudo verificar la subcategoría', 'error');
-                                    }
-                                    const subcategoria = subRes.data?.data || subRes.data || subRes;
-                                    if (subcategoria && subcategoria.activo === false) {
-                                      return Swal.fire('Acción no permitida', 'No se puede activar el producto porque su subcategoría está desactivada', 'error');
-                                    }
-                                    const parentCatId = subcategoria?.category?._id || subcategoria?.category;
-                                    if (parentCatId) {
-                                      const catRes = await api.get(`/api/categories/${parentCatId}`);
-                                      if (!(catRes.status >= 200 && catRes.status < 300)) {
-                                        const err = catRes.data || {};
-                                        return Swal.fire('Error', err.message || 'No se pudo verificar la categoría padre', 'error');
-                                      }
-                                      const categoria = catRes.data?.data || catRes.data || catRes;
-                                      if (categoria && categoria.activo === false) {
-                                        return Swal.fire('Acción no permitida', 'No se puede activar el producto porque la categoría padre está desactivada', 'error');
-                                      }
-                                    }
-                                  } catch (err) {
-                                    return Swal.fire('Error', 'Error verificando subcategoría/categoría', 'error');
-                                  }
-                                }
-                                // Si pasa validaciones, pedir confirmación para activar
-                                const confirm = await Swal.fire({
-                                  title: `¿Está seguro de activar el producto "${prod.name}"?`,
-                                  text: 'Estará nuevamente disponible en cotizaciones y ventas',
-                                  icon: 'question',
-                                  showCancelButton: true,
-                                  confirmButtonText: 'Sí, activar',
-                                  cancelButtonText: 'Cancelar'
-                                });
-                                if (!confirm.isConfirmed) return; // cancelar activación
-                                return handleToggleEstado(prod, prod.activo);
-                              } else {
-                                // Desactivación: primero validar estado de subcategoría (si está activa pedir confirmación)
-                                if (subcatId) {
-                                  try {
-                                    const subRes = await api.get(`/api/subcategories/${subcatId}`);
-                                    if (subRes.status >= 200 && subRes.status < 300) {
-                                      const subcategoria = subRes.data?.data || subRes.data || subRes;
-                                      if (subcategoria && subcategoria.activo) {
-                                        const confirm = await Swal.fire({
-                                          title: `¿Está seguro de desactivar el producto "${prod.name}"?`,
-                                          text: 'No estará disponible para cotizaciones ni ventas',
-                                          icon: 'warning',
-                                          showCancelButton: true,
-                                          confirmButtonText: 'Sí, desactivar',
-                                          cancelButtonText: 'Cancelar'
-                                        });
-                                        if (!confirm.isConfirmed) return; // cancelar
-                                      }
-                                    }
-                                  } catch (err) {
-                                    // Si falla la verificación igual pedir confirmación genérica
-                                    const confirm = await Swal.fire({
-                                      title: `¿Está seguro de desactivar el producto "${prod.name}"?`,
-                                      text: 'No estará disponible para cotizaciones ni ventas',
-                                      icon: 'warning',
-                                      showCancelButton: true,
-                                      confirmButtonText: 'Sí, desactivar',
-                                      cancelButtonText: 'Cancelar'
-                                    });
-                                    if (!confirm.isConfirmed) return;
-                                  }
-                                } else {
-                                  // Sin subcategoría: pedir confirmación igualmente
-                                  const confirm = await Swal.fire({
-                                    title: `¿Está seguro de desactivar el producto "${prod.name}"?`,
-                                    text: 'No estará disponible para cotizaciones ni ventas',
-                                    icon: 'warning',
-                                    showCancelButton: true,
-                                    confirmButtonText: 'Sí, desactivar',
-                                    cancelButtonText: 'Cancelar'
-                                  });
-                                  if (!confirm.isConfirmed) return;
-                                }
-                                // Ejecutar desactivación
-                                return handleToggleEstado(prod, prod.activo);
-                              }
-                            }}
+                            onChange={() => handleToggleCheckbox(prod)}
                           />
                           <span className="slider"></span>
                         </label>

@@ -167,10 +167,9 @@ export default function RegistrarCotizacion() {
     const day = date.getDate().toString().padStart(2, '0');
     return `${year}-${month}-${day}`;
   }
-
-  const handleGuardarCotizacion = async (enviar = false, mostrarModal = false) => {
+  // Helpers to reduce cognitive complexity of guardar flow
+  const validarClienteYProductos = () => {
     const inputs = document.querySelectorAll('.cuadroTexto');
-
     const nombre = inputs[0]?.value.trim();
     const ciudad = inputs[1]?.value.trim();
     const direccion = inputs[2]?.value.trim();
@@ -180,35 +179,36 @@ export default function RegistrarCotizacion() {
 
     if (!nombre || !ciudad || !direccion || !telefono || !correo || !fecha) {
       Swal.fire('Error', 'Todos los campos del cliente y la fecha son obligatorios.', 'warning');
-      return;
+      return null;
     }
 
-    // Validación básica de formato de correo antes de enviar
     const emailRegex = /^\S+@\S+\.\S+$/;
     if (!emailRegex.test(correo)) {
       Swal.fire('Error', 'El correo del cliente debe tener un formato válido.', 'warning');
-      return;
+      return null;
     }
 
     if (productosSeleccionados.length === 0) {
       Swal.fire('Error', 'Debes agregar al menos un producto a la cotización.', 'warning');
-      return;
+      return null;
     }
 
     for (const prod of productosSeleccionados) {
       if (!prod.producto || !prod.cantidad || !prod.valorUnitario) {
         Swal.fire('Error', 'Todos los productos deben tener cantidad y valor unitario.', 'warning');
-        return;
+        return null;
       }
     }
 
+    return { nombre, ciudad, direccion, telefono, correo, fecha };
+  };
+
+  const construirDatosCotizacion = (clienteVals, enviarFlag) => {
+    const { nombre, ciudad, direccion, telefono, correo, fecha } = clienteVals;
     const clienteData = { nombre, ciudad, direccion, telefono, correo, esCliente: false };
 
-    const datosCotizacion = {
-      cliente: {
-        referencia: user?._id, // Si tienes el id del cliente, cámbialo aquí
-        ...clienteData
-      },
+    return {
+      cliente: { referencia: user?._id, ...clienteData },
       responsable: {
         id: user?._id,
         firstName: user?.firstName,
@@ -222,10 +222,7 @@ export default function RegistrarCotizacion() {
       productos: productosSeleccionados.map(p => {
         const prodObj = productos.find(prod => prod._id === p.producto);
         return {
-          producto: {
-            id: p.producto,
-            name: prodObj?.name || ''
-          },
+          producto: { id: p.producto, name: prodObj?.name || '' },
           descripcion: p.descripcion,
           cantidad: Number.parseFloat(p.cantidad || 0),
           valorUnitario: Number.parseFloat(p.valorUnitario || 0),
@@ -234,99 +231,74 @@ export default function RegistrarCotizacion() {
         };
       }),
       clientePotencial: true,
-      enviadoCorreo: enviar
+      enviadoCorreo: !!enviarFlag
     };
+  };
 
-    // Añadir información de la empresa si está disponible en la UI
+  const anexarEmpresaSiExiste = (datos) => {
     try {
       const empresaNombreEl = document.getElementById('empresa-nombre');
       const empresaNombre = empresaNombreEl ? empresaNombreEl.innerText.trim() : '';
-      if (empresaNombre) {
-        datosCotizacion.empresa = { nombre: empresaNombre, direccion: '' };
-      }
+      if (empresaNombre) datos.empresa = { nombre: empresaNombre, direccion: '' };
     } catch (err) {
-      // no bloquear si no se puede obtener
       console.warn('No se pudo obtener información de la empresa desde la UI', err);
     }
+  };
+
+  const asegurarProspecto = async (correo, nombre, telefono, direccion, ciudad) => {
+    try {
+      const clientesRes = await api.get('/api/clientes');
+      const clientes = clientesRes.data;
+      const existe = Array.isArray(clientes) && clientes.some(c => (c.correo || '').toLowerCase() === correo.toLowerCase());
+      if (!existe) {
+        const nuevoCliente = { nombre, correo, telefono, direccion, ciudad, esCliente: false };
+        const createRes = await api.post('/api/clientes', nuevoCliente);
+        if (createRes.status >= 200 && createRes.status < 300) {
+          Swal.fire('Prospecto creado', 'El correo no existía en la base de datos y se creó como prospecto.', 'success');
+        } else {
+          console.warn('No se pudo crear prospecto:', createRes.data);
+        }
+      }
+    } catch (err) {
+      console.warn('Error al verificar/crear prospecto:', err);
+    }
+  };
+
+  const limpiarFormulario = () => {
+    try {
+      const allInputs = document.querySelectorAll('.cuadroTexto');
+      if (allInputs && allInputs.length) allInputs.forEach(input => { if (input) input.value = ''; });
+      setProductosSeleccionados([]);
+      if (descripcionRef.current) descripcionRef.current.setContent('');
+      if (condicionesPagoRef.current) condicionesPagoRef.current.setContent('');
+    } catch (err) {
+      console.warn('No se pudieron limpiar todos los campos automáticamente:', err);
+    }
+  };
+
+  const handleGuardarCotizacion = async (enviar = false, mostrarModal = false) => {
+    const clienteVals = validarClienteYProductos();
+    if (!clienteVals) return;
+
+    const datosCotizacion = construirDatosCotizacion(clienteVals, enviar);
+    anexarEmpresaSiExiste(datosCotizacion);
 
     try {
       const response = await api.post('/api/cotizaciones', datosCotizacion);
       const result = response.data;
-
       if (response.status < 200 || response.status >= 300) {
         Swal.fire('Error', result.message || 'No se pudo guardar la cotización.', 'error');
         return;
       }
 
-      // MARCAR: check if client with this email exists; if not, create as prospect
-      try {
-        const clientesRes = await api.get('/api/clientes');
-        const clientes = clientesRes.data;
-        const existe = Array.isArray(clientes) && clientes.some(c => (c.correo || '').toLowerCase() === correo.toLowerCase());
-        if (!existe) {
-          // crear prospecto (esCliente: false)
-          const nuevoCliente = {
-            nombre,
-            correo,
-            telefono,
-            direccion,
-            ciudad,
-            esCliente: false
-          };
+      // Asegurar prospecto (no bloqueante para el flujo principal)
+      await asegurarProspecto(clienteVals.correo, clienteVals.nombre, clienteVals.telefono, clienteVals.direccion, clienteVals.ciudad);
 
-          const createRes = await api.post('/api/clientes', nuevoCliente);
-          if (createRes.status >= 200 && createRes.status < 300) {
-            Swal.fire('Prospecto creado', 'El correo no existía en la base de datos y se creó como prospecto.', 'success');
-          } else {
-            console.warn('No se pudo crear prospecto:', createRes.data);
-          }
-        }
-      } catch (err) {
-        console.warn('Error al verificar/crear prospecto:', err);
-      }
-  // En vez de mostrar el modal aquí, navegamos a ListaDeCotizaciones
-  // y pasamos la cotización creada en el state para que la lista abra el formato
-  const nuevaCot = result.data || result;
-  // Mostrar toast de éxito (persiste al navegar porque SweetAlert2 se monta en body)
-  Swal.fire({
-    toast: true,
-    position: 'top-end',
-    icon: 'success',
-    title: 'Cotización guardada',
-    showConfirmButton: false,
-    timer: 2000,
-    timerProgressBar: true,
-    didOpen: (toast) => {
-      toast.addEventListener('mouseenter', Swal.stopTimer);
-      toast.addEventListener('mouseleave', Swal.resumeTimer);
-    }
-  });
-  navigate('/ListaDeCotizaciones', { state: { abrirFormato: true, cotizacion: nuevaCot } });
+      const nuevaCot = result.data || result;
+      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Cotización guardada', showConfirmButton: false, timer: 2000, timerProgressBar: true, didOpen: (toast) => { toast.addEventListener('mouseenter', Swal.stopTimer); toast.addEventListener('mouseleave', Swal.resumeTimer); } });
+      navigate('/ListaDeCotizaciones', { state: { abrirFormato: true, cotizacion: nuevaCot } });
 
-      // Limpiar todos los inputs de la vista después de guardar correctamente
-      try {
-        // Limpiar inputs con la clase usada en el formulario
-        const allInputs = document.querySelectorAll('.cuadroTexto');
-        if (allInputs && allInputs.length) {
-          allInputs.forEach(input => {
-            if (input) input.value = '';
-          });
-        }
-
-        // Limpiar productos seleccionados
-        setProductosSeleccionados([]);
-
-        // Limpiar contenidos de los editores (si existen)
-        if (descripcionRef.current) {
-          descripcionRef.current.setContent('');
-        }
-        if (condicionesPagoRef.current) {
-          condicionesPagoRef.current.setContent('');
-        }
-      } catch (err) {
-        console.warn('No se pudieron limpiar todos los campos automáticamente:', err);
-      }
-
+      limpiarFormulario();
     } catch (error) {
       console.error('Error en la solicitud de cotización:', error);
       Swal.fire('Error', 'Error de red al guardar cotización.', 'error');

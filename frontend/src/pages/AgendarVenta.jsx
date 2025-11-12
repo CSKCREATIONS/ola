@@ -38,6 +38,22 @@ useEffect(() => {
 
 const [productosDisponibles, setProductosDisponibles] = useState([]);
 
+  // Helper: map a cotizacion product to a product entry with resolved info and price
+  const mapProductoCotizacion = (p) => {
+    const idProducto = typeof p.producto === 'object' ? p.producto._id : p.producto;
+    const productoInfo = productosDisponibles.find(prod => prod._id === idProducto);
+    const precioUnitario = p.valorUnitario || productoInfo?.price || 0;
+
+    return {
+      ...p,
+      valorUnitario: precioUnitario,
+      producto: {
+        ...productoInfo,
+        _id: p.producto
+      }
+    };
+  };
+
 useEffect(() => {
   const cargarProductos = async () => {
     try {
@@ -101,24 +117,8 @@ useEffect(() => {
       console.log('✅ Cotización para cliente:', id, cotizacion);
 
       if (cotizacion?.productos?.length > 0) {
-        const productosConPrecio = cotizacion.productos.map((p) => {
-          const productoInfo = productosDisponibles.find(prod => {
-            const idProducto = typeof p.producto === 'object' ? p.producto._id : p.producto;
-            return prod._id === idProducto;
-          });
-
-          // Use the quotation price, fallback to product price
-          const precioUnitario = p.valorUnitario || productoInfo?.price || 0;
-
-          return {
-            ...p,
-            valorUnitario: precioUnitario,
-            producto: {
-              ...productoInfo,
-              _id: p.producto
-            }
-          };
-        });
+        // Use extracted helper to avoid deep nesting
+        const productosConPrecio = cotizacion.productos.map(mapProductoCotizacion);
 
         setProductosCotizacion(productosConPrecio);
       } else {
