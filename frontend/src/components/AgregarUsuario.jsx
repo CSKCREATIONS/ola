@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import  { useState, useEffect } from "react";
 import { registerModalUsuario } from "../funciones/modalController";
 import Swal from "sweetalert2";
 import api from '../api/axiosConfig';
@@ -12,7 +12,6 @@ export default function AgregarUsuario() {
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('');
   const [rolesDisponibles, setRolesDisponibles] = useState([]);
-  const [rolesSeleccionados, setRolesSeleccionados] = useState([]);
   const [cargandoRoles, setCargandoRoles] = useState(true);
   const [rolesForbidden, setRolesForbidden] = useState(false);
 
@@ -26,20 +25,27 @@ export default function AgregarUsuario() {
     registerModalUsuario(setIsVisible);
   }, []);
 
+  // Helper: obtain a crypto object in a cross-environment safe way without using
+  // restricted global identifiers (avoids ESLint `no-restricted-globals` on `self`).
+  const getCrypto = () => {
+    if (typeof window !== 'undefined' && window.crypto) return window.crypto;
+    if (typeof global !== 'undefined' && global.crypto) return global.crypto;
+    try {
+      // Fallback: try to get the global object via Function constructor
+      const g = Function('return this')();
+      if (g && g.crypto) return g.crypto;
+    } catch (e) {
+      // ignore
+    }
+    return null;
+  };
+
   // Función para abrir el modal (puede ser llamada desde el componente padre)
   window.openModalUsuario = () => {
     setIsVisible(true);
   };
 
-  const toggleRole = (roleName) => {
-    setRolesSeleccionados(prev => {
-      if (prev.includes(roleName)) {
-        return prev.filter(r => r !== roleName);
-      } else {
-        return [...prev, roleName];
-      }
-    });
-  };
+  
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -100,8 +106,8 @@ export default function AgregarUsuario() {
 
   //genera password automaticamente
   const generarPassword = () => {
-    // Use Web Crypto API when available for cryptographically secure randomness
-    const cryptoObj = (typeof window !== 'undefined' && window.crypto) ? window.crypto : (typeof globalThis !== 'undefined' ? globalThis.crypto : null);
+  // Use Web Crypto API when available for cryptographically secure randomness
+  const cryptoObj = getCrypto();
     const secureRandomInt = (max) => {
       if (cryptoObj && cryptoObj.getRandomValues) {
         // simple method using 32-bit random and scaling — acceptable for UI-generated passwords
@@ -141,7 +147,7 @@ export default function AgregarUsuario() {
 
   //genera nombre de usuario automaticamente con prefigo jla
   const generarUsername = () => {
-    const cryptoObj = (typeof window !== 'undefined' && window.crypto) ? window.crypto : (typeof globalThis !== 'undefined' ? globalThis.crypto : null);
+    const cryptoObj = getCrypto();
     const secureRandomInt = (max) => {
       if (cryptoObj && cryptoObj.getRandomValues) {
         const arr = new Uint32Array(1);
@@ -155,7 +161,6 @@ export default function AgregarUsuario() {
   };
 
   const handleSubmit = async () => {
-    const token = localStorage.getItem('token');
     const usuarioNombre = generarUsername()
     const nuevaPassword = generarPassword();
     const usuario = {
