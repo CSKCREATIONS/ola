@@ -466,7 +466,7 @@ export default function AgregarRol() {
                      <br />
                      <div className="permissions">
                         <div className="group">
-                           <label >
+                           <label>
                               <input
                                  className="input-gap"
                                  type="checkbox"
@@ -485,7 +485,7 @@ export default function AgregarRol() {
                                     }
                                  }}
                               />
-                              Lista de usuarios
+                              <span>Lista de usuarios</span>
 
                            </label>
                            <br />
@@ -510,7 +510,7 @@ export default function AgregarRol() {
                                        );
                                     }
                                  }}/>
-                              Roles y permisos
+                              <span>Roles y permisos</span>
                            </label>
                            <br />
                         </div>
@@ -685,7 +685,7 @@ export default function AgregarRol() {
                               <input className="input-gap" type="radio" name="comprasPermissions"
                                  onClick={() => toggleGrupoPermisos(permisosCompras)}
                                  checked={permisosCompras.every(p => permisos.includes(p))} />
-                              Todos los permisos
+                              <span>Todos los permisos</span>
                            </label>
                         </div>
                      </div>
@@ -703,60 +703,60 @@ export default function AgregarRol() {
                         <div className="group">
                            <label>
                               <input className="input-gap" type="checkbox" checked={permisos.includes('productos.ver')} onChange={() => { toggleSubMenu('lista-productos'); togglePermiso('productos.ver') }} />
-                              Lista de productos
+                              <span>Lista de productos</span>
                            </label>
                            <br />
                            <label>
                               <input className="input-gap" type="checkbox" checked={permisos.includes('categorias.ver')} onChange={() => togglePermiso('categorias.ver')} />
-                              Ver categorías
+                              <span>Ver categorías</span>
                            </label>
                            <br />
                            <label>
                               <input className="input-gap" type="checkbox" checked={permisos.includes('categorias.crear')} onChange={() => togglePermiso('categorias.crear')} />
-                              Crear categorías
+                              <span>Crear categorías</span>
                            </label>
                            <br />
                            <label>
                               <input className="input-gap" type="checkbox" checked={permisos.includes('categorias.editar')} onChange={() => togglePermiso('categorias.editar')} />
-                              Editar categorías
+                              <span>Editar categorías</span>
                            </label>
                            <br />
                            <label>
                               <input className="input-gap" type="checkbox" checked={permisos.includes('categorias.inactivar')} onChange={() => togglePermiso('categorias.inactivar')} />
-                              Inactivar categorías
+                              <span>Inactivar categorías</span>
                            </label>
                         </div>
                         <div className="group">
                            <label>
                               <input className="input-gap" type="checkbox" checked={permisos.includes('subcategorias.ver')} onChange={() => togglePermiso('subcategorias.ver')} />
-                              Ver subcategorías
+                              <span>Ver subcategorías</span>
                            </label>
                            <br />
                            <label>
                               <input className="input-gap" type="checkbox" checked={permisos.includes('subcategorias.crear')} onChange={() => togglePermiso('subcategorias.crear')} />
-                              Crear subcategorías
+                              <span>Crear subcategorías</span>
                            </label>
                            <br />
                            <label>
                               <input className="input-gap" type="checkbox" checked={permisos.includes('subcategorias.editar')} onChange={() => togglePermiso('subcategorias.editar')} />
-                              Editar subcategorías
+                              <span>Editar subcategorías</span>
                            </label>
                            <br />
                            <label>
                               <input className="input-gap" type="checkbox" checked={permisos.includes('subcategorias.inactivar')} onChange={() => togglePermiso('subcategorias.inactivar')} />
-                              Inactivar subcategorías
+                              <span>Inactivar subcategorías</span>
                            </label>
                            <br />
                            <label>
                               <input className="input-gap" type="checkbox" checked={permisos.includes('reportesProductos.ver')} onChange={() => togglePermiso('reportesProductos.ver')} />
-                              Reportes
+                              <span>Reportes</span>
                            </label>
                            <br />
                            <label>
                               <input className="input-gap" type="radio" name="productosPermissions"
                                  onClick={() => toggleGrupoPermisos(permisosProductos)}
                                  checked={permisosProductos.every(p => permisos.includes(p))} />
-                              Todos los permisos
+                              <span>Todos los permisos</span>
                            </label>
                         </div>
                      </div>
@@ -813,171 +813,171 @@ export default function AgregarRol() {
                            <label>
                               <input className="input-gap" type="checkbox" checked={permisos.includes('ventas.crear')}
                                  onChange={() => togglePermiso('ventas.crear')} />
-                              Crear ventas
+                              <span>Crear ventas</span>
                            </label>
                            <br />
                            <label>
                               <input className="input-gap" type="checkbox" checked={permisos.includes('listaDeVentas.ver')}
                                  onChange={() => togglePermiso('listaDeVentas.ver')}/>
-                              Lista de ventas
+                              <span>Lista de ventas</span>
                            </label>
                            <br />
                            <label>
                               <input className="input-gap" type="checkbox" checked={permisos.includes('pedidos.ver')}
                                  onChange={() => togglePermiso('pedidos.ver')} />
-                              Ver pedidos
+                              <span>Ver pedidos</span>
                            </label>
                            <br />
                            <label>
                               <input className="input-gap" type="checkbox" checked={permisos.includes('pedidos.remisionar')}
                                  onChange={() => togglePermiso('pedidos.remisionar')} />
-                              Remisionar pedidos
+                              <span>Remisionar pedidos</span>
                            </label>
                            <br />
                            <label>
                               <input className="input-gap" type="checkbox" checked={permisos.includes('pedidos.enviar')}
                                  onChange={() => togglePermiso('pedidos.enviar')} />
-                              Enviar pedidos
+                              <span>Enviar pedidos</span>
                            </label>
                            <br />
                            <label>
                               <input className="input-gap" type="checkbox" checked={permisos.includes('pedidosAgendados.ver')}
                                  onChange={() => togglePermiso('pedidosAgendados.ver')} />
-                              Pedidos agendados
+                              <span>Pedidos agendados</span>
                            </label>
                            <br />
                            <label>
                               <input className="input-gap" type="checkbox" checked={permisos.includes('pedidosDespachados.ver')}
                                  onChange={() => togglePermiso('pedidosDespachados.ver')} />
-                              Pedidos despachados
+                              <span>Pedidos despachados</span>
                            </label>
                            <br />
                            <label>
                               <input className="input-gap" type="checkbox" checked={permisos.includes('pedidosEntregados.ver')}
                                  onChange={() => togglePermiso('pedidosEntregados.ver')} />
-                              Pedidos entregados
+                              <span>Pedidos entregados</span>
                            </label>
                            <br />
                            <label>
                               <input className="input-gap" type="checkbox" checked={permisos.includes('pedidosCancelados.ver')}
                                  onChange={() => togglePermiso('pedidosCancelados.ver')} />
-                              Pedidos cancelados
+                              <span>Pedidos cancelados</span>
                            </label>
                            <br />
                            <label>
                               <input className="input-gap" type="checkbox" checked={permisos.includes('pedidosDevueltos.ver')}
                                  onChange={() => togglePermiso('pedidosDevueltos.ver')} />
-                              Pedidos devueltos
+                              <span>Pedidos devueltos</span>
                            </label>
                         </div>
                         <div className="group">
                            <label>
                               <input className="input-gap" type="checkbox" checked={permisos.includes('cotizaciones.ver')}
                                  onChange={() => togglePermiso('cotizaciones.ver')} />
-                              Ver cotizaciones
+                              <span>Ver cotizaciones</span>
                            </label>
                            <br />
                            <label>
                               <input className="input-gap" type="checkbox" checked={permisos.includes('cotizaciones.crear')}
                                  onChange={() => togglePermiso('cotizaciones.crear')} />
-                              Crear cotizaciones
+                              <span>Crear cotizaciones</span>
                            </label>
                            <br />
                            <label>
                               <input className="input-gap" type="checkbox" checked={permisos.includes('cotizaciones.editar')}
                                  onChange={() => togglePermiso('cotizaciones.editar')} />
-                              Editar cotizaciones
+                              <span>Editar cotizaciones</span>
                            </label>
                            <br />
                            <label>
                               <input className="input-gap" type="checkbox" checked={permisos.includes('cotizaciones.eliminar')}
                                  onChange={() => togglePermiso('cotizaciones.eliminar')} />
-                              Eliminar cotizaciones
+                              <span>Eliminar cotizaciones</span>
                            </label>
                            <br />
                            <label>
                               <input className="input-gap" type="checkbox" checked={permisos.includes('cotizaciones.enviar')}
                                  onChange={() => togglePermiso('cotizaciones.enviar')} />
-                              Enviar cotizaciones
+                              <span>Enviar cotizaciones</span>
                            </label>
                            <br />
                            <label>
                               <input className="input-gap" type="checkbox" checked={permisos.includes('cotizaciones.remisionar')}
                                  onChange={() => togglePermiso('cotizaciones.remisionar')} />
-                              Remisionar cotizaciones
+                              <span>Remisionar cotizaciones</span>
                            </label>
                            <br />
                            <label>
                               <input className="input-gap" type="checkbox" checked={permisos.includes('remisiones.ver')}
                                  onChange={() => togglePermiso('remisiones.ver')} />
-                              Ver remisiones
+                              <span>Ver remisiones</span>
                            </label>
                            <br />
                            <label>
                               <input className="input-gap" type="checkbox" checked={permisos.includes('remisiones.crear')}
                                  onChange={() => togglePermiso('remisiones.crear')} />
-                              Crear remisiones
+                              <span>Crear remisiones</span>
                            </label>
                            <br />
                            <label>
                               <input className="input-gap" type="checkbox" checked={permisos.includes('remisiones.editar')}
                                  onChange={() => togglePermiso('remisiones.editar')} />
-                              Editar remisiones
+                              <span>Editar remisiones</span>
                            </label>
                            <br />
                            <label>
                               <input className="input-gap" type="checkbox" checked={permisos.includes('remisiones.eliminar')}
                                  onChange={() => togglePermiso('remisiones.eliminar')} />
-                              Eliminar remisiones
+                              <span>Eliminar remisiones</span>
                            </label>
                            <br />
                            <label>
                               <input className="input-gap" type="checkbox" checked={permisos.includes('remisiones.enviar')}
                                  onChange={() => togglePermiso('remisiones.enviar')} />
-                              Enviar remisiones
+                              <span>Enviar remisiones</span>
                            </label>
                            <br />
                            <label>
                               <input className="input-gap" type="checkbox" checked={permisos.includes('clientes.ver')}
                                  onChange={() => togglePermiso('clientes.ver')} />
-                              Ver clientes
+                              <span>Ver clientes</span>
                            </label>
                            <br />
                            <label>
                               <input className="input-gap" type="checkbox" checked={permisos.includes('clientes.crear')}
                                  onChange={() => togglePermiso('clientes.crear')} />
-                              Crear clientes
+                              <span>Crear clientes</span>
                            </label>
                            <br />
                            <label>
                               <input className="input-gap" type="checkbox" checked={permisos.includes('clientes.editar')}
                                  onChange={() => togglePermiso('clientes.editar')} />
-                              Editar clientes
+                              <span>Editar clientes</span>
                            </label>
                            <br />
                            <label>
                               <input className="input-gap" type="checkbox" checked={permisos.includes('clientes.inactivar')}
                                  onChange={() => togglePermiso('clientes.inactivar')} />
-                              Inactivar clientes
+                              <span>Inactivar clientes</span>
                            </label>
                            <br />
                            <label>
                               <input className="input-gap" type="checkbox" checked={permisos.includes('prospectos.ver')}
                                  onChange={() => togglePermiso('prospectos.ver')} />
-                              Ver prospectos
+                              <span>Ver prospectos</span>
                            </label>
                            <br />
                            <label>
                               <input className="input-gap" type="checkbox" checked={permisos.includes('reportesVentas.ver')}
                                  onChange={() => togglePermiso('reportesVentas.ver')} />
-                              Reportes de ventas
+                              <span>Reportes de ventas</span>
                            </label>
                            <br />
                            <label>
                               <input className="input-gap" type="radio" name="ventasPermissions"
                                  onClick={() => toggleGrupoPermisos(permisosVentas)}
                                  checked={permisosVentas.every(p => permisos.includes(p))} />
-                              Todos los permisos
+                              <span>Todos los permisos</span>
                            </label>
                         </div>
                      </div>
