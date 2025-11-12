@@ -26,6 +26,37 @@ const createGmailTransporter = () => {
   }
 };
 
+// Helper: poblar productos dentro de la orden (si vienen como IDs)
+async function populateOrdenProductos(orden) {
+  if (!orden || !Array.isArray(orden.productos)) return;
+  for (let i = 0; i < orden.productos.length; i++) {
+    const item = orden.productos[i];
+    try {
+      if (item.producto && (typeof item.producto === 'string' || item.producto._bsontype === 'ObjectID')) {
+        const productoDoc = await Producto.findById(item.producto).lean().exec();
+        if (productoDoc) {
+          orden.productos[i].producto = { _id: productoDoc._id, name: productoDoc.name, description: productoDoc.description };
+        }
+      }
+    } catch (err) {
+      console.warn('⚠️ No se pudo poblar el producto:', item.producto, err.message);
+      // continue - non-fatal
+    }
+  }
+}
+
+// Helper: generar PDF de forma segura y devolver attachment o null
+async function generatePdfAttachmentSafeOrden(orden) {
+  try {
+    const pdfService = new PDFService();
+    const pdfData = await pdfService.generarPDFOrdenCompra(orden);
+    return pdfData ? { filename: pdfData.filename, content: pdfData.buffer, contentType: pdfData.contentType } : null;
+  } catch (e) {
+    console.error('⚠️ Error generando PDF de orden (no crítico):', e.message);
+    return null;
+  }
+}
+
 
 // Crear nueva orden
 const crearOrden = async (req, res) => {
@@ -174,75 +205,25 @@ const editarOrden = async (req, res) => {
   }
 };
 
-// Enviar orden de compra por correo
+// Enviar orden de compra por correo (refactorado)
 const enviarOrdenPorCorreo = async (req, res) => {
   try {
     const { id } = req.params;
     const { destinatario, asunto, mensaje } = req.body;
 
-    console.log('🔍 Iniciando envío de correo para orden:', id);
-    console.log('📧 Destinatario:', destinatario);
+    if (!destinatario) return res.status(400).json({ success: false, message: 'Destinatario es requerido' });
 
-    if (!destinatario) {
-      return res.status(400).json({ success: false, message: 'Destinatario es requerido' });
-    }
-
-    // Obtener la orden y poblar los productos
     const orden = await OrdenCompra.findById(id);
-    
-    if (!orden) {
-      return res.status(404).json({ success: false, message: 'Orden de compra no encontrada' });
-    }
+    if (!orden) return res.status(404).json({ success: false, message: 'Orden de compra no encontrada' });
 
-    // Poblar los productos manualmente si es necesario
-    if (orden.productos && orden.productos.length > 0) {
-      for (let i = 0; i < orden.productos.length; i++) {
-        if (orden.productos[i].producto && typeof orden.productos[i].producto === 'string') {
-          try {
-            const producto = await Producto.findById(orden.productos[i].producto);
-            if (producto) {
-              orden.productos[i].producto = {
-                _id: producto._id,
-                name: producto.name,
-                description: producto.description
-              };
-            }
-          } catch (err) {
-            console.warn('⚠️ No se pudo poblar el producto:', orden.productos[i].producto);
-          }
-        }
-      }
-    }
+    // Poblar productos (no-fatal)
+    await populateOrdenProductos(orden);
 
-    // Crear transporter usando la función helper
     const transporter = createGmailTransporter();
-    
-    if (!transporter) {
-      return res.status(500).json({ 
-        success: false, 
-        message: 'Servicio de correo no configurado. Verifica las credenciales de Gmail en el archivo .env' 
-      });
-    }
+    if (!transporter) return res.status(500).json({ success: false, message: 'Servicio de correo no configurado. Verifica las credenciales de Gmail en el archivo .env' });
 
-    // Generar HTML profesional de la orden
     const ordenHTML = generarHTMLOrden(orden, mensaje);
-
-    // Generar PDF de la orden
-    let pdfAttachment = null;
-    try {
-      console.log('📄 Generando PDF de la orden...');
-      const pdfService = new PDFService();
-      const pdfData = await pdfService.generarPDFOrdenCompra(orden);
-      pdfAttachment = {
-        filename: pdfData.filename,
-        content: pdfData.buffer,
-        contentType: pdfData.contentType
-      };
-      console.log('✅ PDF generado exitosamente:', pdfData.filename);
-    } catch (pdfError) {
-      console.error('⚠️ Error generando PDF:', pdfError.message);
-      // Continuar sin PDF si hay error
-    }
+    const pdfAttachment = await generatePdfAttachmentSafeOrden(orden);
 
     const asuntoFinal = asunto || `Orden de Compra - N° ${orden.numeroOrden || 'N/A'} - JLA Global Company`;
 
@@ -251,35 +232,15 @@ const enviarOrdenPorCorreo = async (req, res) => {
       to: destinatario,
       subject: asuntoFinal,
       html: ordenHTML,
-      attachments: pdfAttachment ? [{
-        filename: pdfAttachment.filename,
-        content: pdfAttachment.content,
-        contentType: pdfAttachment.contentType
-      }] : []
+      attachments: pdfAttachment ? [{ filename: pdfAttachment.filename, content: pdfAttachment.content, contentType: pdfAttachment.contentType }] : []
     };
 
     await transporter.sendMail(mailOptions);
 
-    console.log('✅ Correo enviado exitosamente' + (pdfAttachment ? ' con PDF adjunto' : ''));
-
-    res.status(200).json({ 
-      success: true, 
-      message: '¡Orden de compra enviada por correo exitosamente!' + (pdfAttachment ? ' con PDF adjunto' : ''),
-      details: {
-        destinatario: destinatario,
-        asunto: asuntoFinal,
-        numeroOrden: orden.numeroOrden,
-        pdfAdjunto: !!pdfAttachment,
-        fecha: new Date().toLocaleString('es-CO')
-      }
-    });
+    return res.status(200).json({ success: true, message: `¡Orden de compra enviada por correo exitosamente!${pdfAttachment ? ' con PDF adjunto' : ''}`, details: { destinatario, asunto: asuntoFinal, numeroOrden: orden.numeroOrden, pdfAdjunto: !!pdfAttachment, fecha: new Date().toLocaleString('es-CO') } });
   } catch (error) {
     console.error('❌ Error al enviar correo:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Error al enviar correo', 
-      error: error.message 
-    });
+    return res.status(500).json({ success: false, message: 'Error al enviar correo', error: error.message });
   }
 };
 
