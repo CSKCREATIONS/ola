@@ -254,9 +254,11 @@ export default function AgregarRol() {
                         color: '#374151',
                         fontSize: '1.1rem'
                      }}>
-                        <i className="fa-solid fa-tag icon-gap" style={{ color: '#8b5cf6', fontSize: '1rem' }}></i>
-                        Nombre del Rol
-                        <span style={{ color: '#ef4444' }}>*</span>
+                                       <i className="fa-solid fa-tag icon-gap" style={{ color: '#8b5cf6', fontSize: '1rem' }} aria-hidden={true}></i>
+                                       <span>
+                                          Nombre del Rol
+                                          <span style={{ color: '#ef4444' }}>*</span>
+                                       </span>
                      </label>
                      <input 
                         id="nombre-rol-agregar"
@@ -305,8 +307,8 @@ export default function AgregarRol() {
                         alignItems: 'center',
                         gap: '0.5rem'
                      }}>
-                        <i className="fa-solid fa-cube icon-gap" style={{ color: '#10b981' }}></i>
-                        Módulos con Acceso
+                        <i className="fa-solid fa-cube icon-gap" style={{ color: '#10b981' }} aria-hidden={true}></i>
+                        <span>Módulos con Acceso</span>
                      </h4>
                      
                      <div style={{
@@ -350,8 +352,8 @@ export default function AgregarRol() {
                                     accentColor: '#0284c7'
                                  }}
                               />
-                              <i className="fa-solid fa-users icon-gap" style={{ color: '#0284c7' }}></i>
-                              Usuarios
+                              <i className="fa-solid fa-users icon-gap" style={{ color: '#0284c7' }} aria-hidden={true}></i>
+                              <span>Usuarios</span>
                            </label>
                         </div>
 
@@ -384,8 +386,8 @@ export default function AgregarRol() {
                                     accentColor: '#059669'
                                  }}
                               />
-                              <i className="fa-solid fa-shopping-cart icon-gap" style={{ color: '#059669' }}></i>
-                              Compras
+                              <i className="fa-solid fa-shopping-cart icon-gap" style={{ color: '#059669' }} aria-hidden={true}></i>
+                              <span>Compras</span>
                            </label>
                         </div>
 
@@ -418,8 +420,8 @@ export default function AgregarRol() {
                                     accentColor: '#d97706'
                                  }}
                               />
-                              <i className="fa-solid fa-box icon-gap" style={{ color: '#d97706' }}></i>
-                              Productos
+                              <i className="fa-solid fa-box icon-gap" style={{ color: '#d97706' }} aria-hidden={true}></i>
+                              <span>Productos</span>
                            </label>
                         </div>
 
@@ -452,8 +454,8 @@ export default function AgregarRol() {
                                     accentColor: '#be185d'
                                  }}
                               />
-                              <i className="fa-solid fa-chart-line icon-gap" style={{ color: '#be185d' }}></i>
-                              Ventas
+                              <i className="fa-solid fa-chart-line icon-gap" style={{ color: '#be185d' }} aria-hidden={true}></i>
+                              <span>Ventas</span>
                            </label>
                         </div>
                      </div>
