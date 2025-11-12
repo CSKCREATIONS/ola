@@ -2150,10 +2150,11 @@ JLA Global Company</textarea>
                           </div>
 
                           <div className="form-group-profesional">
-                            <label className="form-label-profesional">Valor Unitario *</label>
+                            <label htmlFor="input-orden-valor-temp" className="form-label-profesional">Valor Unitario *</label>
                             <div style={{ position: 'relative' }}>
                               <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#666' }}>$</span>
                               <input
+                                id="input-orden-valor-temp"
                                 type="number"
                                 min="0"
                                 step="0.01"
@@ -2168,10 +2169,11 @@ JLA Global Company</textarea>
                           </div>
 
                           <div className="form-group-profesional">
-                            <label className="form-label-profesional">Descuento</label>
+                            <label htmlFor="input-orden-desc-temp" className="form-label-profesional">Descuento</label>
                             <div style={{ position: 'relative' }}>
                               <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#666' }}>$</span>
                               <input
+                                id="input-orden-desc-temp"
                                 type="number"
                                 min="0"
                                 step="0.01"
@@ -2390,7 +2392,7 @@ JLA Global Company</textarea>
                       </div>
 
                       <div className="form-group-profesional">
-                        <label className="form-label-profesional">Estado</label>
+                        <div className="form-label-profesional">Estado</div>
                         <div>
                           <span className={`badge-profesional ${ordenEditando.estado === 'Pendiente' ? 'badge-pendiente' : 'badge-completada'}`}>
                             {ordenEditando.estado}
@@ -2467,10 +2469,11 @@ JLA Global Company</textarea>
                           </div>
 
                           <div className="form-group-profesional">
-                            <label className="form-label-profesional">Valor Unitario *</label>
+                            <label htmlFor={`input-orden-valor-edit-temp`} className="form-label-profesional">Valor Unitario *</label>
                             <div style={{ position: 'relative' }}>
                               <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#666' }}>$</span>
                               <input
+                                id={`input-orden-valor-edit-temp`}
                                 type="number"
                                 min="0"
                                 step="0.01"
@@ -2485,10 +2488,11 @@ JLA Global Company</textarea>
                           </div>
 
                           <div className="form-group-profesional">
-                            <label className="form-label-profesional">Descuento</label>
+                            <label htmlFor={`input-orden-desc-edit-temp`} className="form-label-profesional">Descuento</label>
                             <div style={{ position: 'relative' }}>
                               <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#666' }}>$</span>
                               <input
+                                id={`input-orden-desc-edit-temp`}
                                 type="number"
                                 min="0"
                                 step="0.01"

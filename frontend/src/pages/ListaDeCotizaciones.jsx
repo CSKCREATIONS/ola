@@ -1476,21 +1476,22 @@ export default function ListaDeCotizaciones() {
                   </div>
                   <div className="form-row">
                     <div className="form-group">
-                      <label><i className="fa-solid fa-envelope"></i> Estado de Envío</label>
-                      <div className="checkbox-group">
-                        <label className="checkbox-label">
-                          <input
-                            type="checkbox"
-                            checked={cotizacionSeleccionada.enviadoCorreo || false}
-                            onChange={(e) => setCotizacionSeleccionada({
-                              ...cotizacionSeleccionada,
-                              enviadoCorreo: e.target.checked
-                            })}
-                          />
-                          <span>Enviado por correo electrónico</span>
-                        </label>
+                        <label htmlFor="cotizacion-enviadoCorreo-checkbox"><i className="fa-solid fa-envelope"></i> Estado de Envío</label>
+                        <div className="checkbox-group">
+                          <label className="checkbox-label">
+                            <input
+                              id="cotizacion-enviadoCorreo-checkbox"
+                              type="checkbox"
+                              checked={cotizacionSeleccionada.enviadoCorreo || false}
+                              onChange={(e) => setCotizacionSeleccionada({
+                                ...cotizacionSeleccionada,
+                                enviadoCorreo: e.target.checked
+                              })}
+                            />
+                            <span>Enviado por correo electrónico</span>
+                          </label>
+                        </div>
                       </div>
-                    </div>
                   </div>
                 </div>
 

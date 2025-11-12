@@ -404,7 +404,7 @@ export default function ListaDeClientes() {
             </div>
             
             <div>
-              <label style={{ 
+              <label htmlFor="buscar-clientes-input" style={{ 
                 display: 'block', 
                 marginBottom: '8px', 
                 color: '#374151', 
@@ -415,6 +415,7 @@ export default function ListaDeClientes() {
                 Buscar por nombre o correo:
               </label>
               <input
+                id="buscar-clientes-input"
                 type="text"
                 placeholder="Buscar por nombre o correo..."
                 value={filtroTexto}
