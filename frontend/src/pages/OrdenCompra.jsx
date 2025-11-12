@@ -225,6 +225,27 @@ function isValidEmail(email) {
   return true;
 }
 
+// Secure random string for client-side identifiers using Web Crypto when available
+function secureRandomString(length) {
+  const alphabet = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  const cryptoObj = (typeof window !== 'undefined' && window.crypto) ? window.crypto : (typeof globalThis !== 'undefined' ? globalThis.crypto : null);
+  if (cryptoObj && cryptoObj.getRandomValues) {
+    const bytes = new Uint8Array(length);
+    cryptoObj.getRandomValues(bytes);
+    let out = '';
+    for (let i = 0; i < bytes.length; i++) {
+      out += alphabet[bytes[i] % alphabet.length];
+    }
+    return out;
+  }
+  // Fallback (not cryptographically secure)
+  let out = '';
+  for (let i = 0; i < length; i++) {
+    out += alphabet[Math.floor(Math.random() * alphabet.length)];
+  }
+  return out;
+}
+
 // Helper: fetch órdenes (mueve la lógica fuera del componente)
 async function fetchOrdenesHelper(setOrdenes) {
   try {
@@ -1012,7 +1033,7 @@ export default function OrdenCompra() {
   const { subtotal, impuestos, total } = calcularTotalesProductos(nuevaOrden.productos);
 
     const ordenCompleta = {
-      numeroOrden: `OC-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      numeroOrden: `OC-${Date.now()}-${secureRandomString(9)}`,
       proveedor: nuevaOrden.proveedor,
       productos: nuevaOrden.productos,
       subtotal: subtotal,

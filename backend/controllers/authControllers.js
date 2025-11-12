@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const config = require('../config/auth.config');
 const sgMail = require('@sendgrid/mail');
+const crypto = require('crypto');
 // Configurar SendGrid de forma segura para no bloquear el arranque
 try {
   const apiKey = process.env.SENDGRID_API_KEY;
@@ -249,11 +250,24 @@ exports.recoverPassword = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Correo no registrado' });
     }
 
-    const provisionalPassword = Math.random().toString(36).slice(-8);
+    // Generar contraseña provisional con RNG criptográficamente seguro
+    function generateSecurePassword(length = 8) {
+      const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      const pwdChars = [];
+      for (let i = 0; i < length; i++) {
+        // crypto.randomInt is secure and available in Node >=12.10
+        const idx = crypto.randomInt(0, alphabet.length);
+        pwdChars.push(alphabet[idx]);
+      }
+      return pwdChars.join('');
+    }
+
+    const provisionalPassword = generateSecurePassword(8);
+    // Consider increasing bcrypt rounds to 12 in the future for stronger hashing
     const hashedPassword = await bcrypt.hash(provisionalPassword, 10);
 
     user.password = hashedPassword;
-    user.provisional = true;
+    user.provisional = true; // existing flag used by the app to force change on next login
     await user.save();
 
     const msg = {

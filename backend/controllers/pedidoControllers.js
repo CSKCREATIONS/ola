@@ -10,6 +10,7 @@ const mongoose = require('mongoose');
 const nodemailer = require('nodemailer');
 const sgMail = require('@sendgrid/mail');
 const PDFService = require('../services/pdfService');
+const { enviarConGmail } = require('../utils/gmailSender');
 
 // Helper function para sanitizar IDs y prevenir inyección NoSQL
 const sanitizarId = (id) => {
@@ -165,20 +166,7 @@ try {
   console.warn('⚠️  No se pudo inicializar SendGrid (pedidos). Continuando sin correo:', e.message);
 }
 
-// Configurar Gmail transporter
-const createGmailTransporter = () => {
-  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD || process.env.GMAIL_APP_PASSWORD === 'PENDIENTE_GENERAR') {
-    return null;
-  }
-  
-  return nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.GMAIL_USER,
-      pass: process.env.GMAIL_APP_PASSWORD
-    }
-  });
-};
+// Gmail sending centralized in backend/utils/gmailSender.js (enviarConGmail)
 
 
 
@@ -817,38 +805,23 @@ exports.enviarPedidoCanceladoPorCorreo = async (req, res) => {
   }
 };
 
-// Función auxiliar para enviar correos con adjuntos (mejorada con el patrón de cotizaciones)
+// Función auxiliar para enviar correos con adjuntos usando el transporter centralizado
 async function enviarCorreoConAttachment(destinatario, asunto, htmlContent, pdfAttachment) {
   const useGmail = process.env.USE_GMAIL === 'true';
-  const gmailTransporter = createGmailTransporter();
   const sendgridConfigured = process.env.SENDGRID_API_KEY && process.env.SENDGRID_API_KEY.startsWith('SG.');
 
   console.log('⚙️ Configuraciones disponibles:');
-  console.log(`   Gmail configurado: ${gmailTransporter ? 'SÍ' : 'NO'}`);
   console.log(`   SendGrid configurado: ${sendgridConfigured ? 'SÍ' : 'NO'}`);
   console.log(`   Usar Gmail prioritario: ${useGmail}`);
 
-  // Intentar envío con Gmail si está configurado y habilitado
-  if (useGmail && gmailTransporter) {
+  // Intentar envío con Gmail si está configurado y habilitado (usar helper centralizado)
+  if (useGmail) {
     try {
-      console.log('📧 Enviando con Gmail...');
-      
-      const mailOptions = {
-        from: `"${process.env.COMPANY_NAME || 'JLA Global Company'}" <${process.env.GMAIL_USER}>`,
-        to: destinatario,
-        subject: asunto,
-        html: htmlContent,
-        attachments: pdfAttachment ? [{
-          filename: pdfAttachment.filename,
-          content: pdfAttachment.content,
-          contentType: pdfAttachment.contentType
-        }] : []
-      };
-
-      await gmailTransporter.sendMail(mailOptions);
+      console.log('📧 Enviando con Gmail centralizado...');
+      const attachments = pdfAttachment ? [{ filename: pdfAttachment.filename, content: pdfAttachment.content, contentType: pdfAttachment.contentType }] : [];
+      await enviarConGmail(destinatario, asunto, htmlContent, attachments);
       console.log('✅ Correo enviado exitosamente con Gmail');
       return;
-
     } catch (gmailError) {
       console.error('❌ Error con Gmail:', gmailError.message);
       console.error('❌ Código de error Gmail:', gmailError.code);

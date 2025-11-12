@@ -219,9 +219,31 @@ export default function RegistrarCompra() {
     return { subtotal, impuestos, total };
   };
 
-  // Generar número de compra aleatorio
+  // Generar número de compra aleatorio (crypto-secure)
+  const secureRandomString = (length) => {
+    const alphabet = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    // Prefer Web Crypto API for secure randomness
+    if (typeof window !== 'undefined' && window.crypto && window.crypto.getRandomValues) {
+      const array = new Uint8Array(length);
+      window.crypto.getRandomValues(array);
+      let out = '';
+      for (let i = 0; i < length; i++) {
+        out += alphabet[array[i] % alphabet.length];
+      }
+      return out;
+    }
+
+    // Fallback: non-crypto PRNG only if Web Crypto unavailable (very unlikely in modern browsers)
+    let out = '';
+    for (let i = 0; i < length; i++) {
+      out += alphabet[Math.floor(Math.random() * alphabet.length)];
+    }
+    return out;
+  };
+
   const generarNumeroCompra = () => {
-    return `COM-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    // Keep the timestamp prefix (useful and monotonic) but replace the random suffix
+    return `COM-${Date.now()}-${secureRandomString(9)}`;
   };
 
   const guardarCompra = async () => {

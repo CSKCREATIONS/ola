@@ -1,27 +1,8 @@
 const Compra = require('../models/compras');
 const nodemailer = require('nodemailer');
+const { enviarConGmail } = require('../utils/gmailSender');
 const PDFService = require('../services/pdfService');
 
-// Configurar Gmail transporter (igual que en cotizaciones)
-const createGmailTransporter = () => {
-  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD || process.env.GMAIL_APP_PASSWORD === 'PENDIENTE_GENERAR') {
-    console.warn('⚠️  Gmail no configurado correctamente');
-    return null;
-  }
-  
-  try {
-    return nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_APP_PASSWORD
-      }
-    });
-  } catch (error) {
-    console.error('❌ Error creando transporter:', error);
-    return null;
-  }
-};
 
 // Crear una nueva compra (solo desde Orden de Compra)
 // Crear nueva compra
@@ -233,25 +214,17 @@ const enviarCompraPorCorreo = async (req, res) => {
     // Asegurar que cada producto tenga datos (best-effort)
     compra = await populateProductosIfNeeded(compra);
 
-    // Crear transporter
-    const transporter = createGmailTransporter();
-    if (!transporter) return res.status(500).json({ success: false, message: 'Servicio de correo no configurado. Verifica las credenciales de Gmail en el archivo .env' });
-
     const compraHTML = generarHTMLCompra(compra, mensaje);
     const pdfAttachment = await generatePdfAttachmentSafe(compra);
 
     const asuntoFinal = asunto || `Compra Confirmada - N° ${compra.numeroOrden || 'N/A'} - JLA Global Company`;
-    const mailOptions = {
-      from: `"JLA Global Company" <${process.env.GMAIL_USER || process.env.EMAIL_USER}>`,
-      to: destinatario,
-      subject: asuntoFinal,
-      html: compraHTML,
-      attachments: pdfAttachment ? [{ filename: pdfAttachment.filename, content: pdfAttachment.content, contentType: pdfAttachment.contentType }] : []
-    };
+    const attachments = pdfAttachment ? [{ filename: pdfAttachment.filename, content: pdfAttachment.content, contentType: pdfAttachment.contentType }] : [];
 
-    const result = await sendMailSafe(transporter, mailOptions);
-    if (!result.ok) {
-      return res.status(500).json({ success: false, message: 'Error al enviar correo', error: result.error?.message || 'Enviar fallo' });
+    try {
+      await enviarConGmail(destinatario, asuntoFinal, compraHTML, attachments);
+    } catch (err) {
+      console.error('❌ Error al enviar correo vía Gmail centralizado:', err?.message || err);
+      return res.status(500).json({ success: false, message: 'Error al enviar correo', error: err?.message || String(err) });
     }
 
     console.log('✅ Correo enviado exitosamente' + (pdfAttachment ? ' con PDF adjunto' : ''));
@@ -601,13 +574,3 @@ async function generatePdfAttachmentSafe(compra) {
   }
 }
 
-// Helper: send mail with transporter and options, returns {ok, error}
-async function sendMailSafe(transporter, mailOptions) {
-  try {
-    await transporter.sendMail(mailOptions);
-    return { ok: true };
-  } catch (err) {
-    console.error('❌ Error al enviar correo:', err.message);
-    return { ok: false, error: err };
-  }
-}

@@ -100,25 +100,57 @@ export default function AgregarUsuario() {
 
   //genera password automaticamente
   const generarPassword = () => {
+    // Use Web Crypto API when available for cryptographically secure randomness
+    const cryptoObj = (typeof window !== 'undefined' && window.crypto) ? window.crypto : (typeof globalThis !== 'undefined' ? globalThis.crypto : null);
+    const secureRandomInt = (max) => {
+      if (cryptoObj && cryptoObj.getRandomValues) {
+        // simple method using 32-bit random and scaling — acceptable for UI-generated passwords
+        const arr = new Uint32Array(1);
+        cryptoObj.getRandomValues(arr);
+        return Math.floor(arr[0] / (0xFFFFFFFF + 1) * max);
+      }
+      // fallback (not cryptographically secure)
+      return Math.floor(Math.random() * max);
+    };
+
     const letrasMayus = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     const letrasMinus = 'abcdefghijklmnopqrstuvwxyz';
     const numeros = '0123456789';
 
-    const mayus = letrasMayus.charAt(Math.floor(Math.random() * letrasMayus.length)) +
-      letrasMayus.charAt(Math.floor(Math.random() * letrasMayus.length));
-    const resto = (letrasMinus + numeros)
-      .split('')
-      .sort(() => 0.5 - Math.random())
-      .slice(0, 4)
-      .join('');
+    const pick = (s) => s.charAt(secureRandomInt(s.length));
 
-    return (mayus + resto).split('').sort(() => 0.5 - Math.random()).join('');
+    const mayus = pick(letrasMayus) + pick(letrasMayus);
+
+    const pool = (letrasMinus + numeros).split('');
+    // Fisher-Yates shuffle using secure RNG
+    for (let i = pool.length - 1; i > 0; i--) {
+      const j = secureRandomInt(i + 1);
+      [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+    const resto = pool.slice(0, 4).join('');
+
+    const combinedArr = (mayus + resto).split('');
+    // Shuffle final password
+    for (let i = combinedArr.length - 1; i > 0; i--) {
+      const j = secureRandomInt(i + 1);
+      [combinedArr[i], combinedArr[j]] = [combinedArr[j], combinedArr[i]];
+    }
+    return combinedArr.join('');
   };
 
 
   //genera nombre de usuario automaticamente con prefigo jla
   const generarUsername = () => {
-    const random = Math.floor(100 + Math.random() * 900);
+    const cryptoObj = (typeof window !== 'undefined' && window.crypto) ? window.crypto : (typeof globalThis !== 'undefined' ? globalThis.crypto : null);
+    const secureRandomInt = (max) => {
+      if (cryptoObj && cryptoObj.getRandomValues) {
+        const arr = new Uint32Array(1);
+        cryptoObj.getRandomValues(arr);
+        return Math.floor(arr[0] / (0xFFFFFFFF + 1) * max);
+      }
+      return Math.floor(Math.random() * max);
+    };
+    const random = 100 + secureRandomInt(900); // 100..999
     return `jla${random}`;
   };
 

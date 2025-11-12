@@ -89,7 +89,19 @@ async function trySendWithGmail(correoDestino, asunto, mensaje, htmlContent, pdf
   try {
     const emailUser = process.env.EMAIL_USER || process.env.GMAIL_USER;
     const emailPass = process.env.EMAIL_PASS || process.env.GMAIL_APP_PASSWORD;
-    const transporter = nodemailer.createTransport({ service: 'gmail', auth: { user: emailUser, pass: emailPass } });
+
+    // Use explicit SMTPS settings to enforce TLS (avoid generic 'service: gmail')
+    const transporter = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
+      auth: { user: emailUser, pass: emailPass },
+      requireTLS: true,
+      tls: { minVersion: 'TLSv1.2' },
+      connectionTimeout: 10000,
+      greetingTimeout: 5000
+    });
+
     await transporter.sendMail({
       from: `"${process.env.COMPANY_NAME || 'Sistema de Remisiones'}" <${emailUser}>`,
       to: correoDestino,
@@ -98,9 +110,10 @@ async function trySendWithGmail(correoDestino, asunto, mensaje, htmlContent, pdf
       text: mensaje,
       attachments: pdfAttachment ? [{ filename: pdfAttachment.filename, content: pdfAttachment.content, contentType: pdfAttachment.contentType }] : []
     });
+
     return { ok: true };
   } catch (err) {
-    console.error('❌ Error Gmail SMTP:', err.message);
+    console.error('❌ Error Gmail SMTP:', err?.message || err);
     return { ok: false, reason: 'Gmail failed', error: err };
   }
 }

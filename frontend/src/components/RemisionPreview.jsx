@@ -13,6 +13,24 @@ export default function RemisionPreview({ datos, onClose }) {
     ...usuarioStorage
   };
   const [showEnviarModal, setShowEnviarModal] = useState(false);
+  // Helper: secure random alphanumeric string using Web Crypto when available
+  const secureRandomString = (length) => {
+    const cryptoObj = (typeof window !== 'undefined' && window.crypto) ? window.crypto : (typeof globalThis !== 'undefined' ? globalThis.crypto : null);
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    const pick = (max) => {
+      if (cryptoObj && cryptoObj.getRandomValues) {
+        const arr = new Uint32Array(1);
+        cryptoObj.getRandomValues(arr);
+        return Math.floor(arr[0] / (0xFFFFFFFF + 1) * max);
+      }
+      return Math.floor(Math.random() * max);
+    };
+    let out = '';
+    for (let i = 0; i < length; i++) {
+      out += alphabet.charAt(pick(alphabet.length));
+    }
+    return out;
+  };
   
   // Agregar datos por defecto si faltan
   const datosConDefaults = {
@@ -149,7 +167,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
   };
 
   // Generar número de remisión si no existe
-  const numeroRemision = datosConDefaults.numeroRemision || `REM-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+  const numeroRemision = datosConDefaults.numeroRemision || `REM-${secureRandomString(6)}`;
 
   // Debug: Ver qué datos están llegando
   console.log('📦 Datos de remisión recibidos:', datos);

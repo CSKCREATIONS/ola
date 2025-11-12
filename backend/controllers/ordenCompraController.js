@@ -5,23 +5,31 @@ const Producto = require('../models/Products'); // Importar modelo de productos
 const nodemailer = require('nodemailer');
 const PDFService = require('../services/pdfService');
 
-// Configurar Gmail transporter
+// Configurar Gmail transporter (usar SMTPS explícito para garantizar TLS)
 const createGmailTransporter = () => {
   if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD || process.env.GMAIL_APP_PASSWORD === 'PENDIENTE_GENERAR') {
     console.warn('⚠️  Gmail no configurado correctamente');
     return null;
   }
-  
+
   try {
     return nodemailer.createTransport({
-      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true, // SMTPS
       auth: {
         user: process.env.GMAIL_USER,
         pass: process.env.GMAIL_APP_PASSWORD
-      }
+      },
+      requireTLS: true,
+      tls: {
+        minVersion: 'TLSv1.2'
+      },
+      connectionTimeout: 10000,
+      greetingTimeout: 5000
     });
   } catch (error) {
-    console.error('❌ Error creando transporter:', error);
+    console.error('❌ Error creando transporter (SMTPS):', error);
     return null;
   }
 };

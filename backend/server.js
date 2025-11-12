@@ -9,6 +9,7 @@ const mongoSanitize = require('express-mongo-sanitize');
 const config = require('./config');
 const {MongoClient , ObjectId} =  require ('mongodb');
 const dbConfig = require('./config/db.js');
+const crypto = require('crypto');
 
 //Importar Rutas
 const authRoutes = require('./routes/authRoutes');
@@ -35,7 +36,10 @@ app.set('query parser', 'simple');
 
 // Request ID simple para correlación de logs
 app.use((req, res, next) => {
-    req.id = (Date.now().toString(36) + Math.random().toString(36).slice(2, 10)).toUpperCase();
+    // Use crypto.randomBytes for unpredictable request IDs instead of Math.random
+    const timePart = Date.now().toString(36);
+    const randPart = crypto.randomBytes(4).toString('hex'); // 8 hex chars
+    req.id = (timePart + randPart).toUpperCase();
     res.setHeader('X-Request-Id', req.id);
     next();
 });

@@ -5,6 +5,8 @@ const Product = require('../models/Products'); // Ensure both references work
 const sgMail = require('@sendgrid/mail');
 const nodemailer = require('nodemailer');
 const PDFService = require('../services/pdfService');
+const crypto = require('crypto');
+const { enviarConGmail } = require('../utils/gmailSender');
 
 const { validationResult } = require('express-validator');
 
@@ -21,20 +23,7 @@ try {
   console.warn('⚠️  No se pudo inicializar SendGrid (cotizaciones). Continuando sin correo:', e.message);
 }
 
-// Configurar Gmail transporter
-const createGmailTransporter = () => {
-  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD || process.env.GMAIL_APP_PASSWORD === 'PENDIENTE_GENERAR') {
-    return null;
-  }
-  
-  return nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.GMAIL_USER,
-      pass: process.env.GMAIL_APP_PASSWORD
-    }
-  });
-};
+// Gmail sending is centralized in backend/utils/gmailSender.js (enviarConGmail)
 
 // Crear cotización
 exports.createCotizacion = async (req, res) => {
@@ -104,12 +93,15 @@ exports.createCotizacion = async (req, res) => {
 
 
 
-    // Generar código aleatorio COT-XXXX (letras y números)
+    // Generar código aleatorio COT-XXXX (letras y números) usando RNG criptográficamente seguro
     function generarCodigoCotizacion() {
-      const chars = 'AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz0123456789';
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      const length = 4;
       let codigo = '';
-      for (let i = 0; i < 4; i++) {
-        codigo += chars.charAt(Math.floor(Math.random() * chars.length));
+      for (let i = 0; i < length; i++) {
+        // crypto.randomInt es seguro y evita la predictibilidad de Math.random
+        const idx = crypto.randomInt(0, chars.length);
+        codigo += chars.charAt(idx);
       }
       return `COT-${codigo}`;
     }
@@ -487,23 +479,7 @@ async function markCotizacionAsSent(id) {
   }
 }
 
-async function trySendWithGmail(transporter, destinatario, asuntoFinal, htmlCompleto, pdfAttachment) {
-  if (!transporter) return { ok: false };
-  try {
-    const mailOptions = {
-      from: `"JLA Global Company" <${process.env.GMAIL_USER}>`,
-      to: destinatario,
-      subject: asuntoFinal,
-      html: htmlCompleto,
-      attachments: pdfAttachment ? [{ filename: pdfAttachment.filename, content: pdfAttachment.content, contentType: pdfAttachment.contentType }] : []
-    };
-    await transporter.sendMail(mailOptions);
-    return { ok: true, metodo: 'Gmail SMTP' };
-  } catch (err) {
-    console.error('❌ Error con Gmail:', err.message);
-    return { ok: false, error: err };
-  }
-}
+// Gmail sending uses the centralized enviarConGmail helper in ../utils/gmailSender
 
 async function trySendWithSendGrid(destinatario, asuntoFinal, mensajeFinal, htmlCompleto, pdfAttachment) {
   if (!process.env.SENDGRID_API_KEY || !process.env.SENDGRID_API_KEY.startsWith('SG.')) return { ok: false };
@@ -547,16 +523,17 @@ exports.enviarCotizacionPorCorreo = async (req, res) => {
     console.log('📊 Datos de cotización para HTML:', { total: cotizacion.total, productos: cotizacion.productos?.length || 0 });
 
     const useGmail = process.env.USE_GMAIL === 'true';
-    const gmailTransporter = createGmailTransporter();
 
-    // Try Gmail first if configured
-    if (useGmail && gmailTransporter) {
-      const gmailResult = await trySendWithGmail(gmailTransporter, destinatario, asuntoFinal, htmlCompleto, pdfAttachment);
-      if (gmailResult.ok) {
+    // Try Gmail first if configured using centralized helper
+    if (useGmail) {
+      try {
+        const attachments = pdfAttachment ? [{ filename: pdfAttachment.filename, content: pdfAttachment.content, contentType: pdfAttachment.contentType }] : [];
+        await enviarConGmail(destinatario, asuntoFinal, htmlCompleto, attachments);
         await markCotizacionAsSent(cotizacionId);
-        return res.status(200).json({ message: '¡Cotización enviada por correo exitosamente!', details: { destinatario, asunto: asuntoFinal, enviado: true, metodo: gmailResult.metodo, fecha: new Date().toLocaleString('es-CO') } });
+        return res.status(200).json({ message: '¡Cotización enviada por correo exitosamente!', details: { destinatario, asunto: asuntoFinal, enviado: true, metodo: 'Gmail SMTP', fecha: new Date().toLocaleString('es-CO') } });
+      } catch (gmailErr) {
+        console.log('🔄 Intentando con SendGrid como fallback... Gmail error:', gmailErr?.message || gmailErr);
       }
-      console.log('🔄 Intentando con SendGrid como fallback...');
     }
 
     // Try SendGrid
