@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import PropTypes from 'prop-types';
 import Swal from 'sweetalert2';
 import api from '../api/axiosConfig';
 import '../App.css';
@@ -519,6 +520,13 @@ const SubcategoriaModal = ({ subcategoria, categorias, onClose, onSave }) => {
       </form>
     </div>
   );
+};
+
+SubcategoriaModal.propTypes = {
+  subcategoria: PropTypes.object,
+  categorias: PropTypes.array,
+  onClose: PropTypes.func.isRequired,
+  onSave: PropTypes.func.isRequired,
 };
 
 const GestionSubcategorias = () => {

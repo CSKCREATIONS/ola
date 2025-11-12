@@ -1,5 +1,6 @@
 const reportWebVitals = onPerfEntry => {
-  if (onPerfEntry && onPerfEntry instanceof Function) {
+  // Use typeof check for functions instead of instanceof (more reliable)
+  if (typeof onPerfEntry === 'function') {
     import('web-vitals').then(({ getCLS, getFID, getFCP, getLCP, getTTFB }) => {
       getCLS(onPerfEntry);
       getFID(onPerfEntry);

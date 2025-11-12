@@ -1,4 +1,5 @@
 // components/PermisoRoute.jsx
+import PropTypes from 'prop-types';
 import { Navigate } from 'react-router-dom';
 
 export default function PermisoRoute({ permiso, children }) {
@@ -10,3 +11,8 @@ export default function PermisoRoute({ permiso, children }) {
 
   return children; // renderiza normalmente si tiene el permiso
 }
+
+PermisoRoute.propTypes = {
+  permiso: PropTypes.string.isRequired,
+  children: PropTypes.node,
+};
