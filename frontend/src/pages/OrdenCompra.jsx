@@ -270,6 +270,94 @@ async function fetchProductosPorProveedorHelper(proveedorId, setProductosProveed
   }
 }
 
+// Helper: buscar producto por id en distintas estructuras
+function findProductoById(productos = [], id) {
+  if (!id) return null;
+  return productos.find(p => p._id === id || p.id === id || p.productoId === id);
+}
+
+// Helper: crear objeto de producto a partir de una selección y datos temporales
+function crearProductoFromSelection(productoSeleccionado = {}, productoTemp = {}) {
+  const valorUnitario = productoSeleccionado.price || productoSeleccionado.precio || 0;
+  const cantidad = productoTemp.cantidad || 1;
+  const descuento = productoTemp.descuento || 0;
+  const valorTotal = valorUnitario * cantidad;
+  return {
+    producto: productoSeleccionado.name || productoSeleccionado.nombre || '',
+    descripcion: productoSeleccionado.description || productoSeleccionado.descripcion || '',
+    cantidad: cantidad,
+    valorUnitario: valorUnitario,
+    descuento: descuento,
+    valorTotal: valorTotal,
+    productoId: productoSeleccionado._id || productoSeleccionado.id || ''
+  };
+}
+
+// Helper: manejar selección de proveedor para el modal de creación
+async function handleProveedorChangeHelper(eOrId, proveedores, setNuevaOrden, setProductoTemp, fetchProductosPorProveedor, setProductosProveedor) {
+  const proveedorId = typeof eOrId === 'string' ? eOrId : (eOrId.target ? eOrId.target.value : '');
+  const proveedorSeleccionado = proveedores.find(p => p._id === proveedorId);
+
+  setNuevaOrden(prev => ({
+    ...prev,
+    proveedor: proveedorSeleccionado ? proveedorSeleccionado.nombre : '',
+    proveedorId: proveedorId,
+    productos: []
+  }));
+
+  setProductoTemp({ producto: '', descripcion: '', cantidad: 1, valorUnitario: 0, descuento: 0, productoId: '' });
+
+  if (proveedorId) {
+    await fetchProductosPorProveedor(proveedorId);
+  } else {
+    setProductosProveedor([]);
+  }
+}
+
+// Helper: manejar selección de proveedor para el modal de edición
+async function handleProveedorChangeEditarHelper(eOrId, proveedores, setOrdenEditando, fetchProductosPorProveedor, setProductosProveedor) {
+  const proveedorId = typeof eOrId === 'string' ? eOrId : (eOrId.target ? eOrId.target.value : '');
+  const proveedorSeleccionado = proveedores.find(p => p._id === proveedorId);
+
+  setOrdenEditando(prev => ({
+    ...prev,
+    proveedor: proveedorSeleccionado ? proveedorSeleccionado.nombre : '',
+    proveedorId: proveedorId
+  }));
+
+  if (proveedorId) {
+    await fetchProductosPorProveedor(proveedorId);
+  } else {
+    setProductosProveedor([]);
+  }
+}
+
+// Helper: manejar cambio de producto en selects (agregar)
+function handleProductoChangeHelper(eOrId, productosProveedor, setProductoTemp) {
+  const productoId = typeof eOrId === 'string' ? eOrId : (eOrId.target ? eOrId.target.value : '');
+  if (!productoId) {
+    setProductoTemp({ producto: '', descripcion: '', cantidad: 1, valorUnitario: 0, descuento: 0, productoId: '' });
+    return;
+  }
+
+  const productoSeleccionado = findProductoById(productosProveedor, productoId);
+  if (productoSeleccionado) {
+    setProductoTemp({
+      producto: productoSeleccionado.name || productoSeleccionado.nombre,
+      descripcion: productoSeleccionado.description || productoSeleccionado.descripcion || '',
+      cantidad: 1,
+      valorUnitario: productoSeleccionado.price || productoSeleccionado.precio || 0,
+      descuento: 0,
+      productoId: productoSeleccionado._id
+    });
+  }
+}
+
+// Helper: manejar cambio de producto en selects (editar)
+function handleProductoChangeEditarHelper(eOrId, productosProveedor, setProductoTemp) {
+  return handleProductoChangeHelper(eOrId, productosProveedor, setProductoTemp);
+}
+
 // Helper: marcar orden como completada (delegado fuera del componente)
 async function marcarComoCompletadaHelper(orden, fetchOrdenesFn) {
   const confirm = await Swal.fire({
@@ -626,25 +714,13 @@ export default function OrdenCompra() {
       Swal.fire('Error', 'Por favor selecciona un producto de la lista', 'error');
       return;
     }
-
-    const productoSeleccionado = productosProveedor.find(p => p._id === productoTemp.productoId);
-
+    const productoSeleccionado = findProductoById(productosProveedor, productoTemp.productoId);
     if (!productoSeleccionado) {
       Swal.fire('Error', 'Producto no encontrado', 'error');
       return;
     }
 
-    const valorTotal = (productoSeleccionado.price || productoSeleccionado.precio || 0) * productoTemp.cantidad;
-
-    const nuevoProducto = {
-      producto: productoSeleccionado.name || productoSeleccionado.nombre,
-      descripcion: productoSeleccionado.description || productoSeleccionado.descripcion || '',
-      cantidad: productoTemp.cantidad,
-      valorUnitario: productoSeleccionado.price || productoSeleccionado.precio || 0,
-      descuento: productoTemp.descuento,
-      valorTotal: valorTotal,
-      productoId: productoSeleccionado._id
-    };
+    const nuevoProducto = crearProductoFromSelection(productoSeleccionado, productoTemp);
 
     setNuevaOrden({
       ...nuevaOrden,
@@ -660,8 +736,6 @@ export default function OrdenCompra() {
       descuento: 0,
       productoId: ''
     });
-
-    
   };
 
   // Función para agregar producto en edición (EDITAR)
@@ -670,25 +744,13 @@ export default function OrdenCompra() {
       Swal.fire('Error', 'Por favor selecciona un producto de la lista', 'error');
       return;
     }
-
-    const productoSeleccionado = productosProveedor.find(p => p._id === productoTemp.productoId);
-
+    const productoSeleccionado = findProductoById(productosProveedor, productoTemp.productoId);
     if (!productoSeleccionado) {
       Swal.fire('Error', 'Producto no encontrado', 'error');
       return;
     }
 
-    const valorTotal = (productoSeleccionado.price || productoSeleccionado.precio || 0) * productoTemp.cantidad;
-
-    const nuevoProducto = {
-      producto: productoSeleccionado.name || productoSeleccionado.nombre,
-      descripcion: productoSeleccionado.description || productoSeleccionado.descripcion || '',
-      cantidad: productoTemp.cantidad,
-      valorUnitario: productoSeleccionado.price || productoSeleccionado.precio || 0,
-      descuento: productoTemp.descuento,
-      valorTotal: valorTotal,
-      productoId: productoSeleccionado._id
-    };
+    const nuevoProducto = crearProductoFromSelection(productoSeleccionado, productoTemp);
 
     setOrdenEditando({
       ...ordenEditando,
@@ -716,108 +778,22 @@ export default function OrdenCompra() {
 
   // Cuando se selecciona un proveedor (AGREGAR)
   const handleProveedorChange = async (e) => {
-    const proveedorId = e.target.value;
-    const proveedorSeleccionado = proveedores.find(p => p._id === proveedorId);
-
-    setNuevaOrden({
-      ...nuevaOrden,
-      proveedor: proveedorSeleccionado ? proveedorSeleccionado.nombre : '',
-      proveedorId: proveedorId,
-      productos: [] // Limpiar productos al cambiar proveedor
-    });
-
-    setProductoTemp({
-      producto: '',
-      descripcion: '',
-      cantidad: 1,
-      valorUnitario: 0,
-      descuento: 0,
-      productoId: ''
-    });
-
-    if (proveedorId) {
-      await fetchProductosPorProveedor(proveedorId);
-    } else {
-      setProductosProveedor([]);
-    }
+    await handleProveedorChangeHelper(e, proveedores, setNuevaOrden, setProductoTemp, fetchProductosPorProveedor, setProductosProveedor);
   };
 
   // Cuando se selecciona un proveedor (EDITAR)
   const handleProveedorChangeEditar = async (e) => {
-    const proveedorId = e.target.value;
-    const proveedorSeleccionado = proveedores.find(p => p._id === proveedorId);
-
-    setOrdenEditando({
-      ...ordenEditando,
-      proveedor: proveedorSeleccionado ? proveedorSeleccionado.nombre : '',
-      proveedorId: proveedorId
-    });
-
-    if (proveedorId) {
-      await fetchProductosPorProveedor(proveedorId);
-    } else {
-      setProductosProveedor([]);
-    }
+    await handleProveedorChangeEditarHelper(e, proveedores, setOrdenEditando, fetchProductosPorProveedor, setProductosProveedor);
   };
 
   // Cuando se selecciona un producto de la lista desplegable (AGREGAR)
   const handleProductoChange = (e) => {
-    const productoId = e.target.value;
-
-    if (!productoId) {
-      setProductoTemp({
-        producto: '',
-        descripcion: '',
-        cantidad: 1,
-        valorUnitario: 0,
-        descuento: 0,
-        productoId: ''
-      });
-      return;
-    }
-
-    const productoSeleccionado = productosProveedor.find(p => p._id === productoId);
-
-    if (productoSeleccionado) {
-      setProductoTemp({
-        producto: productoSeleccionado.name || productoSeleccionado.nombre,
-        descripcion: productoSeleccionado.description || productoSeleccionado.descripcion || '',
-        cantidad: 1,
-        valorUnitario: productoSeleccionado.price || productoSeleccionado.precio || 0,
-        descuento: 0,
-        productoId: productoSeleccionado._id
-      });
-    }
+    handleProductoChangeHelper(e, productosProveedor, setProductoTemp);
   };
 
   // Cuando se selecciona un producto de la lista desplegable (EDITAR)
   const handleProductoChangeEditar = (e) => {
-    const productoId = e.target.value;
-
-    if (!productoId) {
-      setProductoTemp({
-        producto: '',
-        descripcion: '',
-        cantidad: 1,
-        valorUnitario: 0,
-        descuento: 0,
-        productoId: ''
-      });
-      return;
-    }
-
-    const productoSeleccionado = productosProveedor.find(p => p._id === productoId);
-
-    if (productoSeleccionado) {
-      setProductoTemp({
-        producto: productoSeleccionado.name || productoSeleccionado.nombre,
-        descripcion: productoSeleccionado.description || productoSeleccionado.descripcion || '',
-        cantidad: 1,
-        valorUnitario: productoSeleccionado.price || productoSeleccionado.precio || 0,
-        descuento: 0,
-        productoId: productoSeleccionado._id
-      });
-    }
+    handleProductoChangeEditarHelper(e, productosProveedor, setProductoTemp);
   };
 
   // Obtener órdenes pendientes para mostrar en la tabla
