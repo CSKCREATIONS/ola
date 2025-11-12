@@ -62,6 +62,19 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
 
   }, [usuario]);
 
+  // Attach Escape key handler at document level to avoid adding keyboard
+  // listeners directly to non-interactive elements (satisfies a11y lint rules)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' || e.key === 'Esc') {
+        closeModal('editUserModal');
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -159,12 +172,7 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
       role="dialog"
       aria-modal="true"
       aria-labelledby="edit-user-title"
-      tabIndex={-1}
-      onKeyDown={(e) => {
-        if (e.key === 'Escape' || e.key === 'Esc') {
-          closeModal('editUserModal');
-        }
-      }}
+      // Keyboard handling moved to document level via useEffect (a11y)
       style={{
         position: 'fixed',
         top: 0,
