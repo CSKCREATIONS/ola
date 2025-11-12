@@ -507,7 +507,7 @@ export default function AgregarRol() {
                                           )
                                        );
                                     }
-                                 }} />
+                                 }}/>
                               Roles y permisos
                            </label>
                            <br />
@@ -520,7 +520,7 @@ export default function AgregarRol() {
                         <div className="form-group-rol" id='lista-usuarios'>
                            <h5 style={{ margin: '0 0 0.5rem 0', fontWeight: '600', color: '#374151' }}>Permisos para lista de usuarios</h5>
                            <div className="radio-options">
-                              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                              <label className="form-option">
                                  <input type="checkbox"
                                     checked={permisos.includes('usuarios.crear')}
                                     onChange={() => togglePermiso('usuarios.crear')}
@@ -528,7 +528,7 @@ export default function AgregarRol() {
                                  <span>Crear usuarios</span>
                               </label>
 
-                              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                              <label className="form-option">
                                  <input type="checkbox"
                                     checked={permisos.includes('usuarios.editar')}
                                     onChange={() => togglePermiso('usuarios.editar')}
@@ -536,7 +536,7 @@ export default function AgregarRol() {
                                  <span>Editar usuarios</span>
                               </label>
 
-                              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                              <label className="form-option">
                                  <input type="checkbox"
                                     checked={permisos.includes('usuarios.inhabilitar')}
                                     onChange={() => togglePermiso('usuarios.inhabilitar')}
@@ -544,7 +544,7 @@ export default function AgregarRol() {
                                  <span>Habilitar / Inhabilitar</span>
                               </label>
 
-                              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                              <label className="form-option">
                                  <input type="checkbox"
                                     checked={permisos.includes('usuarios.eliminar')}
                                     onChange={() => togglePermiso('usuarios.eliminar')}
@@ -552,7 +552,7 @@ export default function AgregarRol() {
                                  <span>Eliminar usuarios</span>
                               </label>
 
-                              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                              <label className="form-option form-option--no-margin">
                                  <input
                                     type="radio"
                                     name="usersListPermissions"
@@ -570,7 +570,7 @@ export default function AgregarRol() {
                         <div className="form-group-rol" id='roles-y-permisos'>
                            <h5 style={{ margin: '0 0 0.5rem 0', fontWeight: '600', color: '#374151' }}>Permisos para roles y permisos</h5>
                            <div className="radio-options">
-                              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                              <label className="form-option">
                                  <input
                                     type="checkbox"
                                     checked={permisos.includes('roles.crear')}
@@ -579,7 +579,7 @@ export default function AgregarRol() {
                                  <span>Crear roles</span>
                               </label>
 
-                              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                              <label className="form-option">
                                  <input
                                     type="checkbox"
                                     checked={permisos.includes('roles.editar')}
@@ -588,7 +588,7 @@ export default function AgregarRol() {
                                  <span>Editar roles</span>
                               </label>
 
-                              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                              <label className="form-option">
                                  <input
                                     type="checkbox"
                                     checked={permisos.includes('roles.inhabilitar')}
@@ -597,7 +597,7 @@ export default function AgregarRol() {
                                  <span>Habilitar / Inhabilitar</span>
                               </label>
 
-                              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                              <label className="form-option form-option--no-margin">
                                  <input
                                     type="radio"
                                     name="rolesPermissions"
@@ -620,8 +620,7 @@ export default function AgregarRol() {
                      <div className="permissions">
                         <div className="group">
                            <label>
-                              <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" name="hcompras" checked={permisos.includes('hcompras.ver')}
-                                 onChange={() => togglePermiso('hcompras.ver')} />
+                              <input style={{ marginRight: '0.5rem', marginBottom: '.5rem' }} type="checkbox" name="hcompras" checked={permisos.includes('hcompras.ver')} onChange={() => togglePermiso('hcompras.ver')} />
                               Historial de compras
                            </label>
                            <br />
@@ -770,7 +769,7 @@ export default function AgregarRol() {
                      <div className="form-group-rol " id="lista-productos">
                         <h5 style={{ margin: '0 0 0.5rem 0', fontWeight: '600', color: '#374151' }}>Permisos para lista de productos</h5>
                         <div className="radio-options">
-                           <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                           <label className="form-option">
                               <input
                                  type="checkbox"
                                  checked={permisos.includes('productos.crear')}
@@ -779,7 +778,7 @@ export default function AgregarRol() {
                               <span>Agregar Productos</span>
                            </label>
 
-                           <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                           <label className="form-option">
                               <input
                                  type="checkbox"
                                  checked={permisos.includes('productos.editar')}
@@ -788,7 +787,7 @@ export default function AgregarRol() {
                               <span>Editar productos</span>
                            </label>
 
-                           <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                           <label className="form-option">
                               <input
                                  type="checkbox"
                                  checked={permisos.includes('productos.inactivar')}
@@ -797,7 +796,7 @@ export default function AgregarRol() {
                               <span>Activar/Inactivar</span>
                            </label>
 
-                           <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                           <label className="form-option form-option--no-margin">
                               <input
                                  type="radio"
                               />
