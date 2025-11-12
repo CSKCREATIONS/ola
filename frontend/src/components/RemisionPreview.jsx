@@ -14,9 +14,22 @@ export default function RemisionPreview({ datos, onClose }) {
     ...usuarioStorage
   };
   const [showEnviarModal, setShowEnviarModal] = useState(false);
+  // Helper: obtain a crypto object in a cross-environment safe way without using
+  // restricted global identifiers (avoids ESLint `no-restricted-globals` on `self`).
+  const getCrypto = () => {
+    if (typeof window !== 'undefined' && window.crypto) return window.crypto;
+    if (typeof global !== 'undefined' && global.crypto) return global.crypto;
+    try {
+      const g = Function('return this')();
+      if (g && g.crypto) return g.crypto;
+    } catch (e) {
+      // ignore
+    }
+    return null;
+  };
   // Helper: secure random alphanumeric string using Web Crypto when available
   const secureRandomString = (length) => {
-    const cryptoObj = (typeof window !== 'undefined' && window.crypto) ? window.crypto : (typeof globalThis !== 'undefined' ? globalThis.crypto : null);
+    const cryptoObj = getCrypto();
     const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     const pick = (max) => {
       if (cryptoObj && cryptoObj.getRandomValues) {

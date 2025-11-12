@@ -231,7 +231,19 @@ function isValidEmail(email) {
 // Secure random string for client-side identifiers using Web Crypto when available
 function secureRandomString(length) {
   const alphabet = 'abcdefghijklmnopqrstuvwxyz0123456789';
-  const cryptoObj = (typeof window !== 'undefined' && window.crypto) ? window.crypto : (typeof globalThis !== 'undefined' ? globalThis.crypto : null);
+  // Prefer window.crypto, then module/global, then fallback via Function to avoid relying on globalThis
+  function getCrypto() {
+    if (typeof window !== 'undefined' && window.crypto) return window.crypto;
+    if (typeof global !== 'undefined' && global.crypto) return global.crypto;
+    try {
+      const g = Function('return this')();
+      if (g && g.crypto) return g.crypto;
+    } catch (e) {
+      // ignore
+    }
+    return null;
+  }
+  const cryptoObj = getCrypto();
   if (cryptoObj && cryptoObj.getRandomValues) {
     const bytes = new Uint8Array(length);
     cryptoObj.getRandomValues(bytes);
