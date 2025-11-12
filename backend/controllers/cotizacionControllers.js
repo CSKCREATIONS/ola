@@ -444,197 +444,136 @@ exports.getUltimaCotizacionPorCliente = async (req, res) => {
   }
 };
 
-// Enviar cotización por correo
+// Helper: validate and return trimmed ObjectId or null
+function validateObjectId(raw) {
+  const id = typeof raw === 'string' ? raw.trim() : '';
+  return id && id.match(/^[0-9a-fA-F]{24}$/) ? id : null;
+}
+
+// Helper: fetch cotizacion with necessary populations
+async function fetchCotizacion(cotizacionId) {
+  return Cotizacion.findById(cotizacionId)
+    .populate('cliente.referencia', 'nombre correo ciudad telefono')
+    .populate({
+      path: 'productos.producto.id',
+      model: 'Product',
+      select: 'name price description'
+    });
+}
+
+// Helper: generate PDF attachment or null
+async function generatePdfAttachmentSafe(cotizacion) {
+  try {
+    console.log('📄 Generando PDF de la cotización...');
+    const pdfService = new PDFService();
+    const pdfData = await pdfService.generarPDFCotizacion(cotizacion);
+    console.log('✅ PDF generado exitosamente:', pdfData.filename);
+    return {
+      filename: pdfData.filename,
+      content: pdfData.buffer,
+      contentType: pdfData.contentType
+    };
+  } catch (err) {
+    console.error('⚠️ Error generando PDF:', err.message);
+    return null; // continue without PDF
+  }
+}
+
+async function markCotizacionAsSent(id) {
+  try {
+    await Cotizacion.findByIdAndUpdate(id, { enviadoCorreo: true });
+  } catch (err) {
+    console.warn('No se pudo marcar cotización como enviada:', err.message);
+  }
+}
+
+async function trySendWithGmail(transporter, destinatario, asuntoFinal, htmlCompleto, pdfAttachment) {
+  if (!transporter) return { ok: false };
+  try {
+    const mailOptions = {
+      from: `"JLA Global Company" <${process.env.GMAIL_USER}>`,
+      to: destinatario,
+      subject: asuntoFinal,
+      html: htmlCompleto,
+      attachments: pdfAttachment ? [{ filename: pdfAttachment.filename, content: pdfAttachment.content, contentType: pdfAttachment.contentType }] : []
+    };
+    await transporter.sendMail(mailOptions);
+    return { ok: true, metodo: 'Gmail SMTP' };
+  } catch (err) {
+    console.error('❌ Error con Gmail:', err.message);
+    return { ok: false, error: err };
+  }
+}
+
+async function trySendWithSendGrid(destinatario, asuntoFinal, mensajeFinal, htmlCompleto, pdfAttachment) {
+  if (!process.env.SENDGRID_API_KEY || !process.env.SENDGRID_API_KEY.startsWith('SG.')) return { ok: false };
+  try {
+    const msg = {
+      to: destinatario,
+      from: { email: process.env.SENDGRID_FROM_EMAIL, name: process.env.SENDGRID_FROM_NAME },
+      subject: asuntoFinal,
+      text: mensajeFinal,
+      html: htmlCompleto,
+      attachments: pdfAttachment ? [{ content: pdfAttachment.content.toString('base64'), filename: pdfAttachment.filename, type: pdfAttachment.contentType, disposition: 'attachment' }] : []
+    };
+    await sgMail.send(msg);
+    return { ok: true, metodo: 'SendGrid' };
+  } catch (err) {
+    console.error('❌ Error con SendGrid:', err.message);
+    return { ok: false, error: err };
+  }
+}
+
 exports.enviarCotizacionPorCorreo = async (req, res) => {
   try {
     const { correoDestino, asunto, mensaje } = req.body;
-    
-    // Sanitizar y validar el ID para prevenir inyección NoSQL
-    const cotizacionId = typeof req.params.id === 'string' ? req.params.id.trim() : '';
-    
-    if (!cotizacionId || !cotizacionId.match(/^[0-9a-fA-F]{24}$/)) {
-      return res.status(400).json({ message: 'ID de cotización inválido' });
-    }
+    const cotizacionId = validateObjectId(req.params.id);
+    if (!cotizacionId) return res.status(400).json({ message: 'ID de cotización inválido' });
 
     console.log('🔍 Iniciando envío de correo para cotización:', cotizacionId);
     console.log('📧 Datos de envío:', { correoDestino, asunto });
 
-    const cotizacion = await Cotizacion.findById(cotizacionId)
-      .populate('cliente.referencia', 'nombre correo ciudad telefono')
-      .populate({
-        path: 'productos.producto.id',
-        model: 'Product',
-        select: 'name price description'
-      });
-
-    if (!cotizacion) {
-      return res.status(404).json({ message: 'Cotización no encontrada' });
-    }
+    const cotizacion = await fetchCotizacion(cotizacionId);
+    if (!cotizacion) return res.status(404).json({ message: 'Cotización no encontrada' });
 
     const destinatario = correoDestino || cotizacion.cliente.correo;
     const asuntoFinal = asunto || `Cotización ${cotizacion.codigo} - JLA Global Company`;
     const mensajeFinal = mensaje || `Nos complace enviarle la cotización ${cotizacion.codigo}. Esperamos que sea de su interés y quedamos atentos a sus comentarios.`;
+    const htmlCompleto = generarHTMLCotizacion(cotizacion);
 
-    // Generar HTML de la cotización
-    const cotizacionHTML = generarHTMLCotizacion(cotizacion);
-    
-    // Generar PDF de la cotización
-    let pdfAttachment = null;
-    try {
-      console.log('📄 Generando PDF de la cotización...');
-      const pdfService = new PDFService();
-      const pdfData = await pdfService.generarPDFCotizacion(cotizacion);
-      pdfAttachment = {
-        filename: pdfData.filename,
-        content: pdfData.buffer,
-        contentType: pdfData.contentType
-      };
-      console.log('✅ PDF generado exitosamente:', pdfData.filename);
-    } catch (pdfError) {
-      console.error('⚠️ Error generando PDF:', pdfError.message);
-      // Continuar sin PDF si hay error
-    }
-    
-    // Debug: Verificar datos de la cotización
-    console.log('📊 Datos de cotización para HTML:');
-    console.log('   - Total:', cotizacion.total);
-    console.log('   - Productos:', cotizacion.productos?.length || 0);
-    console.log('   - Productos detalle:', cotizacion.productos?.map(p => ({
-      producto: p.producto?.name || 'N/A',
-      cantidad: p.cantidad,
-      valorUnitario: p.valorUnitario,
-      subtotal: p.subtotal
-    })));
-    
-    // El HTML ya incluye todo el contenido estructurado
-    const htmlCompleto = cotizacionHTML;
+    const pdfAttachment = await generatePdfAttachmentSafe(cotizacion);
 
-    // Verificar configuraciones disponibles
+    // Show debug info
+    console.log('📊 Datos de cotización para HTML:', { total: cotizacion.total, productos: cotizacion.productos?.length || 0 });
+
     const useGmail = process.env.USE_GMAIL === 'true';
     const gmailTransporter = createGmailTransporter();
-    const sendgridConfigured = process.env.SENDGRID_API_KEY && process.env.SENDGRID_API_KEY.startsWith('SG.');
 
-    console.log('⚙️ Configuraciones disponibles:');
-    console.log(`   Gmail configurado: ${gmailTransporter ? 'SÍ' : 'NO'}`);
-    console.log(`   SendGrid configurado: ${sendgridConfigured ? 'SÍ' : 'NO'}`);
-    console.log(`   Usar Gmail prioritario: ${useGmail}`);
-
-    // Intentar envío con Gmail si está configurado y habilitado
+    // Try Gmail first if configured
     if (useGmail && gmailTransporter) {
-      try {
-        console.log('� Enviando con Gmail...');
-        
-        const mailOptions = {
-          from: `"JLA Global Company" <${process.env.GMAIL_USER}>`,
-          to: destinatario,
-          subject: asuntoFinal,
-          html: htmlCompleto,
-          attachments: pdfAttachment ? [{
-            filename: pdfAttachment.filename,
-            content: pdfAttachment.content,
-            contentType: pdfAttachment.contentType
-          }] : []
-        };
-
-        await gmailTransporter.sendMail(mailOptions);
-        
-        console.log('✅ Correo enviado exitosamente con Gmail');
-        
-        // Marcar como enviado por correo
-        await Cotizacion.findByIdAndUpdate(cotizacionId, { enviadoCorreo: true });
-
-        return res.status(200).json({ 
-          message: '¡Cotización enviada por correo exitosamente!',
-          details: {
-            destinatario: destinatario,
-            asunto: asuntoFinal,
-            enviado: true,
-            metodo: 'Gmail SMTP',
-            fecha: new Date().toLocaleString('es-CO')
-          }
-        });
-
-      } catch (gmailError) {
-        console.error('❌ Error con Gmail:', gmailError.message);
-        console.log('🔄 Intentando con SendGrid como fallback...');
+      const gmailResult = await trySendWithGmail(gmailTransporter, destinatario, asuntoFinal, htmlCompleto, pdfAttachment);
+      if (gmailResult.ok) {
+        await markCotizacionAsSent(cotizacionId);
+        return res.status(200).json({ message: '¡Cotización enviada por correo exitosamente!', details: { destinatario, asunto: asuntoFinal, enviado: true, metodo: gmailResult.metodo, fecha: new Date().toLocaleString('es-CO') } });
       }
+      console.log('🔄 Intentando con SendGrid como fallback...');
     }
 
-    // Intentar con SendGrid si Gmail falló o no está configurado
-    if (sendgridConfigured) {
-      try {
-        console.log('� Enviando con SendGrid...');
-
-        const msg = {
-          to: destinatario,
-          from: {
-            email: process.env.SENDGRID_FROM_EMAIL,
-            name: process.env.SENDGRID_FROM_NAME
-          },
-          subject: asuntoFinal,
-          text: mensajeFinal,
-          html: htmlCompleto,
-          attachments: pdfAttachment ? [{
-            content: pdfAttachment.content.toString('base64'),
-            filename: pdfAttachment.filename,
-            type: pdfAttachment.contentType,
-            disposition: 'attachment'
-          }] : []
-        };
-
-        await sgMail.send(msg);
-        
-        console.log('✅ Correo enviado exitosamente con SendGrid');
-        
-        // Marcar como enviado por correo
-        await Cotizacion.findByIdAndUpdate(cotizacionId, { enviadoCorreo: true });
-
-        return res.status(200).json({ 
-          message: '¡Cotización enviada por correo exitosamente!',
-          details: {
-            destinatario: destinatario,
-            asunto: asuntoFinal,
-            enviado: true,
-            metodo: 'SendGrid',
-            fecha: new Date().toLocaleString('es-CO')
-          }
-        });
-
-      } catch (sendError) {
-        console.error('❌ Error con SendGrid:', sendError.message);
-        
-        if (sendError.code === 401) {
-          console.error('🔑 Error 401: API Key inválida o sin permisos');
-        } else if (sendError.code === 403) {
-          console.error('🚫 Error 403: Email remitente no verificado');
-        }
-      }
+    // Try SendGrid
+    const sendgridResult = await trySendWithSendGrid(destinatario, asuntoFinal, mensajeFinal, htmlCompleto, pdfAttachment);
+    if (sendgridResult.ok) {
+      await markCotizacionAsSent(cotizacionId);
+      return res.status(200).json({ message: '¡Cotización enviada por correo exitosamente!', details: { destinatario, asunto: asuntoFinal, enviado: true, metodo: sendgridResult.metodo, fecha: new Date().toLocaleString('es-CO') } });
     }
 
-    // Si ambos fallan, usar simulación
-    console.log('📧 SIMULACIÓN DE ENVÍO (ambos servicios fallaron):');
-    console.log(`   Destinatario: ${destinatario}`);
-    console.log(`   Asunto: ${asuntoFinal}`);
-    
-    // Marcar como enviado por correo (simulación)
-    await Cotizacion.findByIdAndUpdate(cotizacionId, { enviadoCorreo: true });
-
-    return res.status(200).json({ 
-      message: 'Envío simulado (servicios de correo no disponibles)',
-      details: {
-        destinatario: destinatario,
-        asunto: asuntoFinal,
-        simulado: true,
-        nota: 'Configure Gmail o SendGrid correctamente para envío real'
-      }
-    });
+    // If both fail, simulate send and mark as sent
+    console.log('📧 SIMULACIÓN DE ENVÍO (servicios de correo no disponibles):', { destinatario, asunto: asuntoFinal });
+    await markCotizacionAsSent(cotizacionId);
+    return res.status(200).json({ message: 'Envío simulado (servicios de correo no disponibles)', details: { destinatario, asunto: asuntoFinal, simulado: true, nota: 'Configure Gmail o SendGrid correctamente para envío real' } });
 
   } catch (error) {
     console.error('💥 Error general:', error);
-    res.status(500).json({ 
-      message: 'Error interno al procesar el envío', 
-      error: error.message
-    });
+    res.status(500).json({ message: 'Error interno al procesar el envío', error: error.message });
   }
 };
 
