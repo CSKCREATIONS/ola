@@ -169,20 +169,7 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
   return (
     <div 
       id="editUserModal"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="edit-user-title"
-      // Keyboard handling moved to document level via useEffect (a11y)
-      // Make backdrop focusable so the click handler is keyboard-accessible
-      tabIndex={0}
-      onKeyDown={(e) => {
-        // Allow closing the modal with Enter or Space when backdrop is focused
-        if (e.key === 'Enter' || e.code === 'Space' || e.key === ' ') {
-          if (e.target && e.target.id === 'editUserModal') {
-            closeModal('editUserModal');
-          }
-        }
-      }}
+      role="presentation"
       style={{
         position: 'fixed',
         top: 0,
@@ -205,6 +192,9 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
       }}
     >
       <form 
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="edit-user-title"
         onSubmit={guardarCambios}
         style={{
           backgroundColor: 'white',
