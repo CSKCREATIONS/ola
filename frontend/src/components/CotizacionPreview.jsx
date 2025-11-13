@@ -456,7 +456,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                   border: 'none',
                   borderRadius: '8px',
                   padding: '0.75rem 1rem',
-                  color: 'white',
+                  color: '#0f172a',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
@@ -482,7 +482,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                   border: 'none',
                   borderRadius: '8px',
                   padding: '0.75rem 1rem',
-                  color: 'white',
+                  color: '#0f172a',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
@@ -530,20 +530,20 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                 newWindow.print();
                 newWindow.close();
               }}
-              style={{
-                background: 'rgba(255, 255, 255, 0.2)',
-                border: 'none',
-                borderRadius: '8px',
-                padding: '0.75rem',
-                color: 'white',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                fontSize: '0.9rem',
-                fontWeight: 'bold',
-                transition: 'all 0.3s ease'
-              }}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.2)',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '0.75rem',
+                  color: '#0f172a',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  fontSize: '0.9rem',
+                  fontWeight: 'bold',
+                  transition: 'all 0.3s ease'
+                }}
               onMouseEnter={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.3)'}
               onMouseLeave={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.2)'}
             >
@@ -653,21 +653,21 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               marginBottom: '2rem'
             }}>
               <div>
-                <h3 style={{ 
-                  borderBottom: '3px solid #2563eb', 
-                  paddingBottom: '0.5rem', 
-                  color: '#2563eb',
-                  fontSize: '1.2rem',
+                <div style={{
+                  background: 'rgba(255, 255, 255, 0.2)',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '0.75rem',
+                  color: '#0f172a',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  fontSize: '0.9rem',
                   fontWeight: 'bold',
-                  marginBottom: '1rem'
+                  transition: 'all 0.3s ease'
                 }}>
-                  Información Cliente
-                </h3>
-                <div style={{ lineHeight: '1.8' }}>
-                  <p><strong>Cliente:</strong> {datos?.cliente?.nombre}</p>
-                  <p><strong>Teléfono:</strong> {datos?.cliente?.telefono}</p>
-                  <p><strong>Dirección:</strong> {datos?.cliente?.direccion}</p>
-                  <p><strong>Ciudad:</strong> {datos?.cliente?.ciudad}</p>
+                  <p style={{ margin: 0 }}><strong>Ciudad:</strong> {datos?.cliente?.ciudad}</p>
                 </div>
               </div>
 
