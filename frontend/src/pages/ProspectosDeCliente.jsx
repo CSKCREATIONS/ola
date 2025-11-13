@@ -289,25 +289,28 @@ export default function ListaDeClientes() {
       <div>
         {toShow.map((c) => (
           <div key={c.id} style={{ display: 'block', marginBottom: 6 }}>
-            <a
-              href="#"
-              onClick={(e) => { e.preventDefault(); abrirCotizacionPreview(c.id); }}
+            <button
+              type="button"
+              onClick={() => abrirCotizacionPreview(c.id)}
               className="prospectos-cotizacion-link"
+              aria-label={`Abrir cotización ${c.codigo}`}
             >
               {c.codigo}
-            </a>
+            </button>
           </div>
         ))}
 
         {list.length > 3 && (
           <div>
-            <a
-              href="#"
-              onClick={(e) => { e.preventDefault(); toggleExpandEmails(emailKey); }}
+            <button
+              type="button"
+              onClick={() => toggleExpandEmails(emailKey)}
               className="prospectos-expand-link"
+              aria-expanded={isExpanded}
+              aria-controls={`cotizaciones-${emailKey}`}
             >
               {isExpanded ? 'mostrar menos' : `...ver ${list.length - 3} más`}
-            </a>
+            </button>
           </div>
         )}
       </div>
