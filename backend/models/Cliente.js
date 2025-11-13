@@ -31,10 +31,11 @@ const ClienteSchema = new mongoose.Schema({
       validator: function (email) {
         // Deterministic, low-risk email validation to avoid catastrophic backtracking.
         if (typeof email !== 'string') return false;
-        if (email.length === 0 || email.length > 320) return false;
-        if (/\s/.test(email)) return false; // no whitespace
+        const value = email.trim();
+        if (value.length === 0 || value.length > 320) return false;
+        if (/\s/.test(value)) return false; // no whitespace
 
-        const parts = email.split('@');
+        const parts = value.split('@');
         if (parts.length !== 2) return false; // exactly one @
 
         const [local, domain] = parts;
@@ -46,9 +47,9 @@ const ClienteSchema = new mongoose.Schema({
         // Domain: only letters, digits, hyphen and dot
         if (!/^[A-Za-z0-9.-]+$/.test(domain)) return false;
 
-  // Local: allow common characters but keep it conservative
-  // Move hyphen to the end of the class to avoid an unnecessary escape
-  if (!/^[A-Za-z0-9!#$%&'*+/?^_`{|}~.-]+$/.test(local)) return false;
+        // Local: allow common characters but keep it conservative
+        // Keep hyphen escaped to avoid any ambiguity inside the character class
+        if (!/^[A-Za-z0-9!#$%&'*+\/?^_`{|}~.\-]+$/.test(local)) return false;
 
         return true;
       },
