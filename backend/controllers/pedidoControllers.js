@@ -378,83 +378,6 @@ exports.actualizarEstadoPedido = async (req, res) => {
 
 
 
-exports.marcarComoEntregado = async (req, res) => {
-  try {
-    // Sanitizar el ID para prevenir inyección NoSQL
-    const pedidoId = sanitizarId(req.params.id);
-    if (!pedidoId) {
-      return res.status(400).json({ message: 'ID de pedido inválido' });
-    }
-
-    const pedido = await Pedido.findById(pedidoId)
-      .populate('productos.product') // Asegúrate que el campo se llama "productos.product"
-      .populate('cliente');
-
-    if (!pedido) return res.status(404).json({ message: 'Pedido no encontrado' });
-
-    // Actualizar el stock de los productos antes de marcar como entregado
-    const Products = require('../models/Products');
-    
-    for (const item of pedido.productos) {
-      if (item.product) {
-        const producto = await Products.findById(item.product._id);
-        if (producto) {
-          // Verificar que hay suficiente stock
-          if (producto.stock < item.cantidad) {
-            return res.status(400).json({ 
-              message: `Stock insuficiente para ${producto.name}. Stock actual: ${producto.stock}, requerido: ${item.cantidad}` 
-            });
-          }
-          
-          // Disminuir el stock
-          producto.stock -= item.cantidad;
-          await producto.save();
-          
-          console.log(`📦 Stock actualizado: ${producto.name} - Stock anterior: ${producto.stock + item.cantidad}, Stock nuevo: ${producto.stock}`);
-        }
-      }
-    }
-
-    // Cambiar estado
-    pedido.estado = 'entregado';
-    await pedido.save();
-
-    // Construir productosVenta con precioUnitario
-    const productosVenta = pedido.productos.map(item => {
-      if (item.product?.precio == null) {
-        throw new Error(`Falta el precio del producto: ${item.product?._id}`);
-      }
-
-      return {
-        producto: item.product._id,
-        cantidad: item.cantidad,
-        precioUnitario: item.product.precio
-      };
-    });
-
-    // Calcular total
-    const total = productosVenta.reduce((sum, p) => sum + (p.cantidad * p.precioUnitario), 0);
-
-    // Registrar venta
-    const venta = new Venta({
-      cliente: pedido.cliente._id,
-      productos: productosVenta,
-      total,
-      estado: 'completado',
-      pedidoReferenciado: pedido._id,
-      fecha: new Date()
-    });
-
-    await venta.save();
-
-    res.json({ message: 'Pedido entregado y venta registrada correctamente', venta });
-
-  } catch (error) {
-    console.error('❌ Error al entregar pedido y crear venta:', error);
-    res.status(500).json({ message: 'Error al entregar pedido y crear venta' });
-  }
-};
-
 // Remisionar un pedido: crea un documento en la colección Remision usando los datos del pedido
 exports.remisionarPedido = async (req, res) => {
   try {
@@ -519,15 +442,24 @@ exports.remisionarPedido = async (req, res) => {
 
     const RemisionModel = require('../models/Remision');
 
+    // Construir observaciones incluyendo referencia a cotización si aplica
+    let obsFinal = observaciones || `Remisión generada desde pedido ${pedido.numeroPedido}`;
+    const tieneCotRef = !!pedido.cotizacionReferenciada;
+    if (tieneCotRef) {
+      const cotRefStr = String(pedido.cotizacionReferenciada);
+      obsFinal = `${obsFinal} | Cotización: ${cotRefStr}`;
+    }
+
     const nuevaRemision = new RemisionModel({
       numeroRemision,
       pedidoReferencia: pedido._id,
       codigoPedido: pedido.numeroPedido,
+      ...(tieneCotRef ? { cotizacionReferencia: pedido.cotizacionReferenciada } : {}),
       cliente: clienteId,
       productos: productosRemisionDoc,
       fechaRemision: new Date(),
       fechaEntrega: fechaEntrega ? new Date(fechaEntrega) : new Date(),
-      observaciones: observaciones || `Remisión generada desde pedido ${pedido.numeroPedido}`,
+      observaciones: obsFinal,
       responsable: req.userId || null,
       estado: 'activa',
       total,
@@ -550,6 +482,15 @@ exports.remisionarPedido = async (req, res) => {
     const remisionCompleta = await RemisionModel.findById(nuevaRemision._id)
       .populate('responsable', 'username firstName surname')
       .populate('cliente');
+
+    // Si el pedido referencia una cotización, marcarla como remisionada (no bloqueante)
+    if (tieneCotRef) {
+      try {
+        await Cotizacion.findByIdAndUpdate(pedido.cotizacionReferenciada, { estado: 'remisionada' });
+      } catch (cotErr) {
+        console.warn('⚠️ No se pudo marcar la cotización como remisionada:', cotErr?.message || cotErr);
+      }
+    }
 
     return res.status(201).json({ message: 'Remisión creada exitosamente', remision: remisionCompleta, numeroRemision });
   } catch (error) {
