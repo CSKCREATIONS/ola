@@ -1,6 +1,7 @@
 const htmlPdf = require('html-pdf-node');
-const path = require('path');
-const fs = require('fs');
+// Prefer the explicit node: specifier for core modules
+const path = require('node:path');
+const fs = require('node:fs');
 
 class PDFService {
   constructor() {
@@ -76,9 +77,17 @@ class PDFService {
 
       const pdfBuffer = await htmlPdf.generatePdf(file, this.options);
       
-      const estadoTexto = estado === 'agendado' ? 'Agendado' : 
-                         estado === 'devuelto' ? 'Devuelto' : 
-                         estado === 'cancelado' ? 'Cancelado' : estado;
+      // Normalize estadoTexto with a clear, non-nested conditional for readability
+      let estadoTexto;
+      if (estado === 'agendado') {
+        estadoTexto = 'Agendado';
+      } else if (estado === 'devuelto') {
+        estadoTexto = 'Devuelto';
+      } else if (estado === 'cancelado') {
+        estadoTexto = 'Cancelado';
+      } else {
+        estadoTexto = estado;
+      }
       
       return {
         buffer: pdfBuffer,
@@ -93,8 +102,8 @@ class PDFService {
 
   // Generar HTML para cotización
   generarHTMLCotizacion(cotizacion) {
-    const fechaCotizacion = cotizacion.fecha ? new Date(cotizacion.fecha).toLocaleDateString('es-ES') : 'N/A';
-    const fechaVencimiento = cotizacion.fechaVencimiento ? new Date(cotizacion.fechaVencimiento).toLocaleDateString('es-ES') : 'N/A';
+  const fechaCotizacion = cotizacion.fecha ? new Date(cotizacion.fecha).toLocaleDateString('es-ES') : 'N/A';
+  // fechaVencimiento was previously computed but not used in the template; removed to avoid dead code
     
     // Calcular total si no existe
     const total = cotizacion.total || cotizacion.productos?.reduce((sum, prod) => {
