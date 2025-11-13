@@ -10,8 +10,7 @@ const PedidoAgendadoPreview = ({ datos, onClose, onEmailSent, onRemisionar }) =>
   const [mensaje, setMensaje] = useState('');
 
   // Obtener usuario del localStorage
-  const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
-
+  
   // Función para formatear fecha
   const formatDate = (fecha) => {
     if (!fecha) return 'No especificada';
@@ -40,7 +39,7 @@ const PedidoAgendadoPreview = ({ datos, onClose, onEmailSent, onRemisionar }) =>
 
   // Función para abrir modal de envío
   const abrirModalEnvio = () => {
-    const totalFinal = calcularTotal();
+    
     setAsunto(`Pedido Agendado ${datos?.numeroPedido || datos?.codigo || ''} - ${datos?.cliente?.nombre || 'Cliente'} | ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}`);
     setMensaje(
       `Estimado/a ${datos?.cliente?.nombre || 'cliente'},
@@ -397,8 +396,8 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                   </tr>
                 </thead>
                 <tbody>
-                  {datos?.productos && datos.productos.map((producto, index) => (
-                    <tr key={index} style={{
+                  {datos?.productos?.map((producto, index) => (
+                    <tr key={producto._id || producto.product?._id || producto.codigo || producto.product?.codigo || index} style={{
                       borderBottom: '1px solid #eee',
                       backgroundColor: index % 2 === 0 ? '#fafafa' : 'white'
                     }}>
