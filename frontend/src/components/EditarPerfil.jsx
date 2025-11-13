@@ -133,20 +133,7 @@ export default function EditarPerfil() {
   return (
     <div 
       id="editar-perfil"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="edit-profile-title"
-      // Backdrop: keep role=dialog and a click handler for backdrop clicks.
-      // Keyboard handling: Escape is attached at document level via useEffect.
-      // Add keyboard listener here so the visible non-interactive backdrop has a keyboard affordance
-      tabIndex={0}
-      onKeyDown={(e) => {
-        // Allow closing the modal with Enter or Space when backdrop is focused
-        if ((e.key === 'Enter' || e.code === 'Space' || e.key === ' ') && e.target && e.target.id === 'editar-perfil') {
-          e.preventDefault();
-          closeModal('editar-perfil');
-        }
-      }}
+      role="presentation"
       style={{
         position: 'fixed',
         top: 0,
@@ -169,6 +156,9 @@ export default function EditarPerfil() {
       // Keyboard handling (Escape) is attached at document level via useEffect.
     >
       <form 
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="edit-profile-title"
         onSubmit={guardarCambios}
         style={{
           backgroundColor: 'white',
