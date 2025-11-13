@@ -1,5 +1,6 @@
 // src/pages/Proveedores.jsx
 import React, { useEffect, useState } from 'react';
+import PropTypes from 'prop-types';
 import api from '../api/axiosConfig';
 import Swal from 'sweetalert2';
 import '../App.css';
@@ -778,6 +779,49 @@ const ModalProductosProveedor = ({ visible, onClose, productos, proveedor }) => 
     </div>
   );
 
+};
+
+ProveedorModal.propTypes = {
+  proveedor: PropTypes.shape({
+    _id: PropTypes.string,
+    nombre: PropTypes.string,
+    contacto: PropTypes.shape({
+      telefono: PropTypes.string,
+      correo: PropTypes.string,
+    }),
+    direccion: PropTypes.shape({
+      calle: PropTypes.string,
+      pais: PropTypes.string,
+    }),
+    empresa: PropTypes.string,
+  }),
+  onClose: PropTypes.func,
+  onSave: PropTypes.func,
+};
+
+ProveedorModal.defaultProps = {
+  proveedor: null,
+  onClose: () => {},
+  onSave: () => {},
+};
+
+ModalProductosProveedor.propTypes = {
+  visible: PropTypes.bool,
+  onClose: PropTypes.func,
+  productos: PropTypes.arrayOf(PropTypes.shape({
+    _id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    name: PropTypes.string,
+    price: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    stock: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  })),
+  proveedor: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+};
+
+ModalProductosProveedor.defaultProps = {
+  visible: false,
+  onClose: () => {},
+  productos: [],
+  proveedor: '',
 };
 
 const GestionProveedores = () => {
