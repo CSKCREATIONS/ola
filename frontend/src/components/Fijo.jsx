@@ -247,8 +247,15 @@ export default function Fijo() {
                     type="button"
                     onClick={() => toggleSubMenu('submenuUsuarios')}
                     className="menu-toggle-button"
+                    aria-controls="submenuUsuarios"
+                    // Use a boolean for aria-expanded. We derive it from the submenu element's visibility class.
+                    // Fallback to false if the element isn't present yet (initial render).
+                    aria-expanded={
+                      typeof document !== 'undefined' && document.getElementById('submenuUsuarios')
+                        ? document.getElementById('submenuUsuarios').classList.contains('visible')
+                        : false
+                    }
                     style={{ background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-                    aria-expanded={document.getElementById('submenuUsuarios') ? undefined : undefined}
                   >
                     <i className="fas fa-users" aria-hidden={true}></i>
                     <span>Usuarios</span>
