@@ -141,7 +141,11 @@ function buildProductosRemisionDoc(pedido) {
 function buildObsFinal(pedido, observaciones) {
   let obs = observaciones || `Remisión generada desde pedido ${pedido.numeroPedido}`;
   if (pedido.cotizacionReferenciada) {
-    obs = `${obs} | Cotización: ${String(pedido.cotizacionReferenciada)}`;
+    // Si está poblada como objeto, usar su código; si no, usar el valor como string
+    const codigoCot = (typeof pedido.cotizacionReferenciada === 'object')
+      ? (pedido.cotizacionReferenciada.codigo || String(pedido.cotizacionReferenciada._id || ''))
+      : String(pedido.cotizacionReferenciada);
+    obs = `${obs} y Cotización: ${codigoCot}`;
   }
   return obs;
 }
@@ -234,7 +238,10 @@ exports.getPedidos = async (req, res) => {
       }
     }
     
-    const pedidos = await Pedido.find(filtro).populate('cliente').populate('productos.product');
+    const pedidos = await Pedido.find(filtro)
+      .populate('cliente')
+      .populate('productos.product')
+      .populate('cotizacionReferenciada', 'codigo');
     
     // Calcular el total para cada pedido
     const pedidosConTotal = pedidos.map(pedido => {
@@ -243,9 +250,14 @@ exports.getPedidos = async (req, res) => {
         const precio = prod.precioUnitario || 0;
         return sum + (cantidad * precio);
       }, 0);
-      
+      const pedidoObj = pedido.toObject();
+      // Reemplazar cotizacionReferenciada por su código cuando esté poblada
+      if (pedidoObj.cotizacionReferenciada && typeof pedidoObj.cotizacionReferenciada === 'object') {
+        pedidoObj.cotizacionReferenciada = pedidoObj.cotizacionReferenciada.codigo || String(pedidoObj.cotizacionReferenciada._id);
+      }
+
       return {
-        ...pedido.toObject(),
+        ...pedidoObj,
         total
       };
     });
@@ -314,7 +326,8 @@ exports.getPedidoById = async (req, res) => {
 
     const pedido = await Pedido.findById(id)
       .populate('cliente')
-      .populate('productos.product');
+      .populate('productos.product')
+      .populate('cotizacionReferenciada', 'codigo');
 
     if (!pedido) {
       return res.status(404).json({ message: 'Pedido no encontrado' });
@@ -327,8 +340,13 @@ exports.getPedidoById = async (req, res) => {
       return sum + (cantidad * precio);
     }, 0);
 
+    const pedidoObj = pedido.toObject();
+    if (pedidoObj.cotizacionReferenciada && typeof pedidoObj.cotizacionReferenciada === 'object') {
+      pedidoObj.cotizacionReferenciada = pedidoObj.cotizacionReferenciada.codigo || String(pedidoObj.cotizacionReferenciada._id);
+    }
+
     const pedidoConTotal = {
-      ...pedido.toObject(),
+      ...pedidoObj,
       total
     };
 
@@ -429,7 +447,11 @@ exports.remisionarPedido = async (req, res) => {
 
     if (!pedidoId) return res.status(400).json({ message: 'ID de pedido inválido' });
 
-    const pedido = await Pedido.findById(pedidoId).populate('cliente').populate('productos.product').exec();
+    const pedido = await Pedido.findById(pedidoId)
+      .populate('cliente')
+      .populate('productos.product')
+      .populate('cotizacionReferenciada', 'codigo')
+      .exec();
     if (!pedido) return res.status(404).json({ message: 'Pedido no encontrado' });
 
     // Generar número de remisión secuencial
@@ -469,7 +491,15 @@ exports.remisionarPedido = async (req, res) => {
       cantidadTotal
     };
 
-    if (tieneCotRef) remisionData.cotizacionReferencia = pedido.cotizacionReferenciada;
+    if (tieneCotRef) {
+      // Guardar referencia ObjectId y código en la remisión para conveniencia
+      remisionData.cotizacionReferencia = (typeof pedido.cotizacionReferenciada === 'object')
+        ? pedido.cotizacionReferenciada._id
+        : pedido.cotizacionReferenciada;
+      remisionData.cotizacionCodigo = (typeof pedido.cotizacionReferenciada === 'object')
+        ? pedido.cotizacionReferenciada.codigo
+        : String(pedido.cotizacionReferenciada);
+    }
 
     const nuevaRemision = new RemisionModel(remisionData);
     await nuevaRemision.save();
@@ -481,8 +511,8 @@ exports.remisionarPedido = async (req, res) => {
       .populate('responsable', 'username firstName surname')
       .populate('cliente');
 
-    // Marcar cotización como remisionada (no bloqueante)
-    safeMarkCotizacionRemisionada(pedido.cotizacionReferenciada);
+    // Marcar cotización como remisionada (no bloqueante) - pasar ObjectId si está poblada
+    safeMarkCotizacionRemisionada(pedido.cotizacionReferenciada?._id || pedido.cotizacionReferenciada);
 
     return res.status(201).json({ message: 'Remisión creada exitosamente', remision: remisionCompleta, numeroRemision });
   } catch (error) {
@@ -514,7 +544,8 @@ exports.enviarPedidoAgendadoPorCorreo = async (req, res) => {
 
     const pedido = await Pedido.findById(pedidoId)
       .populate('cliente')
-      .populate('productos.product');
+      .populate('productos.product')
+      .populate('cotizacionReferenciada', 'codigo');
 
     if (!pedido) {
       return res.status(404).json({ message: 'Pedido no encontrado' });
@@ -585,7 +616,8 @@ exports.enviarPedidoDevueltoPorCorreo = async (req, res) => {
 
     const pedido = await Pedido.findById(pedidoId)
       .populate('cliente')
-      .populate('productos.product');
+      .populate('productos.product')
+      .populate('cotizacionReferenciada', 'codigo');
 
     if (!pedido) {
       return res.status(404).json({ message: 'Pedido no encontrado' });
@@ -641,7 +673,8 @@ exports.enviarPedidoCanceladoPorCorreo = async (req, res) => {
 
     const pedido = await Pedido.findById(pedidoId)
       .populate('cliente')
-      .populate('productos.product');
+      .populate('productos.product')
+      .populate('cotizacionReferenciada', 'codigo');
 
     if (!pedido) {
       return res.status(404).json({ message: 'Pedido no encontrado' });
