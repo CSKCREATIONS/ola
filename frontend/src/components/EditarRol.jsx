@@ -210,7 +210,7 @@ export default function EditarRol({ rol }) {
    return (
       <div 
          id="edit-role-modal"
-         role="presentation"
+         aria-hidden="true"
          style={{
             position: 'fixed',
             top: 0,
@@ -233,11 +233,9 @@ export default function EditarRol({ rol }) {
          }}
         
       >
-         <form 
-            role="dialog"
+         <dialog
             aria-modal="true"
             aria-labelledby="edit-role-title"
-            onSubmit={handleSubmit}
             style={{
                backgroundColor: 'white',
                borderRadius: '20px',
@@ -247,9 +245,13 @@ export default function EditarRol({ rol }) {
                overflow: 'hidden',
                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
                display: 'flex',
-               flexDirection: 'column'
+               flexDirection: 'column',
+               border: 'none',
+               padding: 0
             }}
+            open
          >
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column' }}>
             {/* Header */}
             <div style={{
                background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
@@ -982,7 +984,8 @@ export default function EditarRol({ rol }) {
                   <span>Guardar Cambios</span>
                </button>
             </div>
-         </form>
+            </form>
+         </dialog>
       </div>
    );
 }
