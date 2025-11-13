@@ -473,6 +473,21 @@ export default function ListaDeCotizaciones() {
     }
   }, [location]);
 
+  // Manejar tecla Escape para cerrar el modal de edición desde el documento
+  useEffect(() => {
+    if (!modoEdicion) return;
+
+    const handleEscape = (e) => {
+      if (e.key === 'Escape' || e.key === 'Esc') {
+        setModoEdicion(false);
+        setCotizacionSeleccionada(null);
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [modoEdicion]);
+
   // Funciones de cálculo mejoradas
   const calcularSubtotalProducto = (producto) => {
     const cantidad = Number.parseFloat(producto?.cantidad) || 0;
@@ -1299,16 +1314,9 @@ export default function ListaDeCotizaciones() {
             className="modal-overlay"
             role="dialog"
             aria-modal="true"
-            tabIndex={0}
             aria-label="Editar Cotización"
             onClick={(e) => {
               if (e.target === e.currentTarget) {
-                setModoEdicion(false);
-                setCotizacionSeleccionada(null);
-              }
-            }}
-            onKeyDown={(e) => {
-              if ((e.key === 'Escape' || e.key === 'Esc') && e.target === e.currentTarget) {
                 setModoEdicion(false);
                 setCotizacionSeleccionada(null);
               }
