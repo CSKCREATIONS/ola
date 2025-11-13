@@ -226,6 +226,7 @@ export default function EditarRol({ rol }) {
             backdropFilter: 'blur(4px)',
             padding: '1rem'
          }}
+         // Make backdrop focusable so click handler is keyboard-accessible
          onClick={(e) => {
             if (e.target.id === 'edit-role-modal') {
                closeModal('edit-role-modal');
