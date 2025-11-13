@@ -18,8 +18,6 @@ export default function CambiarContrasena() {
     }
 
     try {
-      const token = localStorage.getItem('token');
-
       // Cambiar contraseña
       await api.patch('/api/users/change-password', { newPassword });
 
