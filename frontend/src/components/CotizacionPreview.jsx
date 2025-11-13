@@ -306,7 +306,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                 <br><small>Por favor seleccione una fecha para continuar</small>
               </div>
             `);
-            return false;
+            return { valid: false };
           }
 
           // Validar que la fecha no sea anterior a hoy
@@ -322,17 +322,18 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                 <br><small>Por favor seleccione una fecha válida</small>
               </div>
             `);
-            return false;
+            return { valid: false };
           }
 
           return {
+            valid: true,
             fechaEntrega: fechaEntrega,
             observaciones: (observaciones || '').trim()
           };
         }
       });
 
-      if (formValues) {
+  if (formValues?.valid) {
         // Mostrar loading
         Swal.fire({
           title: 'Procesando...',
@@ -743,8 +744,8 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                   </tr>
                 </thead>
                 <tbody>
-                  {datos?.productos && datos.productos.map((producto, index) => (
-                    <tr key={index} style={{ 
+                  {datos?.productos?.map((producto, index) => (
+                    <tr key={producto.producto?.id || producto.product?._id || producto.product?.id || producto.codigo || producto._id || index} style={{ 
                       borderBottom: '1px solid #eee',
                       backgroundColor: index % 2 === 0 ? '#fafafa' : 'white'
                     }}>
