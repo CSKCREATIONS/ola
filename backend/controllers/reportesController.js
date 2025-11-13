@@ -97,7 +97,7 @@ exports.reporteProductos = async (req, res) => {
     // Sanitizar categoría para prevenir inyección NoSQL
     if (categoria) {
       const categoriaSanitizada = typeof categoria === 'string' ? categoria.trim() : '';
-      if (categoriaSanitizada && categoriaSanitizada.match(/^[0-9a-fA-F]{24}$/)) {
+      if (categoriaSanitizada?.match(/^[0-9a-fA-F]{24}$/)) {
         filters.category = categoriaSanitizada;
       }
     }
@@ -655,8 +655,7 @@ exports.reporteProveedoresRecientes = async (req, res) => {
 // Estadísticas de Ventas
 exports.estadisticasVentas = async (req, res) => {
   try {
-    const totalVentas = await Venta.countDocuments();
-    const totalPedidos = await Pedido.countDocuments();
+  const totalPedidos = await Pedido.countDocuments();
     const clientesActivos = await Cliente.countDocuments({ activo: true });
     
     const ventasConPrecio = await Venta.aggregate([

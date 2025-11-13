@@ -177,9 +177,9 @@ exports.desactivarSubcategoriaYProductos = async (req, res) => {
     // Sanitizar el ID para prevenir inyección NoSQL
     const subcategoriaId = typeof id === 'string' ? id.trim() : '';
     
-    if (!subcategoriaId || !subcategoriaId.match(/^[0-9a-fA-F]{24}$/)) {
-      return res.status(400).json({ message: 'ID de subcategoría inválido' });
-    }
+        if (!subcategoriaId?.match(/^[0-9a-fA-F]{24}$/)) {
+            return res.status(400).json({ message: 'ID de subcategoría inválido' });
+        }
 
     const subcategoria = await Subcategory.findByIdAndUpdate(subcategoriaId, { activo: false });
     if (!subcategoria) {
@@ -211,7 +211,7 @@ exports.activarSubcategoria = async (req, res) => {
         }
 
         // Si la categoría padre existe y está inactiva, no permitir activar la subcategoría
-        if (subcategoria.category && subcategoria.category.activo === false) {
+        if (subcategoria.category?.activo === false) {
             return res.status(400).json({ message: 'No se puede activar la subcategoría porque la categoría padre está desactivada' });
         }
 

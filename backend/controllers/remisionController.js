@@ -32,7 +32,8 @@ function isValidEmail(email) {
 
   // Local part: avoid dangerous patterns; allow most common chars but keep it simple
   // Accept: letters, digits and these punctuation: !#$%&'*+/=?^_`{|}~.-
-  if (!/^[A-Za-z0-9!#$%&'*+/=?^_`{|}~.\-]+$/.test(local)) return false;
+  // Note: escape the forward slash inside the class and place '-' last so it does not need escaping
+  if (!/^[A-Za-z0-9!#$%&'*+\/=?^_`{|}~.-]+$/.test(local)) return false;
 
   return true;
 }
@@ -40,7 +41,7 @@ function isValidEmail(email) {
 async function fetchRemisionOrThrow(id) {
   // Validate id early to avoid costly DB lookups with invalid input
   const idStr = typeof id === 'string' ? id.trim() : '';
-  if (!idStr || !idStr.match(/^[0-9a-fA-F]{24}$/)) {
+  if (!idStr?.match(/^[0-9a-fA-F]{24}$/)) {
     const err = new Error('ID inválido para remisión');
     err.code = 'INVALID_ID';
     throw err;
@@ -70,7 +71,7 @@ async function generatePdfAttachmentSafe(remision) {
 
 function configureSendGridIfAvailable() {
   const sgKey = process.env.SENDGRID_API_KEY;
-  if (sgKey && sgKey.startsWith('SG.')) {
+  if (sgKey?.startsWith('SG.')) {
     try {
       sgMail.setApiKey(sgKey);
       return true;
@@ -243,7 +244,7 @@ exports.crearRemisionDesdePedido = async (req, res) => {
 
     // Sanitizar el ID para prevenir inyección NoSQL
     const pedidoIdSanitizado = typeof pedidoId === 'string' ? pedidoId.trim() : '';
-    if (!pedidoIdSanitizado || !pedidoIdSanitizado.match(/^[0-9a-fA-F]{24}$/)) {
+    if (!pedidoIdSanitizado?.match(/^[0-9a-fA-F]{24}$/)) {
       return res.status(400).json({ message: 'ID de pedido inválido' });
     }
 
@@ -374,7 +375,7 @@ exports.probarGmail = async (req, res) => {
 exports.probarSendGrid = async (req, res) => {
   try {
     const sgKey = process.env.SENDGRID_API_KEY;
-    if (!sgKey || !sgKey.startsWith('SG.')) {
+    if (!sgKey?.startsWith('SG.')) {
       return res.status(400).json({ message: 'SENDGRID_API_KEY no configurada o inválida' });
     }
 
