@@ -71,13 +71,11 @@ useEffect(() => {
 
 
 
- const handleAgendar = async () => {
+  const handleAgendar = async () => {
   if (!fechaEntrega || productosCotizacion.length === 0) {
     Swal.fire('Campos requeridos', 'Debes tener al menos un producto y una fecha de entrega', 'warning');
     return;
   }
-
-  const token = localStorage.getItem('token');
 
   const pedido = {
     cliente: id,

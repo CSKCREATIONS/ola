@@ -96,7 +96,6 @@ export default function ListaDeClientes() {
   }, []);
 
   const handleEliminar = (id) => {
-    const token = localStorage.getItem('token');
     Swal.fire({
       title: '¿Estás seguro?',
       text: 'Esta acción eliminará el cliente.',
@@ -119,7 +118,6 @@ export default function ListaDeClientes() {
   };
 
   const handleGuardar = async (clienteActualizado) => {
-    const token = localStorage.getItem('token');
     try {
       const res = await api.put(`/api/clientes/${clienteActualizado._id}`, clienteActualizado);
       if (!(res.status >= 200 && res.status < 300)) throw new Error('Error al actualizar cliente');

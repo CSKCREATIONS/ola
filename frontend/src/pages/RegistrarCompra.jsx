@@ -45,10 +45,8 @@ export default function RegistrarCompra() {
     }
 
     try {
-      setCargandoProductos(true);
-      const token = localStorage.getItem('token');
-
-      // Cargar TODOS los productos
+  setCargandoProductos(true);
+  // Cargar TODOS los productos
       const res = await api.get('/api/products');
       const data = res.data;
 
@@ -223,7 +221,7 @@ export default function RegistrarCompra() {
   const secureRandomString = (length) => {
     const alphabet = 'abcdefghijklmnopqrstuvwxyz0123456789';
     // Prefer Web Crypto API for secure randomness
-    if (typeof window !== 'undefined' && window.crypto && window.crypto.getRandomValues) {
+    if (typeof window !== 'undefined' && window.crypto?.getRandomValues) {
       const array = new Uint8Array(length);
       window.crypto.getRandomValues(array);
       let out = '';
