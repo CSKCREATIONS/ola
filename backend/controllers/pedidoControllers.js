@@ -125,6 +125,49 @@ async function safeSetClienteEsCliente(clienteId) {
   }
 }
 
+// Helper: construir productos para documento de remisión
+function buildProductosRemisionDoc(pedido) {
+  return (pedido.productos || []).map(prod => ({
+    nombre: prod.product?.name || prod.nombre || 'Producto sin nombre',
+    cantidad: prod.cantidad || 0,
+    precioUnitario: prod.precioUnitario || prod.valorUnitario || 0,
+    total: (prod.cantidad || 0) * (prod.precioUnitario || prod.valorUnitario || 0),
+    descripcion: prod.descripcion || prod.product?.description || '',
+    codigo: prod.product?.codigo || prod.codigo || ''
+  }));
+}
+
+// Helper: construir observaciones finales para remisión
+function buildObsFinal(pedido, observaciones) {
+  let obs = observaciones || `Remisión generada desde pedido ${pedido.numeroPedido}`;
+  if (pedido.cotizacionReferenciada) {
+    obs = `${obs} | Cotización: ${String(pedido.cotizacionReferenciada)}`;
+  }
+  return obs;
+}
+
+// Helper: marcar cotización como remisionada (no bloqueante)
+async function safeMarkCotizacionRemisionada(cotizacionId) {
+  try {
+    if (!cotizacionId) return;
+    await Cotizacion.findByIdAndUpdate(cotizacionId, { estado: 'remisionada' });
+  } catch (err) {
+    console.warn('⚠️ No se pudo marcar la cotización como remisionada:', err?.message || err);
+  }
+}
+
+// Helper: actualizar pedido con referencia a remisión (no bloqueante)
+async function safeUpdatePedidoWithRemision(pedido, nuevaRemisionId, numeroRemision) {
+  try {
+    pedido.estado = 'entregado';
+    pedido.remisionReferencia = nuevaRemisionId;
+    pedido.codigoRemision = numeroRemision;
+    await pedido.save();
+  } catch (err) {
+    console.warn('No se pudo actualizar pedido con referencia a remisión:', err.message || err);
+  }
+}
+
 // Helper: actualizar stock de productos cuando el pedido se entrega
 // Retorna { ok: true } o { ok: false, status, message }
 async function updateStockIfEntregado(pedido) {
@@ -386,75 +429,34 @@ exports.remisionarPedido = async (req, res) => {
 
     if (!pedidoId) return res.status(400).json({ message: 'ID de pedido inválido' });
 
-    const pedido = await Pedido.findById(pedidoId)
-      .populate('cliente')
-      .populate('productos.product')
-      .exec();
-
+    const pedido = await Pedido.findById(pedidoId).populate('cliente').populate('productos.product').exec();
     if (!pedido) return res.status(404).json({ message: 'Pedido no encontrado' });
 
     // Generar número de remisión secuencial
-    const counter = await Counter.findByIdAndUpdate(
-      'remision',
-      { $inc: { seq: 1 } },
-      { new: true, upsert: true }
-    );
+    const counter = await Counter.findByIdAndUpdate('remision', { $inc: { seq: 1 } }, { new: true, upsert: true });
     const numeroRemision = `REM-${String(counter.seq).padStart(5, '0')}`;
 
-    // Mapear productos
-    const productosRemisionDoc = (pedido.productos || []).map(prod => ({
-      nombre: prod.product?.name || prod.nombre || 'Producto sin nombre',
-      cantidad: prod.cantidad || 0,
-      precioUnitario: prod.precioUnitario || prod.valorUnitario || 0,
-      total: (prod.cantidad || 0) * (prod.precioUnitario || prod.valorUnitario || 0),
-      descripcion: prod.descripcion || prod.product?.description || '',
-      codigo: prod.product?.codigo || prod.codigo || ''
-    }));
-
+    const productosRemisionDoc = buildProductosRemisionDoc(pedido);
     const total = productosRemisionDoc.reduce((s, p) => s + (Number(p.total) || 0), 0);
     const cantidadTotal = productosRemisionDoc.reduce((s, p) => s + (Number(p.cantidad) || 0), 0);
 
-    // Resolver cliente: si pedido.cliente tiene _id úsalo, si es objeto buscar/crear
-    let clienteId = null;
-    if (pedido.cliente) {
-      if (typeof pedido.cliente === 'string' && mongoose.Types.ObjectId.isValid(pedido.cliente)) clienteId = pedido.cliente;
-      else if (pedido.cliente._id && mongoose.Types.ObjectId.isValid(pedido.cliente._id)) clienteId = pedido.cliente._id;
+    // Resolver/crear cliente (reutiliza helper centralizado)
+    let clienteId;
+    try {
+      clienteId = await resolveClienteId(pedido.cliente);
+    } catch (cliErr) {
+      return res.status(400).json({ message: cliErr?.message || 'No se pudo resolver el cliente para crear la remisión' });
     }
-
-    if (!clienteId && pedido.cliente?.correo) {
-      const correo = pedido.cliente?.correo ? String(pedido.cliente.correo).toLowerCase().trim() : null;
-      let clienteExistente = await Cliente.findOne({ correo });
-      if (!clienteExistente) {
-        clienteExistente = new Cliente({
-          nombre: pedido.cliente.nombre || '',
-          correo,
-          telefono: pedido.cliente.telefono || '',
-          direccion: pedido.cliente.direccion || '',
-          ciudad: pedido.cliente.ciudad || '',
-          esCliente: true
-        });
-        await clienteExistente.save();
-      }
-      clienteId = clienteExistente._id;
-    }
-
-    if (!clienteId) return res.status(400).json({ message: 'No se pudo resolver el cliente para crear la remisión' });
 
     const RemisionModel = require('../models/Remision');
 
-    // Construir observaciones incluyendo referencia a cotización si aplica
-    let obsFinal = observaciones || `Remisión generada desde pedido ${pedido.numeroPedido}`;
+    const obsFinal = buildObsFinal(pedido, observaciones);
     const tieneCotRef = !!pedido.cotizacionReferenciada;
-    if (tieneCotRef) {
-      const cotRefStr = String(pedido.cotizacionReferenciada);
-      obsFinal = `${obsFinal} | Cotización: ${cotRefStr}`;
-    }
 
-    const nuevaRemision = new RemisionModel({
+    const remisionData = {
       numeroRemision,
       pedidoReferencia: pedido._id,
       codigoPedido: pedido.numeroPedido,
-      ...(tieneCotRef ? { cotizacionReferencia: pedido.cotizacionReferenciada } : {}),
       cliente: clienteId,
       productos: productosRemisionDoc,
       fechaRemision: new Date(),
@@ -465,32 +467,22 @@ exports.remisionarPedido = async (req, res) => {
       total,
       cantidadItems: productosRemisionDoc.length,
       cantidadTotal
-    });
+    };
 
+    if (tieneCotRef) remisionData.cotizacionReferencia = pedido.cotizacionReferenciada;
+
+    const nuevaRemision = new RemisionModel(remisionData);
     await nuevaRemision.save();
 
-    // Marcar pedido como entregado y guardar referencia a la remisión (no bloqueante)
-    try {
-      pedido.estado = 'entregado';
-      pedido.remisionReferencia = nuevaRemision._id;
-      pedido.codigoRemision = numeroRemision;
-      await pedido.save();
-    } catch (uErr) {
-      console.warn('No se pudo actualizar pedido con referencia a remisión:', uErr.message || uErr);
-    }
+    // Actualizar pedido con referencia a remisión (no bloqueante)
+    safeUpdatePedidoWithRemision(pedido, nuevaRemision._id, numeroRemision);
 
     const remisionCompleta = await RemisionModel.findById(nuevaRemision._id)
       .populate('responsable', 'username firstName surname')
       .populate('cliente');
 
-    // Si el pedido referencia una cotización, marcarla como remisionada (no bloqueante)
-    if (tieneCotRef) {
-      try {
-        await Cotizacion.findByIdAndUpdate(pedido.cotizacionReferenciada, { estado: 'remisionada' });
-      } catch (cotErr) {
-        console.warn('⚠️ No se pudo marcar la cotización como remisionada:', cotErr?.message || cotErr);
-      }
-    }
+    // Marcar cotización como remisionada (no bloqueante)
+    safeMarkCotizacionRemisionada(pedido.cotizacionReferenciada);
 
     return res.status(201).json({ message: 'Remisión creada exitosamente', remision: remisionCompleta, numeroRemision });
   } catch (error) {
