@@ -1357,7 +1357,11 @@ export default function ListaDeCotizaciones() {
               open
               tabIndex={-1}
               onClick={(e) => e.stopPropagation()}
-              onKeyDown={(e) => e.stopPropagation()}
+              onKeyDown={(e) => {
+                // Allow Escape to bubble so the document-level handler can close the modal.
+                if (e.key === 'Escape' || e.key === 'Esc') return;
+                e.stopPropagation();
+              }}
             >
               <div className="modal-header">
                 <div className="header-info">
