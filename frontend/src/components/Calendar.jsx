@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 export default function Calendar() {
-  const [selectedDate, setSelectedDate] = useState(null);
+  const [, setSelectedDate] = useState(null);
 
   return (
     <input

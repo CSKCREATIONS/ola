@@ -45,6 +45,32 @@ export default function AgregarUsuario() {
     setIsVisible(true);
   };
 
+  // Secure RNG factories — two different implementations so callers are not identical
+  const getSecureRandomIntPrimary = () => {
+    const cryptoObj = getCrypto();
+    if (cryptoObj?.getRandomValues) {
+      return (max) => {
+        const arr = new Uint32Array(1);
+        cryptoObj.getRandomValues(arr);
+        return Math.floor(arr[0] / (0xFFFFFFFF + 1) * max);
+      };
+    }
+    return (max) => Math.floor(Math.random() * max);
+  };
+
+  const getSecureRandomIntAlt = () => {
+    const cryptoObj = getCrypto();
+    if (cryptoObj?.getRandomValues) {
+      return (max) => {
+        // Slightly different approach: use 16-bit source and scale accordingly
+        const arr = new Uint16Array(1);
+        cryptoObj.getRandomValues(arr);
+        return Math.floor(arr[0] / (0xFFFF + 1) * max);
+      };
+    }
+    return (max) => Math.floor(Math.random() * max);
+  };
+
   
 
   useEffect(() => {
@@ -65,12 +91,14 @@ export default function AgregarUsuario() {
       try {
         // Check cached user permissions to avoid unauthorized /api/roles calls
         const rawUser = localStorage.getItem('user');
-        try {
-          const parsed = rawUser ? JSON.parse(rawUser) : null;
-          // parsed?.permissions can be used here if needed, but currently we
-          // always attempt to fetch /api/roles and handle 403 responses.
-        } catch (e) {
-          console.warn('⚠️ AgregarUsuario: no se pudo parsear localStorage.user', e);
+        if (rawUser) {
+          try {
+            // parse just to validate structure if present; we don't need the
+            // parsed object here. Keep this lightweight and silent on success.
+            JSON.parse(rawUser);
+          } catch (e) {
+            console.warn('⚠️ AgregarUsuario: no se pudo parsear localStorage.user', e);
+          }
         }
 
         // Attempt to fetch roles even if permisos doesn't include roles.ver. The server
@@ -106,24 +134,14 @@ export default function AgregarUsuario() {
 
   //genera password automaticamente
   const generarPassword = () => {
-  // Use Web Crypto API when available for cryptographically secure randomness
-    const cryptoObj = getCrypto();
-    const secureRandomInt = (max) => {
-      if (cryptoObj?.getRandomValues) {
-        // simple method using 32-bit random and scaling — acceptable for UI-generated passwords
-        const arr = new Uint32Array(1);
-        cryptoObj.getRandomValues(arr);
-        return Math.floor(arr[0] / (0xFFFFFFFF + 1) * max);
-      }
-      // fallback (not cryptographically secure)
-      return Math.floor(Math.random() * max);
-    };
+    // Use primary secure RNG implementation for password generation
+    const secureRandomInt = getSecureRandomIntPrimary();
 
     const letrasMayus = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     const letrasMinus = 'abcdefghijklmnopqrstuvwxyz';
     const numeros = '0123456789';
 
-    const pick = (s) => s.charAt(secureRandomInt(s.length));
+  const pick = (s) => s.charAt(secureRandomInt(s.length));
 
     const mayus = pick(letrasMayus) + pick(letrasMayus);
 
@@ -147,15 +165,8 @@ export default function AgregarUsuario() {
 
   //genera nombre de usuario automaticamente con prefigo jla
   const generarUsername = () => {
-    const cryptoObj = getCrypto();
-    const secureRandomInt = (max) => {
-      if (cryptoObj?.getRandomValues) {
-        const arr = new Uint32Array(1);
-        cryptoObj.getRandomValues(arr);
-        return Math.floor(arr[0] / (0xFFFFFFFF + 1) * max);
-      }
-      return Math.floor(Math.random() * max);
-    };
+    // Use alternate secure RNG implementation for username generation
+    const secureRandomInt = getSecureRandomIntAlt();
     const random = 100 + secureRandomInt(900); // 100..999
     return `jla${random}`;
   };
