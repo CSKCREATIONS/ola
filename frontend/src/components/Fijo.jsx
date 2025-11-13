@@ -222,7 +222,6 @@ export default function Fijo() {
       </header>
 
       <div id='menu' className="menu">
-        <div className="usuarioYModulos" style={{ width: '100%' }}>
           <Link as={Link} to="/Perfil"><div className="preview-usuario">
             <img src="https://cdn-icons-png.freepik.com/256/17740/17740782.png?ga=GA1.1.755740385.1744083497&semt=ais_hybrid" alt="" style={{ width: "80px" }} />
             <div className="datos-usuario">
@@ -377,7 +376,7 @@ export default function Fijo() {
           </div>
 
 
-        </div>
+        
       </div>
     </div>
   )

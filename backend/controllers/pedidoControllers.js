@@ -455,165 +455,110 @@ exports.marcarComoEntregado = async (req, res) => {
   }
 };
 
-// Crear remisión desde pedido entregado
-exports.crearRemisionDesdePedido = async (req, res) => {
+// Remisionar un pedido: crea un documento en la colección Remision usando los datos del pedido
+exports.remisionarPedido = async (req, res) => {
   try {
-    // Sanitizar el ID para prevenir inyección NoSQL
     const pedidoId = sanitizarId(req.params.id);
-    if (!pedidoId) {
-      return res.status(400).json({ message: 'ID de pedido inválido' });
-    }
+    const { fechaEntrega, observaciones } = req.body || {};
 
-    const { observaciones, numeroRemision, fechaEntrega } = req.body;
-
-    console.log('🔍 Creando remisión para pedido:', pedidoId);
-    console.log('📝 Datos recibidos:', { observaciones, numeroRemision, fechaEntrega });
+    if (!pedidoId) return res.status(400).json({ message: 'ID de pedido inválido' });
 
     const pedido = await Pedido.findById(pedidoId)
       .populate('cliente')
-      .populate({
-        path: 'productos.product',
-        select: 'name price description'
-      });
+      .populate('productos.product')
+      .exec();
 
-    if (!pedido) {
-      console.log('❌ Pedido no encontrado:', pedidoId);
-      return res.status(404).json({ message: 'Pedido no encontrado' });
+    if (!pedido) return res.status(404).json({ message: 'Pedido no encontrado' });
+
+    // Generar número de remisión secuencial
+    const counter = await Counter.findByIdAndUpdate(
+      'remision',
+      { $inc: { seq: 1 } },
+      { new: true, upsert: true }
+    );
+    const numeroRemision = `REM-${String(counter.seq).padStart(5, '0')}`;
+
+    // Mapear productos
+    const productosRemisionDoc = (pedido.productos || []).map(prod => ({
+      nombre: prod.product?.name || prod.nombre || 'Producto sin nombre',
+      cantidad: prod.cantidad || 0,
+      precioUnitario: prod.precioUnitario || prod.valorUnitario || 0,
+      total: (prod.cantidad || 0) * (prod.precioUnitario || prod.valorUnitario || 0),
+      descripcion: prod.descripcion || prod.product?.description || '',
+      codigo: prod.product?.codigo || prod.codigo || ''
+    }));
+
+    const total = productosRemisionDoc.reduce((s, p) => s + (Number(p.total) || 0), 0);
+    const cantidadTotal = productosRemisionDoc.reduce((s, p) => s + (Number(p.cantidad) || 0), 0);
+
+    // Resolver cliente: si pedido.cliente tiene _id úsalo, si es objeto buscar/crear
+    let clienteId = null;
+    if (pedido.cliente) {
+      if (typeof pedido.cliente === 'string' && mongoose.Types.ObjectId.isValid(pedido.cliente)) clienteId = pedido.cliente;
+      else if (pedido.cliente._id && mongoose.Types.ObjectId.isValid(pedido.cliente._id)) clienteId = pedido.cliente._id;
     }
 
-    console.log('📦 Estado del pedido:', pedido.estado);
-    console.log('📦 Productos en pedido:', pedido.productos?.length || 0);
-    
-    // Debug: mostrar estructura de productos
-    if (pedido.productos && pedido.productos.length > 0) {
-      console.log('🔍 Estructura del primer producto:');
-      console.log(JSON.stringify(pedido.productos[0], null, 2));
-    }
-
-    // Verificar que el pedido esté entregado (puede ser 'entregado' o 'completado')
-    if (pedido.estado !== 'entregado' && pedido.estado !== 'completado') {
-      return res.status(400).json({ 
-        message: 'Solo se pueden crear remisiones de pedidos entregados',
-        estadoActual: pedido.estado
-      });
-    }
-
-    // Verificar que tenga productos
-    if (!pedido.productos || pedido.productos.length === 0) {
-      console.log('❌ El pedido no tiene productos');
-      return res.status(400).json({ 
-        message: 'El pedido no tiene productos asociados'
-      });
-    }
-
-    // Crear la remisión con manejo robusto de productos
-    const productos = pedido.productos.map((p, index) => {
-      // Manejar la estructura correcta del modelo Pedido
-      let nombre, precio, cantidad;
-      
-      if (p.product && typeof p.product === 'object') {
-        // Si product está populado
-        nombre = p.product.name || 'Producto sin nombre';
-        precio = Number.parseFloat(p.precioUnitario) || Number.parseFloat(p.product.price) || 0;
-      } else {
-        // Si no está populado, usar datos directos
-        nombre = `Producto ID: ${p.product}`;
-        precio = Number.parseFloat(p.precioUnitario) || 0;
+    if (!clienteId && pedido.cliente && pedido.cliente.correo) {
+      const correo = String(pedido.cliente.correo).toLowerCase().trim();
+      let clienteExistente = await Cliente.findOne({ correo });
+      if (!clienteExistente) {
+        clienteExistente = new Cliente({
+          nombre: pedido.cliente.nombre || '',
+          correo,
+          telefono: pedido.cliente.telefono || '',
+          direccion: pedido.cliente.direccion || '',
+          ciudad: pedido.cliente.ciudad || '',
+          esCliente: true
+        });
+        await clienteExistente.save();
       }
-
-      cantidad = Number.parseInt(p.cantidad, 10) || 1;
-      const total = cantidad * precio;
-
-      console.log(`📦 Producto ${index + 1}:`, {
-        nombre,
-        cantidad,
-        precio,
-        total: total.toFixed(2)
-      });
-
-      return {
-        nombre: nombre,
-        cantidad: cantidad,
-        precioUnitario: precio,
-        precio: precio, // Mantener compatibilidad
-        total: Number.parseFloat(total.toFixed(2)),
-        descripcion: p.product?.description || '',
-        codigo: p.product?._id || p.product || ''
-      };
-    });
-
-    console.log('📦 Productos procesados:', productos.length);
-
-    // Calcular totales
-    const subtotal = productos.reduce((sum, p) => sum + p.total, 0);
-    const totalGeneral = Number.parseFloat(subtotal.toFixed(2));
-
-    console.log('💰 Cálculos financieros:');
-    console.log(`   Subtotal: $${subtotal.toFixed(2)}`);
-    console.log(`   Total: $${totalGeneral.toFixed(2)}`);
-
-    // Crear la remisión
-    const remision = {
-      numeroRemision: numeroRemision || `REM-${Date.now()}`,
-      pedidoReferencia: pedidoId,
-      codigoPedido: pedido.codigo || pedido.numeroPedido,
-      cliente: {
-        nombre: pedido.cliente?.nombre || 'Cliente sin nombre',
-        correo: pedido.cliente?.correo || '',
-        telefono: pedido.cliente?.telefono || '',
-        ciudad: pedido.cliente?.ciudad || ''
-      },
-      productos: productos,
-      fechaRemision: new Date(),
-      fechaEntrega: fechaEntrega || pedido.fechaEntrega || new Date(),
-      observaciones: observaciones || 'Remisión generada desde pedido entregado',
-      responsable: req.user?.id || null,
-      estado: 'activa',
-      subtotal: subtotal,
-      total: totalGeneral,
-      cantidadItems: productos.length,
-      cantidadTotal: productos.reduce((sum, p) => sum + p.cantidad, 0)
-    };
-
-    console.log('✅ Remisión creada:', remision.numeroRemision);
-    console.log('📋 Resumen de la remisión:');
-    console.log(`   - Cliente: ${remision.cliente.nombre}`);
-    console.log(`   - Productos: ${remision.cantidadItems} items`);
-    console.log(`   - Cantidad total: ${remision.cantidadTotal} unidades`);
-    console.log(`   - Total: $${remision.total}`);
-
-    // Guardar la remisión en la base de datos
-    try {
-      const nuevaRemision = new Remision(remision);
-      const remisionGuardada = await nuevaRemision.save();
-      
-      console.log('💾 Remisión guardada en BD con ID:', remisionGuardada._id);
-      
-      res.status(201).json({ 
-        message: 'Remisión creada y guardada exitosamente',
-        remision: remisionGuardada,
-        success: true
-      });
-    } catch (saveError) {
-      console.error('❌ Error guardando remisión:', saveError);
-      
-      // Si hay error guardando, al menos devolver la remisión generada
-      res.status(201).json({ 
-        message: 'Remisión creada exitosamente (advertencia: no se pudo guardar en BD)',
-        remision: remision,
-        success: true,
-        warning: 'La remisión se generó pero no se guardó en la base de datos'
-      });
+      clienteId = clienteExistente._id;
     }
-  } catch (error) {
-    console.error('❌ Error creando remisión:', error);
-    res.status(500).json({ 
-      message: 'Error al crear remisión', 
-      error: error.message,
-      success: false
+
+    if (!clienteId) return res.status(400).json({ message: 'No se pudo resolver el cliente para crear la remisión' });
+
+    const RemisionModel = require('../models/Remision');
+
+    const nuevaRemision = new RemisionModel({
+      numeroRemision,
+      pedidoReferencia: pedido._id,
+      codigoPedido: pedido.numeroPedido,
+      cliente: clienteId,
+      productos: productosRemisionDoc,
+      fechaRemision: new Date(),
+      fechaEntrega: fechaEntrega ? new Date(fechaEntrega) : new Date(),
+      observaciones: observaciones || `Remisión generada desde pedido ${pedido.numeroPedido}`,
+      responsable: req.userId || null,
+      estado: 'activa',
+      total,
+      cantidadItems: productosRemisionDoc.length,
+      cantidadTotal
     });
+
+    await nuevaRemision.save();
+
+    // Marcar pedido como entregado y guardar referencia a la remisión (no bloqueante)
+    try {
+      pedido.estado = 'entregado';
+      pedido.remisionReferencia = nuevaRemision._id;
+      pedido.codigoRemision = numeroRemision;
+      await pedido.save();
+    } catch (uErr) {
+      console.warn('No se pudo actualizar pedido con referencia a remisión:', uErr.message || uErr);
+    }
+
+    const remisionCompleta = await RemisionModel.findById(nuevaRemision._id)
+      .populate('responsable', 'username firstName surname')
+      .populate('cliente');
+
+    return res.status(201).json({ message: 'Remisión creada exitosamente', remision: remisionCompleta, numeroRemision });
+  } catch (error) {
+    console.error('Error remisionando pedido:', error);
+    return res.status(500).json({ message: 'Error al remisionar pedido', error: error.message });
   }
 };
+
+
 
 
 

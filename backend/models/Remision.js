@@ -16,6 +16,11 @@ const RemisionSchema = new mongoose.Schema({
     ref: 'Cotizacion',
     required: false
   },
+  // Guarda también el código de la cotización por conveniencia
+  cotizacionCodigo: {
+    type: String,
+    required: false,
+  },
   cliente: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Cliente',
@@ -29,10 +34,6 @@ const RemisionSchema = new mongoose.Schema({
     descripcion: String,
     codigo: String
   }],
-  fechaRemision: {
-    type: Date,
-    default: Date.now
-  },
   fechaEntrega: Date,
   observaciones: {
     type: String,

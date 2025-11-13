@@ -209,89 +209,51 @@ export default function PedidosEntregados() {
   const totalPages = Math.ceil(pedidosEntregados.length / itemsPerPage);
 
   useEffect(() => {
-    cargarPedidosEntregados();
+    cargarRemisionesEntregadas();
   }, []);
-
-  const cargarPedidosEntregados = async () => {
+  const cargarRemisionesEntregadas = async () => {
     try {
-      const res = await api.get('/api/pedidos?populate=true');
+      // Usar el endpoint del controlador de remisiones. Cargar todas las remisiones (sin filtrar)
+      const res = await api.get('/api/remisiones?limite=1000');
       const data = res.data || res;
-      const arr = Array.isArray(data) ? data : data.data || [];
-      const entregados = arr.filter(pedido => pedido.estado === 'entregado');
-      const entregadosOrdenados = entregados.sort((a, b) => new Date(b.createdAt || b.fechaCreacion) - new Date(a.createdAt || a.fechaCreacion));
-      // Intentar obtener remisiones existentes y mapear su número al pedido correspondiente
-      try {
-        const remRes = await api.get('/api/remisiones?limite=1000');
-        const remData = remRes.data || remRes;
-        // controller retorna { remisiones, total, ... }
-        const remisionesArr = Array.isArray(remData) ? remData : remData.remisiones || remData.data || [];
-        const mapRemisionByPedido = {};
-        for (const r of remisionesArr) {
-          // r.pedidoReferencia puede ser ObjectId (string) o poblado
-          const pedidoRef = r.pedidoReferencia?._id || r.pedidoReferencia || r.pedidoReferenciaId || null;
-          if (pedidoRef) mapRemisionByPedido[String(pedidoRef)] = r.numeroRemision || r.numero || r.numeroRemision;
-        }
+      const remisionesArr = Array.isArray(data) ? data : data.remisiones || data.data || [];
 
-        const entregadosConRemision = entregadosOrdenados.map(p => ({
-          ...p,
-          numeroRemision: mapRemisionByPedido[String(p._id)] || p.numeroRemision || null
-        }));
+      // Normalizar y ordenar por fechaRemision (fallback a updatedAt/createdAt)
+      const entregadasOrdenadas = (remisionesArr || []).slice().sort((a, b) => {
+        const da = new Date(a.fechaRemision || a.updatedAt || a.createdAt || 0);
+        const db = new Date(b.fechaRemision || b.updatedAt || b.createdAt || 0);
+        return db - da;
+      });
 
-        setPedidosEntregados(entregadosConRemision);
-      } catch (remError) {
-        console.warn('No se pudieron cargar remisiones, se muestra la lista de pedidos sin números de remisión', remError);
-        setPedidosEntregados(entregadosOrdenados);
-      }
+      setPedidosEntregados(entregadasOrdenadas);
     } catch (error) {
-      console.error('Error:', error);
-      Swal.fire('Error', 'Error de conexión', 'error');
-    } finally {
-      // loading eliminado por no usarse
+      console.error('Error cargando remisiones:', error);
+      Swal.fire('Error', 'Error de conexión al cargar remisiones', 'error');
     }
   };
 
   // Función para ver/obtener remisión (separada para reducir anidamiento en JSX)
-  const verRemisionPreview = async (pedido) => {
+  const verRemisionPreview = async (remision) => {
     try {
-      // Primero intentar obtener remisión existente desde el pedido
-      const res = await api.post(`/api/remisiones/crear-desde-pedido/${pedido._id}`);
-      const data = res.data || res;
-      if (data.remision) {
-        // actualizar estado local para mostrar numeroRemision en la tabla
-        setPedidosEntregados(prev => prev.map(p => p._id === pedido._id ? { ...p, numeroRemision: data.remision.numeroRemision } : p));
-        setRemisionPreview(data.remision);
-        return;
+      // Si la remisión tiene un _id, intentar obtener la versión completa desde el servidor
+      if (remision && remision._id) {
+        try {
+          const res = await api.get(`/api/remisiones/${remision._id}`);
+          const data = res.data || res;
+          const rem = data.remision || data;
+          setRemisionPreview(rem);
+          return;
+        } catch (e) {
+          // Si falla el fetch, caer al fallback y usar el objeto que ya tenemos
+          console.warn('No se pudo obtener remisión por id, usando datos disponibles', e);
+        }
       }
 
-      // Si no viene remision detallada, intentar fallback obtener pedido completo y mapear estructura mínima
-      const pedidoRes = await api.get(`/api/pedidos/${pedido._id}?populate=true`);
-      const pedidoData = (pedidoRes.data || pedidoRes).data || (pedidoRes.data || pedidoRes);
-      const remisionLike = {
-        numeroRemision: 'REM-PED-' + (pedidoData.numeroPedido || pedidoData._id?.slice(-6)),
-        codigoPedido: pedidoData.numeroPedido,
-        fechaRemision: pedidoData.updatedAt || pedidoData.createdAt,
-        fechaEntrega: pedidoData.fechaEntrega,
-        estado: 'activa',
-        cliente: pedidoData.cliente || {},
-        productos: (pedidoData.productos || []).map(p => ({
-          nombre: p.product?.name || p.product?.nombre || p.nombre || 'Producto',
-          cantidad: p.cantidad,
-          precioUnitario: p.precioUnitario,
-          total: p.cantidad * (p.precioUnitario || 0),
-          descripcion: p.product?.description || p.product?.descripcion || '',
-          codigo: p.product?.code || p.product?.codigo || ''
-        })),
-        total: (pedidoData.productos || []).reduce((sum, pr) => sum + pr.cantidad * (pr.precioUnitario || 0), 0),
-        observaciones: pedidoData.observacion || '',
-      };
-
-      // actualizar estado local con número de remisión estimado
-      setPedidosEntregados(prev => prev.map(p => p._id === pedido._id ? { ...p, numeroRemision: remisionLike.numeroRemision } : p));
-      setRemisionPreview(remisionLike);
-
+      // Fallback: usar el objeto que llegó desde la lista
+      setRemisionPreview(remision);
     } catch (error) {
-      console.error('Error cargando remisión/pedido para vista previa:', error);
-      Swal.fire('Error', 'No se pudo cargar la remisión del pedido', 'error');
+      console.error('Error cargando remisión para vista previa:', error);
+      Swal.fire('Error', 'No se pudo cargar la remisión', 'error');
     }
   };
 
@@ -534,8 +496,8 @@ export default function PedidosEntregados() {
                   </tr>
                 </thead>
                 <tbody>
-                  {currentItems.map((pedido, index) => (
-                    <tr key={pedido._id}>
+                  {currentItems.map((remision, index) => (
+                    <tr key={remision._id}>
                       <td style={{ fontWeight: '500', color: '#6b7280' }}>
                         {indexOfFirstItem + index + 1}
                       </td>
@@ -564,23 +526,23 @@ export default function PedidosEntregados() {
                               padding: 0,
                               font: 'inherit'
                             }} 
-                            onClick={() => verRemisionPreview(pedido)}
+                            onClick={() => verRemisionPreview(remision)}
                           >
-                            {pedido.numeroRemision || '---'}
+                            {remision.numeroRemision || '---'}
                           </button>
                         </div>
                       </td>
                       <td style={{ color: '#6b7280' }}>
-                        {new Date(pedido.updatedAt).toLocaleDateString()}
+                        {new Date(remision.fechaEntrega || remision.fechaRemision || remision.updatedAt || remision.createdAt).toLocaleDateString()}
                       </td>
                       <td style={{ fontWeight: '500', color: '#1f2937' }}>
-                        {pedido.cliente?.nombre}
+                        {remision.cliente?.nombre || remision.cliente?.nombreCliente || remision.cliente?.nombreCompleto || ''}
                       </td>
                       <td style={{ color: '#6b7280' }}>
-                        {pedido.cliente?.ciudad}
+                        {remision.cliente?.ciudad || remision.cliente?.direccion?.ciudad || ''}
                       </td>
                       <td style={{ fontWeight: '600', color: '#10b981', fontSize: '14px' }}>
-                        ${(pedido.total || 0).toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        ${(remision.total || 0).toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
                     </tr>
                   ))}

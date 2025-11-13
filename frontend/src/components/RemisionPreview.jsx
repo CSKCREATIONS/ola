@@ -13,7 +13,11 @@ export default function RemisionPreview({ datos, onClose }) {
     telefono: usuarioStorage.telefono || '000-000-000',
     ...usuarioStorage
   };
+  // Empresa desde variables de entorno con fallback
+  const COMPANY_NAME = process.env.REACT_APP_COMPANY_NAME || process.env.COMPANY_NAME || 'JLA GLOBAL COMPANY';
+  const COMPANY_PHONE = process.env.REACT_APP_COMPANY_PHONE || process.env.COMPANY_PHONE || '(555) 123-4567';
   const [showEnviarModal, setShowEnviarModal] = useState(false);
+  const [clienteResolved, setClienteResolved] = useState(null);
   // Helper: obtain a crypto object in a cross-environment safe way without using
   // restricted global identifiers (avoids ESLint `no-restricted-globals` on `self`).
   const getCrypto = () => {
@@ -45,7 +49,7 @@ export default function RemisionPreview({ datos, onClose }) {
     }
     return out;
   };
-  
+
   // Agregar datos por defecto si faltan
   const datosConDefaults = {
     numeroRemision: datos?.numeroRemision || 'REM-000',
@@ -72,7 +76,7 @@ export default function RemisionPreview({ datos, onClose }) {
     ],
     ...datos
   };
-  
+
   // Autocompletar información del correo para remisión
   const [correo, setCorreo] = useState(datosConDefaults?.cliente?.correo || '');
   const [asunto, setAsunto] = useState(`Remisión ${datosConDefaults?.numeroRemision || ''} - ${datosConDefaults?.cliente?.nombre || 'Cliente'}`);
@@ -94,6 +98,42 @@ ${usuario?.email ? `\n${usuario.email}` : ''}
 ${usuario?.telefono ? `\nTel: ${usuario.telefono}` : ''}`
   );
 
+  // Si la remisión trae solo el ObjectId en cliente o no contiene nombre, intentar obtener el cliente poblado
+  React.useEffect(() => {
+    let mounted = true;
+    const fetchFromCotizacion = async () => {
+      try {
+        // Preferir obtener la información embebida del cliente desde la cotización
+        const cotRef = datos?.cotizacionReferencia;
+        let cotizacionId = null;
+
+        if (!cotRef) {
+          // si no hay referencia a cotización, no hacemos fetch
+          return;
+        }
+
+        if (typeof cotRef === 'string') cotizacionId = cotRef;
+        else if (cotRef && typeof cotRef === 'object' && (cotRef._id || cotRef.id)) cotizacionId = cotRef._id || cotRef.id;
+
+        if (!cotizacionId) return;
+
+        // Llamar al endpoint de cotizaciones para obtener la cotización completa
+        const res = await api.get(`/api/cotizaciones/${cotizacionId}`);
+        const cotResp = (res.data && (res.data.data || res.data)) || null;
+        const clienteFromCot = cotResp && (cotResp.cliente || (cotResp.data && cotResp.data.cliente));
+        if (mounted && clienteFromCot) {
+          // clienteFromCot puede ser un object con campos embebidos
+          setClienteResolved(clienteFromCot);
+          return;
+        }
+      } catch (err) {
+        console.warn('No se pudo poblar cliente desde la cotización para remisión:', err?.message || err);
+      }
+    };
+    fetchFromCotizacion();
+    return () => { mounted = false; };
+  }, [datos]);
+
   // Función para abrir modal con datos actualizados
   const abrirModalEnvio = () => {
     // Calcular total dinámicamente si no existe
@@ -101,9 +141,9 @@ ${usuario?.telefono ? `\nTel: ${usuario.telefono}` : ''}`
       const subtotal = Number(producto.total) || Number(producto.precioUnitario * producto.cantidad) || 0;
       return total + subtotal;
     }, 0) || 0;
-    
+
     const totalFinal = datos?.total || totalCalculado;
-    
+
     // Actualizar datos autocompletados cada vez que se abre el modal
     setCorreo(datos?.cliente?.correo || '');
     setAsunto(`Remisión ${datos?.numeroRemision || ''} - ${datos?.cliente?.nombre || 'Cliente'} | ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}`);
@@ -341,326 +381,318 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
           backgroundColor: '#f8f9fa'
         }}>
 
-        {/* Contenido scrolleable */}
-        <div style={{
-          flex: 1,
-          overflow: 'auto',
-          padding: '2rem',
-          backgroundColor: '#f8f9fa'
-        }}>
-          {/* Contenido de la remisión */}
-          <div
-            className="pdf-remision"
-            id="pdf-remision-block"
-            style={{ 
-              display: 'flex', 
-              flexDirection: 'column', 
-              background: '#fff', 
-              padding: '2rem', 
-              borderRadius: '10px', 
-              boxShadow: '0 2px 8px rgba(0,0,0,0.08)', 
-              marginTop: '1rem',
-              userSelect: 'none',
-              WebkitUserSelect: 'none',
-              MozUserSelect: 'none',
-              msUserSelect: 'none'
-            }}
-            onCopy={e => e.preventDefault()}
-          >
-            <div className="header" style={{
-              textAlign: 'center',
-              color: 'white',
-              marginBottom: '2rem',
-              padding: '1.5rem',
-              background: 'linear-gradient(135deg, #059669, #065f46)',
-              borderRadius: '8px',
-              fontSize: '1.8rem',
-              fontWeight: 'bold'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem' }}>
-                <i className="fa-solid fa-truck" style={{ fontSize: '2rem' }} aria-hidden={true}></i>
-                <div>
-                  <div>REMISIÓN</div>
-                  <div style={{ fontSize: '1rem', fontWeight: 'normal', marginTop: '0.5rem' }}>
-                    N° {numeroRemision}
+          {/* Contenido scrolleable */}
+          <div style={{
+            flex: 1,
+            overflow: 'auto',
+            padding: '2rem',
+            backgroundColor: '#f8f9fa'
+          }}>
+            {/* Contenido de la remisión */}
+            <div
+              className="pdf-remision"
+              id="pdf-remision-block"
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                background: '#fff',
+                padding: '2rem',
+                borderRadius: '10px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                marginTop: '1rem',
+                userSelect: 'none',
+                WebkitUserSelect: 'none',
+                MozUserSelect: 'none',
+                msUserSelect: 'none'
+              }}
+              onCopy={e => e.preventDefault()}
+            >
+              <div className="header" style={{
+                textAlign: 'center',
+                color: 'white',
+                marginBottom: '2rem',
+                padding: '1.5rem',
+                background: 'linear-gradient(135deg, #059669, #065f46)',
+                borderRadius: '8px',
+                fontSize: '1.8rem',
+                fontWeight: 'bold'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem' }}>
+                  <i className="fa-solid fa-truck" style={{ fontSize: '2rem' }} aria-hidden={true}></i>
+                  <div>
+                    <div>REMISIÓN</div>
+                    <div style={{ fontSize: '1rem', fontWeight: 'normal', marginTop: '0.5rem' }}>
+                      N° {numeroRemision}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Información del cliente y empresa */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '2rem',
-              marginBottom: '2rem'
-            }}>
-              <div>
-                <h3 style={{ 
-                  borderBottom: '3px solid #059669', 
-                  paddingBottom: '0.5rem', 
-                  color: '#059669',
-                  fontSize: '1.2rem',
-                  fontWeight: 'bold',
-                  marginBottom: '1rem'
-                }}>
-                  Entregar a:
-                </h3>
-                <div style={{ lineHeight: '1.8' }}>
-                  <p><strong>Cliente:</strong> {datosConDefaults.cliente?.nombre || 'Cliente no especificado'}</p>
-                  <p><strong>Documento:</strong> {datosConDefaults.cliente?.documentoIdentidad || datosConDefaults.cliente?.cedula || datosConDefaults.cliente?.nit || 'N/A'}</p>
-                  <p><strong>Dirección:</strong> {datosConDefaults.cliente?.direccion || 'Dirección no especificada'}</p>
-                  <p><strong>Ciudad:</strong> {datosConDefaults.cliente?.ciudad || 'Ciudad no especificada'}</p>
-                  <p><strong>Teléfono:</strong> {datosConDefaults.cliente?.telefono || 'No especificado'}</p>
-                </div>
-              </div>
-
-              <div>
-                <h3 style={{ 
-                  borderBottom: '3px solid #059669', 
-                  paddingBottom: '0.5rem', 
-                  color: '#059669',
-                  fontSize: '1.2rem',
-                  fontWeight: 'bold',
-                  marginBottom: '1rem'
-                }}>
-                  Remite:
-                </h3>
-                <div style={{ lineHeight: '1.8' }}>
-                  <p><strong>Empresa:</strong> {datosConDefaults.empresa?.nombre || 'JLA GLOBAL COMPANY'}</p>
-                  <p><strong>Dirección:</strong> {datosConDefaults.empresa?.direccion || 'Cl. 21 # 5 - 52 C19, Chía, Cundinamarca'}</p>
-                  
-                  <p><strong>Fecha Remisión:</strong> {datosConDefaults.fechaRemision ? new Date(datosConDefaults.fechaRemision).toLocaleDateString('es-ES') : 'N/A'}</p>
-                  
-                  {datosConDefaults.fechaEntrega && (
-                    <p><strong>Fecha Entrega:</strong> {new Date(datosConDefaults.fechaEntrega).toLocaleDateString('es-ES')}</p>
-                  )}
-                  <p><strong>Teléfono:</strong> {datosConDefaults.empresa?.telefono || 'No especificado'}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Observaciones */}
-            {datos.observacion && (
-              <div style={{ marginBottom: '2rem' }}>
-                <h3 style={{ 
-                  borderBottom: '3px solid #059669', 
-                  paddingBottom: '0.5rem', 
-                  color: '#059669',
-                  fontSize: '1.2rem',
-                  fontWeight: 'bold',
-                  marginBottom: '1rem'
-                }}>
-                  Observaciones
-                </h3>
-                <div style={{
-                  background: '#ecfdf5',
-                  padding: '1rem',
-                  borderRadius: '8px',
-                  borderLeft: '4px solid #059669',
-                  lineHeight: '1.6'
-                }}>
-                  {datos.observacion}
-                </div>
-              </div>
-            )}
-
-            {/* Tabla de productos */}
-            <div style={{ marginBottom: '2rem' }}>
-              <h3 style={{ 
-                borderBottom: '3px solid #059669', 
-                paddingBottom: '0.5rem', 
-                color: '#059669',
-                fontSize: '1.2rem',
-                fontWeight: 'bold',
-                marginBottom: '1rem'
+              {/* Información del cliente y empresa */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '2rem',
+                marginBottom: '2rem'
               }}>
-                Productos Entregados
-              </h3>
-              <table className="tabla-cotizacion" style={{
-                width: '100%',
-                borderCollapse: 'collapse',
-                marginTop: '1rem',
-                borderRadius: '8px',
-                overflow: 'hidden',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-              }}>
-                <thead>
-                  <tr style={{ background: 'linear-gradient(135deg, #059669, #065f46)', color: 'white' }}>
-                    <th style={{ padding: '1rem', textAlign: 'center', fontWeight: 'bold' }}>Cant.</th>
-                    <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 'bold' }}>Producto</th>
-                    <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 'bold' }}>Descripción</th>
-                    <th style={{ padding: '1rem', textAlign: 'right', fontWeight: 'bold' }}>Valor Unit.</th>
-                    <th style={{ padding: '1rem', textAlign: 'right', fontWeight: 'bold' }}>Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {datosConDefaults.productos && datosConDefaults.productos.length > 0 ? datosConDefaults.productos.map((p, idx) => (
-                    <tr key={idx} style={{ 
-                      borderBottom: '1px solid #eee',
-                      backgroundColor: idx % 2 === 0 ? '#fafafa' : 'white'
-                    }}>
-                      <td style={{ padding: '1rem', textAlign: 'center', fontWeight: 'bold' }}>
-                        {p.cantidad || 0}
-                      </td>
-                      <td style={{ padding: '1rem' }}>
-                        <div style={{ fontWeight: 'bold', color: '#333' }}>
-                          {p.nombre || 'Producto sin nombre'}
-                        </div>
-                        {p.codigo && (
-                          <div style={{ fontSize: '0.85rem', color: '#666', marginTop: '4px' }}>
-                            Código: {p.codigo}
-                          </div>
-                        )}
-                      </td>
-                      <td style={{ padding: '1rem', color: '#666' }}>
-                        {p.descripcion || 'Sin descripción'}
-                      </td>
-                      <td style={{ padding: '1rem', textAlign: 'right' }}>
-                        S/. {(p.precioUnitario || 0).toLocaleString('es-ES')}
-                      </td>
-                      <td style={{ padding: '1rem', textAlign: 'right', fontWeight: 'bold' }}>
-                        S/. {(p.total || (p.cantidad * p.precioUnitario) || 0).toLocaleString('es-ES')}
-                      </td>
-                    </tr>
-                  )) : (
-                    <tr>
-                      <td colSpan={5} style={{ padding: '1rem', textAlign: 'center', color: '#666' }}>
-                        No hay productos disponibles
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-                <tfoot>
-                  <tr style={{ 
-                    background: 'linear-gradient(135deg, #ecfdf5, #d1fae5)', 
-                    borderTop: '2px solid #059669' 
+                <div>
+                  <h3 style={{
+                    borderBottom: '3px solid #059669',
+                    paddingBottom: '0.5rem',
+                    color: '#059669',
+                    fontSize: '1.2rem',
+                    fontWeight: 'bold',
+                    marginBottom: '1rem'
                   }}>
-                    <td colSpan="4" style={{ 
-                      padding: '1rem', 
-                      textAlign: 'right', 
-                      fontWeight: 'bold', 
-                      fontSize: '1.1rem',
-                      color: '#059669'
-                    }}>
-                      TOTAL A ENTREGAR:
-                    </td>
-                    <td style={{ 
-                      padding: '1rem', 
-                      textAlign: 'right', 
-                      fontWeight: 'bold', 
-                      fontSize: '1.3rem',
-                      color: '#059669'
-                    }}>
-                      S/. {datosConDefaults.total || (datosConDefaults.productos && datosConDefaults.productos.length > 0 ? datosConDefaults.productos
-                        .reduce((acc, p) => {
-                          const cantidad = Number.parseFloat(p.cantidad) || 0;
-                          const precio = Number.parseFloat(p.precioUnitario || p.valorUnitario || p.product?.price) || 0;
-                          return acc + (cantidad * precio);
-                        }, 0)
-                        .toLocaleString('es-ES') : '0')}
-                    </td>
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
+                    Entregar a:
+                  </h3>
+                  <div style={{ lineHeight: '1.8' }}>
+                    <p><strong>Pedido remisionado:</strong> {datosConDefaults.codigoPedido || datosConDefaults.pedidoReferencia || 'N/A'}</p>
+                    <p><strong>Cliente:</strong> {clienteResolved?.nombre || datosConDefaults.cliente?.nombre || 'Cliente no especificado'}</p>
+                    <p><strong>Dirección:</strong> {clienteResolved?.direccion || datosConDefaults.cliente?.direccion || 'Dirección no especificada'}</p>
+                    <p><strong>Ciudad:</strong> {clienteResolved?.ciudad || datosConDefaults.cliente?.ciudad || 'Ciudad no especificada'}</p>
+                    <p><strong>Teléfono:</strong> {clienteResolved?.telefono || datosConDefaults.cliente?.telefono || 'No especificado'}</p>
+                  </div>
+                </div>
 
-            {/* Información adicional de la remisión */}
-            {(datosConDefaults.observaciones || datosConDefaults.fechaEntrega) && (
-              <div style={{ 
+                <div>
+                  <h3 style={{
+                    borderBottom: '3px solid #059669',
+                    paddingBottom: '0.5rem',
+                    color: '#059669',
+                    fontSize: '1.2rem',
+                    fontWeight: 'bold',
+                    marginBottom: '1rem'
+                  }}>
+                    Remite:
+                  </h3>
+                  <div style={{ lineHeight: '1.8' }}>
+                    <p><strong>Fecha:</strong> {new Date(datosConDefaults.fechaEntrega).toLocaleDateString('es-ES')}</p>
+                    <p><strong>Empresa:</strong> {datosConDefaults.empresa?.nombre || COMPANY_NAME}</p>
+                    <p><strong>Dirección:</strong> {datosConDefaults.empresa?.direccion || 'Cl. 21 # 5 - 52 C19, Chía, Cundinamarca'}</p>
+                    <p><strong>Teléfono:</strong> {datosConDefaults.empresa?.telefono || COMPANY_PHONE}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Observaciones */}
+              {datos.observacion && (
+                <div style={{ marginBottom: '2rem' }}>
+                  <h3 style={{
+                    borderBottom: '3px solid #059669',
+                    paddingBottom: '0.5rem',
+                    color: '#059669',
+                    fontSize: '1.2rem',
+                    fontWeight: 'bold',
+                    marginBottom: '1rem'
+                  }}>
+                    Observaciones
+                  </h3>
+                  <div style={{
+                    background: '#ecfdf5',
+                    padding: '1rem',
+                    borderRadius: '8px',
+                    borderLeft: '4px solid #059669',
+                    lineHeight: '1.6'
+                  }}>
+                    {datos.observacion}
+                  </div>
+                </div>
+              )}
+
+              {/* Tabla de productos */}
+              <div style={{ marginBottom: '2rem' }}>
+                <h3 style={{
+                  borderBottom: '3px solid #059669',
+                  paddingBottom: '0.5rem',
+                  color: '#059669',
+                  fontSize: '1.2rem',
+                  fontWeight: 'bold',
+                  marginBottom: '1rem'
+                }}>
+                  Productos Entregados
+                </h3>
+                <table className="tabla-cotizacion" style={{
+                  width: '100%',
+                  borderCollapse: 'collapse',
+                  marginTop: '1rem',
+                  borderRadius: '8px',
+                  overflow: 'hidden',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                }}>
+                  <thead>
+                    <tr style={{ background: 'linear-gradient(135deg, #059669, #065f46)', color: 'white' }}>
+                      <th style={{ padding: '1rem', textAlign: 'center', fontWeight: 'bold' }}>Cant.</th>
+                      <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 'bold' }}>Producto</th>
+                      <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 'bold' }}>Descripción</th>
+                      <th style={{ padding: '1rem', textAlign: 'right', fontWeight: 'bold' }}>Valor Unit.</th>
+                      <th style={{ padding: '1rem', textAlign: 'right', fontWeight: 'bold' }}>Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {datosConDefaults.productos && datosConDefaults.productos.length > 0 ? datosConDefaults.productos.map((p, idx) => (
+                      <tr key={idx} style={{
+                        borderBottom: '1px solid #eee',
+                        backgroundColor: idx % 2 === 0 ? '#fafafa' : 'white'
+                      }}>
+                        <td style={{ padding: '1rem', textAlign: 'center', fontWeight: 'bold' }}>
+                          {p.cantidad || 0}
+                        </td>
+                        <td style={{ padding: '1rem' }}>
+                          <div style={{ fontWeight: 'bold', color: '#333' }}>
+                            {p.nombre || 'Producto sin nombre'}
+                          </div>
+                          {p.codigo && (
+                            <div style={{ fontSize: '0.85rem', color: '#666', marginTop: '4px' }}>
+                              Código: {p.codigo}
+                            </div>
+                          )}
+                        </td>
+                        <td style={{ padding: '1rem', color: '#666' }}>
+                          {p.descripcion || 'Sin descripción'}
+                        </td>
+                        <td style={{ padding: '1rem', textAlign: 'right' }}>
+                          S/. {(p.precioUnitario || 0).toLocaleString('es-ES')}
+                        </td>
+                        <td style={{ padding: '1rem', textAlign: 'right', fontWeight: 'bold' }}>
+                          S/. {(p.total || (p.cantidad * p.precioUnitario) || 0).toLocaleString('es-ES')}
+                        </td>
+                      </tr>
+                    )) : (
+                      <tr>
+                        <td colSpan={5} style={{ padding: '1rem', textAlign: 'center', color: '#666' }}>
+                          No hay productos disponibles
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                  <tfoot>
+                    <tr style={{
+                      background: 'linear-gradient(135deg, #ecfdf5, #d1fae5)',
+                      borderTop: '2px solid #059669'
+                    }}>
+                      <td colSpan="4" style={{
+                        padding: '1rem',
+                        textAlign: 'right',
+                        fontWeight: 'bold',
+                        fontSize: '1.1rem',
+                        color: '#059669'
+                      }}>
+                        TOTAL A ENTREGAR:
+                      </td>
+                      <td style={{
+                        padding: '1rem',
+                        textAlign: 'right',
+                        fontWeight: 'bold',
+                        fontSize: '1.3rem',
+                        color: '#059669'
+                      }}>
+                        S/. {datosConDefaults.total || (datosConDefaults.productos && datosConDefaults.productos.length > 0 ? datosConDefaults.productos
+                          .reduce((acc, p) => {
+                            const cantidad = Number.parseFloat(p.cantidad) || 0;
+                            const precio = Number.parseFloat(p.precioUnitario || p.valorUnitario || p.product?.price) || 0;
+                            return acc + (cantidad * precio);
+                          }, 0)
+                          .toLocaleString('es-ES') : '0')}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+
+              {/* Información adicional de la remisión */}
+              {(datosConDefaults.observaciones || datosConDefaults.fechaEntrega) && (
+                <div style={{
+                  marginTop: '2rem',
+                  padding: '1.5rem',
+                  background: 'linear-gradient(135deg, #f0fdf4, #ecfdf5)',
+                  borderRadius: '8px',
+                  border: '1px solid #10b981'
+                }}>
+                  <h4 style={{ color: '#059669', marginBottom: '1rem', fontSize: '1.1rem', fontWeight: 'bold' }}>
+                    Información Adicional
+                  </h4>
+                  <div style={{ lineHeight: '1.6' }}>
+                    {datosConDefaults.observaciones && (
+                      <div>
+                        <strong>Observaciones:</strong>
+                        <div style={{
+                          marginTop: '0.5rem',
+                          padding: '1rem',
+                          background: 'white',
+                          borderRadius: '6px',
+                          border: '1px solid #d1d5db',
+                          whiteSpace: 'pre-wrap'
+                        }}>
+                          {datosConDefaults.observaciones}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Sección de firmas */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '3rem',
+                marginTop: '3rem',
+                paddingTop: '2rem',
+                borderTop: '1px solid #e5e7eb'
+              }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ borderTop: '2px solid #374151', marginTop: '3rem', paddingTop: '0.5rem' }}>
+                    <p style={{ fontSize: '0.9rem', color: '#6b7280', margin: 0, fontWeight: 'bold' }}>ENTREGADO POR:</p>
+                  </div>
+                </div>
+
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ borderTop: '2px solid #374151', marginTop: '3rem', paddingTop: '0.5rem' }}>
+                    <p style={{ fontSize: '0.9rem', color: '#6b7280', margin: 0, fontWeight: 'bold' }}>RECIBIDO POR:</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Términos y condiciones */}
+              <div style={{
                 marginTop: '2rem',
                 padding: '1.5rem',
-                background: 'linear-gradient(135deg, #f0fdf4, #ecfdf5)',
+                background: 'linear-gradient(135deg, #f8f9fa, #e9ecef)',
                 borderRadius: '8px',
-                border: '1px solid #10b981'
+                borderTop: '3px solid #059669'
               }}>
-                <h4 style={{ color: '#059669', marginBottom: '1rem', fontSize: '1.1rem', fontWeight: 'bold' }}>
-                  Información Adicional
-                </h4>
-                <div style={{ lineHeight: '1.6' }}>
-                  {datosConDefaults.fechaEntrega && (
-                    <p><strong>Fecha Entrega:</strong> {new Date(datosConDefaults.fechaEntrega).toLocaleDateString('es-ES')}</p>
-                  )}
-                  {datosConDefaults.observaciones && (
-                    <div>
-                      <strong>Observaciones:</strong>
-                      <div style={{ 
-                        marginTop: '0.5rem', 
-                        padding: '1rem', 
-                        background: 'white', 
-                        borderRadius: '6px',
-                        border: '1px solid #d1d5db',
-                        whiteSpace: 'pre-wrap'
-                      }}>
-                        {datosConDefaults.observaciones}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                <h5 style={{ fontSize: '1rem', color: '#059669', marginBottom: '0.8rem', fontWeight: 'bold' }}>TÉRMINOS Y CONDICIONES:</h5>
+                <ul style={{ fontSize: '0.9rem', color: '#6b7280', margin: 0, paddingLeft: '1.5rem', lineHeight: '1.5' }}>
+                  <li>El cliente debe verificar la mercancía al momento de la entrega</li>
+                  <li>Los reclamos por daños o faltantes deben realizarse en el momento de la entrega</li>
+                  <li>Una vez firmada la remisión, se da por aceptada la mercancía en perfectas condiciones</li>
+                </ul>
               </div>
-            )}
 
-            {/* Sección de firmas */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '3rem',
-              marginTop: '3rem',
-              paddingTop: '2rem',
-              borderTop: '1px solid #e5e7eb'
-            }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ borderTop: '2px solid #374151', marginTop: '3rem', paddingTop: '0.5rem' }}>
-                  <p style={{ fontSize: '0.9rem', color: '#6b7280', margin: 0, fontWeight: 'bold' }}>ENTREGADO POR:</p>
-                </div>
-              </div>
-              
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ borderTop: '2px solid #374151', marginTop: '3rem', paddingTop: '0.5rem' }}>
-                  <p style={{ fontSize: '0.9rem', color: '#6b7280', margin: 0, fontWeight: 'bold' }}>RECIBIDO POR:</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Términos y condiciones */}
-            <div style={{ 
-              marginTop: '2rem', 
-              padding: '1.5rem', 
-              background: 'linear-gradient(135deg, #f8f9fa, #e9ecef)', 
-              borderRadius: '8px', 
-              borderTop: '3px solid #059669'
-            }}>
-              <h5 style={{ fontSize: '1rem', color: '#059669', marginBottom: '0.8rem', fontWeight: 'bold' }}>TÉRMINOS Y CONDICIONES:</h5>
-              <ul style={{ fontSize: '0.9rem', color: '#6b7280', margin: 0, paddingLeft: '1.5rem', lineHeight: '1.5' }}>
-                <li>El cliente debe verificar la mercancía al momento de la entrega</li>
-                <li>Los reclamos por daños o faltantes deben realizarse en el momento de la entrega</li>
-                <li>Una vez firmada la remisión, se da por aceptada la mercancía en perfectas condiciones</li>
-              </ul>
-            </div>
-
-            {/* Footer */}
-            <div style={{
-              marginTop: '3rem',
-              padding: '1.5rem',
-              background: 'linear-gradient(135deg, #f8f9fa, #e9ecef)',
-              borderRadius: '8px',
-              textAlign: 'center',
-              borderTop: '3px solid #059669'
-            }}>
-              <div style={{ 
-                fontSize: '1.1rem', 
-                fontWeight: 'bold', 
-                color: '#059669',
-                marginBottom: '0.5rem'
+              {/* Footer */}
+              <div style={{
+                marginTop: '3rem',
+                padding: '1.5rem',
+                background: 'linear-gradient(135deg, #f8f9fa, #e9ecef)',
+                borderRadius: '8px',
+                textAlign: 'center',
+                borderTop: '3px solid #059669'
               }}>
-                JLA GLOBAL COMPANY
-              </div>
-              <div style={{ fontSize: '0.9rem', color: '#666' }}>
-                Gracias por su preferencia • Remisión de entrega
+                <div style={{
+                  fontSize: '1.1rem',
+                  fontWeight: 'bold',
+                  color: '#059669',
+                  marginBottom: '0.5rem'
+                }}>
+                  JLA GLOBAL COMPANY
+                </div>
+                <div style={{ fontSize: '0.9rem', color: '#666' }}>
+                  Gracias por su preferencia • Remisión de entrega
+                </div>
               </div>
             </div>
           </div>
-        </div>
         </div>
 
         {/* Modal para enviar por correo */}
@@ -690,7 +722,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                 <i className="fa-solid fa-envelope icon-gap" style={{}} aria-hidden={true}></i>
                 <span>Enviar Remisión por Correo</span>
               </h3>
-              
+
               <div style={{ marginBottom: '1rem' }}>
                 <label htmlFor="correo-remision-preview" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
                   Correo del destinatario:
@@ -778,8 +810,8 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                     fontWeight: 'bold'
                   }}
                 >
-                    <i className="fa-solid fa-envelope icon-gap" style={{}} aria-hidden={true}></i>
-                    <span>Enviar Remisión</span>
+                  <i className="fa-solid fa-envelope icon-gap" style={{}} aria-hidden={true}></i>
+                  <span>Enviar Remisión</span>
                 </button>
               </div>
             </div>
@@ -827,5 +859,5 @@ RemisionPreview.propTypes = {
 };
 
 RemisionPreview.defaultProps = {
-  onClose: () => {}
+  onClose: () => { }
 };

@@ -15,6 +15,10 @@ export default function CotizacionPreview({ datos, onClose, onEmailSent, onRemis
   const [asunto, setAsunto] = useState('');
   const [mensaje, setMensaje] = useState('');
 
+  // Company information (exposed to frontend via env - prefer REACT_APP_ prefix)
+  const COMPANY_NAME = process.env.REACT_APP_COMPANY_NAME || process.env.COMPANY_NAME || 'JLA Global Company';
+  const COMPANY_PHONE = process.env.REACT_APP_COMPANY_PHONE || process.env.COMPANY_PHONE || '(555) 123-4567';
+
   // Detectar si la cotización ya fue remisionada (varios nombres posibles según el objeto)
   const isRemisionada = Boolean(
     datos?.remision ||
@@ -287,9 +291,13 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
         },
         focusConfirm: false,
         preConfirm: () => {
-          const fechaEntrega = document.getElementById('fechaEntrega').value;
-          const observaciones = document.getElementById('observaciones').value;
-          
+          // Use Swal popup scoped query to avoid collisions with other elements
+          const popup = Swal.getPopup ? Swal.getPopup() : document;
+          const fechaEl = popup ? popup.querySelector('#fechaEntrega') : document.getElementById('fechaEntrega');
+          const obsEl = popup ? popup.querySelector('#observaciones') : document.getElementById('observaciones');
+          const fechaEntrega = fechaEl ? fechaEl.value : '';
+          const observaciones = obsEl ? obsEl.value : '';
+
           if (!fechaEntrega) {
             Swal.showValidationMessage(`
               <div style="text-align: left; color: #dc2626;">
@@ -300,12 +308,12 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
             `);
             return false;
           }
-          
+
           // Validar que la fecha no sea anterior a hoy
           const fechaSeleccionada = new Date(fechaEntrega);
           const hoy = new Date();
           hoy.setHours(0, 0, 0, 0);
-          
+
           if (fechaSeleccionada < hoy) {
             Swal.showValidationMessage(`
               <div style="text-align: left; color: #dc2626;">
@@ -316,11 +324,11 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
             `);
             return false;
           }
-          
+
           return {
             fechaEntrega: fechaEntrega,
-            observaciones: observaciones.trim()
-          }
+            observaciones: (observaciones || '').trim()
+          };
         }
       });
 
@@ -349,31 +357,9 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
           Swal.fire({
             icon: 'success',
             title: '¡Cotización Remisionada!',
-            html: `
-              <div style="text-align: left; background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 15px 0;">
-                <h4 style="color: #2563eb; margin-bottom: 15px;">
-                  <i class="fa-solid fa-check-circle"></i> Documentos Creados Exitosamente
-                </h4>
-                
-                <div style="background: #10b981; color: white; padding: 12px; border-radius: 6px; margin-bottom: 12px;">
-                  <strong><i class="fa-solid fa-file-invoice"></i> Pedido:</strong> ${result.numeroPedido}
-                </div>
-                
-                <div style="background: #3b82f6; color: white; padding: 12px; border-radius: 6px; margin-bottom: 15px;">
-                  <strong><i class="fa-solid fa-truck"></i> Remisión:</strong> ${result.numeroRemision}
-                </div>
-                
-                <p><strong>Cliente:</strong> ${datos?.cliente?.nombre}</p>
-                <p><strong>Fecha de Entrega:</strong> ${new Date(formValues.fechaEntrega).toLocaleDateString('es-ES')}</p>
-                <p><strong>Estado Pedido:</strong> <span style="background: #059669; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px;">ENTREGADO</span></p>
-                <p><strong>Estado Remisión:</strong> <span style="background: #3b82f6; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px;">ACTIVA</span></p>
-                ${formValues.observaciones ? `<p><strong>Observaciones:</strong> ${formValues.observaciones}</p>` : ''}
-              </div>
-            `,
+           
             showDenyButton: true,
             showCancelButton: true,
-            confirmButtonText: '<i class="fa-solid fa-file-invoice"></i> Ver Pedidos',
-            denyButtonText: '<i class="fa-solid fa-truck"></i> Ver Remisiones',
             cancelButtonText: 'Cerrar',
             confirmButtonColor: '#10b981',
             denyButtonColor: '#3b82f6'
@@ -450,7 +436,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
             <i className="fa-solid fa-file-lines" style={{ fontSize: '1.8rem' }} aria-hidden={true}></i>
             <div>
               <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 'bold' }}>
-                Vista Previa - Cotización
+                Cotización
               </h2>
               <p style={{ margin: 0, opacity: 0.9, fontSize: '0.95rem' }}>
                 N° {datos.codigo || 'Sin código'}
@@ -672,12 +658,11 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                   fontWeight: 'bold',
                   marginBottom: '1rem'
                 }}>
-                  Información del Cliente
+                  Información Cliente
                 </h3>
                 <div style={{ lineHeight: '1.8' }}>
                   <p><strong>Cliente:</strong> {datos?.cliente?.nombre}</p>
                   <p><strong>Teléfono:</strong> {datos?.cliente?.telefono}</p>
-                  <p><strong>Email:</strong> {datos?.cliente?.correo}</p>
                   <p><strong>Dirección:</strong> {datos?.cliente?.direccion}</p>
                   <p><strong>Ciudad:</strong> {datos?.cliente?.ciudad}</p>
                 </div>
@@ -692,24 +677,14 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                   fontWeight: 'bold',
                   marginBottom: '1rem'
                 }}>
-                  Detalles de la Cotización
+                  Información Empresa
                 </h3>
                 <div style={{ lineHeight: '1.8' }}>
-                  <p><strong>Fecha de Emisión:</strong> {formatDate(datos?.fecha)}</p>
-                  <p><strong>Fecha de Vencimiento:</strong> {formatDate(datos?.fechaVencimiento)}</p>
-                  <p><strong>Validez:</strong> {datos?.validez || '15 días'}</p>
-                  <p><strong>Estado:</strong> 
-                    <span style={{
-                      background: '#2563eb',
-                      color: 'white',
-                      padding: '4px 12px',
-                      borderRadius: '15px',
-                      fontSize: '0.9rem',
-                      marginLeft: '0.5rem'
-                    }}>
-                      {datos?.estado || 'Pendiente'}
-                    </span>
-                  </p>
+                  <p><strong>Fecha de cotización:</strong> {formatDate(datos?.fecha)}</p>
+                  <p><strong>Empresa:</strong> {COMPANY_NAME || (process.env.REACT_APP_COMPANY_NAME || process.env.COMPANY_NAME || '')}</p>
+                  <p><strong>Teléfono:</strong> {COMPANY_PHONE}</p>
+                  
+                  
                 </div>
               </div>
             </div>
