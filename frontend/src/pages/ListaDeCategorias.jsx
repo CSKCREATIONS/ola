@@ -729,11 +729,12 @@ const ListaDeCategorias = () => {
 
           {/* Botón agregar */}
           <button
+            type="button"
             className="categoria-add-btn"
             onClick={() => { setCategoriaEditando(null); setModalVisible(true); }}
           >
-            <i className="fa-solid fa-plus"></i>
-            Nueva Categoría
+            <i className="fa-solid fa-plus" aria-hidden={true}></i>
+            <span>Nueva Categoría</span>
           </button>
 
           {/* Tabla principal con diseño moderno */}

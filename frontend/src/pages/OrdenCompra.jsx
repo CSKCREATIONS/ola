@@ -1135,8 +1135,8 @@ export default function OrdenCompra() {
                       e.target.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.4)';
                     }}
                   >
-                    <i className="fa-solid fa-plus"></i>
-                    Agregar Orden de Compra
+                    <i className="fa-solid fa-plus" aria-hidden={true}></i>
+                    <span>Agregar Orden de Compra</span>
                   </button>
                 </div>
               </div>
@@ -1695,8 +1695,8 @@ export default function OrdenCompra() {
                       <h6 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}><i className="fa-solid fa-info-circle" style={{ color: '#6a1b9a' }}></i> Información de la Orden</h6>
                       <div style={{ marginTop: '0.75rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                         <div>
-                          <label className="form-label-profesional">Proveedor *</label>
-                          <select value={nuevaOrden.proveedorId || ''} onChange={handleProveedorChange} className="form-input-profesional">
+                          <label htmlFor="nueva-proveedor" className="form-label-profesional">Proveedor *</label>
+                          <select id="nueva-proveedor" value={nuevaOrden.proveedorId || ''} onChange={handleProveedorChange} className="form-input-profesional">
                             <option value="">Seleccione un proveedor</option>
                             {proveedores.filter(p => p.activo || p._id === ordenEditando.proveedorId).map(prov => (
                               <option key={prov._id} value={prov._id}>{prov.nombre}</option>
@@ -1705,16 +1705,16 @@ export default function OrdenCompra() {
                           {errores.proveedor && <div style={{ color: '#e74c3c', fontSize: '0.85rem' }}>{errores.proveedor}</div>}
                         </div>
                         <div>
-                          <label className="form-label-profesional">Solicitado Por</label>
-                          <input className="form-input-profesional" value={nuevaOrden.solicitadoPor} disabled />
+                          <label htmlFor="nueva-solicitadoPor" className="form-label-profesional">Solicitado Por</label>
+                          <input id="nueva-solicitadoPor" className="form-input-profesional" value={nuevaOrden.solicitadoPor} disabled />
                         </div>
                         <div style={{ gridColumn: '1 / -1' }}>
-                          <label className="form-label-profesional">Condiciones de Pago</label>
-                          <textarea className="form-input-profesional" rows={3} value={nuevaOrden.condicionesPago} onChange={e => setNuevaOrden({ ...nuevaOrden, condicionesPago: e.target.value })} />
+                          <label htmlFor="nueva-condicionesPago" className="form-label-profesional">Condiciones de Pago</label>
+                          <textarea id="nueva-condicionesPago" className="form-input-profesional" rows={3} value={nuevaOrden.condicionesPago} onChange={e => setNuevaOrden({ ...nuevaOrden, condicionesPago: e.target.value })} />
                         </div>
                         <div>
-                          <label className="form-label-profesional">IVA (%)</label>
-                          <input type="number" step="0.01" className="form-input-profesional" value={nuevaOrden.iva || 0} onChange={e => setNuevaOrden({ ...nuevaOrden, iva: Number(e.target.value) })} />
+                          <label htmlFor="nueva-iva" className="form-label-profesional">IVA (%)</label>
+                          <input id="nueva-iva" type="number" step="0.01" className="form-input-profesional" value={nuevaOrden.iva || 0} onChange={e => setNuevaOrden({ ...nuevaOrden, iva: Number(e.target.value) })} />
                         </div>
                       </div>
                     </div>
@@ -1852,10 +1852,10 @@ export default function OrdenCompra() {
                 {/* Body */}
                 <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem', backgroundColor: '#f8fafc' }}>
                   <div style={{ background: 'white', padding: '1.5rem', borderRadius: 12, marginBottom: '1rem', border: '1px solid #e2e8f0', borderLeft: '4px solid #10b981' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                       <div>
-                        <label className="form-label-profesional">Proveedor *</label>
-                        <select value={ordenEditando.proveedorId} onChange={handleProveedorChangeEditar} className="form-input-profesional" required>
+                        <label htmlFor="editar-proveedor" className="form-label-profesional">Proveedor *</label>
+                        <select id="editar-proveedor" value={ordenEditando.proveedorId} onChange={handleProveedorChangeEditar} className="form-input-profesional" required>
                           <option value="">Seleccione un proveedor</option>
                           {proveedores.filter(p => p.activo).map(proveedor => (
                             <option key={proveedor._id} value={proveedor._id}>{proveedor.nombre}</option>
@@ -1865,23 +1865,23 @@ export default function OrdenCompra() {
                       </div>
 
                       <div>
-                        <label className="form-label-profesional">Solicitado Por</label>
-                        <input disabled value={ordenEditando.solicitadoPor} className="form-input-profesional" style={{ backgroundColor: '#f3f4f6', cursor: 'not-allowed' }} />
+                        <label htmlFor="editar-solicitadoPor" className="form-label-profesional">Solicitado Por</label>
+                        <input id="editar-solicitadoPor" disabled value={ordenEditando.solicitadoPor} className="form-input-profesional" style={{ backgroundColor: '#f3f4f6', cursor: 'not-allowed' }} />
                         {errores.solicitadoPor && <div style={{ color: '#e74c3c', fontSize: '0.85rem' }}>{errores.solicitadoPor}</div>}
                       </div>
 
                       <div style={{ gridColumn: '1 / -1' }}>
-                        <label className="form-label-profesional">Condiciones de Pago</label>
-                        <textarea value={ordenEditando.condicionesPago} onChange={e => setOrdenEditando({ ...ordenEditando, condicionesPago: e.target.value })} className="form-input-profesional" rows={3} style={{ resize: 'vertical' }} />
+                        <label htmlFor="editar-condicionesPago" className="form-label-profesional">Condiciones de Pago</label>
+                        <textarea id="editar-condicionesPago" value={ordenEditando.condicionesPago} onChange={e => setOrdenEditando({ ...ordenEditando, condicionesPago: e.target.value })} className="form-input-profesional" rows={3} style={{ resize: 'vertical' }} />
                       </div>
 
                       <div>
-                        <label className="form-label-profesional">IVA (%)</label>
-                        <input type="number" step="0.01" className="form-input-profesional" value={ordenEditando.iva || 0} onChange={e => setOrdenEditando({ ...ordenEditando, iva: Number(e.target.value) })} />
+                        <label htmlFor="editar-iva" className="form-label-profesional">IVA (%)</label>
+                        <input id="editar-iva" type="number" step="0.01" className="form-input-profesional" value={ordenEditando.iva || 0} onChange={e => setOrdenEditando({ ...ordenEditando, iva: Number(e.target.value) })} />
                       </div>
 
                       <div>
-                        <label className="form-label-profesional">Estado</label>
+                        <div className="form-label-profesional">Estado</div>
                         <div>
                           <span className={`badge-profesional ${ordenEditando.estado === 'Pendiente' ? 'badge-pendiente' : 'badge-completada'}`}>{ordenEditando.estado}</span>
                         </div>
@@ -1899,8 +1899,8 @@ export default function OrdenCompra() {
                           <div style={{ background: '#fff7ed', border: '1px solid #ffe8cc', borderRadius: 8, padding: '0.75rem', marginBottom: '0.75rem' }}>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '0.5rem' }}>
                               <div>
-                                <label className="form-label-profesional">Producto</label>
-                                <select className="form-input-profesional" value={productoEditando.productoId || ''} onChange={handleProductoEditSelectChange}>
+                                <label htmlFor="editar-producto-select" className="form-label-profesional">Producto</label>
+                                <select id="editar-producto-select" className="form-input-profesional" value={productoEditando.productoId || ''} onChange={handleProductoEditSelectChange}>
                                   <option value="">Seleccione un producto</option>
                                   {productoEditando.productoId && !productosProveedor.some(p => p._id === productoEditando.productoId) && (
                                     <option value={productoEditando.productoId}>{productoEditando.producto || 'Producto actual'}</option>
@@ -1911,20 +1911,20 @@ export default function OrdenCompra() {
                                 </select>
                               </div>
                               <div>
-                                <label className="form-label-profesional">Descripción</label>
-                                <input className="form-input-profesional" value={productoEditando.descripcion} disabled />
+                                <label htmlFor="editar-producto-descripcion" className="form-label-profesional">Descripción</label>
+                                <input id="editar-producto-descripcion" className="form-input-profesional" value={productoEditando.descripcion} disabled />
                               </div>
                               <div>
-                                <label className="form-label-profesional">Cantidad</label>
-                                <input type="number" min="1" className="form-input-profesional" value={productoEditando.cantidad} onChange={e => setProductoEditando({ ...productoEditando, cantidad: Number(e.target.value) })} />
+                                <label htmlFor="editar-producto-cantidad" className="form-label-profesional">Cantidad</label>
+                                <input id="editar-producto-cantidad" type="number" min="1" className="form-input-profesional" value={productoEditando.cantidad} onChange={e => setProductoEditando({ ...productoEditando, cantidad: Number(e.target.value) })} />
                               </div>
                               <div>
-                                <label className="form-label-profesional">Valor Unitario</label>
-                                <input type="number" min="0" step="0.01" className="form-input-profesional" value={productoEditando.valorUnitario} disabled />
+                                <label htmlFor="editar-producto-valorUnitario" className="form-label-profesional">Valor Unitario</label>
+                                <input id="editar-producto-valorUnitario" type="number" min="0" step="0.01" className="form-input-profesional" value={productoEditando.valorUnitario} disabled />
                               </div>
                               <div>
-                                <label className="form-label-profesional">Descuento</label>
-                                <input type="number" min="0" step="0.01" className="form-input-profesional" value={productoEditando.descuento} onChange={e => setProductoEditando({ ...productoEditando, descuento: Number(e.target.value) })} />
+                                <label htmlFor="editar-producto-descuento" className="form-label-profesional">Descuento</label>
+                                <input id="editar-producto-descuento" type="number" min="0" step="0.01" className="form-input-profesional" value={productoEditando.descuento} onChange={e => setProductoEditando({ ...productoEditando, descuento: Number(e.target.value) })} />
                               </div>
                             </div>
                             <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
