@@ -1357,6 +1357,7 @@ export default function ListaDeCotizaciones() {
               open
               tabIndex={-1}
               onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.stopPropagation()}
             >
               <div className="modal-header">
                 <div className="header-info">
