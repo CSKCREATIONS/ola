@@ -23,13 +23,6 @@ h3 {
 
 /**Orden de compra*/
 /* Estilos para modales más realistas */
-.modal-realista {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  border: none;
-  overflow: hidden;
-}
 
 .modal-header-realista {
   background: linear-gradient(135deg, #2c3e50, #3498db);
@@ -55,9 +48,7 @@ h3 {
   transition: background 0.3s;
 }
 
-.modal-close-realista:hover {
-  background: rgba(255, 255, 255, 0.3);
-}
+/* consolidated modal-close-realista:hover exists later; removed duplicate */
 
 /* Estilos para formularios profesionales */
 .form-group-profesional {
@@ -91,72 +82,7 @@ h3 {
   box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
 }
 
-/* Estilos para tablas mejoradas */
-.table-profesional {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 1rem 0;
-}
-
-.table-profesional th {
-  background: #f8f9fa;
-  padding: 1rem;
-  text-align: left;
-  font-weight: 600;
-  color: #2c3e50;
-  border-bottom: 2px solid #dee2e6;
-}
-
-.table-profesional td {
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid #e9ecef;
-}
-
-.table-profesional tr:hover {
-  background: #f8f9fa;
-}
-
-/* Badges profesionales */
-.badge-profesional {
-  padding: 0.35rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.8rem;
-  font-weight: 600;
-}
-
-.badge-pendiente {
-  background: #fff3cd;
-  color: #856404;
-}
-
-.badge-completada {
-  background: #d1edff;
-  color: #004085;
-}
-
-/* Botones mejorados */
-.btn-profesional {
-  padding: 0.6rem 1.5rem;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.btn-primary-profesional {
-  background: linear-gradient(135deg, #3498db, #2980b9);
-  color: white;
-}
-
-.btn-primary-profesional:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
-}
+/* Table/badges/buttons definitions consolidated later in the file; removed duplicate earlier block */
 
 .btn-success-profesional {
   background: linear-gradient(135deg, #27ae60, #219a52);
@@ -558,21 +484,7 @@ header {
   padding: 20px; /* espacio alrededor */
 }
 
-.logout-btn {
-  width: 100%;
-  padding: 10px;
-  border-radius: 8px;
-  border: none;
-  background: #2563eb;
-  color: #fff;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background 0.2s ease;
-}
-
-.logout-btn:hover {
-  background: #1d4ed8;
-}
+/* consolidated logout button rules exist later; removed earlier duplicate */
 /***** Menu lateral (ajustado) *****/
 .menu {
   z-index: 10;
@@ -1179,21 +1091,7 @@ td {
 }
 
 /* Botón de permisos */
-.btn-permisos {
-  padding: 5px 10px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  transition: all 0.2s ease;
-}
-
-.btn-permisos:hover {
-  background-color: #0056b3;
-  transform: scale(1.05);
-}
+/* consolidated .btn-permisos appears later (green variant); removed earlier duplicate */
 
 
 
