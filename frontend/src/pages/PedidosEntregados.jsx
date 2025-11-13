@@ -203,9 +203,8 @@ export default function PedidosEntregados() {
   const itemsPerPage = 10;
   const [remisionPreview, setRemisionPreview] = useState(null);
 
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = pedidosEntregados.slice(indexOfFirstItem, indexOfLastItem);
+  const indexOfFirstItem = (currentPage - 1) * itemsPerPage;
+  const currentItems = pedidosEntregados.slice(indexOfFirstItem, indexOfFirstItem + itemsPerPage);
   const totalPages = Math.ceil(pedidosEntregados.length / itemsPerPage);
 
   useEffect(() => {
@@ -257,57 +256,7 @@ export default function PedidosEntregados() {
     }
   };
 
-  // 🆕 Función para crear remisión desde pedido
-  const crearRemisionDesdePedido = async (pedidoId) => {
-    try {
-      // Mostrar loading
-      Swal.fire({
-        title: 'Creando remisión...',
-        text: 'Por favor espere mientras se genera la remisión',
-        allowOutsideClick: false,
-        didOpen: () => {
-          Swal.showLoading();
-        }
-      });
-
-      const res = await api.post(`/api/remisiones/crear-desde-pedido/${pedidoId}`);
-      const result = res.data || res;
-
-      Swal.close();
-
-        if (result.existente) {
-        // Ya existe una remisión
-        Swal.fire({
-          icon: 'info',
-          title: 'Remisión existente',
-          text: `Ya existe la remisión ${result.remision?.numeroRemision || ''} para este pedido`,
-          confirmButtonText: 'Ver remisión'
-        }).then((r) => {
-          if (r.isConfirmed) {
-              // No abrimos modal local aquí; el usuario puede navegar a la remisión desde la lista
-          }
-        });
-      } else {
-        // Remisión creada exitosamente
-        Swal.fire({
-          icon: 'success',
-          title: 'Remisión creada',
-          text: `Se ha creado la remisión ${result.remision?.numeroRemision || ''}`,
-          confirmButtonText: 'Ver remisión'
-        }).then((swalResult) => {
-          // El usuario podrá ver la remisión desde la lista; no abrimos modal local.
-        });
-      }
-
-    } catch (error) {
-      console.error('Error al crear remisión:', error);
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: error.message || 'No se pudo crear la remisión'
-      });
-    }
-  };
+  // Note: crearRemisionDesdePedido removed — not referenced anywhere in this file. Kept pagination and preview handlers.
 
   const exportarPDF = () => {
     const elementosNoExport = document.querySelectorAll('.no-export');
