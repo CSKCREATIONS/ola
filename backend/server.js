@@ -99,10 +99,18 @@ async function init() {
     });
 }
 
-init().catch(err => {
-    console.error('Fatal error iniciando la app:', err);
-    process.exit(1);
-});
+// Start the app and handle startup errors.
+// Note: this file is CommonJS (uses require()). Top-level await requires ESM ("type": "module" in package.json
+// or using .mjs). To avoid switching module systems here we use an async IIFE that awaits init() and mirrors the
+// previous .catch behavior.
+(async () => {
+    try {
+        await init();
+    } catch (err) {
+        console.error('Fatal error iniciando la app:', err);
+        process.exit(1);
+    }
+})();
 
 /* -------------------------------------------------------------
    🦠 Seguridad, CORS, Sanitización y Logging
