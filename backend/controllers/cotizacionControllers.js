@@ -437,7 +437,7 @@ exports.getUltimaCotizacionPorCliente = async (req, res) => {
 // Helper: validate and return trimmed ObjectId or null
 function validateObjectId(raw) {
   const id = typeof raw === 'string' ? raw.trim() : '';
-  return id && id.match(/^[0-9a-fA-F]{24}$/) ? id : null;
+  return id?.match(/^[0-9a-fA-F]{24}$/) ? id : null;
 }
 
 // Helper: fetch cotizacion with necessary populations
@@ -480,7 +480,7 @@ async function markCotizacionAsSent(id) {
 // Gmail sending uses the centralized enviarConGmail helper in ../utils/gmailSender
 
 async function trySendWithSendGrid(destinatario, asuntoFinal, mensajeFinal, htmlCompleto, pdfAttachment) {
-  if (!process.env.SENDGRID_API_KEY || !process.env.SENDGRID_API_KEY.startsWith('SG.')) return { ok: false };
+  if (!process.env.SENDGRID_API_KEY?.startsWith('SG.')) return { ok: false };
   try {
     const msg = {
       to: destinatario,
