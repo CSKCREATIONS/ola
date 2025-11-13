@@ -317,15 +317,46 @@ useEffect(() => {
 
 ---
 
+### 9. ✅ Tautological aria-expanded Conditional
+**Problem:** `aria-expanded` attribute had a conditional that returned the same value regardless of condition: `aria-expanded={document.getElementById('submenuUsuarios') ? undefined : undefined}`.
+
+**Solution:** Replaced with proper boolean derived from the submenu element's visibility class and added `aria-controls` for better ARIA compliance.
+
+**Files Modified:**
+- `frontend/src/components/Fijo.jsx` (submenu toggle buttons)
+
+**Example:**
+```jsx
+// Before
+<button
+  onClick={() => toggleSubMenu('submenuUsuarios')}
+  aria-expanded={document.getElementById('submenuUsuarios') ? undefined : undefined}
+>
+
+// After
+<button
+  onClick={() => toggleSubMenu('submenuUsuarios')}
+  aria-controls="submenuUsuarios"
+  aria-expanded={
+    typeof document !== 'undefined' && document.getElementById('submenuUsuarios')
+      ? document.getElementById('submenuUsuarios').classList.contains('visible')
+      : false
+  }
+>
+```
+
+---
+
 ## Next Steps
 
 1. Run frontend build: `npm start` in `frontend/` directory
 2. Test modals with keyboard-only navigation
-3. Verify PropTypes don't cause runtime warnings
-4. Commit changes with descriptive message
-5. Push to remote repository
+3. Test submenu toggles with screen readers to verify aria-expanded state
+4. Verify PropTypes don't cause runtime warnings
+5. Commit changes with descriptive message
+6. Push to remote repository
 
 ---
 
-**Generated:** 2025-01-XX  
+**Generated:** 2025-11-12  
 **Status:** All identified issues resolved, pending build verification
