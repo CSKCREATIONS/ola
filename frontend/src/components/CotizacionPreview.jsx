@@ -1007,8 +1007,11 @@ CotizacionPreview.propTypes = {
     fecha: PropTypes.string,
     fechaEntrega: PropTypes.string,
     estado: PropTypes.string,
-    descripcion: PropTypes.string,
-    condicionesPago: PropTypes.string,
+  descripcion: PropTypes.string,
+  condicionesPago: PropTypes.string,
+  validez: PropTypes.string,
+  tipo: PropTypes.string,
+  fechaVencimiento: PropTypes.string,
     cliente: PropTypes.shape({
       nombre: PropTypes.string,
       correo: PropTypes.string,
