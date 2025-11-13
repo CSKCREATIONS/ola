@@ -609,7 +609,7 @@ const GestionSubcategorias = () => {
       const res = await api.patch(`${API_URL}/${id}/${activar ? 'activate' : 'deactivate'}`);
       const data = res.data;
       if (res.status < 200 || res.status >= 300) {
-        if (res.status === 400 && data && data.message) {
+        if (res.status === 400 && data?.message) {
           await Swal.fire('Acción no permitida', data.message, 'error');
           return;
         }
@@ -643,7 +643,7 @@ const GestionSubcategorias = () => {
         const catData = catRes.data;
 
         const categoria = catData?.data || catData;
-        if (catRes.ok && categoria && categoria.activo === false) {
+        if (catRes.ok && categoria?.activo === false) {
           // Mostrar mensaje del backend o personalizado
           return Swal.fire('Acción no permitida', 'No se puede activar la subcategoría porque la categoría padre está desactivada', 'error');
         }
