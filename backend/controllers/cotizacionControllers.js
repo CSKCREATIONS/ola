@@ -5,7 +5,7 @@ const Product = require('../models/Products'); // Ensure both references work
 const sgMail = require('@sendgrid/mail');
 const nodemailer = require('nodemailer');
 const PDFService = require('../services/pdfService');
-const crypto = require('crypto');
+const crypto = require('node:crypto');
 const { enviarConGmail } = require('../utils/gmailSender');
 
 const { validationResult } = require('express-validator');
@@ -13,7 +13,7 @@ const { validationResult } = require('express-validator');
 // Configurar SendGrid de forma segura para no bloquear el arranque
 try {
   const apiKey = process.env.SENDGRID_API_KEY;
-  if (apiKey && apiKey.startsWith('SG.')) {
+  if (apiKey?.startsWith('SG.')) {
     sgMail.setApiKey(apiKey);
     console.log('✉️  SendGrid listo (cotizaciones)');
   } else {
@@ -45,19 +45,17 @@ exports.createCotizacion = async (req, res) => {
     } = req.body;
 
     // Validar que responsable.id sea un ObjectId válido
-    if (!responsable || !responsable.id || !responsable.id.match(/^[0-9a-fA-F]{24}$/)) {
+    if (!responsable?.id?.match(/^[0-9a-fA-F]{24}$/)) {
       return res.status(400).json({ message: 'El responsable debe ser el id del usuario registrado.' });
     }
-
-    
-    if (!cliente || !cliente.correo) {
+    if (!cliente?.correo) {
       return res.status(400).json({ message: 'Datos de cliente inválidos' });
     }
 
     // Sanitizar el correo para prevenir inyección NoSQL
-    const correoSanitizado = typeof cliente.correo === 'string' ? cliente.correo.toLowerCase().trim() : '';
+    const correoSanitizado = typeof cliente?.correo === 'string' ? cliente.correo.toLowerCase().trim() : '';
     
-    if (!correoSanitizado || !correoSanitizado.includes('@')) {
+    if (!correoSanitizado?.includes('@')) {
       return res.status(400).json({ message: 'Correo electrónico inválido' });
     }
 
@@ -75,12 +73,12 @@ exports.createCotizacion = async (req, res) => {
         esCliente: !clientePotencial // true si es cliente, false si prospecto
       });
       await clienteExistente.save();
-    } else {
-      // Si ya existe, asegúrate de que se marque como cliente
-      if (!clienteExistente.esCliente && !clientePotencial) {
-        clienteExistente.esCliente = true;
-        await clienteExistente.save();
-      }
+    }
+
+    // Si ya existe y no está marcado como cliente pero no es prospecto, márcalo
+    if (!clienteExistente?.esCliente && !clientePotencial) {
+      clienteExistente.esCliente = true;
+      await clienteExistente.save();
     }
 
     let fechaCotizacion = null;
@@ -110,13 +108,13 @@ exports.createCotizacion = async (req, res) => {
     const productosConNombre = await Promise.all(
       productos.map(async (prod) => {
         let productoInfo = null;
-        if (prod.producto && prod.producto.id) {
+        if (prod.producto?.id) {
           productoInfo = await Producto.findById(prod.producto.id).lean();
         }
         return {
           producto: {
-            id: prod.producto.id,
-            name: productoInfo ? productoInfo.name : prod.producto.name
+            id: prod.producto?.id,
+            name: productoInfo ? productoInfo.name : prod.producto?.name
           },
           descripcion: prod.descripcion,
           cantidad: prod.cantidad,
@@ -202,7 +200,7 @@ exports.getCotizaciones = async (req, res) => {
       const cotObj = cotizacion.toObject();
       if (Array.isArray(cotObj.productos)) {
         cotObj.productos = cotObj.productos.map(p => {
-          if (p.producto && p.producto.id) {
+          if (p.producto?.id) {
             // Handle both populated and non-populated product data
             if (typeof p.producto.id === 'object' && p.producto.id.name) {
               // Populated data
@@ -246,7 +244,7 @@ exports.getCotizacionById = async (req, res) => {
     const cotizacionId = typeof req.params.id === 'string' ? req.params.id.trim() : '';
     
     // Validate ObjectId format
-    if (!cotizacionId || !cotizacionId.match(/^[0-9a-fA-F]{24}$/)) {
+    if (!cotizacionId?.match(/^[0-9a-fA-F]{24}$/)) {
       return res.status(400).json({ message: 'ID de cotización inválido' });
     }
 
@@ -266,7 +264,7 @@ exports.getCotizacionById = async (req, res) => {
     const cotObj = cotizacion.toObject();
     if (Array.isArray(cotObj.productos)) {
       cotObj.productos = cotObj.productos.map(p => {
-        if (p.producto && p.producto.id) {
+        if (p.producto?.id) {
           p.producto.name = p.producto.id.name || p.producto.name;
           p.producto.price = p.producto.id.price || p.producto.price;
           p.producto.description = p.producto.id.description || p.producto.description;
@@ -293,7 +291,7 @@ exports.updateCotizacion = async (req, res) => {
     // Sanitizar y validar el ID para prevenir inyección NoSQL
     const cotizacionId = typeof req.params.id === 'string' ? req.params.id.trim() : '';
     
-    if (!cotizacionId || !cotizacionId.match(/^[0-9a-fA-F]{24}$/)) {
+    if (!cotizacionId?.match(/^[0-9a-fA-F]{24}$/)) {
       return res.status(400).json({ message: 'ID de cotización inválido' });
     }
 
@@ -301,7 +299,7 @@ exports.updateCotizacion = async (req, res) => {
     const { codigo, _id, ...rest } = req.body;
 
     // Si se actualiza cliente, actualizar también en la colección Cliente
-    if (rest.cliente && rest.cliente.referencia) {
+    if (rest.cliente?.referencia) {
       const clienteId = rest.cliente.referencia;
       // Solo actualiza si hay datos nuevos
       await Cliente.findByIdAndUpdate(
@@ -336,7 +334,7 @@ exports.deleteCotizacion = async (req, res) => {
     // Sanitizar y validar el ID para prevenir inyección NoSQL
     const cotizacionId = typeof req.params.id === 'string' ? req.params.id.trim() : '';
     
-    if (!cotizacionId || !cotizacionId.match(/^[0-9a-fA-F]{24}$/)) {
+    if (!cotizacionId?.match(/^[0-9a-fA-F]{24}$/)) {
       return res.status(400).json({ message: 'ID de cotización inválido' });
     }
 
@@ -376,7 +374,7 @@ exports.updateEstadoCotizacion = async (req, res) => {
     // Sanitizar y validar el ID para prevenir inyección NoSQL
     const cotizacionId = typeof req.params.id === 'string' ? req.params.id.trim() : '';
     
-    if (!cotizacionId || !cotizacionId.match(/^[0-9a-fA-F]{24}$/)) {
+    if (!cotizacionId?.match(/^[0-9a-fA-F]{24}$/)) {
       return res.status(400).json({ message: 'ID de cotización inválido' });
     }
 
@@ -402,7 +400,7 @@ exports.getUltimaCotizacionPorCliente = async (req, res) => {
     const clienteId = typeof cliente === 'string' ? cliente.trim() : '';
     
     // Validate ObjectId format
-    if (!clienteId || !clienteId.match(/^[0-9a-fA-F]{24}$/)) {
+    if (!clienteId?.match(/^[0-9a-fA-F]{24}$/)) {
       return res.status(400).json({ message: 'ID de cliente inválido' });
     }
 
@@ -420,7 +418,7 @@ exports.getUltimaCotizacionPorCliente = async (req, res) => {
     const cotObj = cotizacion.toObject();
     if (Array.isArray(cotObj.productos)) {
       cotObj.productos = cotObj.productos.map(p => {
-        if (p.producto && p.producto.id) {
+        if (p.producto?.id) {
           p.producto.name = p.producto.id.name || p.producto.name;
           p.producto.price = p.producto.id.price || p.producto.price;
           p.producto.description = p.producto.id.description || p.producto.description;
