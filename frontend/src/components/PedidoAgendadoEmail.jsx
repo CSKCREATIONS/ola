@@ -29,6 +29,14 @@ export default function PedidoAgendadoEmail({ datos, onClose, onEmailSent }) {
       ? new Date(datos.createdAt).toLocaleDateString('es-ES')
       : (datos?.fecha ? new Date(datos.fecha).toLocaleDateString('es-ES') : 'N/A');
 
+    // Observaciones: extraer el bloque para mejorar legibilidad
+    const observacionesBlock = datos?.observacion
+      ? `📝 OBSERVACIONES:
+${datos.observacion}
+
+`
+      : '';
+
     // Actualizar datos autocompletados cada vez que se abre el modal
     setCorreo(datos?.cliente?.correo || '');
     setAsunto(`Pedido Agendado ${datos?.numeroPedido || ''} - ${datos?.cliente?.nombre || 'Cliente'} | ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}`);
@@ -53,10 +61,7 @@ Esperamos se encuentre muy bien. Su pedido ha sido agendado exitosamente con la 
 
 Su pedido será procesado y entregado en las fechas programadas. Mantendremos comunicación constante sobre el progreso de su orden.
 
-${datos?.observacion ? `📝 OBSERVACIONES:
-${datos.observacion}
-
-` : ''}¡Gracias por confiar en nosotros y esperamos cumplir con todas sus expectativas!
+${observacionesBlock}¡Gracias por confiar en nosotros y esperamos cumplir con todas sus expectativas!
 
 Si tiene alguna pregunta sobre su pedido, no dude en contactarnos.
 
