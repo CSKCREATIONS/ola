@@ -1356,7 +1356,16 @@ export default function ListaDeCotizaciones() {
               if (e.target === e.currentTarget) closeModal();
             }}
           >
-            <dialog className="modal-content-large" aria-label="Editar Cotización" aria-modal="true" open onClick={(e) => e.stopPropagation()}>
+            <dialog
+              className="modal-content-large"
+              role="dialog"
+              aria-label="Editar Cotización"
+              aria-modal="true"
+              open
+              tabIndex={-1}
+              onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.stopPropagation()}
+            >
               <div className="modal-header">
                 <div className="header-info">
                   <h3>Editar Cotización</h3>
