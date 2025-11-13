@@ -52,7 +52,7 @@ exports.createProduct = async(req,res) =>{
             proveedor
         });
 
-        if(req.user && req.user.id){
+        if (req.user?.id) {
             product.CreatedBy = req.user.id;
         }
 

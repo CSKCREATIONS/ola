@@ -33,7 +33,7 @@ function isValidEmail(email) {
   // Local part: avoid dangerous patterns; allow most common chars but keep it simple
   // Accept: letters, digits and these punctuation: !#$%&'*+/=?^_`{|}~.-
   // Note: escape the forward slash inside the class and place '-' last so it does not need escaping
-  if (!/^[A-Za-z0-9!#$%&'*+\/=?^_`{|}~.-]+$/.test(local)) return false;
+  if (!/^[A-Za-z0-9!#$%&'*+/=?^_`{|}~.-]+$/.test(local)) return false;
 
   return true;
 }

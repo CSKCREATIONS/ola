@@ -18,7 +18,7 @@ const verifyTokenFn = async (req, res, next) => {
     // Cargar usuario con el rol
     const user = await User.findById(decoded.id).populate('role');
 
-    if (!user || !user.role) {
+    if (!user?.role) {
       return res.status(401).json({
         success: false,
         message: 'Usuario o rol no encontrado'

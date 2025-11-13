@@ -627,7 +627,7 @@ function imprimirOrdenHelper(orden) {
 
 // Helper: enviar orden por correo (separado para reducir complejidad del componente)
 async function enviarOrdenPorCorreoHelper(orden) {
-  if (!orden || !orden._id) {
+  if (!orden?._id) {
     Swal.fire('Error', 'No hay orden seleccionada', 'error');
     return;
   }

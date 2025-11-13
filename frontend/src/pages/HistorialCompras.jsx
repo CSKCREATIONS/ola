@@ -561,7 +561,7 @@ export default function HistorialCompras() {
   };
 
   const enviarCompraPorCorreo = async () => {
-    if (!compraSeleccionada || !compraSeleccionada._id) {
+    if (!compraSeleccionada?._id) {
       Swal.fire('Error', 'No hay compra seleccionada', 'error');
       return;
     }
