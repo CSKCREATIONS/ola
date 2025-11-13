@@ -134,7 +134,16 @@ export default function EditarPerfil() {
       aria-modal="true"
       aria-labelledby="edit-profile-title"
       // Backdrop: keep role=dialog and a click handler for backdrop clicks.
-      // Keyboard handling is attached at document level via useEffect.
+      // Keyboard handling: Escape is attached at document level via useEffect.
+      // Add keyboard listener here so the visible non-interactive backdrop has a keyboard affordance
+      tabIndex={0}
+      onKeyDown={(e) => {
+        // Allow closing the modal with Enter or Space when backdrop is focused
+        if ((e.key === 'Enter' || e.code === 'Space' || e.key === ' ') && e.target && e.target.id === 'editar-perfil') {
+          e.preventDefault();
+          closeModal('editar-perfil');
+        }
+      }}
       style={{
         position: 'fixed',
         top: 0,
