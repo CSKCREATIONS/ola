@@ -24,6 +24,10 @@ export default function PedidoCanceladoEmail({ datos, onClose, onEmailSent }) {
     }, 0) || 0;
     
     const totalFinal = datos?.total || totalCalculado;
+    // Fecha de pedido original: preferir createdAt, si no usar fecha, si ninguna está presente 'N/A'
+    const fechaPedidoOriginal = datos?.createdAt
+      ? new Date(datos.createdAt).toLocaleDateString('es-ES')
+      : (datos?.fecha ? new Date(datos.fecha).toLocaleDateString('es-ES') : 'N/A');
     
     // Actualizar datos autocompletados cada vez que se abre el modal
     setCorreo(datos?.cliente?.correo || '');
@@ -36,7 +40,7 @@ Lamentamos informarle que su pedido ha sido cancelado. A continuación los detal
 📦 DETALLES DEL PEDIDO CANCELADO:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 • Número de pedido: ${datos?.numeroPedido || 'N/A'}
-• Fecha de pedido original: ${datos?.createdAt ? new Date(datos.createdAt).toLocaleDateString('es-ES') : datos?.fecha ? new Date(datos.fecha).toLocaleDateString('es-ES') : 'N/A'}
+• Fecha de pedido original: ${fechaPedidoOriginal}
 • Fecha de cancelación: ${new Date().toLocaleDateString('es-ES')}
 • Cliente: ${datos?.cliente?.nombre || 'N/A'}
 • Correo: ${datos?.cliente?.correo || 'N/A'}
