@@ -852,6 +852,7 @@ RemisionPreview.propTypes = {
       precioUnitario: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
       total: PropTypes.oneOfType([PropTypes.number, PropTypes.string])
     })),
+      cotizacionReferencia: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
     observacion: PropTypes.string,
     observaciones: PropTypes.string
   }).isRequired,
