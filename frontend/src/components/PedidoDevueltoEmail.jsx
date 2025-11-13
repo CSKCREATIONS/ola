@@ -110,8 +110,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
         onClick={abrirModalEnvio}
         className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
       >
-        <span>↩️</span>
-        Enviar notificación
+        <span>↩️</span><span>Enviar notificación</span>
       </button>
 
       {/* Modal de envío de correo */}

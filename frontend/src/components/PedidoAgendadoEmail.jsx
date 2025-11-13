@@ -108,8 +108,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
         onClick={abrirModalEnvio}
         className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
       >
-        <span>📧</span>
-        Enviar por correo
+        <span>📧</span><span>Enviar por correo</span>
       </button>
 
       {/* Modal de envío de correo */}
@@ -186,8 +185,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                 onClick={enviarPorCorreo}
                 className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
               >
-                <span>📧</span>
-                Enviar
+                <span>📧</span><span>Enviar</span>
               </button>
             </div>
           </div>
