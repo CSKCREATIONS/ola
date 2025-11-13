@@ -6,6 +6,54 @@ import { Editor } from "@tinymce/tinymce-react";
 import { useRef, useState, useEffect } from 'react';
 import api from '../api/axiosConfig';
 
+// Move small pure helpers to module scope to avoid re-creating them on each render
+function obtenerFechaLocal(inputDate) {
+  const date = new Date(inputDate);
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const day = date.getDate().toString().padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+// Deterministic, linear-time email validator to avoid catastrophic backtracking
+function isValidEmail(email) {
+  if (typeof email !== 'string') return false;
+  const trimmed = email.trim();
+  if (trimmed.length === 0 || trimmed.length > 254) return false;
+
+  const at = trimmed.indexOf('@');
+  // single @ and not first/last
+  if (at <= 0 || trimmed.indexOf('@', at + 1) !== -1) return false;
+
+  const local = trimmed.slice(0, at);
+  const domain = trimmed.slice(at + 1);
+  if (!local || !domain) return false;
+
+  // length constraints
+  if (local.length > 64 || domain.length > 253) return false;
+
+  // allowed char sets
+  const localAllowed = /^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+$/;
+  const labelAllowed = /^[A-Za-z0-9-]+$/;
+
+  // local checks
+  if (local.startsWith('.') || local.endsWith('.') || local.includes('..')) return false;
+  if (!localAllowed.test(local)) return false;
+
+  // domain checks
+  if (domain.includes('..')) return false;
+  const labels = domain.split('.');
+  if (labels.length < 2) return false;
+
+  const allLabelsValid = labels.every(lab => {
+    if (!lab || lab.length > 63) return false;
+    if (lab.startsWith('-') || lab.endsWith('-')) return false;
+    return labelAllowed.test(lab);
+  });
+
+  return allLabelsValid;
+}
+
 export default function RegistrarCotizacion() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
@@ -165,52 +213,7 @@ export default function RegistrarCotizacion() {
     });
   };
 
-  function obtenerFechaLocal(inputDate) {
-    const date = new Date(inputDate);
-    const year = date.getFullYear();
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const day = date.getDate().toString().padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  }
   
-  // Deterministic, linear-time email validator to avoid catastrophic backtracking
-  function isValidEmail(email) {
-    if (typeof email !== 'string') return false;
-    const trimmed = email.trim();
-    if (trimmed.length === 0 || trimmed.length > 254) return false;
-
-    const at = trimmed.indexOf('@');
-    // single @ and not first/last
-    if (at <= 0 || trimmed.indexOf('@', at + 1) !== -1) return false;
-
-    const local = trimmed.slice(0, at);
-    const domain = trimmed.slice(at + 1);
-    if (!local || !domain) return false;
-
-    // length constraints
-    if (local.length > 64 || domain.length > 253) return false;
-
-    // allowed char sets
-    const localAllowed = /^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+$/;
-    const labelAllowed = /^[A-Za-z0-9-]+$/;
-
-    // local checks
-    if (local.startsWith('.') || local.endsWith('.') || local.includes('..')) return false;
-    if (!localAllowed.test(local)) return false;
-
-    // domain checks
-    if (domain.includes('..')) return false;
-    const labels = domain.split('.');
-    if (labels.length < 2) return false;
-
-    const allLabelsValid = labels.every(lab => {
-      if (!lab || lab.length > 63) return false;
-      if (lab.startsWith('-') || lab.endsWith('-')) return false;
-      return labelAllowed.test(lab);
-    });
-
-    return allLabelsValid;
-  }
   // Helpers to reduce cognitive complexity of guardar flow
   const validarClienteYProductos = () => {
     const inputs = document.querySelectorAll('.cuadroTexto');

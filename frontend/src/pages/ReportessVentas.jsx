@@ -56,7 +56,7 @@ const ReportessVentas = () => {
             console.log("📊 Estadísticas - Status:", res.status);
             console.log("📊 Estadísticas - Data:", res.data);
             
-            if (res.data && res.data.success && res.data.data) {
+            if (res.data?.success && res.data?.data) {
               console.log("✅ Estableciendo estadísticas:", res.data.data);
               setEstadisticas(res.data.data);
             } else {
@@ -77,7 +77,7 @@ const ReportessVentas = () => {
             console.log("👥 Clientes - Status:", res.status);
             console.log("👥 Clientes - Data:", res.data);
             
-            if (res.data && res.data.success && res.data.data) {
+            if (res.data?.success && res.data?.data) {
               console.log("✅ Estableciendo clientes:", res.data.data);
               setClientes(res.data.data);
             } else {
@@ -98,7 +98,7 @@ const ReportessVentas = () => {
             console.log("🛍️ Productos - Status:", res.status);
             console.log("🛍️ Productos - Data:", res.data);
             
-            if (res.data && res.data.success && res.data.data) {
+            if (res.data?.success && res.data?.data) {
               console.log("✅ Estableciendo productos:", res.data.data);
               setProductos(res.data.data);
             } else {
@@ -119,7 +119,7 @@ const ReportessVentas = () => {
             console.log("📋 Estados - Status:", res.status);
             console.log("📋 Estados - Data:", res.data);
             
-            if (res.data && res.data.success && res.data.data) {
+            if (res.data?.success && res.data?.data) {
               console.log("✅ Estableciendo estados:", res.data.data);
               setEstadosChartData(res.data.data);
             } else {
