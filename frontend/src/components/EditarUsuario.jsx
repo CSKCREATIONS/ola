@@ -506,22 +506,19 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
             border: '1px solid #e2e8f0',
             borderLeft: '4px solid #f59e0b'
           }}>
-                <div 
-              role="button"
-              tabIndex={0}
+            <button
+              type="button"
               onClick={() => setMostrarCambiarPassword(!mostrarCambiarPassword)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  setMostrarCambiarPassword(!mostrarCambiarPassword);
-                }
-              }}
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 cursor: 'pointer',
-                marginBottom: mostrarCambiarPassword ? '1.5rem' : 0
+                marginBottom: mostrarCambiarPassword ? '1.5rem' : 0,
+                background: 'transparent',
+                border: 'none',
+                padding: 0,
+                width: '100%'
               }}
             >
               <h4 style={{
@@ -538,7 +535,7 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
               </h4>
               <i className={`fa-solid fa-chevron-${mostrarCambiarPassword ? 'up' : 'down'}`} 
                  style={{ color: '#6b7280' }} aria-hidden={true}></i>
-            </div>
+            </button>
 
             {mostrarCambiarPassword && (
               <div style={{

@@ -210,7 +210,9 @@ export default function EditarRol({ rol }) {
    return (
       <div 
          id="edit-role-modal"
-         role="button"
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="edit-role-title"
          tabIndex={0}
          style={{
             position: 'fixed',
@@ -233,7 +235,7 @@ export default function EditarRol({ rol }) {
             }
          }}
          onKeyDown={(e) => {
-            if ((e.key === 'Enter' || e.key === ' ') && e.target.id === 'edit-role-modal') {
+            if ((e.key === 'Escape' || e.key === 'Esc') && e.target.id === 'edit-role-modal') {
                e.preventDefault();
                closeModal('edit-role-modal');
             }

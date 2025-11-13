@@ -1297,9 +1297,10 @@ export default function ListaDeCotizaciones() {
         <div className="cotizacion-modal-container">
           <div
             className="modal-overlay"
-            role="button"
+            role="dialog"
+            aria-modal="true"
             tabIndex={0}
-            aria-label="Cerrar modal"
+            aria-label="Editar Cotización"
             onClick={(e) => {
               if (e.target === e.currentTarget) {
                 setModoEdicion(false);
@@ -1307,7 +1308,7 @@ export default function ListaDeCotizaciones() {
               }
             }}
             onKeyDown={(e) => {
-              if ((e.key === 'Enter' || e.key === ' ') && e.target === e.currentTarget) {
+              if ((e.key === 'Escape' || e.key === 'Esc') && e.target === e.currentTarget) {
                 setModoEdicion(false);
                 setCotizacionSeleccionada(null);
               }
