@@ -7,7 +7,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const mongoSanitize = require('express-mongo-sanitize');
 const config = require('./config');
-const {MongoClient , ObjectId} =  require ('mongodb');
+const { MongoClient, ObjectId } = require('mongodb');
 const dbConfig = require('./config/db.js');
 // Use the explicit node: namespace to prefer the Node core module specifier
 const crypto = require('node:crypto');
@@ -76,7 +76,10 @@ async function initMongoClient() {
     }
 }
 
+
 initMongoClient();
+// Keep initMongoClient as an async initializer for CommonJS compatibility.
+// When the backend is migrated to ESM we can replace this with top-level await.
 
 // Seguridad básica y utilidades
 app.use(helmet());

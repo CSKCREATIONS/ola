@@ -49,7 +49,7 @@ const ClienteSchema = new mongoose.Schema({
 
         // Local: allow common characters but keep it conservative
         // Keep hyphen escaped to avoid any ambiguity inside the character class
-        if (!/^[A-Za-z0-9!#$%&'*+\/?^_`{|}~.\-]+$/.test(local)) return false;
+        if (!/^[A-Za-z0-9!#$%&'*+/?^_`{|}~.-]+$/.test(local)) return false;
 
         return true;
       },
