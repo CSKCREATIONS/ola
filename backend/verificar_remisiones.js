@@ -47,4 +47,5 @@ async function verificarRemisiones() {
 
 // Ejecutar la comprobación. Mantener la llamada dentro de una función async
 // mantiene compatibilidad con CommonJS (evita usar top-level await aquí).
+/* eslint-disable prefer-top-level-await */
 verificarRemisiones();
