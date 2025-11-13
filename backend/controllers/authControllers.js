@@ -3,11 +3,11 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const config = require('../config/auth.config');
 const sgMail = require('@sendgrid/mail');
-const crypto = require('crypto');
+const crypto = require('node:crypto');
 // Configurar SendGrid de forma segura para no bloquear el arranque
-try {
+  try {
   const apiKey = process.env.SENDGRID_API_KEY;
-  if (apiKey && apiKey.startsWith('SG.')) {
+  if (apiKey?.startsWith('SG.')) {
     sgMail.setApiKey(apiKey);
     console.log('✉️  SendGrid listo (auth)');
   } else {
@@ -186,10 +186,8 @@ exports.signin = async (req, res) => {
     // 4. Generar token JWT
 
 
-    const Role = require('../models/Role');
-
-    // buscar el rol completo con permisos
-    const roleDoc = user.role;
+  // buscar el rol completo con permisos
+  const roleDoc = user.role;
 
     if (!roleDoc) {
       return res.status(500).json({ success: false, message: "Rol no asignado correctamente al usuario" });
@@ -240,7 +238,7 @@ exports.recoverPassword = async (req, res) => {
     // Sanitizar el email para prevenir inyección NoSQL
     const sanitizedEmail = typeof email === 'string' ? email.toLowerCase().trim() : '';
     
-    if (!sanitizedEmail || !sanitizedEmail.includes('@')) {
+    if (!sanitizedEmail?.includes('@')) {
       return res.status(400).json({ success: false, message: 'Email inválido' });
     }
 
