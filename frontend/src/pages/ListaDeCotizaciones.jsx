@@ -977,9 +977,14 @@ export default function ListaDeCotizaciones() {
                 </thead>
                 <tbody>
                   {currentItems.map((cot, index) => {
-                    const rowClass = highlightId === cot._id ? (blinkOn ? 'row-blink' : 'row-blink-off') : '';
+                    // Compute row class in a clear, statement-based way (avoid nested ternary)
+                    let rowClass = '';
+                    if (highlightId === cot._id) {
+                      rowClass = blinkOn ? 'row-blink' : 'row-blink-off';
+                    }
 
-                    const statusBadge = isRemisionada(cot) ? (
+                    // Precompute badge variants to keep the JSX clean and avoid nested ternaries
+                    const remisionadaBadge = (
                       <span style={{
                         background: 'linear-gradient(135deg, #7c3aed, #6d28d9)',
                         color: 'white',
@@ -996,7 +1001,9 @@ export default function ListaDeCotizaciones() {
                         <i aria-hidden={true} className="fa-solid fa-tag" style={{ fontSize: '10px' }}></i>
                         <span>REMISIONADA</span>
                       </span>
-                    ) : isAgendada(cot) ? (
+                    );
+
+                    const agendadaBadge = (
                       <span style={{
                         backgroundColor: '#16a34a',
                         color: 'white',
@@ -1013,7 +1020,9 @@ export default function ListaDeCotizaciones() {
                         <i aria-hidden={true} className="fa-solid fa-calendar-check" style={{ fontSize: '10px' }}></i>
                         <span>AGENDADA</span>
                       </span>
-                    ) : (
+                    );
+
+                    const pendienteBadge = (
                       <span style={{
                         backgroundColor: '#0ea5e9',
                         color: 'white',
@@ -1031,6 +1040,13 @@ export default function ListaDeCotizaciones() {
                         <span>PENDIENTE</span>
                       </span>
                     );
+
+                    let statusBadge = pendienteBadge;
+                    if (isRemisionada(cot)) {
+                      statusBadge = remisionadaBadge;
+                    } else if (isAgendada(cot)) {
+                      statusBadge = agendadaBadge;
+                    }
 
                     return (
                     <tr key={cot._id}
@@ -1318,6 +1334,8 @@ export default function ListaDeCotizaciones() {
         <div className="cotizacion-modal-container">
           <div
             className="modal-overlay"
+            role="presentation"
+            aria-hidden="true"
             onClick={(e) => {
               if (e.target === e.currentTarget) {
                 setModoEdicion(false);
@@ -1325,7 +1343,7 @@ export default function ListaDeCotizaciones() {
               }
             }}
           >
-            <dialog className="modal-content-large" aria-label="Editar Cotización" open onClick={(e) => e.stopPropagation()}>
+            <dialog className="modal-content-large" aria-label="Editar Cotización" aria-modal="true" open onClick={(e) => e.stopPropagation()}>
               <div className="modal-header">
                 <div className="header-info">
                   <h3>Editar Cotización</h3>

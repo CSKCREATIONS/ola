@@ -11,7 +11,7 @@ router.get('/',
 )
 
 // POST api/roles - para crear rol 
-// puede crear rol todo aque usuario con permiso role.crear
+// puede crear rol que usuario con permiso role.crear
 router.post('/',
   verifyToken,
   checkPermission('roles.crear'),
