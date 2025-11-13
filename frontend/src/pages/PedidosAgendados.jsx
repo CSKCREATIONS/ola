@@ -299,7 +299,7 @@ export default function PedidosAgendados() {
 
     const tabla = document.getElementById("tabla_despachos");
     const workbook = XLSX.utils.table_to_book(tabla, { sheet: "Pedidos Agendados" });
-    workbook.Sheets["Pedidos Agendados"]["!cols"] = Array(8).fill({ width: 20 });
+  workbook.Sheets["Pedidos Agendados"]["!cols"] = new Array(8).fill({ width: 20 });
 
     XLSX.writeFile(workbook, 'pedidos_agendados.xlsx');
     elementosNoExport.forEach(el => el.style.display = '');
