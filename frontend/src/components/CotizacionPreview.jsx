@@ -1036,6 +1036,7 @@ CotizacionPreview.propTypes = {
     numeroRemision: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     remisionada: PropTypes.bool,
     total: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    enviadoCorreo: PropTypes.bool,
   }).isRequired,
   onClose: PropTypes.func,
   onEmailSent: PropTypes.func,
