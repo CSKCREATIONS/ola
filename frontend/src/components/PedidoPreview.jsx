@@ -403,65 +403,26 @@ FormatoCotizacion.propTypes = {
   datos: PropTypes.shape({
     _id: PropTypes.string,
     numeroPedido: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-    codigo: PropTypes.string,
+    codigo: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     fecha: PropTypes.string,
     fechaEntrega: PropTypes.string,
-    cliente: PropTypes.shape({
-      nombre: PropTypes.string,
-      correo: PropTypes.string,
-      telefono: PropTypes.string,
-      ciudad: PropTypes.string,
-      direccion: PropTypes.string,
-    }),
-    productos: PropTypes.arrayOf(PropTypes.shape({
-      cantidad: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
-      valorUnitario: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
-      descuento: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
-      descripcion: PropTypes.string,
-      producto: PropTypes.object,
-      nombre: PropTypes.string,
-    })),
-    productosLista: PropTypes.array,
-    total: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
     descripcion: PropTypes.string,
     condicionesPago: PropTypes.string,
     estado: PropTypes.string,
-    enviadoCorreo: PropTypes.bool,
-  }),
-  onClose: PropTypes.func,
-  onEmailSent: PropTypes.func,
-};
-
-FormatoCotizacion.defaultProps = {
-  datos: { productos: [] },
-  onClose: () => {},
-  onEmailSent: null,
-};
-
-FormatoCotizacion.propTypes = {
-  datos: PropTypes.shape({
-    _id: PropTypes.string,
-    numeroPedido: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-    codigo: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-    fecha: PropTypes.string,
-    descripcion: PropTypes.string,
-    condicionesPago: PropTypes.string,
-    cliente: PropTypes.shape({
-      nombre: PropTypes.string,
-      direccion: PropTypes.string,
-      ciudad: PropTypes.string,
-      telefono: PropTypes.string,
-      correo: PropTypes.string,
-    }),
     empresa: PropTypes.shape({
       nombre: PropTypes.string,
       direccion: PropTypes.string,
     }),
+    cliente: PropTypes.shape({
+      nombre: PropTypes.string,
+      direccion: PropTypes.string,
+      ciudad: PropTypes.string,
+      telefono: PropTypes.string,
+      correo: PropTypes.string,
+    }),
     productos: PropTypes.arrayOf(
       PropTypes.shape({
-        producto: PropTypes.shape({
-          name: PropTypes.string,
-        }),
+        producto: PropTypes.shape({ name: PropTypes.string }),
         nombre: PropTypes.string,
         descripcion: PropTypes.string,
         cantidad: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
@@ -478,7 +439,8 @@ FormatoCotizacion.propTypes = {
 };
 
 FormatoCotizacion.defaultProps = {
+  datos: { productos: [] },
   onClose: () => {},
-  onEmailSent: () => {},
+  onEmailSent: null,
 };
 
