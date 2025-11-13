@@ -177,11 +177,9 @@ export default function RolesYPermisos() {
     if (!confirmResult.isConfirmed) return;
 
     try {
-      const res = await api.patch(`/api/roles/${id}/toggle-enabled`, { enabled: nuevoEstado });
+  const res = await api.patch(`/api/roles/${id}/toggle-enabled`, { enabled: nuevoEstado });
 
-      const data = res.data;
-
-      setRoles(prev => prev.map(r => (r._id === id ? { ...r, enabled: nuevoEstado } : r)));
+  setRoles(prev => prev.map(r => (r._id === id ? { ...r, enabled: nuevoEstado } : r)));
 
       Swal.fire({
         icon: 'success',

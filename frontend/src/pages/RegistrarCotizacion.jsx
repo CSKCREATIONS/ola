@@ -314,7 +314,9 @@ export default function RegistrarCotizacion() {
   const limpiarFormulario = () => {
     try {
       const allInputs = document.querySelectorAll('.cuadroTexto');
-      if (allInputs && allInputs.length) allInputs.forEach(input => { if (input) input.value = ''; });
+      // use optional chaining: querySelectorAll never returns null, but this is concise and
+      // avoids a verbose length check while remaining safe if APIs change.
+      allInputs?.forEach(input => { if (input) input.value = ''; });
       setProductosSeleccionados([]);
       if (descripcionRef.current) descripcionRef.current.setContent('');
       if (condicionesPagoRef.current) condicionesPagoRef.current.setContent('');

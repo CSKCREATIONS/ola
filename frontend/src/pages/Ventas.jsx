@@ -76,7 +76,6 @@ const exportToExcel = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
   
-  const indexOfLastItem = currentPage * itemsPerPage; // kept for possible future pagination
     const totalPages = Math.ceil(ventasFiltradas.length / itemsPerPage);
   
     const paginate = (pageNumber) => setCurrentPage(pageNumber);
