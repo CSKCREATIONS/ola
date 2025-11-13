@@ -1338,18 +1338,12 @@ export default function ListaDeCotizaciones() {
         <div className="cotizacion-modal-container">
           <div
             className="modal-overlay"
-            role="button"
-            tabIndex={0}
-            aria-label="Cerrar modal (clic fuera o presione Enter/Escape)"
+            role="presentation"
+            aria-hidden="true"
             onClick={(e) => {
+              // click outside the dialog closes the modal
               if (e.target === e.currentTarget) {
                 closeModal();
-              }
-            }}
-            onKeyDown={(e) => {
-              // Support keyboard activation for the overlay (Enter / Space)
-              if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
-                if (e.target === e.currentTarget) closeModal();
               }
             }}
             onTouchStart={(e) => {
@@ -1358,13 +1352,11 @@ export default function ListaDeCotizaciones() {
           >
             <dialog
               className="modal-content-large"
-              role="dialog"
               aria-label="Editar Cotización"
               aria-modal="true"
               open
               tabIndex={-1}
               onClick={(e) => e.stopPropagation()}
-              onKeyDown={(e) => e.stopPropagation()}
             >
               <div className="modal-header">
                 <div className="header-info">

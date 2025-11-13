@@ -36,7 +36,7 @@ export default function DetallesOrdenModal({ visible, orden, onClose, onPrint, o
       document.onmousemove = null;
     };
 
-    const header = modal.querySelector('.modal-header-realista');
+    const header = modal.querySelector('.pdf-orden-compra .header') || modal.querySelector('.modal-header-realista');
     if (header) header.onmousedown = dragMouseDown;
 
     return () => {
@@ -56,103 +56,135 @@ export default function DetallesOrdenModal({ visible, orden, onClose, onPrint, o
         id="modalMovible"
         ref={modalRef}
       >
-        <div className="modal-header-realista" style={{ cursor: 'move' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', padding: '0.5rem 1rem' }}>
-            <h5 style={{ margin: 0 }}>
-              <i className="fa-solid fa-file-invoice icon-gap" style={{}}></i>
-              <span>Orden: {orden.numeroOrden}</span>
-            </h5>
-            <button className="modal-close-realista" onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#666', padding: 0, width: '30px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>&times;</button>
-          </div>
-        </div>
+        
 
         <div className="modal-body" style={{ padding: 0, maxHeight: '70vh', overflowY: 'auto' }}>
-          <div style={{ background: 'linear-gradient(135deg, #2c3e50, #34495e)', color: 'white', padding: '1.5rem', borderBottom: '3px solid #f39c12' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <div>
-                <h2 style={{ margin: '0 0 0.5rem 0', fontSize: '1.5rem', fontWeight: 'bold' }}>ORDEN DE COMPRA</h2>
-                <p style={{ margin: 0, opacity: 0.9, fontSize: '1rem' }}>N°: <strong>{orden.numeroOrden}</strong></p>
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ background: 'rgba(255,255,255,0.1)', padding: '0.75rem', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.2)' }}>
-                  <p style={{ margin: 0, fontSize: '0.8rem', opacity: 0.8 }}>Fecha</p>
-                  <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 'bold' }}>{new Date(orden.fechaOrden).toLocaleDateString('es-ES')}</p>
+          <div style={{ background: 'linear-gradient(135deg, #6a1b9a, #9b59b6)', color: 'white', padding: '1.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <i className="fa-solid fa-file-invoice" style={{ fontSize: '1.8rem' }} aria-hidden={true}></i>
+                <div>
+                  <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 'bold' }}>ORDEN DE COMPRA</h2>
+                  <p style={{ margin: 0, opacity: 0.95, fontSize: '0.95rem' }}>N° {orden.numeroOrden || 'Sin número'}</p>
                 </div>
+              </div>
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <button
+                  onClick={() => {
+                    const printContent = document.querySelector('.pdf-orden-compra');
+                    if (!printContent) return;
+                    const newWindow = window.open('', '_blank');
+                    newWindow.document.write(`
+                      <html>
+                        <head>
+                          <title>Orden de Compra - ${orden.numeroOrden}</title>
+                                <style>
+                                  body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+                                  .header { text-align: center; margin-bottom: 30px; padding: 20px; background: linear-gradient(135deg, #6a1b9a, #9b59b6); color: white; border-radius: 10px; }
+                                  .info-section { margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; }
+                                  table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                                  th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+                                  th { background: linear-gradient(135deg, #6a1b9a, #9b59b6); color: white; font-weight: bold; }
+                                  .total-row { background: #fef3c7; font-weight: bold; }
+                                  .status-badge { background: #6a1b9a; color: white; padding: 8px 16px; border-radius: 20px; display: inline-block; }
+                                </style>
+                        </head>
+                        <body>
+                          ${printContent.innerHTML}
+                        </body>
+                      </html>
+                    `);
+                    newWindow.document.close();
+                    newWindow.focus();
+                    newWindow.print();
+                    newWindow.close();
+                  }}
+                  style={{
+                    background: 'rgba(255,255,255,0.2)',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '0.6rem 0.8rem',
+                    color: 'white',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <i className="fa-solid fa-print" aria-hidden={true}></i>
+                </button>
+                <button className="btn" onClick={() => onSendEmail(orden)} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: '8px', padding: '0.6rem 0.8rem', color: 'white', cursor: 'pointer' }}><i className="fa-solid fa-envelope"></i></button>
+                <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: '8px', padding: '0.6rem 0.8rem', color: 'white', cursor: 'pointer' }}><i className="fa-solid fa-times"></i></button>
               </div>
             </div>
           </div>
 
-          <div style={{ padding: '1.5rem' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
-              <div>
-                <h6 style={{ color: '#2c3e50', marginBottom: '0.5rem', borderBottom: '1px solid #ecf0f1', paddingBottom: '0.25rem' }}><i className="fa-solid fa-truck icon-gap" style={{}}></i>Proveedor</h6>
-                <p style={{ margin: 0, fontWeight: '500' }}>{orden.proveedor || 'No especificado'}</p>
+          <div style={{ flex: 1, overflow: 'auto', padding: '1.5rem', backgroundColor: '#f8f9fa' }}>
+            <div
+              className="pdf-orden-compra"
+              style={{ background: '#fff', padding: '2rem', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
+            >
+              <div className="header" style={{ textAlign: 'center', color: 'white', marginBottom: '2rem', padding: '1.5rem', background: 'linear-gradient(135deg, #6a1b9a, #9b59b6)', borderRadius: '8px', fontSize: '1.6rem', fontWeight: 'bold' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem' }}>
+                  <i className="fa-solid fa-file-invoice" style={{ fontSize: '2rem' }} aria-hidden={true}></i>
+                  <div>
+                    <div>ORDEN DE COMPRA</div>
+                    <div style={{ fontSize: '1rem', fontWeight: 'normal', marginTop: '0.5rem' }}>N° {orden.numeroOrden}</div>
+                  </div>
+                </div>
               </div>
-              <div>
-                <h6 style={{ color: '#2c3e50', marginBottom: '0.5rem', borderBottom: '1px solid #ecf0f1', paddingBottom: '0.25rem' }}><i className="fa-solid fa-user icon-gap" style={{}}></i>Solicitado Por</h6>
-                <p style={{ margin: 0, fontWeight: '500' }}>{orden.solicitadoPor || 'No especificado'}</p>
-              </div>
-              <div>
-                <h6 style={{ color: '#2c3e50', marginBottom: '0.5rem', borderBottom: '1px solid #ecf0f1', paddingBottom: '0.25rem' }}><i className="fa-solid fa-credit-card icon-gap" style={{}}></i>Condiciones de Pago</h6>
-                <p style={{ margin: 0, fontWeight: '500' }}>{orden.condicionesPago || 'Contado'}</p>
-              </div>
-              <div>
-                <h6 style={{ color: '#2c3e50', marginBottom: '0.5rem', borderBottom: '1px solid #ecf0f1', paddingBottom: '0.25rem' }}><i className="fa-solid fa-flag icon-gap" style={{}}></i>Estado</h6>
-                <span className={`badge ${orden.estado === 'Pendiente' ? 'bg-warning' : 'bg-success'}`}>{orden.estado}</span>
-              </div>
-            </div>
 
-            <div>
-              <h6 style={{ color: '#2c3e50', marginBottom: '1rem', borderBottom: '2px solid #3498db', paddingBottom: '0.5rem', display: 'flex', alignItems: 'center' }}><i className="fa-solid fa-boxes icon-gap" style={{}}></i>Productos ({orden.productos?.length || 0})</h6>
-              {orden.productos && orden.productos.length > 0 ? (
-                <div className="table-responsive">
-                  <table className="table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-                    <thead>
-                      <tr style={{ background: '#f8f9fa' }}>
-                        <th style={{ padding: '0.75rem', border: '1px solid #dee2e6', textAlign: 'left' }}>Producto</th>
-                        <th style={{ padding: '0.75rem', border: '1px solid #dee2e6', textAlign: 'left' }}>Descripción</th>
-                        <th style={{ padding: '0.75rem', border: '1px solid #dee2e6', textAlign: 'center' }}>Cantidad</th>
-                        <th style={{ padding: '0.75rem', border: '1px solid #dee2e6', textAlign: 'right' }}>Valor Unit.</th>
-                        <th style={{ padding: '0.75rem', border: '1px solid #dee2e6', textAlign: 'right' }}>Descuento</th>
-                        <th style={{ padding: '0.75rem', border: '1px solid #dee2e6', textAlign: 'right' }}>Total</th>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '2rem' }}>
+                <div>
+                  <h3 style={{ borderBottom: '3px solid #7b1fa2', paddingBottom: '0.5rem', color: '#7b1fa2', fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '1rem' }}>Información</h3>
+                  <div style={{ lineHeight: '1.8' }}>
+                    <p><strong>Proveedor:</strong> {orden.proveedor || '-'}</p>
+                    <p><strong>Solicitado por:</strong> {orden.solicitadoPor || '-'}</p>
+                    <p><strong>Condiciones de Pago:</strong> {orden.condicionesPago || '-'}</p>
+                    <p><strong>Fecha de Orden:</strong> {new Date(orden.fechaOrden).toLocaleDateString('es-ES')}</p>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 style={{ borderBottom: '3px solid #7b1fa2', paddingBottom: '0.5rem', color: '#7b1fa2', fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '1rem' }}>Estado</h3>
+                  <div style={{ lineHeight: '1.8' }}>
+                    <p><strong>Estado:</strong> <span style={{ background: '#fd7e14', color: 'white', padding: '4px 12px', borderRadius: '15px', fontSize: '0.9rem', marginLeft: '0.5rem' }}>{orden.estado}</span></p>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '2rem' }}>
+                <h3 style={{ borderBottom: '3px solid #7b1fa2', paddingBottom: '0.5rem', color: '#7b1fa2', fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '1rem' }}>Productos Solicitados</h3>
+                <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '1rem' }}>
+                  <thead>
+                    <tr style={{ background: 'linear-gradient(135deg, #6a1b9a, #9b59b6)', color: 'white' }}>
+                      <th style={{ padding: '12px', textAlign: 'left' }}>Producto</th>
+                      <th style={{ padding: '12px', textAlign: 'center' }}>Cantidad</th>
+                      <th style={{ padding: '12px', textAlign: 'right' }}>Precio Unit.</th>
+                      <th style={{ padding: '12px', textAlign: 'right' }}>Subtotal</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {orden.productos && orden.productos.map((p, i) => (
+                      <tr key={i} style={{ borderBottom: '1px solid #eee', backgroundColor: i % 2 === 0 ? '#fafafa' : 'white' }}>
+                        <td style={{ padding: '12px' }}>{p.producto || p.nombre || 'Producto'}</td>
+                        <td style={{ padding: '12px', textAlign: 'center' }}>{p.cantidad}</td>
+                        <td style={{ padding: '12px', textAlign: 'right' }}>${(p.valorUnitario || p.precioUnitario || 0).toLocaleString()}</td>
+                        <td style={{ padding: '12px', textAlign: 'right' }}>${(p.valorTotal || ((p.cantidad || 0) * (p.valorUnitario || p.precioUnitario || 0) - (p.descuento || 0))).toLocaleString()}</td>
                       </tr>
-                    </thead>
-                    <tbody>
-            {orden.productos.map((producto, index) => (
-              <tr key={producto._id || producto.productoId || producto.producto?.id || index}>
-                          <td style={{ padding: '0.75rem', border: '1px solid #dee2e6' }}><strong>{producto.producto}</strong></td>
-                          <td style={{ padding: '0.75rem', border: '1px solid #dee2e6' }}>{producto.descripcion || 'N/A'}</td>
-                          <td style={{ padding: '0.75rem', border: '1px solid #dee2e6', textAlign: 'center' }}><span className="badge bg-primary">{producto.cantidad}</span></td>
-                          <td style={{ padding: '0.75rem', border: '1px solid #dee2e6', textAlign: 'right' }}>${(producto.valorUnitario || producto.precioUnitario || 0).toLocaleString()}</td>
-                          <td style={{ padding: '0.75rem', border: '1px solid #dee2e6', textAlign: 'right' }}>${(producto.descuento || 0).toLocaleString()}</td>
-                          <td style={{ padding: '0.75rem', border: '1px solid #dee2e6', textAlign: 'right', fontWeight: 'bold' }}>${(producto.valorTotal || ((producto.cantidad || 0) * (producto.valorUnitario || producto.precioUnitario || 0) - (producto.descuento || 0))).toLocaleString()}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <div style={{ textAlign: 'center', padding: '2rem', color: '#7f8c8d', background: '#f8f9fa', borderRadius: '4px', border: '1px dashed #dee2e6' }}>
-                  <i className="fa-solid fa-cart-shopping" style={{ fontSize: '2rem', marginBottom: '1rem', display: 'block' }}></i>
-                  <p>No hay productos en esta orden</p>
-                </div>
-              )}
-            </div>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
 
-            {orden.productos && orden.productos.length > 0 && (
-              <div style={{ marginTop: '1.5rem', padding: '1rem', background: 'linear-gradient(135deg, #f8f9fa, #e9ecef)', borderRadius: '6px', border: '1px solid #dee2e6' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
-                  <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: '0.9rem', color: '#6c757d' }}>Subtotal</div>
-                    <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#2c3e50' }}>${(orden.subtotal || 0).toLocaleString()}</div>
-                  </div>
-                  <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: '0.9rem', color: '#6c757d' }}>Total</div>
-                    <div style={{ fontSize: '1.4rem', fontWeight: 'bold', color: '#e74c3c' }}>${(orden.total || 0).toLocaleString()}</div>
-                  </div>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '2rem' }}>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: '0.9rem', color: '#6c757d' }}>Subtotal</div>
+                  <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#2c3e50' }}>${(orden.subtotal || 0).toLocaleString()}</div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: '0.9rem', color: '#6c757d' }}>Total</div>
+                  <div style={{ fontSize: '1.4rem', fontWeight: 'bold', color: '#e74c3c' }}>${(orden.total || 0).toLocaleString()}</div>
                 </div>
               </div>
-            )}
+            </div>
           </div>
         </div>
 

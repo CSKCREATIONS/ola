@@ -6,637 +6,268 @@ import Fijo from '../components/Fijo';
 import NavCompras from '../components/NavCompras';
 import DetallesOrdenModal from '../components/DetallesOrdenModal';
 
-// CSS inyectado para diseño avanzado
+// Small helper utilities (local fallbacks used by this page)
 const advancedStyles = `
-  .orden-compra-advanced-table {
-    background: white;
-    border-radius: 16px;
-    overflow: hidden;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-    border: 1px solid #e5e7eb;
-  }
-  
-  .orden-compra-header-section {
-    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
-    padding: 20px 25px;
-    border-bottom: 1px solid #e5e7eb;
-  }
-  
-  .orden-compra-table-container {
-    overflow: auto;
-  }
-  
-  .orden-compra-advanced-table table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 14px;
-  }
-  
-  .orden-compra-advanced-table thead tr {
-    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
-    border-bottom: 2px solid #e5e7eb;
-  }
-  
-  .orden-compra-advanced-table thead th {
-    padding: 16px 12px;
-    text-align: left;
-    font-weight: 600;
-    color: #374151;
-    font-size: 13px;
-    letter-spacing: 0.5px;
-  }
-  
-  .orden-compra-advanced-table tbody tr {
-    border-bottom: 1px solid #f3f4f6;
-    transition: all 0.2s ease;
-  }
-  
-  .orden-compra-advanced-table tbody tr:hover {
-    background-color: #f8fafc;
-  }
-  
-  .orden-compra-advanced-table tbody td {
-    padding: 16px 12px;
-    color: #4b5563;
-    font-weight: 500;
-  }
-  
-  .orden-numero-link {
-    color: #6366f1;
-    text-decoration: none;
-    padding: 4px 8px;
-    border-radius: 6px;
-    transition: all 0.2s ease;
-    font-weight: 600;
-    display: inline-block;
-  }
-  
-  .orden-numero-link:hover {
-    background: rgba(99, 102, 241, 0.1);
-    text-decoration: underline;
-  }
-  
-  .orden-estado-pendiente {
-    background: linear-gradient(135deg, #fef3c7, #fde68a);
-    color: #d97706;
-    border: none;
-    border-radius: 8px;
-    padding: 6px 12px;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: 600;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 4px rgba(217, 119, 6, 0.2);
-  }
-  
-  .orden-estado-pendiente:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(217, 119, 6, 0.3);
-  }
-  
-  .orden-estado-completada {
-    background: #dcfce7;
-    color: #16a34a;
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
-    display: inline-block;
-  }
-  
-  .orden-estado-cancelada {
-    background: #fee2e2;
-    color: #dc2626;
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
-    display: inline-block;
-  }
-  
-  .orden-action-btn {
-    background: linear-gradient(135deg, #dbeafe, #bfdbfe);
-    color: #1e40af;
-    border: none;
-    border-radius: 8px;
-    padding: 8px 10px;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: 600;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 4px rgba(30, 64, 175, 0.2);
-    margin-right: 6px;
-  }
-  
-  .orden-action-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(30, 64, 175, 0.3);
-  }
-  
-  .orden-action-btn.delete {
-    background: linear-gradient(135deg, #fee2e2, #fecaca);
-    color: #dc2626;
-    box-shadow: 0 2px 4px rgba(220, 38, 38, 0.2);
-  }
-  
-  .orden-action-btn.delete:hover {
-    box-shadow: 0 4px 8px rgba(220, 38, 38, 0.3);
-  }
-  
-  .orden-empty-state {
-    text-align: center;
-    padding: 80px 20px;
-  }
-  
-  .orden-empty-icon {
-    background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
-    border-radius: 50%;
-    padding: 25px;
-    margin: 0 auto 20px auto;
-    width: 80px;
-    height: 80px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
+  /* minimal advanced styles for orden compra */
+  .orden-compra-advanced-table { box-shadow: 0 6px 20px rgba(0,0,0,0.06); }
 `;
 
-// Inyectar estilos
-if (!document.getElementById('orden-compra-advanced-styles')) {
-  const styleSheet = document.createElement('style');
-  styleSheet.id = 'orden-compra-advanced-styles';
-  styleSheet.textContent = advancedStyles;
-  document.head.appendChild(styleSheet);
-}
+const roundMoney = (n) => {
+  const v = Number(n) || 0;
+  return Math.round((v + Number.EPSILON) * 100) / 100;
+};
 
-// Helper: calcular totales para una lista de productos (para usar fuera del componente)
-function calcularTotalesOrdenProductos(productos = []) {
-  const subtotal = (productos || []).reduce((acc, p) => {
-    const valorProducto = (p.cantidad || 0) * (p.valorUnitario || p.precioUnitario || 0);
-    const descuento = p.descuento || 0;
-    return acc + (valorProducto - descuento);
-  }, 0);
-  const impuestos = subtotal * 0.19;
-  const total = subtotal + impuestos;
-  return { subtotal, impuestos, total };
-}
-
-// Helper: calcular totales genérico (subtotal basado en valorTotal)
-function calcularTotalesProductos(productos = []) {
-  const subtotal = (productos || []).reduce((acc, p) => acc + (p.valorTotal || 0), 0);
-  const impuestos = subtotal * 0.19;
-  const total = subtotal + impuestos;
-  return { subtotal, impuestos, total };
-}
-
-// Deterministic, linear-time email validator to avoid catastrophic backtracking
-function isValidEmail(email) {
-  if (typeof email !== 'string') return false;
-  const trimmed = email.trim();
-  if (trimmed.length === 0 || trimmed.length > 254) return false;
-
-  const at = trimmed.indexOf('@');
-  // must contain exactly one @ and not be first/last
-  if (at <= 0 || trimmed.indexOf('@', at + 1) !== -1) return false;
-
-  const local = trimmed.slice(0, at);
-  const domain = trimmed.slice(at + 1);
-  if (!local || !domain) return false;
-
-  // length limits
-  if (local.length > 64 || domain.length > 253) return false;
-
-  // simple conservative allowed-char patterns
-  const localAllowed = /^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+$/;
-  const labelAllowed = /^[A-Za-z0-9-]+$/;
-
-  // local checks (no leading/trailing dot, no consecutive dots, allowed chars)
-  if (local.startsWith('.') || local.endsWith('.') || local.includes('..')) return false;
-  if (!localAllowed.test(local)) return false;
-
-  // domain checks: no consecutive dots, at least one dot, all labels valid
-  if (domain.includes('..')) return false;
-  const labels = domain.split('.');
-  if (labels.length < 2) return false;
-
-  const allLabelsValid = labels.every(lab => {
-    if (!lab || lab.length > 63) return false;
-    if (lab.startsWith('-') || lab.endsWith('-')) return false;
-    return labelAllowed.test(lab);
+const calcularTotalesProductos = (productos = [], ivaPercent = 0) => {
+  let subtotal = 0;
+  productos.forEach(p => {
+    const qty = Number(p.cantidad) || 0;
+    const unit = Number(p.valorUnitario || p.precio || 0) || 0;
+    const desc = Number(p.descuento || 0) || 0;
+    const line = roundMoney(qty * unit - desc);
+    subtotal += line;
   });
+  subtotal = roundMoney(subtotal);
+  const ivaNum = Number(ivaPercent) || 0;
+  const impuestos = roundMoney(subtotal * (ivaNum / 100));
+  const total = roundMoney(subtotal + impuestos);
+  return { subtotal, impuestos, total };
+};
 
-  return allLabelsValid;
+function isValidEmail(email) {
+  if (!email || typeof email !== 'string') return false;
+  // simple, safe validators used elsewhere in the app
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-// Prefer window.crypto, then module/global, then fallback via Function to avoid relying on globalThis
-function getCrypto() {
-  if (typeof window !== 'undefined' && window.crypto) return window.crypto;
-  if (typeof global !== 'undefined' && global.crypto) return global.crypto;
-  try {
-    const g = new Function('return this')();
-    if (g?.crypto) return g.crypto;
-  } catch (e) {
-    // ignore
-  }
-  return null;
-}
-
-// Secure random string for client-side identifiers using Web Crypto when available
-function secureRandomString(length) {
-  const alphabet = 'abcdefghijklmnopqrstuvwxyz0123456789';
-  // Prefer window.crypto, then module/global, then fallback via Function to avoid relying on globalThis
-  const cryptoObj = getCrypto();
-  if (cryptoObj?.getRandomValues) {
-    const bytes = new Uint8Array(length);
-    cryptoObj.getRandomValues(bytes);
-    let out = '';
-    for (let i = 0; i < bytes.length; i++) {
-      out += alphabet[bytes[i] % alphabet.length];
-    }
-    return out;
-  }
-  // Fallback (not cryptographically secure)
+const secureRandomString = (length = 8) => {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let out = '';
-  for (let i = 0; i < length; i++) {
-    out += alphabet[Math.floor(Math.random() * alphabet.length)];
-  }
+  for (let i = 0; i < length; i++) out += chars.charAt(Math.floor(Math.random() * chars.length));
   return out;
-}
+};
 
-// Helper: fetch órdenes (mueve la lógica fuera del componente)
+// API helpers (lightweight wrappers used by this page)
 async function fetchOrdenesHelper(setOrdenes) {
   try {
     const res = await api.get('/api/ordenes-compra');
-    const data = res.data || res;
-    if (data.success || Array.isArray(data)) {
-      const ordenesOrdenadas = (data.data || data).sort((a, b) =>
-        new Date(b.createdAt || b.fechaCreacion) - new Date(a.createdAt || a.fechaCreacion)
-      );
-      setOrdenes(ordenesOrdenadas);
+    // Normalizar respuesta: el backend envuelve la lista en { success:true, data: [...] }
+    const payload = res.data;
+    if (Array.isArray(payload)) {
+      setOrdenes(payload);
+    } else if (payload && Array.isArray(payload.data)) {
+      setOrdenes(payload.data);
+    } else if (payload && Array.isArray(payload.ordenes)) {
+      setOrdenes(payload.ordenes);
     } else {
-      Swal.fire('Error', data.message || 'No se pudieron cargar las órdenes', 'error');
+      setOrdenes([]);
     }
-  } catch (err) {
-    console.error('Error fetchOrdenes:', err);
-    Swal.fire('Error', 'No se pudo conectar con el servidor', 'error');
+  } catch (e) {
+    console.error('fetchOrdenesHelper error', e);
+    setOrdenes([]);
   }
 }
 
-// Helper: fetch proveedores
 async function fetchProveedoresHelper(setProveedores) {
   try {
-    const res = await api.get('/api/proveedores');
-    const data = res.data || res;
-    if (data.success || data.proveedores || Array.isArray(data)) {
-      setProveedores(data.data || data.proveedores || data);
+    // Prefer activos endpoint which returns { success:true, proveedores: [...] }
+    const res = await api.get('/api/proveedores/activos');
+    const payload = res.data;
+    if (Array.isArray(payload)) {
+      setProveedores(payload);
+    } else if (payload && Array.isArray(payload.proveedores)) {
+      setProveedores(payload.proveedores);
+    } else if (payload && Array.isArray(payload.data)) {
+      setProveedores(payload.data);
     } else {
-      console.error('Formato de respuesta inesperado:', data);
+      setProveedores([]);
     }
-  } catch (error) {
-    console.error('Error al cargar proveedores:', error);
+  } catch (e) {
+    console.error('fetchProveedoresHelper error', e);
+    setProveedores([]);
   }
 }
 
-// Helper: fetch productos por proveedor (mira distintas estructuras de respuesta)
 async function fetchProductosPorProveedorHelper(proveedorId, setProductosProveedor, setCargandoProductos) {
-  if (!proveedorId) {
-    setProductosProveedor([]);
-    return;
-  }
-
   try {
     setCargandoProductos(true);
-    // Cargar TODOS los productos
+    // Backend returns { success:true, data: [...] } for products; product endpoint does not accept proveedorId in controller, so fetch all and filter client-side
     const res = await api.get('/api/products');
-    const data = res.data || res;
-
-    // Obtener el array de productos (diferentes estructuras posibles)
-    let todosProductos = [];
-    if (data.products) {
-      todosProductos = data.products;
-    } else if (data.data) {
-      todosProductos = data.data;
-    } else if (Array.isArray(data)) {
-      todosProductos = data;
+    const payload = res.data;
+    let allProducts = [];
+    if (Array.isArray(payload)) {
+      allProducts = payload;
+    } else if (payload && Array.isArray(payload.data)) {
+      allProducts = payload.data;
+    } else if (payload && Array.isArray(payload.products)) {
+      allProducts = payload.products;
     }
 
-    // Filtrar productos por proveedor
-    const productosFiltrados = todosProductos.filter(producto => {
-      const proveedorProducto = producto.proveedor;
-      if (proveedorProducto && typeof proveedorProducto === 'object' && proveedorProducto._id) {
-        return proveedorProducto._id === proveedorId;
-      } else if (proveedorProducto && typeof proveedorProducto === 'string') {
-        return proveedorProducto === proveedorId;
-      } else if (proveedorProducto && typeof proveedorProducto === 'object' && proveedorProducto.id) {
-        return proveedorProducto.id === proveedorId;
-      } else if (producto.proveedorId) {
-        return producto.proveedorId === proveedorId;
-      }
-      return false;
-    });
-
-    setProductosProveedor(productosFiltrados);
-  } catch (error) {
-    console.error('Error al cargar productos:', error);
-    Swal.fire('Error', 'No se pudieron cargar los productos', 'error');
+    if (proveedorId) {
+      const filtered = allProducts.filter(p => {
+        // p.proveedor may be an object or an id string
+        if (!p) return false;
+        if (typeof p.proveedor === 'string') return String(p.proveedor) === String(proveedorId);
+        if (p.proveedor && (p.proveedor._id || p.proveedor.id)) return String(p.proveedor._id || p.proveedor.id) === String(proveedorId);
+        return false;
+      });
+      setProductosProveedor(filtered);
+    } else {
+      setProductosProveedor(allProducts);
+    }
+  } catch (e) {
+    console.error('fetchProductosPorProveedorHelper error', e);
     setProductosProveedor([]);
   } finally {
     setCargandoProductos(false);
   }
 }
 
-// Helper: buscar producto por id en distintas estructuras
-function findProductoById(id, productos = []) {
-  if (!id) return null;
-  productos = productos || [];
-  return productos.find(p => p._id === id || p.id === id || p.productoId === id);
-}
+const findProductoById = (lista = [], id) => lista.find(p => {
+  const pid = String(id || '');
+  const cand = String(p && (p._id || p.id || p.productoId || ''));
+  return cand === pid;
+});
 
-// Helper: crear objeto de producto a partir de una selección y datos temporales
-function crearProductoFromSelection(productoSeleccionado = {}, productoTemp = {}) {
-  const valorUnitario = productoSeleccionado.price || productoSeleccionado.precio || 0;
-  const cantidad = productoTemp.cantidad || 1;
-  const descuento = productoTemp.descuento || 0;
-  const valorTotal = valorUnitario * cantidad;
+const crearProductoFromSelection = (productoSeleccionado, productoTemp = {}) => {
+  const cantidad = Number(productoTemp.cantidad) || 1;
+  const valorUnitario = roundMoney(productoTemp.valorUnitario || productoSeleccionado.price || productoSeleccionado.precio || 0);
+  const descuento = roundMoney(productoTemp.descuento || 0);
+  const valorTotal = roundMoney(cantidad * valorUnitario - descuento);
   return {
-    producto: productoSeleccionado.name || productoSeleccionado.nombre || '',
-    descripcion: productoSeleccionado.description || productoSeleccionado.descripcion || '',
-    cantidad: cantidad,
-    valorUnitario: valorUnitario,
-    descuento: descuento,
-    valorTotal: valorTotal,
-    productoId: productoSeleccionado._id || productoSeleccionado.id || ''
+    producto: productoSeleccionado.name || productoSeleccionado.nombre || productoTemp.producto || '',
+    descripcion: productoSeleccionado.description || productoSeleccionado.descripcion || productoTemp.descripcion || productoSeleccionado.desc || '',
+    cantidad,
+    valorUnitario,
+    descuento,
+    valorTotal,
+    productoId: productoSeleccionado._id || productoSeleccionado.productoId || ''
   };
-}
+};
 
-// Helper: manejar selección de proveedor para el modal de creación
-async function handleProveedorChangeHelper(eOrId, proveedores, setNuevaOrden, setProductoTemp, fetchProductosPorProveedor, setProductosProveedor) {
-  let proveedorId;
-  if (typeof eOrId === 'string') {
-    proveedorId = eOrId;
-  } else {
-    proveedorId = eOrId?.target?.value || '';
-  }
-  const proveedorSeleccionado = proveedores.find(p => p._id === proveedorId);
-
-  setNuevaOrden(prev => ({
-    ...prev,
-    proveedor: proveedorSeleccionado ? proveedorSeleccionado.nombre : '',
-    proveedorId: proveedorId,
-    productos: []
-  }));
-
+const handleProveedorChangeHelper = async (e, proveedores, setNuevaOrden, setProductoTemp, fetchProductosPorProveedor, setProductosProveedor) => {
+  const id = e.target.value;
+  const proveedor = proveedores.find(p => p._id === id) || {};
+  setNuevaOrden(prev => ({ ...prev, proveedor: proveedor.nombre || '', proveedorId: id }));
   setProductoTemp({ producto: '', descripcion: '', cantidad: 1, valorUnitario: 0, descuento: 0, productoId: '' });
+  if (id) await fetchProductosPorProveedor(id, setProductosProveedor, () => {});
+};
 
-  if (proveedorId) {
-    await fetchProductosPorProveedor(proveedorId);
-  } else {
-    setProductosProveedor([]);
-  }
-}
+const handleProveedorChangeEditarHelper = async (e, proveedores, setOrdenEditando, fetchProductosPorProveedor, setProductosProveedor) => {
+  const id = e.target.value;
+  const proveedor = proveedores.find(p => p._id === id) || {};
+  setOrdenEditando(prev => ({ ...prev, proveedor: proveedor.nombre || '', proveedorId: id }));
+  if (id) await fetchProductosPorProveedor(id, setProductosProveedor, () => {});
+};
 
-// Helper: manejar selección de proveedor para el modal de edición
-async function handleProveedorChangeEditarHelper(eOrId, proveedores, setOrdenEditando, fetchProductosPorProveedor, setProductosProveedor) {
-  let proveedorId;
-  if (typeof eOrId === 'string') {
-    proveedorId = eOrId;
-  } else {
-    proveedorId = eOrId?.target?.value || '';
-  }
-  const proveedorSeleccionado = proveedores.find(p => p._id === proveedorId);
-
-  setOrdenEditando(prev => ({
-    ...prev,
-    proveedor: proveedorSeleccionado ? proveedorSeleccionado.nombre : '',
-    proveedorId: proveedorId
-  }));
-
-  if (proveedorId) {
-    await fetchProductosPorProveedor(proveedorId);
-  } else {
-    setProductosProveedor([]);
-  }
-}
-
-// Helper: manejar cambio de producto en selects (agregar)
-function handleProductoChangeHelper(eOrId, productosProveedor, setProductoTemp) {
-  let productoId;
-  if (typeof eOrId === 'string') {
-    productoId = eOrId;
-  } else {
-    productoId = eOrId?.target?.value || '';
-  }
-  if (!productoId) {
-    setProductoTemp({ producto: '', descripcion: '', cantidad: 1, valorUnitario: 0, descuento: 0, productoId: '' });
-    return;
-  }
-
-  const productoSeleccionado = findProductoById(productoId, productosProveedor);
-  if (productoSeleccionado) {
-    setProductoTemp({
-      producto: productoSeleccionado.name || productoSeleccionado.nombre,
-      descripcion: productoSeleccionado.description || productoSeleccionado.descripcion || '',
-      cantidad: 1,
-      valorUnitario: productoSeleccionado.price || productoSeleccionado.precio || 0,
-      descuento: 0,
-      productoId: productoSeleccionado._id
-    });
-  }
-}
-
-// Helper: manejar cambio de producto en selects (editar)
-function handleProductoChangeEditarHelper(eOrId, productosProveedor, setProductoTemp) {
-  return handleProductoChangeHelper(eOrId, productosProveedor, setProductoTemp);
-}
-
-// Helper: marcar orden como completada (delegado fuera del componente)
-async function marcarComoCompletadaHelper(orden, fetchOrdenesFn) {
-  const confirm = await Swal.fire({
-    title: '¿Confirmar orden de compra?',
-    text: `Esta acción completará la orden ${orden.numeroOrden} y actualizará el stock de los productos.`,
-    icon: 'question',
-    showCancelButton: true,
-    confirmButtonText: 'Sí, completar orden',
-    cancelButtonText: 'Cancelar',
-    confirmButtonColor: '#28a745',
-    cancelButtonColor: '#dc3545'
+const handleProductoChangeHelper = (e, productosProveedor, setProductoTemp) => {
+  const id = e.target.value;
+  const prod = productosProveedor.find(p => {
+    const pid = String(id || '');
+    return String(p && (p._id || p.id || p.productoId || '')) === pid;
+  }) || {};
+  setProductoTemp({
+    producto: prod.name || prod.nombre || '',
+    descripcion: prod.description || prod.descripcion || prod.desc || '',
+    cantidad: 1,
+    valorUnitario: prod.price || prod.precio || 0,
+    descuento: 0,
+    productoId: id
   });
+};
 
-  if (!confirm.isConfirmed) return;
+const handleProductoChangeEditarHelper = (e, productosProveedor, setProductoTemp) => {
+  // same as add-mode helper but used when editing
+  handleProductoChangeHelper(e, productosProveedor, setProductoTemp);
+};
 
+async function marcarComoCompletadaHelper(orden, fetchOrdenes) {
+  if (!orden || !orden._id) return;
   try {
-    const resCompletar = await api.put(`/api/ordenes-compra/${orden._id}/completar`);
-    const dataCompletar = resCompletar.data || resCompletar;
-
-    if (!dataCompletar.success) {
-      throw new Error(dataCompletar.message || 'No se pudo completar la orden');
+    // Use the dedicated completar endpoint so backend runs stock update + creates Compra
+    const res = await api.put(`/api/ordenes-compra/${orden._id}/completar`);
+    const data = res.data || res;
+    if (data && data.success) {
+      await fetchOrdenes();
+      Swal.fire('OK', 'Orden marcada como completada y movida al historial', 'success');
+    } else {
+      console.error('marcarComoCompletadaHelper respuesta inesperada', data);
+      Swal.fire('Error', data.message || 'No se pudo completar la orden', 'error');
     }
-
-    Swal.fire({
-      title: '¡Éxito!',
-      html: `
-        <div>
-          <p><strong>✅ Orden de compra completada correctamente</strong></p>
-          <p><strong>Número:</strong> ${orden.numeroOrden}</p>
-          <p><strong>Stock actualizado para ${orden.productos.length} producto(s)</strong></p>
-          <div style="margin-top: 10px; background: #f8f9fa; padding: 10px; border-radius: 5px;">
-            <strong>Productos recibidos:</strong><br>
-            ${orden.productos.map(p => `• ${p.producto}: ${p.cantidad} unidades`).join('<br>')}
-          </div>
-        </div>
-      `,
-      icon: 'success',
-      confirmButtonText: 'Aceptar'
-    });
-
-    // Actualizar la lista de órdenes
-    if (typeof fetchOrdenesFn === 'function') fetchOrdenesFn();
-  } catch (error) {
-    console.error('Error al completar la orden:', error);
-    Swal.fire({
-      title: 'Error',
-      text: error.message || 'No se pudo completar la orden. Verifica la conexión con el servidor.',
-      icon: 'error',
-      confirmButtonText: 'Aceptar'
-    });
+  } catch (e) {
+    console.error('marcarComoCompletadaHelper error', e);
+    Swal.fire('Error', 'No se pudo marcar como completada', 'error');
   }
 }
-
-// Helper: imprimir orden en nueva ventana
+// Inyectar estilos
+if (!document.getElementById('orden-compra-advanced-styles')) {
+  const styleEl = document.createElement('style');
+  styleEl.id = 'orden-compra-advanced-styles';
+  styleEl.innerText = advancedStyles;
+  document.head.appendChild(styleEl);
+}
+ 
+// Helper: imprimir orden en nueva ventana (limpio y simple)
 function imprimirOrdenHelper(orden) {
   if (!orden) {
-    Swal.fire('Error', 'No hay orden seleccionada', 'error');
+    Swal.fire('Error', 'No hay orden seleccionada para imprimir', 'error');
     return;
   }
 
-  const totales = calcularTotalesOrdenProductos(orden.productos || []);
-  const fechaFormateada = orden.fechaOrden
-    ? new Date(orden.fechaOrden).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })
-    : 'N/A';
+  const productos = orden.productos || [];
+  const totales = calcularTotalesProductos(productos);
 
-  const productosHTML = (orden.productos || []).map((p, index) => {
-    const nombreProducto = p.producto?.name || p.nombre || 'Producto no especificado';
-    const descripcionProducto = p.descripcion || p.producto?.description || 'N/A';
-    const subtotalProducto = (p.cantidad || 0) * (p.valorUnitario || p.precioUnitario || 0);
-    return `
-      <tr>
-        <td style="text-align: center; padding: 12px; border-bottom: 1px solid #e0e0e0;">${index + 1}</td>
-        <td style="padding: 12px; border-bottom: 1px solid #e0e0e0;">
-          <strong>${nombreProducto}</strong><br/>
-          <small style="color: #666;">${descripcionProducto}</small>
-        </td>
-        <td style="text-align: center; padding: 12px; border-bottom: 1px solid #e0e0e0;">${p.cantidad || 0}</td>
-        <td style="text-align: right; padding: 12px; border-bottom: 1px solid #e0e0e0;">$${Number(p.valorUnitario || p.precioUnitario || 0).toLocaleString()}</td>
-        <td style="text-align: right; padding: 12px; border-bottom: 1px solid #e0e0e0; font-weight: 600;">$${Number(subtotalProducto).toLocaleString()}</td>
-      </tr>
-    `;
-  }).join('') || '<tr><td colspan="5" style="text-align: center; padding: 20px;">No hay productos</td></tr>';
+  const productosHTML = productos.map((p, idx) => `
+    <tr>
+      <td style="text-align:center;padding:8px;border-bottom:1px solid #e0e0e0;">${idx + 1}</td>
+      <td style="padding:8px;border-bottom:1px solid #e0e0e0;">${p.producto || ''}</td>
+      <td style="text-align:center;padding:8px;border-bottom:1px solid #e0e0e0;">${p.cantidad}</td>
+      <td style="text-align:right;padding:8px;border-bottom:1px solid #e0e0e0;">$${(p.valorUnitario || 0).toLocaleString()}</td>
+      <td style="text-align:right;padding:8px;border-bottom:1px solid #e0e0e0;">$${(p.valorTotal || 0).toLocaleString()}</td>
+    </tr>
+  `).join('') || '<tr><td colspan="5" style="text-align:center;padding:20px;">No hay productos</td></tr>';
 
-  const win = window.open('', '', 'width=900,height=700');
-  win.document.write(`
-    <!DOCTYPE html>
+  const html = `
+    <!doctype html>
     <html lang="es">
       <head>
-        <meta charset="UTF-8">
+        <meta charset="utf-8" />
         <title>Orden de Compra - ${orden.numeroOrden || 'N/A'}</title>
         <style>
-          * { margin: 0; padding: 0; box-sizing: border-box; }
-          body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            line-height: 1.6; 
-            color: #333; 
-            padding: 30px;
-            background: #ffffff;
-          }
-          .container { max-width: 800px; margin: 0 auto; }
-          .header { 
-            background: linear-gradient(135deg, #f39c12, #e67e22); 
-            color: white; 
-            padding: 30px; 
-            text-align: center; 
-            border-radius: 10px 10px 0 0;
-            margin-bottom: 0;
-          }
-          .header h1 { font-size: 28px; margin-bottom: 10px; font-weight: 700; }
-          .header p { font-size: 16px; opacity: 0.9; }
-          .content { border: 2px solid #f39c12; border-top: none; border-radius: 0 0 10px 10px; padding: 30px; }
-          .info-section { background: #f8f9fa; padding: 20px; margin-bottom: 25px; border-left: 4px solid #f39c12; border-radius: 5px; }
-          .info-section h3 { color: #f39c12; margin-bottom: 15px; font-size: 16px; font-weight: 600; border-bottom: 2px solid #f39c12; padding-bottom: 8px; }
-          .products-section { margin: 30px 0; }
-          .products-title { background: #f39c12; color: white; padding: 15px 20px; margin-bottom: 0; font-size: 18px; font-weight: 600; }
-          .products-table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-          .products-table thead { background: #f39c12; color: white; }
-          .products-table thead th { padding: 12px; text-align: left; font-weight: 600; font-size: 14px; }
-          .products-table tbody tr:nth-child(even) { background: #f8f9fa; }
-          .products-table tbody td { padding: 12px; font-size: 14px; border-bottom: 1px solid #e0e0e0; }
-          .total-section { background: #f8f9fa; padding: 25px; border-radius: 8px; margin-top: 30px; border: 2px solid #f39c12; }
-          .total-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #dee2e6; font-size: 15px; }
-          .total-row.final { border-bottom: none; font-size: 20px; font-weight: bold; color: #f39c12; margin-top: 15px; padding-top: 15px; border-top: 3px solid #f39c12; }
-          .footer { text-align: center; padding: 20px; color: #6c757d; font-size: 12px; margin-top: 30px; border-top: 2px solid #dee2e6; }
-          @media print { body { padding: 0; } .container { max-width: 100%; } }
+          body { font-family: Arial, sans-serif; color: #222; padding: 24px; }
+          .header { text-align:center; background: linear-gradient(135deg,#6a1b9a,#9b59b6); color: #fff; padding: 18px; border-radius: 8px; }
+          .section { margin-top: 18px; }
+          table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+          th, td { padding: 8px; }
+          th { background: #f3f4f6; text-align: left; }
+          .totales { margin-top: 18px; display:flex; justify-content:flex-end; gap: 16px; }
         </style>
       </head>
       <body>
-        <div class="container">
-          <div class="header">
-            <h1>ORDEN DE COMPRA</h1>
-            <p>N° ${orden.numeroOrden || 'N/A'}</p>
-          </div>
-
-          <div class="content">
-            <div class="info-section">
-              <h3>📋 Información General</h3>
-              <p><strong>Número de Orden:</strong> ${orden.numeroOrden || 'N/A'}</p>
-              <p><strong>Fecha:</strong> ${fechaFormateada}</p>
-              <p><strong>Estado:</strong> ${orden.estado || 'Pendiente'}</p>
-              <p><strong>Solicitado Por:</strong> ${orden.solicitadoPor || 'No especificado'}</p>
-            </div>
-
-            <div class="info-section">
-              <h3>🏢 Información del Proveedor</h3>
-              <p><strong>Nombre:</strong> ${orden.proveedor || 'No especificado'}</p>
-              <p><strong>Condiciones de Pago:</strong> ${orden.condicionesPago || 'Contado'}</p>
-            </div>
-
-            <div class="products-section">
-              <h2 class="products-title">📦 Detalle de Productos</h2>
-              <table class="products-table">
-                <thead>
-                  <tr>
-                    <th style="width: 50px; text-align: center;">#</th>
-                    <th>Producto</th>
-                    <th style="width: 100px; text-align: center;">Cantidad</th>
-                    <th style="width: 130px; text-align: right;">Precio Unit.</th>
-                    <th style="width: 130px; text-align: right;">Subtotal</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${productosHTML}
-                </tbody>
-              </table>
-            </div>
-
-            <div class="total-section">
-              <div class="total-row">
-                <span><strong>Subtotal:</strong></span>
-                <span>$${totales.subtotal.toLocaleString()}</span>
-              </div>
-              <div class="total-row final">
-                <span>TOTAL:</span>
-                <span>$${totales.total.toLocaleString()}</span>
-              </div>
-            </div>
-
-            <div class="footer">
-              <p><strong>JLA Global Company</strong></p>
-              <p>Documento generado el ${new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-              <p>© ${new Date().getFullYear()} JLA Global Company. Todos los derechos reservados.</p>
-            </div>
-          </div>
+        <div class="header"><h2>ORDEN DE COMPRA</h2><div>N° ${orden.numeroOrden || '—'}</div></div>
+        <div class="section">
+          <strong>Proveedor:</strong> ${orden.proveedor || '-'}<br />
+          <strong>Solicitado por:</strong> ${orden.solicitadoPor || '-'}<br />
+          <strong>Fecha:</strong> ${new Date(orden.fechaOrden || Date.now()).toLocaleDateString('es-ES')}
+        </div>
+        <div class="section">
+          <table>
+            <thead>
+              <tr><th style="width:40px;">#</th><th>Producto</th><th style="width:100px;text-align:center;">Cantidad</th><th style="width:140px;text-align:right;">Precio Unit.</th><th style="width:140px;text-align:right;">Subtotal</th></tr>
+            </thead>
+            <tbody>
+              ${productosHTML}
+            </tbody>
+          </table>
+        </div>
+        <div class="totales">
+          <div><div>Subtotal: $${totales.subtotal.toLocaleString()}</div><div style="font-weight:700;margin-top:6px;">Total: $${totales.total.toLocaleString()}</div></div>
         </div>
       </body>
     </html>
-  `);
+  `;
+
+  const win = window.open('', '_blank', 'width=900,height=700');
+  win.document.write(html);
   win.document.close();
   win.focus();
   win.print();
@@ -645,7 +276,7 @@ function imprimirOrdenHelper(orden) {
 
 // Helper: enviar orden por correo (separado para reducir complejidad del componente)
 async function enviarOrdenPorCorreoHelper(orden) {
-  if (!orden?._id) {
+  if (!orden || !orden._id) {
     Swal.fire('Error', 'No hay orden seleccionada', 'error');
     return;
   }
@@ -673,21 +304,18 @@ async function enviarOrdenPorCorreoHelper(orden) {
       const email = document.getElementById('emailDestino').value;
       const asunto = document.getElementById('asuntoEmail').value;
       const mensaje = document.getElementById('mensajeEmail').value;
-      // Return a consistent object shape so callers can check `valid` instead of relying on truthiness
-      if (!email) { Swal.showValidationMessage('Por favor ingresa un correo electrónico'); return { valid: false }; }
+      if (!email) { Swal.showValidationMessage('Por favor ingresa un correo electrónico'); return false; }
       // Use deterministic validator to avoid any regex backtracking issues
-      if (!isValidEmail(email)) { Swal.showValidationMessage('Por favor ingresa un correo electrónico válido'); return { valid: false }; }
-      if (!asunto || asunto.trim() === '') { Swal.showValidationMessage('Por favor ingresa un asunto'); return { valid: false }; }
-      return { valid: true, email, asunto, mensaje };
+      if (!isValidEmail(email)) { Swal.showValidationMessage('Por favor ingresa un correo electrónico válido'); return false; }
+      if (!asunto || asunto.trim() === '') { Swal.showValidationMessage('Por favor ingresa un asunto'); return false; }
+      return { email, asunto, mensaje };
     }
   });
 
-  // `formValues` is always an object; check `.valid` to determine success
-  if (formValues?.valid) {
+  if (formValues) {
     try {
-      const { email, asunto, mensaje } = formValues;
       Swal.fire({ title: 'Enviando...', text: 'Por favor espera', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
-      await api.post(`/api/ordenes-compra/${orden._id}/enviar-email`, { destinatario: email, asunto: asunto, mensaje: mensaje || 'Orden de compra adjunta' });
+      await api.post(`/api/ordenes-compra/${orden._id}/enviar-email`, { destinatario: formValues.email, asunto: formValues.asunto, mensaje: formValues.mensaje || 'Orden de compra adjunta' });
       Swal.fire({ icon: 'success', title: '¡Enviado!', text: 'La orden de compra ha sido enviada por correo electrónico', confirmButtonColor: '#f39c12' });
     } catch (error) {
       console.error('Error al enviar correo:', error);
@@ -713,19 +341,23 @@ export default function OrdenCompra() {
     estado: 'Pendiente',
     solicitadoPor: '',
     proveedor: '',
-    proveedorId: ''
+    proveedorId: '',
+    iva: 0
   });
   const [modalConfirmacionVisible, setModalConfirmacionVisible] = useState(false);
   const [ordenAConfirmar, setOrdenAConfirmar] = useState(null);
 
   const [ordenEditando, setOrdenEditando] = useState({
     _id: '',
+    numeroOrden: '',
     productos: [],
     condicionesPago: "Contado",
     estado: 'Pendiente',
     solicitadoPor: '',
     proveedor: '',
-    proveedorId: ''
+    proveedorId: '',
+    fechaOrden: new Date(),
+    iva: 0
   });
 
   const [productoTemp, setProductoTemp] = useState({
@@ -808,7 +440,7 @@ export default function OrdenCompra() {
       Swal.fire('Error', 'Por favor selecciona un producto de la lista', 'error');
       return;
     }
-  const productoSeleccionado = findProductoById(productoTemp.productoId, productosProveedor);
+    const productoSeleccionado = findProductoById(productosProveedor, productoTemp.productoId);
     if (!productoSeleccionado) {
       Swal.fire('Error', 'Producto no encontrado', 'error');
       return;
@@ -838,7 +470,7 @@ export default function OrdenCompra() {
       Swal.fire('Error', 'Por favor selecciona un producto de la lista', 'error');
       return;
     }
-  const productoSeleccionado = findProductoById(productoTemp.productoId, productosProveedor);
+    const productoSeleccionado = findProductoById(productosProveedor, productoTemp.productoId);
     if (!productoSeleccionado) {
       Swal.fire('Error', 'Producto no encontrado', 'error');
       return;
@@ -901,26 +533,56 @@ export default function OrdenCompra() {
   };
 
   const abrirModalEditar = async (orden) => {
-    const proveedorEncontrado = proveedores.find(p => p.nombre === orden.proveedor);
+    // Buscar proveedor por varias posibilidades
+    const proveedorEncontrado = proveedores.find(p =>
+      p._id === orden.proveedorId ||
+      p._id === orden.proveedor ||
+      p.nombre === orden.proveedor
+    );
 
+    const proveedorId = proveedorEncontrado ? proveedorEncontrado._id : (orden.proveedorId || '');
+
+    // CORRECCIÓN: Inicializar ordenEditando con TODOS los datos de la orden
     setOrdenEditando({
       _id: orden._id,
       numeroOrden: orden.numeroOrden,
-      productos: orden.productos ? [...orden.productos] : [],
+      productos: orden.productos ? orden.productos.map(p => ({
+        producto: p.producto || p.nombre || '',
+        descripcion: p.descripcion || '',
+        cantidad: Number(p.cantidad) || 1,
+        valorUnitario: roundMoney(p.valorUnitario || p.precioUnitario || 0),
+        descuento: roundMoney(p.descuento || 0),
+        valorTotal: roundMoney(p.valorTotal || ((Number(p.cantidad) || 1) * (p.valorUnitario || p.precioUnitario || 0) - (p.descuento || 0))),
+        productoId: p.productoId || p._id || ''
+      })) : [],
       condicionesPago: orden.condicionesPago || "Contado",
       estado: orden.estado || 'Pendiente',
-      solicitadoPor: orden.solicitadoPor || '',
+      solicitadoPor: orden.solicitadoPor || usuarioActual,
       proveedor: orden.proveedor || '',
-      proveedorId: proveedorEncontrado ? proveedorEncontrado._id : ''
+      proveedorId: proveedorId,
+      fechaOrden: orden.fechaOrden || new Date()
     });
 
-    if (proveedorEncontrado) {
-      await fetchProductosPorProveedor(proveedorEncontrado._id);
+    // Resetear producto temporal
+    setProductoTemp({
+      producto: '',
+      descripcion: '',
+      cantidad: 1,
+      valorUnitario: 0,
+      descuento: 0,
+      productoId: ''
+    });
+    setErrores({});
+
+    // Cargar productos del proveedor si tenemos un id
+    if (proveedorId) {
+      await fetchProductosPorProveedor(proveedorId);
+    } else {
+      setProductosProveedor([]);
     }
 
     setModalEditarVisible(true);
   };
-
   const eliminarOrden = async (id) => {
     const confirm = await Swal.fire({
       title: '¿Estás seguro?',
@@ -972,7 +634,7 @@ export default function OrdenCompra() {
   };
 
   // Función para verificar stock antes de completar
-// verificarStockDisponible eliminado por no utilizarse
+  // verificarStockDisponible eliminado por no utilizarse
 
   // Delegador: marcar orden como completada
   const marcarComoCompletada = async (orden) => {
@@ -983,7 +645,7 @@ export default function OrdenCompra() {
     setModalAgregarVisible(true);
     setNuevaOrden({
       productos: [],
-      condicionesPago: "Contado",
+      condicionesPago: "",
       estado: 'Pendiente',
       solicitadoPor: usuarioActual,
       proveedor: '',
@@ -1001,7 +663,11 @@ export default function OrdenCompra() {
     setErrores({});
   };
 
-  // Removed unused local helper `calcularValorTotalProducto` - totals are computed via top-level helpers
+  const calcularValorTotalProducto = (p) => {
+    const subtotal = p.cantidad * p.valorUnitario;
+    const descuento = p.descuento || 0;
+    return subtotal - descuento;
+  };
 
   // agregarProducto eliminado por no utilizarse (se usa agregarProductoDesdeLista/agregarProductoEdicion)
 
@@ -1014,10 +680,108 @@ export default function OrdenCompra() {
   // Funciones para editar productos
   const editarProducto = (index) => {
     const producto = ordenEditando.productos[index];
+
+    // Intentar mapear a producto del proveedor si ya están cargados
+    let productoId = producto.productoId || '';
+    let nombre = producto.producto || '';
+    let descripcion = producto.descripcion || '';
+    let valorUnitario = producto.valorUnitario || producto.valor || 0;
+    let cantidad = producto.cantidad || 1;
+    let descuento = producto.descuento || 0;
+
+    if (productoId && productosProveedor && productosProveedor.length > 0) {
+      const encontrado = productosProveedor.find(p => p._id === productoId);
+      if (encontrado) {
+        nombre = encontrado.name || encontrado.nombre || nombre;
+        descripcion = encontrado.description || encontrado.descripcion || descripcion;
+        valorUnitario = encontrado.price || encontrado.precio || valorUnitario;
+      }
+    } else if (productosProveedor && productosProveedor.length > 0) {
+      // intentar buscar por nombre
+      const porNombre = productosProveedor.find(p => (p.name || p.nombre) === (producto.producto || ''));
+      if (porNombre) {
+        productoId = porNombre._id;
+        nombre = porNombre.name || porNombre.nombre;
+        descripcion = porNombre.description || porNombre.descripcion || descripcion;
+        valorUnitario = porNombre.price || porNombre.precio || valorUnitario;
+      }
+    }
+
     setProductoEditando({
-      ...producto,
+      producto: nombre,
+      descripcion: descripcion,
+      cantidad: cantidad,
+      valorUnitario: valorUnitario,
+      descuento: descuento,
       index: index,
-      productoId: producto.productoId 
+      productoId: productoId || ''
+    });
+  };
+
+  // Cuando se cambia el select dentro del editor inline
+  const handleProductoEditSelectChange = (e) => {
+    const id = e.target.value;
+    if (!id) {
+      setProductoEditando({ ...productoEditando, productoId: '', producto: '', descripcion: '', valorUnitario: 0 });
+      return;
+    }
+    const prod = productosProveedor.find(p => p._id === id);
+    if (prod) {
+      setProductoEditando({
+        ...productoEditando,
+        productoId: id,
+        producto: prod.name || prod.nombre || productoEditando.producto,
+        descripcion: prod.description || prod.descripcion || productoEditando.descripcion || '',
+        valorUnitario: prod.price || prod.precio || productoEditando.valorUnitario || 0
+      });
+    } else {
+      // Fallback: set id only
+      setProductoEditando({ ...productoEditando, productoId: id });
+    }
+  };
+
+  // Guardar los cambios hechos a un producto en edición
+  const guardarProductoEditado = () => {
+    if (productoEditando.index === null || productoEditando.index === undefined) return;
+
+    const idx = productoEditando.index;
+    const nuevos = [...ordenEditando.productos];
+
+    const updated = {
+      producto: productoEditando.producto || nuevos[idx].producto,
+      descripcion: productoEditando.descripcion || nuevos[idx].descripcion || '',
+        cantidad: Number(productoEditando.cantidad) || 1,
+        valorUnitario: roundMoney(productoEditando.valorUnitario || nuevos[idx].valorUnitario || 0),
+        descuento: roundMoney(productoEditando.descuento || nuevos[idx].descuento || 0),
+        valorTotal: roundMoney((Number(productoEditando.cantidad) || 1) * (roundMoney(productoEditando.valorUnitario || nuevos[idx].valorUnitario || 0)) - (roundMoney(productoEditando.descuento || nuevos[idx].descuento || 0))),
+      productoId: productoEditando.productoId || nuevos[idx].productoId
+    };
+
+    nuevos[idx] = updated;
+    setOrdenEditando({ ...ordenEditando, productos: nuevos });
+
+    setProductoEditando({
+      producto: '',
+      descripcion: '',
+      cantidad: 1,
+      valorUnitario: 0,
+      descuento: 0,
+      index: null,
+      productoId: ''
+    });
+
+    Swal.fire({ icon: 'success', title: 'Producto actualizado', timer: 1200, showConfirmButton: false });
+  };
+
+  const cancelarEdicionProducto = () => {
+    setProductoEditando({
+      producto: '',
+      descripcion: '',
+      cantidad: 1,
+      valorUnitario: 0,
+      descuento: 0,
+      index: null,
+      productoId: ''
     });
   };
 
@@ -1062,7 +826,7 @@ export default function OrdenCompra() {
       return;
     }
 
-  const { subtotal, impuestos, total } = calcularTotalesProductos(nuevaOrden.productos);
+    const { subtotal, impuestos, total } = calcularTotalesProductos(nuevaOrden.productos, nuevaOrden.iva || 0);
 
     const ordenCompleta = {
       numeroOrden: `OC-${Date.now()}-${secureRandomString(9)}`,
@@ -1070,6 +834,7 @@ export default function OrdenCompra() {
       productos: nuevaOrden.productos,
       subtotal: subtotal,
       impuestos: impuestos,
+      iva: nuevaOrden.iva || 0,
       total: total,
       condicionesPago: nuevaOrden.condicionesPago,
       estado: nuevaOrden.estado,
@@ -1105,47 +870,81 @@ export default function OrdenCompra() {
   };
 
   const actualizarOrden = async () => {
-    if (!validarOrdenEdicion(ordenEditando)) {
-      Swal.fire('Error', 'Por favor complete todos los campos requeridos', 'error');
-      return;
-    }
-
-    if (!ordenEditando.solicitadoPor) {
-      Swal.fire('Error', 'Debes ingresar quién solicita la orden.', 'error');
-      return;
-    }
-
-    if (!ordenEditando.proveedor) {
+    // Validación básica
+    if (!ordenEditando.proveedor || ordenEditando.proveedor.trim() === '') {
       Swal.fire('Error', 'Debes seleccionar un proveedor.', 'error');
       return;
     }
 
-  const { subtotal, impuestos, total } = calcularTotalesProductos(ordenEditando.productos);
+    if (!ordenEditando.solicitadoPor || ordenEditando.solicitadoPor.trim() === '') {
+      Swal.fire('Error', 'Debes ingresar quién solicita la orden.', 'error');
+      return;
+    }
 
-    const ordenActualizada = {
-      proveedor: ordenEditando.proveedor,
-      productos: ordenEditando.productos,
-      subtotal: subtotal,
-      impuestos: impuestos,
-      total: total,
-      condicionesPago: ordenEditando.condicionesPago,
-      estado: ordenEditando.estado,
-      solicitadoPor: ordenEditando.solicitadoPor
-    };
+    if (ordenEditando.productos.length === 0) {
+      Swal.fire('Error', 'Debes agregar al menos un producto.', 'error');
+      return;
+    }
 
     try {
       setCargando(true);
+
+      // Calcular totales CORRECTAMENTE (incluyendo IVA si está configurado)
+      const { subtotal, impuestos, total } = calcularTotalesProductos(ordenEditando.productos, ordenEditando.iva || 0);
+
+      // Preparar datos para enviar - estructura CORRECTA
+      const ordenActualizada = {
+        proveedor: ordenEditando.proveedor,
+        proveedorId: ordenEditando.proveedorId,
+        productos: ordenEditando.productos.map(p => {
+          // Asegurar que 'producto' sea string (evitar Cast to String failed si viene como objeto)
+          const productoStr = (typeof p.producto === 'string')
+            ? p.producto
+            : (p.producto && (p.producto.name || p.producto.nombre || p.producto._id)) || '';
+
+          const cantidad = Number(p.cantidad) || 1;
+          const valorUnitario = roundMoney(p.valorUnitario || 0);
+          const descuento = roundMoney(p.descuento || 0);
+          const valorTotal = roundMoney(p.valorTotal || (cantidad * valorUnitario - descuento));
+
+          return {
+            producto: productoStr,
+            descripcion: p.descripcion,
+            cantidad: cantidad,
+            valorUnitario: valorUnitario,
+            descuento: descuento,
+            valorTotal: valorTotal,
+            productoId: p.productoId
+          };
+        }),
+        subtotal: roundMoney(subtotal),
+        impuestos: roundMoney(impuestos),
+        iva: ordenEditando.iva || 0,
+        total: roundMoney(total),
+        condicionesPago: ordenEditando.condicionesPago,
+        estado: ordenEditando.estado,
+        solicitadoPor: ordenEditando.solicitadoPor,
+        fechaOrden: ordenEditando.fechaOrden
+      };
+
+      console.log('Enviando datos de actualización:', ordenActualizada); // Para debug
+
       const res = await api.put(`/api/ordenes-compra/${ordenEditando._id}`, ordenActualizada);
       const data = res.data || res;
+
       if (data.success) {
         Swal.fire('¡Éxito!', 'Orden de compra actualizada correctamente', 'success');
         cerrarModalEditar();
-        fetchOrdenes();
+        fetchOrdenes(); // Recargar la lista
       } else {
         Swal.fire('Error', data.message || 'No se pudo actualizar la orden', 'error');
       }
     } catch (error) {
-      Swal.fire('Error', 'No se pudo conectar con el servidor', 'error');
+      console.error('Error al actualizar orden:', error);
+      const status = error.response?.status;
+      const serverMsg = error.response?.data?.message || error.message;
+      console.error('Detalle error actualización:', { status, serverMsg, body: error.response?.data });
+      Swal.fire('Error', serverMsg || 'No se pudo conectar con el servidor', 'error');
     } finally {
       setCargando(false);
     }
@@ -1159,7 +958,8 @@ export default function OrdenCompra() {
       estado: 'Pendiente',
       solicitadoPor: '',
       proveedor: '',
-      proveedorId: ''
+      proveedorId: '',
+      iva: 0
     });
     setProductoTemp({ producto: '', descripcion: '', cantidad: 1, valorUnitario: 0, descuento: 0, productoId: '' });
     setProductosProveedor([]);
@@ -1175,7 +975,8 @@ export default function OrdenCompra() {
       estado: 'Pendiente',
       solicitadoPor: '',
       proveedor: '',
-      proveedorId: ''
+      proveedorId: '',
+      iva: 0
     });
     setProductoEditando({
       producto: '',
@@ -1308,7 +1109,7 @@ export default function OrdenCompra() {
                   </div>
                 </div>
                 <div>
-                  <button 
+                  <button
                     onClick={abrirModalAgregar}
                     style={{
                       background: 'linear-gradient(135deg, #10b981, #059669)',
@@ -1334,7 +1135,8 @@ export default function OrdenCompra() {
                       e.target.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.4)';
                     }}
                   >
-                    <i className="fa-solid fa-plus"></i><span>Agregar Orden de Compra</span>
+                    <i className="fa-solid fa-plus"></i>
+                    Agregar Orden de Compra
                   </button>
                 </div>
               </div>
@@ -1502,7 +1304,7 @@ export default function OrdenCompra() {
                 </div>
               </div>
             </div>
-            
+
             <div style={{ overflow: 'auto' }}>
               <table style={{
                 width: '100%',
@@ -1510,115 +1312,107 @@ export default function OrdenCompra() {
                 fontSize: '14px'
               }}>
                 <thead>
-                  <tr style={{ 
+                  <tr style={{
                     background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)',
                     borderBottom: '2px solid #e5e7eb'
                   }}>
-                    <th style={{ 
-                      padding: '16px 12px', 
-                      textAlign: 'left', 
-                      fontWeight: '600', 
+                    <th style={{
+                      padding: '16px 12px',
+                      textAlign: 'left',
+                      fontWeight: '600',
+                      color: 'white',
+                      fontSize: '13px',
+                      letterSpacing: '0.5px'
+                    }}>#</th>
+                    <th style={{
+                      padding: '16px 12px',
+                      textAlign: 'left',
+                      fontWeight: '600',
+                      color: 'white',
+                      fontSize: '13px',
+                      letterSpacing: '0.5px'
+                    }}>IDENTIFICADOR</th>
+                    <th style={{
+                      padding: '16px 12px',
+                      textAlign: 'left',
+                      fontWeight: '600',
+                      color: 'white',
+                      fontSize: '13px',
+                      letterSpacing: '0.5px'
+                    }}>PROVEEDOR</th>
+                    <th style={{
+                      padding: '16px 12px',
+                      textAlign: 'left',
+                      fontWeight: '600',
+                      color: 'white',
+                      fontSize: '13px',
+                      letterSpacing: '0.5px'
+                    }}>TOTAL</th>
+                    <th style={{
+                      padding: '16px 12px',
+                      textAlign: 'left',
+                      fontWeight: '600',
+                      color: 'white',
+                      fontSize: '13px',
+                      letterSpacing: '0.5px'
+                    }}>FECHA</th>
+                    <th style={{
+                      padding: '16px 12px',
+                      textAlign: 'left',
+                      fontWeight: '600',
                       color: '#374151',
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-hashtag icon-gap" style={{ color: '#6366f1' }}></i><span>#</span>
+                      
+                      SOLICITADO POR
                     </th>
-                    <th style={{ 
-                      padding: '16px 12px', 
-                      textAlign: 'left', 
-                      fontWeight: '600', 
-                      color: '#374151',
+                    <th style={{
+                      padding: '16px 12px',
+                      textAlign: 'center',
+                      fontWeight: '600',
+                      color: 'white',
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-file-invoice icon-gap" style={{ color: '#6366f1' }}></i><span>NÚMERO ORDEN</span>
+                      ESTADO
                     </th>
-                    <th style={{ 
-                      padding: '16px 12px', 
-                      textAlign: 'left', 
-                      fontWeight: '600', 
-                      color: '#374151',
+                    <th style={{
+                      padding: '16px 12px',
+                      textAlign: 'center',
+                      fontWeight: '600',
+                      color: 'white',
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-truck icon-gap" style={{ color: '#6366f1' }}></i><span>PROVEEDOR</span>
+                      ENVIADO
                     </th>
-                    <th style={{ 
-                      padding: '16px 12px', 
-                      textAlign: 'left', 
-                      fontWeight: '600', 
-                      color: '#374151',
+                    <th style={{
+                      padding: '16px 12px',
+                      textAlign: 'center',
+                      fontWeight: '600',
+                      color: 'white',
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-dollar-sign icon-gap" style={{ color: '#6366f1' }}></i><span>TOTAL</span>
-                    </th>
-                    <th style={{ 
-                      padding: '16px 12px', 
-                      textAlign: 'left', 
-                      fontWeight: '600', 
-                      color: '#374151',
-                      fontSize: '13px',
-                      letterSpacing: '0.5px'
-                    }}>
-                      <i className="fa-solid fa-calendar icon-gap" style={{ color: '#6366f1' }}></i><span>FECHA</span>
-                    </th>
-                    <th style={{ 
-                      padding: '16px 12px', 
-                      textAlign: 'left', 
-                      fontWeight: '600', 
-                      color: '#374151',
-                      fontSize: '13px',
-                      letterSpacing: '0.5px'
-                    }}>
-                      <i className="fa-solid fa-user icon-gap" style={{ color: '#6366f1' }}></i><span>SOLICITADO POR</span>
-                    </th>
-                    <th style={{ 
-                      padding: '16px 12px', 
-                      textAlign: 'center', 
-                      fontWeight: '600', 
-                      color: '#374151',
-                      fontSize: '13px',
-                      letterSpacing: '0.5px'
-                    }}>
-                      <i className="fa-solid fa-flag icon-gap" style={{ color: '#6366f1' }}></i><span>ESTADO</span>
-                    </th>
-                    <th style={{ 
-                      padding: '16px 12px', 
-                      textAlign: 'center', 
-                      fontWeight: '600', 
-                      color: '#374151',
-                      fontSize: '13px',
-                      letterSpacing: '0.5px'
-                    }}>
-                      <i className="fa-solid fa-paper-plane icon-gap" style={{ color: '#6366f1' }}></i><span>ENVIADO</span>
-                    </th>
-                    <th style={{ 
-                      padding: '16px 12px', 
-                      textAlign: 'center', 
-                      fontWeight: '600', 
-                      color: '#374151',
-                      fontSize: '13px',
-                      letterSpacing: '0.5px'
-                    }}>
-                      <i className="fa-solid fa-cogs icon-gap" style={{ color: '#6366f1' }}></i><span>ACCIONES</span>
+                      
+                      ACCIONES
                     </th>
                   </tr>
                 </thead>
                 <tbody>
                   {currentOrdenes.map((orden, index) => (
-                    <tr key={orden._id} 
-                        style={{
-                          borderBottom: '1px solid #f3f4f6',
-                          transition: 'all 0.2s ease'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = '#f8fafc';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = 'transparent';
-                        }}
+                    <tr key={orden._id}
+                      style={{
+                        borderBottom: '1px solid #f3f4f6',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#f8fafc';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                      }}
                     >
                       <td style={{ padding: '16px 12px', fontWeight: '600', color: '#6366f1' }}>
                         {indexOfFirstItem + index + 1}
@@ -1771,7 +1565,7 @@ export default function OrdenCompra() {
                             <i className="fa-solid fa-pen-to-square"></i>
                           </button>
                           {!orden.enviado && (
-                            <button 
+                            <button
                               onClick={() => eliminarOrden(orden._id)}
                               title="Eliminar orden"
                               style={{
@@ -1802,39 +1596,26 @@ export default function OrdenCompra() {
                       </td>
                     </tr>
                   ))}
-                  
+
                   {ordenesPendientes.length === 0 && (
                     <tr>
-                      <td colSpan="8" style={{ textAlign: 'center', padding: '80px 20px' }}>
-                        <div style={{
-                          display: 'flex',
-                          flexDirection: 'column',
-                          alignItems: 'center',
-                          gap: '20px'
-                        }}>
-                          <div style={{
-                            background: 'linear-gradient(135deg, #f3f4f6, #e5e7eb)',
-                            borderRadius: '50%',
-                            padding: '25px',
-                            marginBottom: '10px'
-                          }}>
-                            <i className="fa-solid fa-file-invoice-dollar" style={{ 
-                              fontSize: '3.5rem', 
-                              color: '#9ca3af'
-                            }}></i>
+                      <td colSpan="9" style={{ textAlign: 'center', padding: '80px 20px' }}>
+                        <div style={{ display: 'flex', gap: '20px', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
+                          <div style={{ fontSize: '3.5rem', color: '#9ca3af' }}>
+                            <i className="fa-solid fa-file-invoice-dollar"></i>
                           </div>
                           <div style={{ textAlign: 'center' }}>
-                            <h5 style={{ 
-                              color: '#6b7280', 
+                            <h5 style={{
+                              color: '#6b7280',
                               margin: '0 0 12px 0',
                               fontSize: '1.2rem',
                               fontWeight: '600'
                             }}>
                               No hay órdenes pendientes
                             </h5>
-                            <p style={{ 
-                              color: '#9ca3af', 
-                              margin: 0, 
+                            <p style={{
+                              color: '#9ca3af',
+                              margin: 0,
                               fontSize: '14px',
                               lineHeight: '1.5'
                             }}>
@@ -1851,17 +1632,11 @@ export default function OrdenCompra() {
 
             {/* Paginación */}
             {totalPages > 1 && (
-              <div style={{
-                padding: '20px 25px',
-                borderTop: '1px solid #e5e7eb',
-                display: 'flex',
-                justifyContent: 'center',
-                gap: '8px'
-              }}>
-                {Array.from({ length: totalPages }, (_, i) => (
+              <div style={{ padding: '12px 20px', display: 'flex', justifyContent: 'flex-end', gap: '8px', alignItems: 'center' }}>
+                {Array.from({ length: totalPages }).map((_, i) => (
                   <button
-                    key={i + 1}
-                    onClick={() => paginate(i + 1)}
+                    key={i}
+                    onClick={() => setCurrentPage(i + 1)}
                     style={{
                       padding: '8px 16px',
                       border: currentPage === i + 1 ? '2px solid #6366f1' : '2px solid #e5e7eb',
@@ -1875,14 +1650,14 @@ export default function OrdenCompra() {
                     }}
                     onMouseEnter={(e) => {
                       if (currentPage !== i + 1) {
-                        e.target.style.borderColor = '#6366f1';
-                        e.target.style.color = '#6366f1';
+                        e.currentTarget.style.borderColor = '#6366f1';
+                        e.currentTarget.style.color = '#6366f1';
                       }
                     }}
                     onMouseLeave={(e) => {
                       if (currentPage !== i + 1) {
-                        e.target.style.borderColor = '#e5e7eb';
-                        e.target.style.color = '#4b5563';
+                        e.currentTarget.style.borderColor = '#e5e7eb';
+                        e.currentTarget.style.color = '#4b5563';
                       }
                     }}
                   >
@@ -1893,316 +1668,160 @@ export default function OrdenCompra() {
             )}
           </div>
 
-          {/* Modal para agregar nueva orden */}
+          {/* Modal para agregar nueva orden (estilo Proveedores - morado) */}
           {modalAgregarVisible && (
             <div className="modal-overlay">
-              <div className="modal-realista modal-lg" style={{ maxWidth: '900px' }}>
-                <div className="modal-header-realista">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                    <h5>
-                      <i className="fa-solid fa-file-invoice-dollar icon-gap"></i><span>Nueva Orden de Compra</span>
-                    </h5>
-                    <button className="modal-close-realista" onClick={cerrarModalAgregar}>&times;</button>
+              <div className="modal-realista modal-lg" style={{ maxWidth: '1100px' }}>
+                <div style={{ background: 'linear-gradient(135deg, #6a1b9a, #9b59b6)', color: 'white', padding: '1.25rem 1.5rem', borderTopLeftRadius: '10px', borderTopRightRadius: '10px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <i className="fa-solid fa-file-invoice-dollar" style={{ fontSize: '1.1rem' }}></i>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '1.05rem', fontWeight: 700 }}>Nueva Orden de Compra</div>
+                        <div style={{ fontSize: '0.85rem', opacity: 0.95 }}>N° {nuevaOrden.numeroOrden || '—'}</div>
+                      </div>
+                    </div>
+                    <div>
+                      <button className="modal-close-realista" onClick={cerrarModalAgregar} style={{ background: 'transparent', border: 'none', color: 'white', fontSize: '1.25rem' }}>&times;</button>
+                    </div>
                   </div>
                 </div>
 
-                <div className="modal-body" style={{ padding: '2rem', maxHeight: '70vh', overflowY: 'auto' }}>
-                  {/* Información Básica */}
-                  <div className="modal-section">
-                    <h6>
-                      <i className="fa-solid fa-info-circle icon-gap"></i><span>Información de la Orden</span>
-                    </h6>
-                    <div className="form-grid">
-                      <div className="form-group-profesional">
-                        <label htmlFor="input-orden-1" className="form-label-profesional">Proveedor *</label>
-                        <select id="input-orden-1"
-                          value={nuevaOrden.proveedorId || ''}
-                          onChange={handleProveedorChange}
-                          required
-                          className="form-input-profesional"
-                        >
-                          <option value="">Seleccione un proveedor</option>
-                          {proveedores.map(proveedor => (
-                            <option key={proveedor._id} value={proveedor._id}>
-                              {proveedor.nombre}
-                            </option>
-                          ))}
-                        </select>
-                        {errores.proveedor && <span style={{ color: '#e74c3c', fontSize: '0.8rem' }}>{errores.proveedor}</span>}
-                      </div>
-
-                      <div className="form-group-profesional">
-                        <label htmlFor="input-orden-2" className="form-label-profesional">Solicitado Por *</label>
-                        <input id="input-orden-2"
-                          type="text"
-                          value={nuevaOrden.solicitadoPor}
-                          disabled
-                          className="form-input-profesional"
-                          placeholder="Nombre del solicitante"
-                          style={{ backgroundColor: '#f3f4f6', cursor: 'not-allowed' }}
-                        />
-                        {errores.solicitadoPor && <span style={{ color: '#e74c3c', fontSize: '0.8rem' }}>{errores.solicitadoPor}</span>}
-                      </div>
-
-                      <div className="form-group-profesional">
-                        <label htmlFor="input-orden-3" className="form-label-profesional">Condiciones de Pago</label>
-                        <textarea id="input-orden-3"
-                          value={nuevaOrden.condicionesPago}
-                          onChange={e => setNuevaOrden({ ...nuevaOrden, condicionesPago: e.target.value })}
-                          className="form-input-profesional"
-                          rows="3"
-                          placeholder="Describe las condiciones de pago"
-                          style={{ resize: 'vertical', fontFamily: 'inherit' }}
-                        />
+                <div style={{ display: 'flex', gap: '1rem', padding: '1rem', maxHeight: '75vh', overflow: 'hidden' }}>
+                  <div style={{ flex: 1, overflowY: 'auto', paddingRight: '0.5rem' }}>
+                    <div style={{ background: 'white', padding: '1rem', borderRadius: 10, border: '1px solid #e5e7eb', marginBottom: '1rem' }}>
+                      <h6 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}><i className="fa-solid fa-info-circle" style={{ color: '#6a1b9a' }}></i> Información de la Orden</h6>
+                      <div style={{ marginTop: '0.75rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                        <div>
+                          <label className="form-label-profesional">Proveedor *</label>
+                          <select value={nuevaOrden.proveedorId || ''} onChange={handleProveedorChange} className="form-input-profesional">
+                            <option value="">Seleccione un proveedor</option>
+                            {proveedores.filter(p => p.activo || p._id === ordenEditando.proveedorId).map(prov => (
+                              <option key={prov._id} value={prov._id}>{prov.nombre}</option>
+                            ))}
+                          </select>
+                          {errores.proveedor && <div style={{ color: '#e74c3c', fontSize: '0.85rem' }}>{errores.proveedor}</div>}
+                        </div>
+                        <div>
+                          <label className="form-label-profesional">Solicitado Por</label>
+                          <input className="form-input-profesional" value={nuevaOrden.solicitadoPor} disabled />
+                        </div>
+                        <div style={{ gridColumn: '1 / -1' }}>
+                          <label className="form-label-profesional">Condiciones de Pago</label>
+                          <textarea className="form-input-profesional" rows={3} value={nuevaOrden.condicionesPago} onChange={e => setNuevaOrden({ ...nuevaOrden, condicionesPago: e.target.value })} />
+                        </div>
+                        <div>
+                          <label className="form-label-profesional">IVA (%)</label>
+                          <input type="number" step="0.01" className="form-input-profesional" value={nuevaOrden.iva || 0} onChange={e => setNuevaOrden({ ...nuevaOrden, iva: Number(e.target.value) })} />
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Selección de Productos */}
-                  <div className="modal-section">
-                    <h6>
-                      <i className="fa-solid fa-cart-plus icon-gap"></i><span>Agregar Productos</span>
-                    </h6>
+                    <div style={{ background: 'white', padding: '1rem', borderRadius: 10, border: '1px solid #e5e7eb', marginBottom: '1rem' }}>
+                      <h6 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}><i className="fa-solid fa-cart-plus" style={{ color: '#6a1b9a' }}></i> Agregar Productos</h6>
+                        <div style={{ marginTop: '0.75rem' }}>
+                        {nuevaOrden.proveedorId ? (
+                          <>
+                            <select value={productoTemp.productoId || ''} onChange={handleProductoChange} className="form-input-profesional">
+                              <option value="">Seleccione un producto</option>
+                              {productosProveedor.length > 0 ? productosProveedor.map(prod => (
+                                <option key={prod._id || prod.id || prod.productoId || JSON.stringify(prod)} value={prod._id || prod.id || prod.productoId || ''}>{prod.name || prod.nombre} - ${(prod.price || prod.precio)?.toLocaleString()}</option>
+                              )) : <option value="" disabled>{cargandoProductos ? 'Cargando...' : 'No hay productos'}</option>}
+                            </select>
 
-                    {nuevaOrden.proveedorId ? (
-                      <>
-                        <div className="form-group-profesional">
-                          <label className="form-label-profesional">
-                            Producto *
-                            {cargandoProductos && (
-                              <small style={{ marginLeft: '10px', color: '#3498db' }}>
-                                <i className="fa-solid fa-spinner fa-spin"></i> Cargando productos...
-                              </small>
-                            )}
-                          </label>
-
-                          <select
-                            value={productoTemp.productoId || ''}
-                            onChange={handleProductoChange}
-                            className="form-input-profesional"
-                            disabled={cargandoProductos}
-                          >
-                            <option value="">Seleccione un producto</option>
-                            {productosProveedor.length > 0 ? (
-                              productosProveedor.map(producto => (
-                                <option key={producto._id} value={producto._id}>
-                                  {producto.name || producto.nombre} -
-                                  ${(producto.price || producto.precio)?.toLocaleString()} -
-                                  Stock: {producto.stock || 'N/A'}
-                                </option>
-                              ))
-                            ) : (
-                              <option value="" disabled>
-                                {cargandoProductos ? 'Cargando...' : 'Este proveedor no tiene productos asociados'}
-                              </option>
-                            )}
-                          </select>
-
-                          {productosProveedor.length === 0 && !cargandoProductos && (
-                            <div style={{
-                              background: '#fff3cd',
-                              border: '1px solid #ffeaa7',
-                              borderRadius: '4px',
-                              padding: '0.75rem',
-                              marginTop: '0.5rem',
-                              color: '#856404',
-                              fontSize: '0.9rem'
-                            }}>
-                              <i className="fa-solid fa-info-circle icon-gap"></i><span>Este proveedor no tiene productos asociados. Por favor, regístrelos en el módulo de Gestión de Productos.</span>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginTop: '0.5rem' }}>
+                              <input className="form-input-profesional" value={productoTemp.descripcion} disabled placeholder="Descripción" />
+                              <input type="number" min="1" className="form-input-profesional" value={productoTemp.cantidad} onChange={e => setProductoTemp({ ...productoTemp, cantidad: Number(e.target.value) })} />
+                              <input className="form-input-profesional" value={productoTemp.valorUnitario} disabled />
+                              <input type="number" step="0.01" className="form-input-profesional" value={productoTemp.descuento} onChange={e => setProductoTemp({ ...productoTemp, descuento: Number(e.target.value) })} />
                             </div>
-                          )}
-                        </div>
 
-                        <div className="form-grid">
-                          <div className="form-group-profesional">
-                            <label htmlFor="input-orden-4" className="form-label-profesional">Descripción</label>
-                            <input id="input-orden-4"
-                              value={productoTemp.descripcion}
-                              onChange={e => setProductoTemp({ ...productoTemp, descripcion: e.target.value })}
-                              className="form-input-profesional"
-                              placeholder="Descripción del producto"
-                              disabled
-                            />
-                          </div>
-
-                          <div className="form-group-profesional">
-                            <label htmlFor="input-orden-5" className="form-label-profesional">Cantidad *</label>
-                            <input id="input-orden-5"
-                              type="number"
-                              min="1"
-                              value={productoTemp.cantidad}
-                              onChange={e => setProductoTemp({ ...productoTemp, cantidad: Number(e.target.value) })}
-                              required
-                              className="form-input-profesional"
-                            />
-                          </div>
-
-                          <div className="form-group-profesional">
-                            <label htmlFor="input-orden-valor-temp" className="form-label-profesional">Valor Unitario *</label>
-                            <div style={{ position: 'relative' }}>
-                              <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#666' }}>$</span>
-                              <input
-                                id="input-orden-valor-temp"
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                value={productoTemp.valorUnitario}
-                                onChange={e => setProductoTemp({ ...productoTemp, valorUnitario: Number(e.target.value) })}
-                                required
-                                className="form-input-profesional"
-                                style={{ paddingLeft: '30px' }}
-                                disabled
-                              />
+                            <div style={{ marginTop: '0.5rem' }}>
+                              <button className="btn-profesional btn-primary-profesional" onClick={agregarProductoDesdeLista} disabled={!productoTemp.productoId || productoTemp.cantidad < 1}><i className="fa-solid fa-plus"></i> Agregar Producto</button>
                             </div>
-                          </div>
-
-                          <div className="form-group-profesional">
-                            <label htmlFor="input-orden-desc-temp" className="form-label-profesional">Descuento</label>
-                            <div style={{ position: 'relative' }}>
-                              <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#666' }}>$</span>
-                              <input
-                                id="input-orden-desc-temp"
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                value={productoTemp.descuento}
-                                onChange={e => setProductoTemp({ ...productoTemp, descuento: Number(e.target.value) })}
-                                className="form-input-profesional"
-                                style={{ paddingLeft: '30px' }}
-                              />
-                            </div>
-                          </div>
-
-                          <div className="form-group-profesional" style={{ display: 'flex', alignItems: 'flex-end' }}>
-                            <button
-                              className="btn-profesional btn-primary-profesional"
-                              onClick={agregarProductoDesdeLista}
-                              disabled={!productoTemp.productoId || productoTemp.cantidad < 1}
-                            >
-                              <i className="fa-solid fa-plus"></i><span>Agregar Producto</span>
-                            </button>
-                          </div>
-                        </div>
-                      </>
-                    ) : (
-                      <div style={{
-                        background: '#f8f9fa',
-                        border: '1px solid #e0e0e0',
-                        borderRadius: '4px',
-                        padding: '1rem',
-                        textAlign: 'center',
-                        color: '#6c757d'
-                      }}>
-                        <i className="fa-solid fa-hand-pointer" style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}></i>
-                        <p style={{ margin: '0' }}>Seleccione un proveedor para ver sus productos disponibles</p>
+                          </>
+                        ) : (
+                          <div style={{ padding: '1rem', background: '#f8fafc', borderRadius: 8 }}>Seleccione un proveedor para ver productos</div>
+                        )}
                       </div>
-                    )}
-                  </div>
+                    </div>
 
-                  {/* Lista de Productos Agregados */}
-                  {nuevaOrden.productos.length > 0 && (
-                    <div className="modal-section">
-                      <h6>
-                        <i className="fa-solid fa-list-check icon-gap"></i><span>Productos en la Orden ({nuevaOrden.productos.length})</span>
-                      </h6>
-                      <div className="table-responsive">
-                        <table className="table-profesional">
+                    {nuevaOrden.productos.length > 0 && (
+                      <div style={{ background: 'white', padding: '0.75rem', borderRadius: 10, border: '1px solid #e5e7eb' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                           <thead>
-                            <tr>
-                              <th>Producto</th>
-                              <th>Descripción</th>
-                              <th>Cantidad</th>
-                              <th>Valor Unit.</th>
-                              <th>Descuento</th>
-                              <th>Total</th>
-                              <th>Acción</th>
+                            <tr style={{ background: '#f8fafc' }}>
+                              <th style={{ padding: '8px', textAlign: 'left' }}>Producto</th>
+                              <th style={{ padding: '8px', textAlign: 'left' }}>Descripción</th>
+                              <th style={{ padding: '8px', textAlign: 'center' }}>Cantidad</th>
+                              <th style={{ padding: '8px', textAlign: 'right' }}>Total</th>
+                              <th style={{ padding: '8px', textAlign: 'center' }}>Acción</th>
                             </tr>
                           </thead>
                           <tbody>
                             {nuevaOrden.productos.map((p, i) => (
-                              <tr key={p.productoId || p._id || p.producto || i}>
-                                <td>
-                                  <strong>{p.producto}</strong>
-                                </td>
-                                <td>{p.descripcion || 'N/A'}</td>
-                                <td>
-                                  <span className="badge-profesional" style={{ background: '#e3f2fd', color: '#1976d2' }}>
-                                    {p.cantidad}
-                                  </span>
-                                </td>
-                                <td>${p.valorUnitario.toLocaleString()}</td>
-                                <td>
-                                  {p.descuento > 0 ? (
-                                    <span style={{ color: '#e74c3c', fontWeight: '600' }}>
-                                      -${p.descuento.toLocaleString()}
-                                    </span>
-                                  ) : (
-                                    <span style={{ color: '#95a5a6' }}>$0</span>
-                                  )}
-                                </td>
-                                <td>
-                                  <strong>${p.valorTotal.toLocaleString()}</strong>
-                                </td>
-                                <td>
-                                  <button
-                                    className="btn-profesional btn-danger-profesional"
-                                    onClick={() => eliminarProducto(i)}
-                                    style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
-                                  >
-                                    <i className="fa-solid fa-trash"></i>
-                                  </button>
-                                </td>
+                              <tr key={p.productoId || p.id || i} style={{ borderBottom: '1px solid #eee' }}>
+                                <td style={{ padding: '8px' }}><strong>{p.producto}</strong></td>
+                                <td style={{ padding: '8px' }}>{p.descripcion}</td>
+                                <td style={{ padding: '8px', textAlign: 'center' }}>{p.cantidad}</td>
+                                <td style={{ padding: '8px', textAlign: 'right' }}>${p.valorTotal.toLocaleString()}</td>
+                                <td style={{ padding: '8px', textAlign: 'center' }}><button className="btn-profesional btn-danger-profesional" onClick={() => eliminarProducto(i)}>Eliminar</button></td>
                               </tr>
                             ))}
                           </tbody>
                         </table>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  {/* Resumen de Totales */}
-                  {nuevaOrden.productos.length > 0 && (
-                    <div className="totales-destacados">
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-                        <div>
-                          <div style={{ fontSize: '0.9rem', opacity: '0.9' }}>Subtotal</div>
-                          <div style={{ fontSize: '1.3rem', fontWeight: 'bold' }}>
-                            ${calcularTotalesProductos(nuevaOrden.productos).subtotal.toLocaleString()}
-                          </div>
-                        </div>
-                        <div>
-                          <div style={{ fontSize: '0.9rem', opacity: '0.9' }}>Total</div>
-                          <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#f39c12' }}>
-                            ${calcularTotalesProductos(nuevaOrden.productos).total.toLocaleString()}
-                          </div>
-                        </div>
+                    <div style={{ marginTop: '0.75rem', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '0.85rem', color: '#6c757d' }}>Subtotal</div>
+                        <div style={{ fontSize: '1.05rem', fontWeight: 700 }}>${calcularTotalesProductos(nuevaOrden.productos, nuevaOrden.iva || 0).subtotal.toLocaleString()}</div>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '0.85rem', color: '#6c757d' }}>Impuestos ({nuevaOrden.iva || 0}%)</div>
+                        <div style={{ fontSize: '1.05rem', fontWeight: 700 }}>${calcularTotalesProductos(nuevaOrden.productos, nuevaOrden.iva || 0).impuestos.toLocaleString()}</div>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '0.85rem', color: '#6c757d' }}>Total</div>
+                        <div style={{ fontSize: '1.15rem', fontWeight: 700, color: '#7b1fa2' }}>${calcularTotalesProductos(nuevaOrden.productos, nuevaOrden.iva || 0).total.toLocaleString()}</div>
                       </div>
                     </div>
-                  )}
+                  </div>
+
+                  <div style={{ width: 340, padding: '1rem', background: '#f6f0fb', borderLeft: '1px solid #ebe3f6', overflowY: 'auto' }}>
+                    <div className="pdf-orden-compra" style={{ background: 'white', padding: '0.9rem', borderRadius: 8 }}>
+                      <div style={{ textAlign: 'center', background: 'linear-gradient(135deg,#6a1b9a,#9b59b6)', color: 'white', padding: '0.5rem', borderRadius: 6, marginBottom: '0.6rem', fontWeight: 700 }}>ORDEN DE COMPRA</div>
+                      <div style={{ fontSize: '0.9rem', marginBottom: '0.4rem' }}><strong>N°</strong> {nuevaOrden.numeroOrden || '—'}</div>
+                      <div style={{ fontSize: '0.9rem', marginBottom: '0.4rem' }}><strong>Proveedor:</strong> {nuevaOrden.proveedor || '-'}</div>
+                      <div style={{ fontSize: '0.9rem', marginBottom: '0.4rem' }}><strong>Solicitado por:</strong> {nuevaOrden.solicitadoPor || '-'}</div>
+                      <div style={{ fontSize: '0.9rem', marginBottom: '0.4rem' }}><strong>Fecha:</strong> {new Date(nuevaOrden.fechaOrden || Date.now()).toLocaleDateString('es-ES')}</div>
+                      <hr />
+                      <div>
+                        {nuevaOrden.productos.map((p, i) => (
+                          <div key={p.productoId || p.id || i} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.45rem' }}>
+                            <div style={{ fontSize: '0.9rem' }}>{p.producto}</div>
+                            <div style={{ fontSize: '0.9rem' }}>{p.cantidad} x ${(p.valorUnitario||0).toLocaleString()}</div>
+                          </div>
+                        ))}
+                      </div>
+                      <hr />
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700 }}>
+                        <div>Total</div>
+                        <div style={{ color: '#7b1fa2' }}>${calcularTotalesProductos(nuevaOrden.productos).total.toLocaleString()}</div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="modal-footer" style={{ padding: '1.5rem 2rem', borderTop: '1px solid #e0e0e0', background: '#f8f9fa' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                    <div>
-                      <span style={{ color: '#7f8c8d', fontSize: '0.9rem' }}>
-                        {nuevaOrden.productos.length} producto(s) agregado(s)
-                      </span>
-                    </div>
-                    <div style={{ display: 'flex', gap: '1rem' }}>
-                      <button
-                        className="btn-profesional"
-                        onClick={cerrarModalAgregar}
-                        style={{ background: '#95a5a6', color: 'white' }}
-                      >
-                        <i className="fa-solid fa-times"></i><span>Cancelar</span>
-                      </button>
-                      <button
-                        className="btn-profesional btn-success-profesional"
-                        onClick={guardarOrden}
-                        disabled={nuevaOrden.productos.length === 0}
-                      >
-                        <i className="fa-solid fa-check"></i><span>Guardar Orden</span>
-                      </button>
+                <div style={{ padding: '1rem', borderTop: '1px solid #ececec', background: '#fff' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ color: '#7f8c8d' }}>{nuevaOrden.productos.length} producto(s)</div>
+                    <div style={{ display: 'flex', gap: '0.6rem' }}>
+                      <button className="btn-profesional" onClick={cerrarModalAgregar} style={{ background: '#95a5a6', color: 'white' }}><i className="fa-solid fa-times"></i> Cancelar</button>
+                      <button className="btn-profesional btn-success-profesional" onClick={guardarOrden} disabled={nuevaOrden.productos.length === 0}><i className="fa-solid fa-check"></i> Guardar Orden</button>
                     </div>
                   </div>
                 </div>
@@ -2210,351 +1829,179 @@ export default function OrdenCompra() {
             </div>
           )}
 
-          {/* Modal para editar orden */}
+          {/* Modal para editar orden (formato como Proveedores) */}
           {modalEditarVisible && (
-            <div className="modal-overlay">
-              <div className="modal-realista modal-lg" style={{ maxWidth: '900px' }}>
-                <div className="modal-header-realista">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                    <h5>
-                      <i className="fa-solid fa-edit icon-gap"></i><span>Editar Orden de Compra: </span><span style={{ color: '#f39c12' }}>{ordenEditando.numeroOrden}</span>
-                    </h5>
-                    <button className="modal-close-realista" onClick={cerrarModalEditar}>&times;</button>
+            <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+              <form onSubmit={(e) => { e.preventDefault(); actualizarOrden(); }} style={{ backgroundColor: 'white', borderRadius: '20px', maxWidth: '900px', width: '95%', maxHeight: '90vh', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', display: 'flex', flexDirection: 'column' }}>
+                {/* Header */}
+                <div style={{ background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white', padding: '1.5rem 2rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <i className="fa-solid fa-file-invoice" style={{ fontSize: '1.1rem' }}></i>
+                        </div>
+                        Editar Orden de Compra
+                      </h3>
+                      <p style={{ margin: '6px 0 0 58px', opacity: 0.9, fontSize: '0.95rem' }}>Modifica los detalles de la orden</p>
+                    </div>
+                    <button type="button" onClick={cerrarModalEditar} style={{ background: 'rgba(255,255,255,0.18)', border: 'none', color: 'white', fontSize: '1.25rem', width: 36, height: 36, borderRadius: 18, cursor: 'pointer' }}>&times;</button>
                   </div>
                 </div>
 
-                <div className="modal-body" style={{ padding: '2rem', maxHeight: '70vh', overflowY: 'auto' }}>
-                  {/* Información Básica */}
-                  <div className="modal-section">
-                    <h6>
-                      <i className="fa-solid fa-info-circle icon-gap"></i><span>Información de la Orden</span>
-                    </h6>
-                    <div className="form-grid">
-                      <div className="form-group-profesional">
-                        <label htmlFor="input-orden-6" className="form-label-profesional">Proveedor *</label>
-                        <select id="input-orden-6"
-                          value={ordenEditando.proveedorId}
-                          onChange={handleProveedorChangeEditar}
-                          required
-                          className="form-input-profesional"
-                        >
+                {/* Body */}
+                <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem', backgroundColor: '#f8fafc' }}>
+                  <div style={{ background: 'white', padding: '1.5rem', borderRadius: 12, marginBottom: '1rem', border: '1px solid #e2e8f0', borderLeft: '4px solid #10b981' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                      <div>
+                        <label className="form-label-profesional">Proveedor *</label>
+                        <select value={ordenEditando.proveedorId} onChange={handleProveedorChangeEditar} className="form-input-profesional" required>
                           <option value="">Seleccione un proveedor</option>
-                          {proveedores.map(proveedor => (
-                            <option key={proveedor._id} value={proveedor._id}>
-                              {proveedor.nombre}
-                            </option>
+                          {proveedores.filter(p => p.activo).map(proveedor => (
+                            <option key={proveedor._id} value={proveedor._id}>{proveedor.nombre}</option>
                           ))}
                         </select>
-                        {errores.proveedor && <span style={{ color: '#e74c3c', fontSize: '0.8rem' }}>{errores.proveedor}</span>}
+                        {errores.proveedor && <div style={{ color: '#e74c3c', fontSize: '0.85rem' }}>{errores.proveedor}</div>}
                       </div>
 
-                      <div className="form-group-profesional">
-                        <label htmlFor="input-orden-7" className="form-label-profesional">Solicitado Por *</label>
-                        <input id="input-orden-7"
-                          type="text"
-                          value={ordenEditando.solicitadoPor}
-                          disabled
-                          className="form-input-profesional"
-                          placeholder="Nombre del solicitante"
-                          style={{ backgroundColor: '#f3f4f6', cursor: 'not-allowed' }}
-                        />
-                        {errores.solicitadoPor && <span style={{ color: '#e74c3c', fontSize: '0.8rem' }}>{errores.solicitadoPor}</span>}
+                      <div>
+                        <label className="form-label-profesional">Solicitado Por</label>
+                        <input disabled value={ordenEditando.solicitadoPor} className="form-input-profesional" style={{ backgroundColor: '#f3f4f6', cursor: 'not-allowed' }} />
+                        {errores.solicitadoPor && <div style={{ color: '#e74c3c', fontSize: '0.85rem' }}>{errores.solicitadoPor}</div>}
                       </div>
 
-                      <div className="form-group-profesional">
-                        <label htmlFor="input-orden-8" className="form-label-profesional">Condiciones de Pago</label>
-                        <textarea id="input-orden-8"
-                          value={ordenEditando.condicionesPago}
-                          onChange={e => setOrdenEditando({ ...ordenEditando, condicionesPago: e.target.value })}
-                          className="form-input-profesional"
-                          rows="3"
-                          placeholder="Describe las condiciones de pago"
-                          style={{ resize: 'vertical', fontFamily: 'inherit' }}
-                        />
+                      <div style={{ gridColumn: '1 / -1' }}>
+                        <label className="form-label-profesional">Condiciones de Pago</label>
+                        <textarea value={ordenEditando.condicionesPago} onChange={e => setOrdenEditando({ ...ordenEditando, condicionesPago: e.target.value })} className="form-input-profesional" rows={3} style={{ resize: 'vertical' }} />
                       </div>
 
-                      <div className="form-group-profesional">
-                        <div className="form-label-profesional">Estado</div>
+                      <div>
+                        <label className="form-label-profesional">IVA (%)</label>
+                        <input type="number" step="0.01" className="form-input-profesional" value={ordenEditando.iva || 0} onChange={e => setOrdenEditando({ ...ordenEditando, iva: Number(e.target.value) })} />
+                      </div>
+
+                      <div>
+                        <label className="form-label-profesional">Estado</label>
                         <div>
-                          <span className={`badge-profesional ${ordenEditando.estado === 'Pendiente' ? 'badge-pendiente' : 'badge-completada'}`}>
-                            {ordenEditando.estado}
-                          </span>
+                          <span className={`badge-profesional ${ordenEditando.estado === 'Pendiente' ? 'badge-pendiente' : 'badge-completada'}`}>{ordenEditando.estado}</span>
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Selección de Productos para Edición */}
-                  <div className="modal-section">
-                    <h6>
-                      <i className="fa-solid fa-cart-plus icon-gap"></i><span>Agregar Nuevos Productos</span>
-                    </h6>
+                  {/* Productos */}
+                  <div style={{ background: 'white', padding: '1rem', borderRadius: 12, border: '1px solid #e2e8f0' }}>
+                    <h6 style={{ marginTop: 0, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><i className="fa-solid fa-list-check"></i> Productos en la Orden ({ordenEditando.productos.length})</h6>
 
-                    {ordenEditando.proveedorId ? (
+                    {ordenEditando.productos.length > 0 ? (
                       <>
-                        <div className="form-group-profesional">
-                          <label className="form-label-profesional">
-                            Producto *
-                            {cargandoProductos && (
-                              <small style={{ marginLeft: '10px', color: '#3498db' }}>
-                                <i className="fa-solid fa-spinner fa-spin"></i> Cargando productos...
-                              </small>
-                            )}
-                          </label>
-
-                          <select
-                            value={productoTemp.productoId || ''}
-                            onChange={handleProductoChangeEditar}
-                            className="form-input-profesional"
-                            disabled={cargandoProductos}
-                          >
-                            <option value="">Seleccione un producto</option>
-                            {productosProveedor.length > 0 ? (
-                              productosProveedor.map(producto => (
-                                <option key={producto._id} value={producto._id}>
-                                  {producto.name || producto.nombre} -
-                                  ${(producto.price || producto.precio)?.toLocaleString()} -
-                                  Stock: {producto.stock || 'N/A'}
-                                </option>
-                              ))
-                            ) : (
-                              <option value="" disabled>
-                                {cargandoProductos ? 'Cargando...' : 'Este proveedor no tiene productos asociados'}
-                              </option>
-                            )}
-                          </select>
-                        </div>
-
-                        <div className="form-grid">
-                          <div className="form-group-profesional">
-                            <label htmlFor="input-orden-9" className="form-label-profesional">Descripción</label>
-                            <input id="input-orden-9"
-                              value={productoTemp.descripcion}
-                              onChange={e => setProductoTemp({ ...productoTemp, descripcion: e.target.value })}
-                              className="form-input-profesional"
-                              placeholder="Descripción del producto"
-                              disabled
-                            />
-                          </div>
-
-                          <div className="form-group-profesional">
-                            <label htmlFor="input-orden-10" className="form-label-profesional">Cantidad *</label>
-                            <input id="input-orden-10"
-                              type="number"
-                              min="1"
-                              value={productoTemp.cantidad}
-                              onChange={e => setProductoTemp({ ...productoTemp, cantidad: Number(e.target.value) })}
-                              required
-                              className="form-input-profesional"
-                            />
-                          </div>
-
-                          <div className="form-group-profesional">
-                            <label htmlFor={`input-orden-valor-edit-temp`} className="form-label-profesional">Valor Unitario *</label>
-                            <div style={{ position: 'relative' }}>
-                              <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#666' }}>$</span>
-                              <input
-                                id={`input-orden-valor-edit-temp`}
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                value={productoTemp.valorUnitario}
-                                onChange={e => setProductoTemp({ ...productoTemp, valorUnitario: Number(e.target.value) })}
-                                required
-                                className="form-input-profesional"
-                                style={{ paddingLeft: '30px' }}
-                                disabled
-                              />
+                        {productoEditando.index !== null && (
+                          <div style={{ background: '#fff7ed', border: '1px solid #ffe8cc', borderRadius: 8, padding: '0.75rem', marginBottom: '0.75rem' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '0.5rem' }}>
+                              <div>
+                                <label className="form-label-profesional">Producto</label>
+                                <select className="form-input-profesional" value={productoEditando.productoId || ''} onChange={handleProductoEditSelectChange}>
+                                  <option value="">Seleccione un producto</option>
+                                  {productoEditando.productoId && !productosProveedor.some(p => p._id === productoEditando.productoId) && (
+                                    <option value={productoEditando.productoId}>{productoEditando.producto || 'Producto actual'}</option>
+                                  )}
+                                  {productosProveedor.map(prod => (
+                                    <option key={prod._id} value={prod._id}>{prod.name || prod.nombre} - ${(prod.price || prod.precio)?.toLocaleString()}</option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div>
+                                <label className="form-label-profesional">Descripción</label>
+                                <input className="form-input-profesional" value={productoEditando.descripcion} disabled />
+                              </div>
+                              <div>
+                                <label className="form-label-profesional">Cantidad</label>
+                                <input type="number" min="1" className="form-input-profesional" value={productoEditando.cantidad} onChange={e => setProductoEditando({ ...productoEditando, cantidad: Number(e.target.value) })} />
+                              </div>
+                              <div>
+                                <label className="form-label-profesional">Valor Unitario</label>
+                                <input type="number" min="0" step="0.01" className="form-input-profesional" value={productoEditando.valorUnitario} disabled />
+                              </div>
+                              <div>
+                                <label className="form-label-profesional">Descuento</label>
+                                <input type="number" min="0" step="0.01" className="form-input-profesional" value={productoEditando.descuento} onChange={e => setProductoEditando({ ...productoEditando, descuento: Number(e.target.value) })} />
+                              </div>
+                            </div>
+                            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                              <button type="button" className="btn-profesional btn-success-profesional" onClick={guardarProductoEditado}><i className="fa-solid fa-check"></i> Guardar</button>
+                              <button type="button" className="btn-profesional" onClick={cancelarEdicionProducto} style={{ background: '#95a5a6', color: 'white' }}><i className="fa-solid fa-times"></i> Cancelar</button>
                             </div>
                           </div>
+                        )}
 
-                          <div className="form-group-profesional">
-                            <label htmlFor={`input-orden-desc-edit-temp`} className="form-label-profesional">Descuento</label>
-                            <div style={{ position: 'relative' }}>
-                              <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#666' }}>$</span>
-                              <input
-                                id={`input-orden-desc-edit-temp`}
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                value={productoTemp.descuento}
-                                onChange={e => setProductoTemp({ ...productoTemp, descuento: Number(e.target.value) })}
-                                className="form-input-profesional"
-                                style={{ paddingLeft: '30px' }}
-                              />
-                            </div>
-                          </div>
-
-                          <div className="form-group-profesional" style={{ display: 'flex', alignItems: 'flex-end' }}>
-                            <button
-                              className="btn-profesional btn-primary-profesional"
-                              onClick={agregarProductoEdicion}
-                              disabled={!productoTemp.productoId || productoTemp.cantidad < 1}
-                            >
-                              <i className="fa-solid fa-plus"></i><span>Agregar Producto</span>
-                            </button>
-                          </div>
+                        <div className="table-responsive">
+                          <table className="table-profesional" style={{ width: '100%' }}>
+                            <thead>
+                              <tr>
+                                <th>Producto</th>
+                                <th>Descripción</th>
+                                <th>Cantidad</th>
+                                <th>Valor Unit.</th>
+                                <th>Descuento</th>
+                                <th>Total</th>
+                                <th>Acciones</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {ordenEditando.productos.map((p, i) => (
+                                <tr key={p.productoId || p.id || i} className={productoEditando.index === i ? 'highlighted-row' : ''}>
+                                  <td><strong>{p.producto}</strong>{productoEditando.index === i && <span style={{ color: '#f39c12', marginLeft: 6, fontSize: '0.8rem' }}>(Editando)</span>}</td>
+                                  <td>{p.descripcion || 'N/A'}</td>
+                                  <td><span className="badge-profesional" style={{ background: '#e3f2fd', color: '#1976d2' }}>{p.cantidad}</span></td>
+                                  <td>${p.valorUnitario?.toLocaleString()}</td>
+                                  <td>{p.descuento > 0 ? <span style={{ color: '#e74c3c', fontWeight: 600 }}>-${p.descuento?.toLocaleString() || '0'}</span> : <span style={{ color: '#95a5a6' }}>$0</span>}</td>
+                                  <td><strong>${p.valorTotal?.toLocaleString()}</strong></td>
+                                  <td>
+                                    <div style={{ display: 'flex', gap: '0.3rem' }}>
+                                      <button type="button" className="btn-profesional btn-warning-profesional" onClick={() => editarProducto(i)} disabled={productoEditando.index !== null && productoEditando.index !== i}><i className="fa-solid fa-pen"></i></button>
+                                      <button type="button" className="btn-profesional btn-danger-profesional" onClick={() => eliminarProductoEdicion(i)} disabled={productoEditando.index !== null}><i className="fa-solid fa-trash"></i></button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
                         </div>
                       </>
                     ) : (
-                      <div style={{
-                        background: '#f8f9fa',
-                        border: '1px solid #e0e0e0',
-                        borderRadius: '4px',
-                        padding: '1rem',
-                        textAlign: 'center',
-                        color: '#6c757d'
-                      }}>
-                        <i className="fa-solid fa-hand-pointer" style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}></i>
-                        <p style={{ margin: '0' }}>Seleccione un proveedor para ver sus productos disponibles</p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Lista de Productos Existente */}
-                  <div className="modal-section">
-                    <h6>
-                      <i className="fa-solid fa-list-check icon-gap"></i><span>Productos en la Orden ({ordenEditando.productos.length})</span>
-                      {errores.productos && <span style={{ color: '#e74c3c', fontSize: '0.8rem', marginLeft: '1rem' }}>{errores.productos}</span>}
-                    </h6>
-
-                    {ordenEditando.productos.length > 0 ? (
-                      <div className="table-responsive">
-                        <table className="table-profesional">
-                          <thead>
-                            <tr>
-                              <th>Producto</th>
-                              <th>Descripción</th>
-                              <th>Cantidad</th>
-                              <th>Valor Unit.</th>
-                              <th>Descuento</th>
-                              <th>Total</th>
-                              <th>Acciones</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {ordenEditando.productos.map((p, i) => (
-                              <tr key={p.productoId || p._id || p.producto || i} className={productoEditando.index === i ? 'highlighted-row' : ''}>
-                                <td>
-                                  <strong>{p.producto}</strong>
-                                  {productoEditando.index === i && (
-                                    <span style={{ color: '#f39c12', marginLeft: '5px', fontSize: '0.8rem' }}>
-                                      (Editando)
-                                    </span>
-                                  )}
-                                </td>
-                                <td>{p.descripcion || 'N/A'}</td>
-                                <td>
-                                  <span className="badge-profesional" style={{ background: '#e3f2fd', color: '#1976d2' }}>
-                                    {p.cantidad}
-                                  </span>
-                                </td>
-                                <td>${p.valorUnitario?.toLocaleString()}</td>
-                                <td>
-                                  {p.descuento > 0 ? (
-                                    <span style={{ color: '#e74c3c', fontWeight: '600' }}>
-                                      -${p.descuento?.toLocaleString() || '0'}
-                                    </span>
-                                  ) : (
-                                    <span style={{ color: '#95a5a6' }}>$0</span>
-                                  )}
-                                </td>
-                                <td>
-                                  <strong>${p.valorTotal?.toLocaleString()}</strong>
-                                </td>
-                                <td>
-                                  <div style={{ display: 'flex', gap: '0.3rem' }}>
-                                    <button
-                                      className="btn-profesional btn-warning-profesional"
-                                      onClick={() => editarProducto(i)}
-                                      style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
-                                      disabled={productoEditando.index !== null && productoEditando.index !== i}
-                                    >
-                                      <i className="fa-solid fa-pen"></i>
-                                    </button>
-                                    <button
-                                      className="btn-profesional btn-danger-profesional"
-                                      onClick={() => eliminarProductoEdicion(i)}
-                                      style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
-                                      disabled={productoEditando.index !== null}
-                                    >
-                                      <i className="fa-solid fa-trash"></i>
-                                    </button>
-                                  </div>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    ) : (
-                      <div style={{ textAlign: 'center', padding: '2rem', color: '#7f8c8d' }}>
-                        <i className="fa-solid fa-cart-shopping" style={{ fontSize: '2rem', marginBottom: '1rem', display: 'block' }}></i>
+                      <div style={{ textAlign: 'center', padding: '1rem', color: '#7f8c8d' }}>
+                        <i className="fa-solid fa-cart-shopping" style={{ fontSize: '1.6rem', marginBottom: '0.5rem', display: 'block' }}></i>
                         <p>No hay productos en esta orden. Agrega al menos un producto.</p>
                       </div>
                     )}
                   </div>
 
-                  {/* Resumen de Totales */}
+                  {/* Totales */}
                   {ordenEditando.productos.length > 0 && (
-                    <div className="totales-destacados">
+                    <div style={{ marginTop: '0.75rem', background: 'white', padding: '1rem', borderRadius: 12, border: '1px solid #e2e8f0' }}>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
                         <div>
-                          <div style={{ fontSize: '0.9rem', opacity: '0.9' }}>Subtotal</div>
-                          <div style={{ fontSize: '1.3rem', fontWeight: 'bold' }}>
-                            ${calcularTotalesProductos(ordenEditando.productos).subtotal.toLocaleString()}
-                          </div>
+                          <div style={{ fontSize: '0.9rem', opacity: 0.9 }}>Subtotal</div>
+                          <div style={{ fontSize: '1.1rem', fontWeight: '700' }}>${calcularTotalesProductos(ordenEditando.productos).subtotal.toLocaleString()}</div>
                         </div>
                         <div>
-                          <div style={{ fontSize: '0.9rem', opacity: '0.9' }}>Total</div>
-                          <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#f39c12' }}>
-                            ${calcularTotalesProductos(ordenEditando.productos).total.toLocaleString()}
-                          </div>
+                          <div style={{ fontSize: '0.9rem', opacity: 0.9 }}>Total</div>
+                          <div style={{ fontSize: '1.4rem', fontWeight: '700', color: '#f39c12' }}>${calcularTotalesProductos(ordenEditando.productos).total.toLocaleString()}</div>
                         </div>
                       </div>
                     </div>
                   )}
                 </div>
 
-                <div className="modal-footer" style={{ padding: '1.5rem 2rem', borderTop: '1px solid #e0e0e0', background: '#f8f9fa' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                    <div>
-                      <span style={{ color: '#7f8c8d', fontSize: '0.9rem' }}>
-                        {ordenEditando.productos.length} producto(s) en la orden
-                      </span>
-                      {ordenEditando.estado === 'Completada' && (
-                        <span className="badge-profesional badge-completada" style={{ marginLeft: '1rem' }}>
-                          <i className="fa-solid fa-check"></i> Completada
-                        </span>
-                      )}
-                    </div>
-                    <div style={{ display: 'flex', gap: '1rem' }}>
-                      <button
-                        className="btn-profesional"
-                        onClick={cerrarModalEditar}
-                        style={{ background: '#95a5a6', color: 'white' }}
-                      >
-                        <i className="fa-solid fa-times"></i><span>Cancelar</span>
-                      </button>
-                      <button
-                        className="btn-profesional btn-success-profesional"
-                        onClick={actualizarOrden}
-                        disabled={ordenEditando.productos.length === 0 || cargando}
-                      >
-                        {cargando ? (
-                          <>
-                            <i className="fa-solid fa-spinner fa-spin"></i><span>Guardando...</span>
-                          </>
-                        ) : (
-                          <>
-                            <i className="fa-solid fa-check"></i><span>Actualizar Orden</span>
-                          </>
-                        )}
-                      </button>
-                    </div>
+                {/* Footer */}
+                <div style={{ padding: '1rem 1.25rem', borderTop: '1px solid #e6eef7', background: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ color: '#7f8c8d' }}>{ordenEditando.productos.length} producto(s) en la orden</div>
+                  <div style={{ display: 'flex', gap: '0.75rem' }}>
+                    <button type="button" onClick={cerrarModalEditar} className="btn-profesional" style={{ background: '#95a5a6', color: 'white' }}><i className="fa-solid fa-times"></i> Cancelar</button>
+                    <button type="submit" className="btn-profesional btn-success-profesional" disabled={ordenEditando.productos.length === 0 || cargando}>{cargando ? <><i className="fa-solid fa-spinner fa-spin"></i> Guardando...</> : <><i className="fa-solid fa-check"></i> Actualizar Orden</>}</button>
                   </div>
                 </div>
-              </div>
+              </form>
             </div>
           )}
 
@@ -2570,155 +2017,60 @@ export default function OrdenCompra() {
           {/* Modal de Confirmación */}
           {modalConfirmacionVisible && ordenAConfirmar && (
             <div className="modal-overlay">
-              <div className="modal-realista modal-confirmacion"
-                style={{
-                  maxWidth: '500px',
-                  width: '90%',
-                  background: 'linear-gradient(135deg, #ffffff, #f8f9fa)'
-                }}>
+              <div className="modal-realista modal-confirmacion" style={{ maxWidth: '500px', width: '90%', background: 'linear-gradient(135deg, #ffffff, #f8f9fa)' }}>
 
-                <div className="modal-header-realista" style={{
-                  background: 'linear-gradient(135deg, #2c3e50, #34495e)',
-                  color: 'white',
-                  padding: '1.5rem',
-                  borderTopLeftRadius: '10px',
-                  borderTopRightRadius: '10px'
-                }}>
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    width: '100%'
-                  }}>
-                    <h5 style={{ margin: 0, display: 'flex', alignItems: 'center' }}>
-                      <i className="fa-solid fa-clipboard-check icon-gap"></i><span>Confirmar Orden de Compra</span>
-                    </h5>
-                    <button
-                      className="modal-close-realista"
-                      onClick={cancelarConfirmacion}
-                      style={{
-                        background: 'rgba(255,255,255,0.2)',
-                        border: 'none',
-                        color: 'white',
-                        fontSize: '1.5rem',
-                        cursor: 'pointer',
-                        borderRadius: '50%',
-                        width: '30px',
-                        height: '30px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                      }}
-                    >
-                      &times;
-                    </button>
+                <div className="modal-header-realista" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'linear-gradient(135deg, #6a1b9a, #9b59b6)', color: 'white', padding: '1.25rem', borderTopLeftRadius: '10px', borderTopRightRadius: '10px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <i className="fa-solid fa-file-invoice-dollar" style={{ fontSize: '1.1rem' }}></i>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '1.05rem', fontWeight: 700 }}>Confirmar Orden</div>
+                      <div style={{ fontSize: '0.85rem', opacity: 0.95 }}>N° {ordenAConfirmar.numeroOrden}</div>
+                    </div>
                   </div>
+                  <button className="modal-close-realista" onClick={cancelarConfirmacion} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white', fontSize: '1.25rem', cursor: 'pointer', borderRadius: '50%', width: '34px', height: '34px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>&times;</button>
                 </div>
 
                 <div className="modal-body" style={{ padding: '1.5rem' }}>
-                  <div style={{
-                    background: 'white',
-                    border: '2px dashed #e0e0e0',
-                    borderRadius: '8px',
-                    padding: '1.5rem',
-                    marginBottom: '1.5rem'
-                  }}>
-                    <h6 style={{
-                      color: '#2c3e50',
-                      borderBottom: '2px solid #3498db',
-                      paddingBottom: '0.5rem',
-                      marginBottom: '1rem'
-                    }}>
-                      <i className="fa-solid fa-file-lines icon-gap"></i><span>Vista Previa de la Orden</span>
-                    </h6>
+                  <h6 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}><i className="fa-solid fa-file-lines icon-gap"></i> Vista Previa de la Orden</h6>
 
-                    <div style={{ display: 'grid', gap: '0.75rem' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ fontWeight: '600', color: '#666' }}>Número:</span>
-                        <span style={{ fontWeight: 'bold' }}>{ordenAConfirmar.numeroOrden}</span>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ fontWeight: '600', color: '#666' }}>Proveedor:</span>
-                        <span>{ordenAConfirmar.proveedor || 'No especificado'}</span>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ fontWeight: '600', color: '#666' }}>Total:</span>
-                        <span style={{ fontWeight: 'bold', color: '#e74c3c' }}>
-                          ${ordenAConfirmar.total?.toLocaleString()}
-                        </span>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ fontWeight: '600', color: '#666' }}>Solicitado por:</span>
-                        <span>{ordenAConfirmar.solicitadoPor || 'No especificado'}</span>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ fontWeight: '600', color: '#666' }}>Fecha:</span>
-                        <span>{new Date(ordenAConfirmar.fechaOrden).toLocaleDateString()}</span>
-                      </div>
+                  <div style={{ display: 'grid', gap: '0.75rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ fontWeight: '600', color: '#666' }}>Número:</span>
+                      <span style={{ fontWeight: 'bold' }}>{ordenAConfirmar.numeroOrden}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ fontWeight: '600', color: '#666' }}>Proveedor:</span>
+                      <span>{ordenAConfirmar.proveedor || 'No especificado'}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ fontWeight: '600', color: '#666' }}>Total:</span>
+                      <span style={{ fontWeight: 'bold', color: '#e74c3c' }}>${ordenAConfirmar.total?.toLocaleString()}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ fontWeight: '600', color: '#666' }}>Solicitado por:</span>
+                      <span>{ordenAConfirmar.solicitadoPor || 'No especificado'}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ fontWeight: '600', color: '#666' }}>Fecha:</span>
+                      <span>{new Date(ordenAConfirmar.fechaOrden).toLocaleDateString()}</span>
                     </div>
                   </div>
 
-                  <div style={{
-                    background: '#fffbf0',
-                    border: '1px solid #ffeaa7',
-                    borderRadius: '6px',
-                    padding: '1rem',
-                    textAlign: 'center'
-                  }}>
-                    <i className="fa-solid fa-exclamation-triangle" style={{
-                      color: '#f39c12',
-                      fontSize: '1.5rem',
-                      marginBottom: '0.5rem'
-                    }}></i>
-                    <p style={{ margin: '0', color: '#856404', fontWeight: '500' }}>
-                      ¿Estás seguro de que deseas marcar esta orden como <strong>COMPLETADA</strong>?
-                    </p>
-                    <small style={{ color: '#666', display: 'block', marginTop: '0.5rem' }}>
-                      Esta acción no se puede deshacer
-                    </small>
+                  <div style={{ background: 'linear-gradient(135deg, rgba(106,27,154,0.06), rgba(155,89,182,0.04))', border: '1px solid rgba(155,89,182,0.12)', borderRadius: '6px', padding: '1rem', textAlign: 'center', marginTop: '1rem' }}>
+                    <i className="fa-solid fa-exclamation-triangle" style={{ color: '#6a1b9a', fontSize: '1.5rem', marginBottom: '0.5rem' }}></i>
+                    <p style={{ margin: '0', color: '#4b0082', fontWeight: '500' }}>¿Estás seguro de que deseas marcar esta orden como <strong>COMPLETADA</strong>?</p>
+                    <small style={{ color: '#6b4a86', display: 'block', marginTop: '0.5rem' }}>Esta acción no se puede deshacer</small>
                   </div>
                 </div>
 
-                <div className="modal-footer" style={{
-                  padding: '1.5rem',
-                  borderTop: '1px solid #e0e0e0',
-                  background: '#f8f9fa',
-                  display: 'flex',
-                  justifyContent: 'flex-end',
-                  gap: '1rem',
-                  borderBottomLeftRadius: '10px',
-                  borderBottomRightRadius: '10px'
-                }}>
-                  <button
-                    onClick={cancelarConfirmacion}
-                    className="btn-profesional"
-                    style={{
-                      background: '#95a5a6',
-                      color: 'white',
-                      padding: '0.5rem 1.5rem',
-                      border: 'none',
-                      borderRadius: '6px',
-                      fontWeight: '600',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    <i className="fa-solid fa-times icon-gap"></i><span>Cancelar</span>
+                <div className="modal-footer" style={{ padding: '1.25rem', borderTop: '1px solid #e0e0e0', background: '#f8f9fa', display: 'flex', justifyContent: 'flex-end', gap: '1rem', borderBottomLeftRadius: '10px', borderBottomRightRadius: '10px' }}>
+                  <button onClick={cancelarConfirmacion} className="btn-profesional" style={{ background: '#95a5a6', color: 'white', padding: '0.5rem 1.25rem', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' }}>
+                    <i className="fa-solid fa-times icon-gap"></i> Cancelar
                   </button>
-                  <button
-                    onClick={confirmarCompletada}
-                    className="btn-profesional btn-primary-profesional"
-                    style={{
-                      background: 'linear-gradient(135deg, #27ae60, #2ecc71)',
-                      color: 'white',
-                      padding: '0.5rem 1.5rem',
-                      border: 'none',
-                      borderRadius: '6px',
-                      fontWeight: '600',
-                      cursor: 'pointer',
-                      boxShadow: '0 2px 4px rgba(39, 174, 96, 0.3)'
-                    }}
-                  >
-                    <i className="fa-solid fa-check icon-gap"></i><span>Marcar como Completada</span>
+                  <button onClick={confirmarCompletada} className="btn-profesional btn-primary-profesional" style={{ background: 'linear-gradient(135deg, #6a1b9a, #9b59b6)', color: 'white', padding: '0.5rem 1.25rem', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer', boxShadow: '0 2px 8px rgba(155,89,182,0.25)' }}>
+                    <i className="fa-solid fa-check icon-gap"></i> Marcar como Completada
                   </button>
                 </div>
               </div>

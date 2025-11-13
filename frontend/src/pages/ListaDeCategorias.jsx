@@ -3,6 +3,7 @@ import Swal from 'sweetalert2';
 import '../App.css';
 import Fijo from '../components/Fijo';
 import NavProductos from '../components/NavProductos'
+
 import api from '../api/axiosConfig';
 import PropTypes from 'prop-types';
 
@@ -563,7 +564,27 @@ const ListaDeCategorias = () => {
     }
   };
 
-  // deleteCategory removed: UI does not expose delete action for categories, keep server-safe methods in API
+  const deleteCategory = async (id) => {
+    const confirm = await Swal.fire({
+      title: '¿Estás seguro?',
+      text: 'Esta acción eliminará la categoría y todas sus subcategorías',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
+    });
+
+    if (!confirm.isConfirmed) return;
+
+    try {
+      const res = await api.delete(`/api/categories/${id}`);
+      if (!(res.status >= 200 && res.status < 300)) throw new Error('No se pudo eliminar la categoría');
+      Swal.fire('Eliminado', 'Categoría eliminada correctamente', 'success');
+      loadCategories();
+    } catch (err) {
+      Swal.fire('Error', err.message, 'error');
+    }
+  };
 
   const toggleEstadoCategoria = async (id, activar = false) => {
     const confirm = await Swal.fire({
@@ -712,7 +733,7 @@ const ListaDeCategorias = () => {
             onClick={() => { setCategoriaEditando(null); setModalVisible(true); }}
           >
             <i className="fa-solid fa-plus"></i>
-           <span>Nueva Categoría</span>
+            Nueva Categoría
           </button>
 
           {/* Tabla principal con diseño moderno */}

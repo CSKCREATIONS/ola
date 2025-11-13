@@ -21,7 +21,7 @@ function isValidEmail(email) {
   if (domain.startsWith('.') || domain.endsWith('.')) return false;
   if (domain.indexOf('.') === -1) return false;
   if (!/^[A-Za-z0-9.-]+$/.test(domain)) return false;
-  if (!/^[A-Za-z0-9!#$%&'*+/=?^_`{|}~.-]+$/.test(local)) return false;
+  if (!/^[A-Za-z0-9!#$%&'*+\/=?^_`{|}~.\-]+$/.test(local)) return false;
   return true;
 }
 
@@ -180,16 +180,6 @@ export default function HistorialCompras() {
     }
   };
 
-  const fetchProveedores = async () => {
-    try {
-      const res = await api.get('/api/proveedores');
-      const data = res.data || res;
-      setProveedores(data.proveedores || data.data || data);
-    } catch (error) {
-      console.error('Error al cargar proveedores:', error);
-    }
-  };
-
   const fetchProductos = async () => {
     try {
       const res = await api.get('/api/products');
@@ -197,6 +187,17 @@ export default function HistorialCompras() {
       setProductos(data.products || data.data || data);
     } catch (error) {
       console.error('Error al cargar productos:', error);
+    }
+  };
+
+  const fetchProveedores = async () => {
+    try {
+      const res = await api.get('/api/proveedores');
+      const data = res.data || res;
+      setProveedores(data.proveedores || data.data || data || []);
+    } catch (error) {
+      console.error('Error al cargar proveedores:', error);
+      setProveedores([]);
     }
   };
 
@@ -235,6 +236,37 @@ export default function HistorialCompras() {
 
   const actualizarProductoNuevaCompra = (index, campo, valor) => {
     const productosActualizados = [...nuevaCompra.productos];
+
+    // Si se está seleccionando un producto, auto-llenar precio y descripción
+    if (campo === 'producto') {
+      productosActualizados[index][campo] = valor;
+
+      if (!valor) {
+        // valor vacío: limpiar campos relacionados
+        productosActualizados[index].precioUnitario = 0;
+        productosActualizados[index].descripcion = '';
+      } else {
+        // buscar el producto en la lista global de productos
+        const encontrado = productos.find(p => {
+          const id = p._id || p.id || p.productoId;
+          return String(id) === String(valor);
+        });
+
+        if (encontrado) {
+          const precio = encontrado.precioUnitario || encontrado.precio || encontrado.price || encontrado.unitPrice || encontrado.priceUnitario || 0;
+          const descripcion = encontrado.descripcion || encontrado.description || encontrado.desc || '';
+          productosActualizados[index].precioUnitario = Number(precio) || 0;
+          productosActualizados[index].descripcion = descripcion;
+        } else {
+          productosActualizados[index].precioUnitario = 0;
+          productosActualizados[index].descripcion = '';
+        }
+      }
+
+      setNuevaCompra({ ...nuevaCompra, productos: productosActualizados });
+      return;
+    }
+
     productosActualizados[index][campo] = valor;
     setNuevaCompra({ ...nuevaCompra, productos: productosActualizados });
   };
@@ -250,13 +282,35 @@ export default function HistorialCompras() {
     }
 
     try {
-      const subtotal = nuevaCompra.productos.reduce((sum, p) => sum + (p.cantidad * p.precioUnitario), 0);
+      const subtotal = nuevaCompra.productos.reduce((sum, p) => sum + (p.cantidad * (p.precioUnitario || p.valorUnitario || 0)), 0);
       const impuestos = subtotal * 0.19;
       const total = subtotal + impuestos;
 
+      // Generar número de orden si no se provee uno
+      const generarNumeroOrden = () => `COM-${Date.now()}-${Math.random().toString(36).slice(2,8).toUpperCase()}`;
+
+      // Mapear productos al formato esperado por el backend
+      const productosPayload = nuevaCompra.productos.map(p => {
+        const cantidad = Number(p.cantidad) || 0;
+        const valorUnitario = Number(p.precioUnitario || p.valorUnitario || 0) || 0;
+        return {
+          producto: p.producto || p.productoId || '',
+          descripcion: p.descripcion || p.description || '',
+          cantidad,
+          valorUnitario,
+          descuento: 0,
+          valorTotal: cantidad * valorUnitario
+        };
+      });
+
+      // Enviar el nombre del proveedor al backend en lugar del id
+      const proveedorSeleccionado = proveedores.find(p => String(p._id || p.id) === String(nuevaCompra.proveedor));
+      const proveedorNombre = proveedorSeleccionado ? (proveedorSeleccionado.nombre || proveedorSeleccionado.name) : nuevaCompra.proveedor;
+
       const compraData = {
-        proveedor: nuevaCompra.proveedor,
-        productos: nuevaCompra.productos,
+        numeroOrden: generarNumeroOrden(),
+        proveedor: proveedorNombre,
+        productos: productosPayload,
         observaciones: nuevaCompra.observaciones,
         solicitadoPor: nuevaCompra.solicitadoPor,
         subtotal,
@@ -266,16 +320,18 @@ export default function HistorialCompras() {
       };
 
       const res = await api.post('/api/compras', compraData);
-      if (res.data.success) {
+      const data = res.data || res;
+      if (data.success) {
         Swal.fire('Éxito', 'Compra registrada correctamente', 'success');
         setModalNuevaCompraVisible(false);
         fetchCompras();
       } else {
-        Swal.fire('Error', res.data.message || 'No se pudo registrar la compra', 'error');
+        console.error('Error guardarNuevaCompra, respuesta:', data);
+        Swal.fire('Error', data.message || 'No se pudo registrar la compra', 'error');
       }
     } catch (error) {
       console.error('Error al guardar compra:', error);
-      Swal.fire('Error', 'No se pudo conectar con el servidor', 'error');
+      Swal.fire('Error', error.response?.data?.message || 'No se pudo conectar con el servidor', 'error');
     }
   };
 
@@ -284,6 +340,15 @@ export default function HistorialCompras() {
     fetchProveedores();
     fetchProductos();
   }, []);
+
+  // Productos filtrados por el proveedor seleccionado en la nueva compra
+  const productosFiltrados = nuevaCompra.proveedor
+    ? productos.filter(p => {
+        let prov = p.proveedor || p.proveedorId || (p.proveedor && p.proveedor._id) || p.proveedor;
+        if (typeof prov === 'object') prov = prov._id || prov.id;
+        return String(prov) === String(nuevaCompra.proveedor);
+      })
+    : productos;
 
   const verDetallesCompra = (compra) => {
     setCompraSeleccionada(compra);
@@ -561,7 +626,7 @@ export default function HistorialCompras() {
   };
 
   const enviarCompraPorCorreo = async () => {
-    if (!compraSeleccionada?._id) {
+    if (!compraSeleccionada || !compraSeleccionada._id) {
       Swal.fire('Error', 'No hay compra seleccionada', 'error');
       return;
     }
@@ -627,32 +692,30 @@ JLA Global Company</textarea>
       confirmButtonColor: '#27ae60',
       cancelButtonColor: '#6c757d',
       preConfirm: () => {
-        // Always return an object with a consistent shape: { ok: boolean, ... }
         const email = document.getElementById('emailDestino').value;
         const asunto = document.getElementById('asuntoEmail').value;
         const mensaje = document.getElementById('mensajeEmail').value;
-
+        
         if (!email) {
           Swal.showValidationMessage('Por favor ingresa un correo electrónico');
-          return { ok: false, error: 'missing_email' };
+          return false;
         }
-
+        
         if (!isValidEmail(email)) {
           Swal.showValidationMessage('Por favor ingresa un correo electrónico válido');
-          return { ok: false, error: 'invalid_email' };
+          return false;
         }
 
         if (!asunto || asunto.trim() === '') {
           Swal.showValidationMessage('Por favor ingresa un asunto');
-          return { ok: false, error: 'missing_subject' };
+          return false;
         }
-
-        return { ok: true, email, asunto, mensaje };
+        
+        return { email, asunto, mensaje };
       }
     });
 
-    // formValues will always be either undefined (cancelled) or an object with { ok }
-    if (formValues?.ok) {
+    if (formValues) {
       try {
         Swal.fire({
           title: 'Enviando...',
@@ -893,7 +956,7 @@ JLA Global Company</textarea>
                       fontWeight: '600',
                       textTransform: 'uppercase',
                       letterSpacing: '0.5px'
-                    }}>Número Orden</th>
+                    }}>Identificador</th>
                     <th style={{
                       padding: '20px 15px',
                       textAlign: 'left',
@@ -1092,7 +1155,7 @@ JLA Global Company</textarea>
             
             {/* Header mejorado */}
             <div className="modal-header-realista" style={{
-                background: 'linear-gradient(135deg, #27ae60, #2ecc71)',
+              background: 'linear-gradient(135deg, #6a1b9a, #9b59b6)',
                 color: 'white',
                 padding: '1.5rem 2rem',
                 borderTopLeftRadius: '12px',
@@ -1215,11 +1278,11 @@ JLA Global Company</textarea>
 
                 {/* Resumen financiero */}
                 <div style={{
-                    background: 'linear-gradient(135deg, #2c3e50, #34495e)',
-                    color: 'white',
-                    padding: '1.5rem',
-                    borderRadius: '10px',
-                    marginBottom: '2rem'
+                  background: 'linear-gradient(135deg, #6a1b9a, #9b59b6)',
+                  color: 'white',
+                  padding: '1.5rem',
+                  borderRadius: '10px',
+                  marginBottom: '2rem'
                 }}>
                     <h6 style={{ 
                         marginBottom: '1rem',
@@ -1305,9 +1368,9 @@ JLA Global Company</textarea>
                     }}>
                         <thead>
                             <tr style={{ 
-                                background: 'linear-gradient(135deg, #27ae60, #2ecc71)',
-                                color: 'white'
-                            }}>
+                                  background: 'linear-gradient(135deg, #6a1b9a, #9b59b6)',
+                                  color: 'white'
+                                }}>
                                 <th style={{ padding: '1rem', fontWeight: '600', width: '5%' }}>#</th>
                                 <th style={{ padding: '1rem', fontWeight: '600', width: '25%' }}>PRODUCTO</th>
                                 <th style={{ padding: '1rem', fontWeight: '600', width: '30%' }}>DESCRIPCIÓN</th>
@@ -1317,8 +1380,8 @@ JLA Global Company</textarea>
                             </tr>
                         </thead>
                         <tbody>
-              {compraSeleccionada.productos?.map((p, i) => (
-                <tr key={p._id || p.codigo || i} style={{ borderBottom: '1px solid #e9ecef' }}>
+                            {compraSeleccionada.productos?.map((p, i) => (
+                                <tr key={i} style={{ borderBottom: '1px solid #e9ecef' }}>
                                     <td style={{ padding: '1rem', color: '#666' }}>{i + 1}</td>
                                     <td style={{ padding: '1rem', fontWeight: '500' }}>
                                         {p.producto?.name || p.producto || 'Producto no especificado'}
@@ -1374,30 +1437,31 @@ JLA Global Company</textarea>
                 borderBottomLeftRadius: '12px',
                 borderBottomRightRadius: '12px'
             }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#666' }}>
-          <i className="fa-solid fa-circle-check" style={{ color: '#27ae60' }} aria-hidden={true}></i>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#666' }}>
+          <i className="fa-solid fa-circle-check" style={{ color: '#6a1b9a' }} aria-hidden={true}></i>
           <span>Compra confirmada y procesada</span>
                 </div>
                 <div style={{ display: 'flex', gap: '1rem' }}>
-                    <button
-                        className="btn-profesional btn-primary-profesional"
-                        onClick={imprimirCompra}
-                    >
-            <i className="fa-solid fa-print" aria-hidden={true}></i>
-            <span>Imprimir PDF</span>
-                    </button>
-                    <button
-                        className="btn-profesional"
-                        onClick={enviarCompraPorCorreo}
-                        style={{ 
-                            background: 'linear-gradient(135deg, #3498db, #2980b9)', 
-                            color: 'white',
-                            padding: '0.5rem 1.5rem'
-                        }}
-                    >
-            <i className="fa-solid fa-envelope" aria-hidden={true}></i>
-            <span>Enviar por correo</span>
-                    </button>
+              <button
+                className="btn-profesional btn-primary-profesional"
+                onClick={imprimirCompra}
+                style={{ background: 'linear-gradient(135deg, #6a1b9a, #9b59b6)', color: 'white' }}
+              >
+          <i className="fa-solid fa-print" aria-hidden={true}></i>
+          <span>Imprimir PDF</span>
+              </button>
+              <button
+                className="btn-profesional"
+                onClick={enviarCompraPorCorreo}
+                style={{ 
+                  background: 'linear-gradient(135deg, #6a1b9a, #9b59b6)', 
+                  color: 'white',
+                  padding: '0.5rem 1.5rem'
+                }}
+              >
+          <i className="fa-solid fa-envelope" aria-hidden={true}></i>
+          <span>Enviar por correo</span>
+              </button>
                     <button
                         className="btn-profesional"
                         onClick={() => setModalDetallesVisible(false)}
@@ -1475,7 +1539,7 @@ JLA Global Company</textarea>
                         <select
                           id="nuevaCompra-proveedor"
                           value={nuevaCompra.proveedor}
-                          onChange={(e) => setNuevaCompra({ ...nuevaCompra, proveedor: e.target.value })}
+                          onChange={(e) => setNuevaCompra({ ...nuevaCompra, proveedor: e.target.value, productos: [] })}
                           style={{
                             width: '100%',
                             padding: '0.75rem',
@@ -1485,8 +1549,8 @@ JLA Global Company</textarea>
                           }}
                         >
                           <option value="">Seleccione un proveedor</option>
-                          {proveedores.map(p => (
-                            <option key={p._id} value={p._id}>{p.nombre}</option>
+                          {proveedores.filter(p => p.activo).map(p => (
+                            <option key={p._id || p.id} value={p._id || p.id}>{p.nombre || p.name}</option>
                           ))}
                         </select>
                       </div>
@@ -1542,7 +1606,7 @@ JLA Global Company</textarea>
                     </div>
 
                     {nuevaCompra.productos.map((prod, index) => (
-                      <div key={prod.productoId || prod.codigo || index} style={{
+                      <div key={index} style={{
                         background: '#f8f9fa',
                         padding: '1rem',
                         borderRadius: '8px',
@@ -1585,8 +1649,8 @@ JLA Global Company</textarea>
                               }}
                             >
                               <option value="">Seleccione</option>
-                              {productos.map(p => (
-                                <option key={p._id} value={p._id}>{p.name}</option>
+                              {productosFiltrados.map(p => (
+                                <option key={p._id || p.id || p.productoId} value={p._id || p.id || p.productoId}>{p.name || p.nombre || p.title}</option>
                               ))}
                             </select>
                           </div>
