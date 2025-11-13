@@ -956,7 +956,7 @@ JLA Global Company</textarea>
                       fontWeight: '600',
                       textTransform: 'uppercase',
                       letterSpacing: '0.5px'
-                    }}>Número Orden</th>
+                    }}>Identificador</th>
                     <th style={{
                       padding: '20px 15px',
                       textAlign: 'left',

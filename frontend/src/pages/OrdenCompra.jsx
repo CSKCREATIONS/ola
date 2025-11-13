@@ -645,7 +645,7 @@ export default function OrdenCompra() {
     setModalAgregarVisible(true);
     setNuevaOrden({
       productos: [],
-      condicionesPago: "Contado",
+      condicionesPago: "",
       estado: 'Pendiente',
       solicitadoPor: usuarioActual,
       proveedor: '',
@@ -1331,7 +1331,7 @@ export default function OrdenCompra() {
                       color: 'white',
                       fontSize: '13px',
                       letterSpacing: '0.5px'
-                    }}>NÚMERO ORDEN</th>
+                    }}>IDENTIFICADOR</th>
                     <th style={{
                       padding: '16px 12px',
                       textAlign: 'left',
@@ -1364,7 +1364,7 @@ export default function OrdenCompra() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-user icon-gap" style={{ color: '#6366f1' }}></i>
+                      
                       SOLICITADO POR
                     </th>
                     <th style={{
@@ -1375,7 +1375,6 @@ export default function OrdenCompra() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-flag icon-gap" style={{ color: '#6366f1' }}></i>
                       ESTADO
                     </th>
                     <th style={{
@@ -1386,7 +1385,6 @@ export default function OrdenCompra() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-paper-plane icon-gap" style={{ color: '#6366f1' }}></i>
                       ENVIADO
                     </th>
                     <th style={{
@@ -1397,7 +1395,6 @@ export default function OrdenCompra() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
-                      <i className="fa-solid fa-cogs icon-gap" style={{ color: '#6366f1' }}></i>
                       ACCIONES
                     </th>
                   </tr>
