@@ -2110,10 +2110,7 @@ select:focus {
   background-color: #f9fbfd;
 }
 
-.form-grid {
-  grid-template-columns: 1fr 1fr;
-  gap: 15px;
-}
+/* earlier .form-grid duplicate removed; consolidated in line 108 */
 
 .form-group {
   margin-bottom: 15px;
@@ -2246,14 +2243,7 @@ select:focus {
   background-color: #cbd5e1;
 }
 
-.btn-save {
-  background-color: var(--primary-color);
-  color: white;
-}
-
-.btn-save:hover {
-  background-color: var(--primary-hover);
-}
+/* earlier .btn-save duplicate removed; consolidated later at line ~2295 */
 
 /* Responsive */
 @media (max-width: 576px) {
@@ -2510,17 +2500,7 @@ select:focus {
 }
 
 
-.modal-compact {
-  background: white;
-  border-radius: 10px;
-  padding: 40px;
-  width: 95%;
-  /* antes 90% */
-  max-width: 1100px;
-  /* antes 900px o 950px */
-  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.3);
-  position: relative;
-}
+/* earlier .modal-compact duplicate removed; consolidated at line 1113 */
 
 .modal-lg {
   max-width: 1100px !important;
@@ -2545,9 +2525,7 @@ select:focus {
   margin-bottom: 18px;
 }
 
-.modal-title {
-  font-size: 24px;
-}
+/* earlier .modal-title duplicate removed; consolidated at line ~2086 and ~2744 */
 
 /*inputs del editar cotizacion*/
 
@@ -2667,48 +2645,7 @@ select:focus {
     }
 }
 
-.table-profesional {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.table-profesional th {
-    padding: 1rem;
-    text-align: left;
-    font-weight: 600;
-    border-bottom: 2px solid #dee2e6;
-}
-
-.table-profesional td {
-    padding: 1rem;
-    border-bottom: 1px solid #e9ecef;
-}
-
-.table-profesional tr:hover {
-    background: #f8f9fa;
-}
-
-.btn-profesional {
-    padding: 0.5rem 1.5rem;
-    border: none;
-    border-radius: 6px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.btn-primary-profesional {
-    background: linear-gradient(135deg, #3498db, #2980b9);
-    color: white;
-}
-
-.btn-profesional:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-}
+/* earlier .table-profesional and .btn-profesional duplicate blocks removed; consolidated at lines 227-252 and 343-382 */
 
 
 /****Modal de proveedores*/
@@ -2732,37 +2669,7 @@ select:focus {
   animation: fadeIn 0.3s ease;
 }
 
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 20px;
-  background: #f8f9fa;
-  border-bottom: 1px solid #e5e5e5;
-}
-
-.modal-title {
-  margin: 0;
-  font-size: 1.2rem;
-  color: #333;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.modal-close {
-  background: transparent;
-  border: none;
-  font-size: 1.5rem;
-  color: #666;
-  cursor: pointer;
-}
-
-.modal-body {
-  padding: 20px;
-  max-height: 400px;
-  overflow-y: auto;
-}
+/* earlier .modal-header/.modal-title/.modal-close/.modal-body duplicates removed; consolidated at lines ~2076-2103 */
 
 .product-list {
   list-style: none;
@@ -2902,7 +2809,7 @@ select:focus {
   box-shadow: none !important;
 }
 
-/* Eliminar cualquier borde blanco restante */
+/* Eliminar cualquier borde blanco restante; .table-container primary definition at line 918 */
 div[class*="-advanced-container"] .table-container {
   background: transparent !important;
   border: none !important;
