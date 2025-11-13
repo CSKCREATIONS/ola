@@ -1,4 +1,4 @@
-import { createRequire } from 'module';
+import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 
 // We intentionally use createRequire so we can interoperate with existing CommonJS modules
