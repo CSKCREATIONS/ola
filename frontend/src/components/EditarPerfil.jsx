@@ -11,9 +11,8 @@ export default function EditarPerfil() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
     const user = JSON.parse(localStorage.getItem('user'));
-    if (!token || !user) return;
+    if (!user) return;
 
     setForm({
       firstName: user.firstName || '',
@@ -49,7 +48,6 @@ export default function EditarPerfil() {
 
   const guardarCambios = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem('token');
     const user = JSON.parse(localStorage.getItem('user'));
 
     if (passwords.new || passwords.confirm) {
@@ -133,7 +131,7 @@ export default function EditarPerfil() {
   return (
     <div 
       id="editar-perfil"
-      role="presentation"
+      aria-hidden="true"
       style={{
         position: 'fixed',
         top: 0,
@@ -155,11 +153,9 @@ export default function EditarPerfil() {
       }}
       // Keyboard handling (Escape) is attached at document level via useEffect.
     >
-      <form 
-        role="dialog"
+      <dialog
         aria-modal="true"
         aria-labelledby="edit-profile-title"
-        onSubmit={guardarCambios}
         style={{
           backgroundColor: 'white',
           borderRadius: '20px',
@@ -169,9 +165,13 @@ export default function EditarPerfil() {
           overflow: 'hidden',
           boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
           display: 'flex',
-          flexDirection: 'column'
+          flexDirection: 'column',
+          border: 'none',
+          padding: 0
         }}
+        open
       >
+        <form onSubmit={guardarCambios} style={{ display: 'flex', flexDirection: 'column' }}>
         {/* Header del modal */}
         <div style={{
           background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
@@ -613,6 +613,7 @@ export default function EditarPerfil() {
           </button>
         </div>
       </form>
+      </dialog>
     </div>
   );
 }
