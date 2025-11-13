@@ -1004,14 +1004,14 @@ exports.remisionarCotizacion = async (req, res) => {
 
     // Resolve cliente ObjectId: prefer cotizacion.cliente.referencia; if not present, try find by correo or create
     let clienteId = null;
-    if (cotizacion.cliente && cotizacion.cliente.referencia) {
+    if (cotizacion.cliente?.referencia) {
       // referencia may be an ObjectId or a populated object
       clienteId = (typeof cotizacion.cliente.referencia === 'object') ? (cotizacion.cliente.referencia._id || cotizacion.cliente.referencia) : cotizacion.cliente.referencia;
     }
 
     if (!clienteId) {
       // try to find by correo
-      const correo = (cotizacion.cliente && cotizacion.cliente.correo) ? String(cotizacion.cliente.correo).toLowerCase().trim() : null;
+      const correo = cotizacion.cliente?.correo ? String(cotizacion.cliente.correo).toLowerCase().trim() : null;
       if (correo) {
         let clienteExistente = await Cliente.findOne({ correo });
         if (!clienteExistente) {
