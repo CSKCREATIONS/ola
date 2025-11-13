@@ -381,8 +381,8 @@ export default function PedidosEntregados() {
     for (const el of elementosNoExport) { el.style.display = 'none'; }
 
     const tabla = document.getElementById("tabla_entregados");
-    const workbook = XLSX.utils.table_to_book(tabla, { sheet: "Pedidos Entregados" });
-    workbook.Sheets["Pedidos Entregados"]["!cols"] = Array(7).fill({ width: 20 });
+  const workbook = XLSX.utils.table_to_book(tabla, { sheet: "Pedidos Entregados" });
+  workbook.Sheets["Pedidos Entregados"]["!cols"] = new Array(7).fill({ width: 20 });
 
     XLSX.writeFile(workbook, 'pedidos_entregados.xlsx');
     for (const el of elementosNoExport) { el.style.display = ''; }
