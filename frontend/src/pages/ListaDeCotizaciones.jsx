@@ -476,17 +476,21 @@ export default function ListaDeCotizaciones() {
   // Manejar tecla Escape para cerrar el modal de edición desde el documento
   useEffect(() => {
     if (!modoEdicion) return;
-
     const handleEscape = (e) => {
       if (e.key === 'Escape' || e.key === 'Esc') {
-        setModoEdicion(false);
-        setCotizacionSeleccionada(null);
+        closeModal();
       }
     };
 
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
   }, [modoEdicion]);
+
+  // Helper para cerrar el modal de edición desde varios lugares
+  const closeModal = () => {
+    setModoEdicion(false);
+    setCotizacionSeleccionada(null);
+  };
 
   // Funciones de cálculo mejoradas
   const calcularSubtotalProducto = (producto) => {
@@ -1334,13 +1338,22 @@ export default function ListaDeCotizaciones() {
         <div className="cotizacion-modal-container">
           <div
             className="modal-overlay"
-            role="presentation"
-            aria-hidden="true"
+            role="button"
+            tabIndex={0}
+            aria-label="Cerrar modal (clic fuera o presione Enter/Escape)"
             onClick={(e) => {
               if (e.target === e.currentTarget) {
-                setModoEdicion(false);
-                setCotizacionSeleccionada(null);
+                closeModal();
               }
+            }}
+            onKeyDown={(e) => {
+              // Support keyboard activation for the overlay (Enter / Space)
+              if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+                if (e.target === e.currentTarget) closeModal();
+              }
+            }}
+            onTouchStart={(e) => {
+              if (e.target === e.currentTarget) closeModal();
             }}
           >
             <dialog className="modal-content-large" aria-label="Editar Cotización" aria-modal="true" open onClick={(e) => e.stopPropagation()}>
@@ -1353,7 +1366,7 @@ export default function ListaDeCotizaciones() {
                     <span>{new Date(cotizacionSeleccionada.fecha).toLocaleDateString()}</span>
                   </span>
                 </div>
-                <button className="close-button" aria-label="Cerrar modal" onClick={() => { setModoEdicion(false); setCotizacionSeleccionada(null); }}>
+                <button className="close-button" aria-label="Cerrar modal" onClick={closeModal}>
                   <i aria-hidden={true} className="fa-solid fa-times"></i>
                 </button>
               </div>
