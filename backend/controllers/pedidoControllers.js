@@ -14,7 +14,7 @@ const { enviarConGmail } = require('../utils/gmailSender');
 // Helper function para sanitizar IDs y prevenir inyección NoSQL
 const sanitizarId = (id) => {
   const idSanitizado = typeof id === 'string' ? id.trim() : '';
-  if (!idSanitizado || !idSanitizado.match(/^[0-9a-fA-F]{24}$/)) {
+  if (!idSanitizado?.match(/^[0-9a-fA-F]{24}$/)) {
     return null;
   }
   return idSanitizado;
@@ -86,7 +86,7 @@ async function savePedidoWithRetry(nuevoPedido) {
   try {
     return await nuevoPedido.save();
   } catch (saveErr) {
-    if (saveErr && saveErr.code === 11000) {
+    if (saveErr?.code === 11000) {
       const counter2 = await Counter.findOneAndUpdate(
         { _id: 'pedido' },
         { $inc: { seq: 1 } },
@@ -155,7 +155,7 @@ async function updateStockIfEntregado(pedido) {
 // Configurar SendGrid de forma segura para no bloquear el arranque
 try {
   const apiKey = process.env.SENDGRID_API_KEY;
-  if (apiKey && apiKey.startsWith('SG.')) {
+  if (apiKey?.startsWith('SG.')) {
     sgMail.setApiKey(apiKey);
     console.log('✉️  SendGrid listo (pedidos)');
   } else {
@@ -343,7 +343,7 @@ exports.actualizarEstadoPedido = async (req, res) => {
     // Si el nuevo estado es 'entregado', registrar la venta
     if (nuevoEstado === 'entregado') {
       const productosVenta = pedido.productos.map(item => {
-        if (!item.product || item.product.precio == null) {
+        if (item.product?.precio == null) {
           throw new Error(`Falta el precio del producto: ${item.product?._id}`);
         }
 
@@ -421,7 +421,7 @@ exports.marcarComoEntregado = async (req, res) => {
 
     // Construir productosVenta con precioUnitario
     const productosVenta = pedido.productos.map(item => {
-      if (!item.product || item.product.precio == null) {
+      if (item.product?.precio == null) {
         throw new Error(`Falta el precio del producto: ${item.product?._id}`);
       }
 
@@ -807,7 +807,7 @@ exports.enviarPedidoCanceladoPorCorreo = async (req, res) => {
 // Función auxiliar para enviar correos con adjuntos usando el transporter centralizado
 async function enviarCorreoConAttachment(destinatario, asunto, htmlContent, pdfAttachment) {
   const useGmail = process.env.USE_GMAIL === 'true';
-  const sendgridConfigured = process.env.SENDGRID_API_KEY && process.env.SENDGRID_API_KEY.startsWith('SG.');
+  const sendgridConfigured = process.env.SENDGRID_API_KEY?.startsWith('SG.');
 
   console.log('⚙️ Configuraciones disponibles:');
   console.log(`   SendGrid configurado: ${sendgridConfigured ? 'SÍ' : 'NO'}`);
@@ -865,307 +865,9 @@ async function enviarCorreoConAttachment(destinatario, asunto, htmlContent, pdfA
   throw new Error('Servicios de correo no configurados correctamente');
 }
 
-// Función auxiliar para generar HTML de pedido agendado
-function generarHTMLPedidoAgendado(pedido, mensaje) {
-  // Calcular totales
-  const totalProductos = pedido.productos?.length || 0;
-  const cantidadTotal = pedido.productos?.reduce((total, p) => total + (p.cantidad || 0), 0) || 0;
-  const totalPedido = pedido.total || pedido.productos?.reduce((total, p) => total + ((p.cantidad || 0) * (p.precioUnitario || 0)), 0) || 0;
-
-  return `
-    <!DOCTYPE html>
-    <html lang="es">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Pedido Agendado ${pedido.numeroPedido}</title>
-      <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-          line-height: 1.6; 
-          color: #333; 
-          background-color: #f8f9fa;
-          margin: 0;
-          padding: 10px;
-        }
-        .container { 
-          max-width: 800px; 
-          margin: 0 auto; 
-          background: white; 
-          border-radius: 10px; 
-          overflow: hidden; 
-          box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        .header { 
-          background: linear-gradient(135deg, #28a745, #20c997); 
-          color: white; 
-          padding: 20px; 
-          text-align: center; 
-        }
-        .header h1 { 
-          font-size: 2em; 
-          margin-bottom: 10px; 
-          font-weight: 300; 
-        }
-        .header p { 
-          font-size: 1em; 
-          opacity: 0.9; 
-        }
-        .content { 
-          padding: 20px; 
-        }
-        .info-grid { 
-          display: block;
-          margin-bottom: 20px; 
-        }
-        .info-card { 
-          background: #f8f9fa; 
-          padding: 15px; 
-          border-radius: 8px; 
-          border-left: 4px solid #28a745; 
-          margin-bottom: 15px;
-        }
-        .info-card h3 { 
-          color: #28a745; 
-          margin-bottom: 10px; 
-          font-size: 1.1em; 
-        }
-        .info-card p { 
-          margin-bottom: 5px; 
-          color: #555; 
-          font-size: 0.9em;
-        }
-        .info-card strong { 
-          color: #333; 
-        }
-        .products-section { 
-          margin: 20px 0; 
-        }
-        .products-title { 
-          background: #28a745; 
-          color: white; 
-          padding: 15px; 
-          margin-bottom: 0; 
-          border-radius: 8px 8px 0 0; 
-          font-size: 1.2em; 
-        }
-        .products-table { 
-          width: 100%; 
-          border-collapse: collapse; 
-          background: white; 
-          border-radius: 0 0 8px 8px; 
-          overflow: hidden; 
-          box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
-        }
-        .products-table thead { 
-          display: none; 
-        }
-        .products-table tr { 
-          display: block; 
-          border: 1px solid #eee; 
-          margin-bottom: 10px; 
-          border-radius: 8px; 
-          background: white; 
-          padding: 10px; 
-        }
-        .products-table td { 
-          display: block; 
-          text-align: left !important; 
-          padding: 5px 0; 
-          border: none; 
-          position: relative; 
-          padding-left: 120px; 
-        }
-        .products-table td:before { 
-          content: attr(data-label); 
-          position: absolute; 
-          left: 0; 
-          width: 110px; 
-          font-weight: bold; 
-          color: #28a745; 
-          font-size: 0.9em; 
-        }
-        .mobile-total {
-          display: block;
-          background: linear-gradient(135deg, #28a745, #20c997);
-          color: white;
-          padding: 15px;
-          border-radius: 8px;
-          margin: 15px 0;
-          text-align: center;
-          font-size: 1.2em;
-          font-weight: bold;
-        }
-        .message-section { 
-          background: linear-gradient(135deg, #007bff, #0056b3); 
-          color: white; 
-          padding: 20px; 
-          border-radius: 8px; 
-          margin: 20px 0; 
-        }
-        .message-section h3 { 
-          margin-bottom: 10px; 
-          font-size: 1.2em; 
-        }
-        .message-section p { 
-          font-size: 1em; 
-          line-height: 1.6; 
-        }
-        .footer { 
-          background: #343a40; 
-          color: #adb5bd; 
-          padding: 20px; 
-          text-align: center; 
-        }
-        .footer p { 
-          margin-bottom: 5px; 
-          font-size: 0.9em; 
-        }
-        .status-badge { 
-          display: inline-block; 
-          padding: 5px 12px; 
-          border-radius: 20px; 
-          font-size: 0.8em; 
-          font-weight: bold; 
-          text-transform: uppercase; 
-          background: #28a745; 
-          color: white; 
-        }
-        @media (min-width: 768px) { 
-          body { padding: 20px; }
-          .header h1 { font-size: 2.5em; }
-          .header p { font-size: 1.1em; }
-          .content { padding: 30px; }
-          .info-grid { 
-            display: grid; 
-            grid-template-columns: 1fr 1fr; 
-            gap: 30px; 
-          }
-          .info-card { padding: 20px; }
-          .info-card h3 { font-size: 1.2em; }
-          .info-card p { font-size: 1em; }
-          .products-table thead { display: table-header-group; }
-          .products-table tr { 
-            display: table-row; 
-            border: none; 
-            margin-bottom: 0; 
-            border-radius: 0; 
-            padding: 0; 
-          }
-          .products-table td { 
-            display: table-cell; 
-            padding: 15px; 
-            border-bottom: 1px solid #eee; 
-            padding-left: 15px; 
-          }
-          .products-table td:before { display: none; }
-          .products-table th { 
-            background: #20c997; 
-            color: white; 
-            padding: 15px; 
-            text-align: left; 
-            font-weight: 600; 
-          }
-          .products-table tr:hover { background: #f8f9fa; }
-          .mobile-total { display: none; }
-        }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <div class="header">
-          <h1>✅ PEDIDO AGENDADO</h1>
-          <p>Documento de pedido No. <strong>${pedido.numeroPedido}</strong></p>
-          <span class="status-badge">AGENDADO</span>
-        </div>
-
-        <div class="content">
-          <div class="info-grid">
-            <div class="info-card">
-              <h3>👤 Información del Cliente</h3>
-              <p><strong>Nombre:</strong> ${pedido.cliente?.nombre || 'N/A'}</p>
-              <p><strong>Correo:</strong> ${pedido.cliente?.correo || 'N/A'}</p>
-              <p><strong>Teléfono:</strong> ${pedido.cliente?.telefono || 'N/A'}</p>
-              <p><strong>Dirección:</strong> ${pedido.cliente?.direccion || 'N/A'}</p>
-              <p><strong>Ciudad:</strong> ${pedido.cliente?.ciudad || 'N/A'}</p>
-            </div>
-
-            <div class="info-card">
-              <h3>📋 Detalles del Pedido</h3>
-              <p><strong>Fecha:</strong> ${new Date(pedido.createdAt).toLocaleDateString('es-ES', { 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-              })}</p>
-              <p><strong>Fecha de Entrega:</strong> ${pedido.fechaEntrega ? new Date(pedido.fechaEntrega).toLocaleDateString('es-ES', { 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-              }) : 'Por definir'}</p>
-              <p><strong>Estado:</strong> Agendado</p>
-              <p><strong>Responsable:</strong> Sistema</p>
-              <p><strong>Items:</strong> ${totalProductos} productos</p>
-              <p><strong>Cantidad Total:</strong> ${cantidadTotal} unidades</p>
-            </div>
-          </div>
-
-          <div class="products-section">
-            <h2 class="products-title">🛍️ Productos Agendados</h2>
-            <table class="products-table">
-              <thead>
-                <tr>
-                  <th>Producto</th>
-                  <th style="text-align: center;">Cantidad</th>
-                  <th style="text-align: right;">Precio Unitario</th>
-                  <th style="text-align: right;">Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${pedido.productos?.map((producto, index) => `
-                  <tr>
-                    <td data-label="Producto:">
-                      <strong>${producto.product?.name || producto.product?.nombre || producto.descripcion || 'Producto sin nombre'}</strong>
-                      ${producto.product?.codigo ? '<br><small style="color: #666;">Código: ' + producto.product.codigo + '</small>' : ''}
-                    </td>
-                    <td data-label="Cantidad:" style="text-align: center; font-weight: bold;">${producto.cantidad || 0}</td>
-                    <td data-label="Precio Unit.:" style="text-align: right;">$${(producto.precioUnitario || 0).toLocaleString('es-ES')}</td>
-                    <td data-label="Total:" style="text-align: right; font-weight: bold;">$${((producto.cantidad || 0) * (producto.precioUnitario || 0)).toLocaleString('es-ES')}</td>
-                  </tr>
-                `).join('') || '<tr><td colspan="4">No hay productos</td></tr>'}
-              </tbody>
-            </table>
-            
-            <div class="mobile-total">
-              💰 Total General: $${totalPedido.toLocaleString('es-ES')}
-            </div>
-          </div>
-
-          <div class="message-section">
-            <h3>💬 Mensaje</h3>
-            <p>${mensaje || `Estimado/a ${pedido.cliente?.nombre || 'Cliente'}, nos complace informarle que su pedido ha sido agendado exitosamente y será procesado en las fechas indicadas. Encontrará adjunto el documento completo con los detalles de su pedido. Para cualquier consulta, no dude en contactarnos.`}</p>
-          </div>
-
-          ${pedido.observaciones ? `
-          <div class="info-card" style="margin-top: 20px;">
-            <h3>📝 Observaciones</h3>
-            <p>${pedido.observaciones}</p>
-          </div>
-          ` : ''}
-        </div>
-
-        <div class="footer">
-          <p><strong>${process.env.COMPANY_NAME || 'JLA Global Company'}</strong></p>
-          <p>📧 ${process.env.GMAIL_USER || process.env.SENDGRID_FROM_EMAIL || 'contacto@empresa.com'} | 📞 ${process.env.COMPANY_PHONE || 'Tel: (555) 123-4567'}</p>
-          <p style="margin-top: 15px; font-size: 0.9em;">
-            Este documento fue generado automáticamente el ${new Date().toLocaleDateString('es-ES')} a las ${new Date().toLocaleTimeString('es-ES')}
-          </p>
-        </div>
-      </div>
-    </body>
-    </html>
-  `;
-}
+// Note: `generarHTMLPedidoAgendado` implementation intentionally moved later in the file to
+// avoid duplicate function definitions. See the consolidated implementation near the end
+// of this file (keeps one authoritative implementation used by all email senders).
 
 // Función auxiliar para generar HTML de pedido devuelto
 function generarHTMLPedidoDevuelto(pedido, mensaje, motivoDevolucion) {
