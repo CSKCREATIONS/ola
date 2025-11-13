@@ -9,7 +9,8 @@ const mongoSanitize = require('express-mongo-sanitize');
 const config = require('./config');
 const {MongoClient , ObjectId} =  require ('mongodb');
 const dbConfig = require('./config/db.js');
-const crypto = require('crypto');
+// Use the explicit node: namespace to prefer the Node core module specifier
+const crypto = require('node:crypto');
 
 //Importar Rutas
 const authRoutes = require('./routes/authRoutes');
@@ -63,7 +64,9 @@ const tryConnectMongoClient = async (primaryUrl) => {
     }
 };
 
-(async () => {
+// Initialize a MongoClient connection. Keep this as an async function
+// and call it to preserve CommonJS compatibility (top-level await requires ESM).
+async function initMongoClient() {
     try {
         const mongoClient = await tryConnectMongoClient(dbConfig.url);
         app.set('mongoDB', mongoClient.db());
@@ -71,7 +74,9 @@ const tryConnectMongoClient = async (primaryUrl) => {
     } catch (error) {
         console.error('❌ No fue posible establecer conexión directa a MongoDB');
     }
-})();
+}
+
+initMongoClient();
 
 // Seguridad básica y utilidades
 app.use(helmet());
