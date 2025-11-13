@@ -13,16 +13,16 @@ export default function NavVentas() {
   const [puedeVerVentasAgendadas, setPuedeVerVentasAgendadas] = useState(false);
   const [puedeVerPedidosEntregados, setPuedeVerPedidosEntregados] = useState(false);
   const [puedeVerPedidosCancelados, setPuedeVerPedidosCancelados] = useState(false);
-  const [puedeVerListaDeVentas, setPuedeVerListaDeVentas] = useState(false);
+  const [, setPuedeVerListaDeVentas] = useState(false);
   const [puedeVerListaDeClientes, setPuedeVerListaDeClientes] = useState(false);
   const [puedeVerProspectos, setPuedeVerProspectos] = useState(false);
   const [puedeVerReportesVentas, setPuedeVerReportesVentas] = useState(false);
-  const [puedeVerRemisiones, setPuedeVerRemisiones] = useState(false);
+  const [, setPuedeVerRemisiones] = useState(false);
 
   // Leer permisos desde localStorage
   useEffect(() => {
     const usuario = JSON.parse(localStorage.getItem('user'));
-    if (usuario && usuario.permissions) {
+    if (usuario?.permissions) {
       setPuedeRegistrarCotizacion(usuario.permissions.includes('cotizaciones.crear'));
       setPuedeVerCotizaciones(usuario.permissions.includes('cotizaciones.ver'));
       setPuedeVerVentasAgendadas(usuario.permissions.includes('pedidosAgendados.ver'));
@@ -80,7 +80,7 @@ export default function NavVentas() {
       const visible = [];
       const hidden = [];
 
-      try {
+  try {
         filteredLinks.forEach((link) => {
           const linkElement = document.createElement('div');
           linkElement.className = 'nav-item';
@@ -99,7 +99,8 @@ export default function NavVentas() {
       } finally {
         // Asegurar que siempre se remueva el elemento temporal
         if (tempContainer.parentNode) {
-          document.body.removeChild(tempContainer);
+          // prefer child.remove() over parent.removeChild(child)
+          tempContainer.remove();
         }
       }
       setVisibleLinks(visible);
