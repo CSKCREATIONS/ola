@@ -60,12 +60,6 @@ router.post('/probar-gmail',
   remisionController.probarGmail
 );
 
-// 🆕 Crear remisión desde un pedido
-router.post('/crear-desde-pedido/:pedidoId',
-  verifyToken,
-  checkPermission('remisiones.crear'),
-  remisionController.crearRemisionDesdePedido
-);
 
 // Obtener una remisión por ID
 router.get('/:id',

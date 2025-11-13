@@ -1463,12 +1463,7 @@ export default function RegistrarCotizacion() {
                 </button>
               </div>
             </div>
-
-            <div className="buttons" style={{ display: 'none' }}>
-              <button className="btn btn-primary-cancel" onClick={handleCancelado}>Cancelar</button>
-              <button className="btn btn-primary-guardar" onClick={() => handleGuardarCotizacion(false, true)}>Guardar</button>
-              <button className="btn btn-primary-env">Guardar y Enviar</button>
-            </div>
+            
 
             
           </div>

@@ -248,21 +248,20 @@ export default function PedidosAgendados() {
   const currentItems = pedidos.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(pedidos.length / itemsPerPage);
 
-  useEffect(() => {
-    const fetchAll = async () => {
-      try {
-        const pedidosRes = await api.get('/api/pedidos?populate=true');
-        const pedidosData = pedidosRes.data || pedidosRes;
-        const agendados = (Array.isArray(pedidosData) ? pedidosData : pedidosData.data || []).filter(p => p.estado === 'agendado');
-        const agendadosOrdenados = agendados.sort((a, b) => new Date(b.createdAt || b.fechaCreacion) - new Date(a.createdAt || a.fechaCreacion));
-        setPedidos(agendadosOrdenados);
-      } catch (err) {
-        console.error('❌ Error al cargar pedidos agendados:', err);
-      }
-    };
+  // Cargar pedidos (reutilizable)
+  const fetchPedidosAgendados = async () => {
+    try {
+      const pedidosRes = await api.get('/api/pedidos?populate=true');
+      const pedidosData = pedidosRes.data || pedidosRes;
+      const agendados = (Array.isArray(pedidosData) ? pedidosData : pedidosData.data || []).filter(p => p.estado === 'agendado');
+      const agendadosOrdenados = agendados.sort((a, b) => new Date(b.createdAt || b.fechaCreacion) - new Date(a.createdAt || a.fechaCreacion));
+      setPedidos(agendadosOrdenados);
+    } catch (err) {
+      console.error('❌ Error al cargar pedidos agendados:', err);
+    }
+  };
 
-    fetchAll();
-  }, []);
+  useEffect(() => { fetchPedidosAgendados(); }, []);
 
   const exportarPDF = () => {
     const elementosNoExport = document.querySelectorAll('.no-export');
@@ -332,7 +331,7 @@ export default function PedidosAgendados() {
     }
   };
 
-  const marcarComoEntregado = async (id) => {
+  const remisionarPedido = async (id) => {
     // Mostrar modal para seleccionar fecha de entrega y luego llamar al endpoint de remisión
     try {
       const defaultDate = pedidoDefaultDateForSwal(id);
@@ -598,7 +597,7 @@ export default function PedidosAgendados() {
                         <div style={{ display: 'flex', gap: '5px' }}>
                           <button
                             className='pedidos-action-btn success'
-                            onClick={() => marcarComoEntregado(pedido._id)}
+                            onClick={() => remisionarPedido(pedido._id)}
                             title="Marcar como entregado"
                           >
                             <i className="fas fa-check"></i>
@@ -671,7 +670,7 @@ export default function PedidosAgendados() {
               datos={cotizacionPreview}
               onClose={() => setCotizacionPreview(null)}
               onEmailSent={handleEmailSent}
-              onRemisionar={() => marcarComoEntregado(cotizacionPreview._id)}
+              onRemisionar={() => remisionarPedido(cotizacionPreview._id)}
             />
           )}
 
@@ -700,14 +699,6 @@ export default function PedidosAgendados() {
                   }}>
                     Esta funcionalidad estará disponible próximamente.
                   </p>
-                </div>
-                <div className="modal-footer">
-                  <button 
-                    className="btn btn-cancel" 
-                    onClick={() => setMostrarModalAgendar(false)}
-                  >
-                    Cerrar
-                  </button>
                 </div>
               </div>
             </div>

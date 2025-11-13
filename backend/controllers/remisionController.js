@@ -237,84 +237,6 @@ exports.getAllRemisiones = async (req, res) => {
   }
 };
 
-// 🆕 Crear remisión desde un pedido
-exports.crearRemisionDesdePedido = async (req, res) => {
-  try {
-    const pedidoId = req.params.pedidoId;
-
-    // Sanitizar el ID para prevenir inyección NoSQL
-    const pedidoIdSanitizado = typeof pedidoId === 'string' ? pedidoId.trim() : '';
-    if (!pedidoIdSanitizado?.match(/^[0-9a-fA-F]{24}$/)) {
-      return res.status(400).json({ message: 'ID de pedido inválido' });
-    }
-
-    console.log(`📋 Creando remisión desde pedido ID: ${pedidoIdSanitizado}`);
-
-    const pedido = await Pedido.findById(pedidoIdSanitizado)
-      .populate('cliente')
-      .populate('productos.product');
-
-    if (!pedido) {
-      return res.status(404).json({ message: 'Pedido no encontrado', error: 'PEDIDO_NOT_FOUND' });
-    }
-
-    if (!['entregado', 'despachado'].includes(pedido.estado)) {
-      return res.status(400).json({ message: 'Solo se pueden crear remisiones de pedidos entregados o despachados', estadoActual: pedido.estado });
-    }
-
-    const remisionExistente = await Remision.findOne({ pedidoReferencia: pedidoIdSanitizado });
-    if (remisionExistente) {
-      return res.status(200).json({ message: 'Ya existe una remisión para este pedido', remision: remisionExistente, existente: true });
-    }
-
-    const counter = await Counter.findByIdAndUpdate('remision', { $inc: { seq: 1 } }, { new: true, upsert: true });
-    const numeroRemision = `REM-${String(counter.seq).padStart(5, '0')}`;
-
-    const productos = pedido.productos.map(p => ({
-      nombre: p.product?.name || p.product?.nombre || p.nombreProducto || `Producto ${p.product?._id || 'ID'}`,
-      cantidad: p.cantidad,
-      precioUnitario: p.precioUnitario,
-      total: p.cantidad * p.precioUnitario,
-      descripcion: p.product?.description || p.product?.descripcion || '',
-      codigo: p.product?.code || p.product?.codigo || ''
-    }));
-
-    const total = productos.reduce((sum, p) => sum + p.total, 0);
-    const cantidadTotal = productos.reduce((sum, p) => sum + p.cantidad, 0);
-
-    const nuevaRemision = new Remision({
-      numeroRemision,
-      pedidoReferencia: pedido._id,
-      codigoPedido: pedido.numeroPedido,
-      cliente: {
-        nombre: pedido.cliente?.nombre,
-        correo: pedido.cliente?.correo,
-        telefono: pedido.cliente?.telefono,
-        ciudad: pedido.cliente?.ciudad,
-        direccion: pedido.cliente?.direccion
-      },
-      productos,
-      fechaRemision: new Date(),
-      fechaEntrega: pedido.fechaEntrega || new Date(),
-      observaciones: `Remisión generada automáticamente desde pedido ${pedido.numeroPedido}`,
-      responsable: req.userId,
-      estado: 'activa',
-      total,
-      cantidadItems: productos.length,
-      cantidadTotal
-    });
-
-    const remisionGuardada = await nuevaRemision.save();
-    await remisionGuardada.populate('responsable', 'username firstName surname');
-
-    console.log(`✅ Remisión creada: ${numeroRemision} para pedido ${pedido.numeroPedido}`);
-
-    return res.status(201).json({ message: 'Remisión creada exitosamente', remision: remisionGuardada, creada: true });
-  } catch (error) {
-    console.error('❌ Error al crear remisión desde pedido:', error);
-    return res.status(500).json({ message: 'Error al crear remisión', error: error.message });
-  }
-};
 
 // Probar configuración de Gmail SMTP
 exports.probarGmail = async (req, res) => {
@@ -512,5 +434,25 @@ exports.updateEstadoRemision = async (req, res) => {
   } catch (error) {
     console.error('Error al actualizar estado de remisión:', error);
     return res.status(500).json({ message: 'Error actualizando estado', error: error.message });
+  }
+};
+
+// Obtener remisión por referencia de cotización
+exports.getByCotizacionReferencia = async (req, res) => {
+  try {
+    const cotizacionId = typeof req.params.id === 'string' ? req.params.id.trim() : '';
+    if (!cotizacionId?.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ message: 'ID de cotización inválido' });
+    }
+
+    const remision = await Remision.findOne({ cotizacionReferencia: cotizacionId }).select('_id numeroRemision cotizacionReferencia');
+    if (!remision) {
+      return res.json({ existe: false });
+    }
+
+    return res.json({ existe: true, numeroRemision: remision.numeroRemision, remisionId: remision._id });
+  } catch (error) {
+    console.error('Error al buscar remisión por cotización:', error);
+    return res.status(500).json({ message: 'Error al buscar remisión por cotización', error: error.message });
   }
 };
