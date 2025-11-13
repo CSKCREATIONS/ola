@@ -50,7 +50,6 @@ const exportToExcel = () => {
 }
 
   useEffect(() => {
-  const token = localStorage.getItem('token');
     const cargarVentasInicial = async () => {
       try {
         const res = await api.get('/api/ventas');
@@ -62,7 +61,7 @@ const exportToExcel = () => {
     };
 
     cargarVentasInicial();
-}, []);
+  }, []);
 
 
   const ventasFiltradas = ventas.filter(venta => {
@@ -77,28 +76,25 @@ const exportToExcel = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
   
-    const indexOfLastItem = currentPage * itemsPerPage;
-    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = ventasFiltradas.slice(indexOfFirstItem, indexOfLastItem);
+  const indexOfLastItem = currentPage * itemsPerPage; // kept for possible future pagination
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage; // kept for possible future pagination
     const totalPages = Math.ceil(ventasFiltradas.length / itemsPerPage);
   
     const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
-  const cargarVentas = () => {
-  const token = localStorage.getItem('token');
-    const cargarVentas = async () => {
-      try {
-        const res = await api.get('/api/ventas');
-        setVentas(res.data);
-      } catch (err) {
-        console.error('Error al cargar ventas:', err);
-      }
-    };
-};
+  // cargarVentas: single async function used by effect
+  const cargarVentas = async () => {
+    try {
+      const res = await api.get('/api/ventas');
+      setVentas(res.data);
+    } catch (err) {
+      console.error('Error al cargar ventas:', err);
+    }
+  };
 
-useEffect(() => {
-  cargarVentas();
-}, []);
+  useEffect(() => {
+    cargarVentas();
+  }, []);
 
 
   return (
