@@ -24,6 +24,11 @@ export default function PedidoAgendadoEmail({ datos, onClose, onEmailSent }) {
     
     const totalFinal = datos?.total || totalCalculado;
     
+    // Fecha de pedido: preferir createdAt, si no existe usar fecha, si ninguna está presente mostrar 'N/A'
+    const fechaPedido = datos?.createdAt
+      ? new Date(datos.createdAt).toLocaleDateString('es-ES')
+      : (datos?.fecha ? new Date(datos.fecha).toLocaleDateString('es-ES') : 'N/A');
+
     // Actualizar datos autocompletados cada vez que se abre el modal
     setCorreo(datos?.cliente?.correo || '');
     setAsunto(`Pedido Agendado ${datos?.numeroPedido || ''} - ${datos?.cliente?.nombre || 'Cliente'} | ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}`);
@@ -35,7 +40,7 @@ Esperamos se encuentre muy bien. Su pedido ha sido agendado exitosamente con la 
 📦 DETALLES DEL PEDIDO AGENDADO:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 • Número de pedido: ${datos?.numeroPedido || 'N/A'}
-• Fecha de pedido: ${datos?.createdAt ? new Date(datos.createdAt).toLocaleDateString('es-ES') : datos?.fecha ? new Date(datos.fecha).toLocaleDateString('es-ES') : 'N/A'}
+• Fecha de pedido: ${fechaPedido}
 • Fecha de entrega programada: ${datos?.fechaEntrega ? new Date(datos.fechaEntrega).toLocaleDateString('es-ES') : 'Por definir'}
 • Cliente: ${datos?.cliente?.nombre || 'N/A'}
 • Correo: ${datos?.cliente?.correo || 'N/A'}
