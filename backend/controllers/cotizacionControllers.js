@@ -169,7 +169,6 @@ exports.createCotizacion = async (req, res) => {
 };
 
 
-
 // Obtener todas las cotizaciones
 exports.getCotizaciones = async (req, res) => {
   try {
@@ -231,10 +230,6 @@ exports.getCotizaciones = async (req, res) => {
     res.status(500).json({ message: 'Error al obtener cotizaciones' });
   }
 };
-
-
-
-
 
 
 // Obtener cotización por ID
@@ -389,7 +384,6 @@ exports.updateEstadoCotizacion = async (req, res) => {
     res.status(500).json({ message: 'Error al actualizar estado', error: error.message });
   }
 };
-
 
 
 exports.getUltimaCotizacionPorCliente = async (req, res) => {

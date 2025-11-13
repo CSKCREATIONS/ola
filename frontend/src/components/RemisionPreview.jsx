@@ -451,7 +451,6 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                     Entregar a:
                   </h3>
                   <div style={{ lineHeight: '1.8' }}>
-                    <p><strong>Pedido remisionado:</strong> {datosConDefaults.codigoPedido || datosConDefaults.pedidoReferencia || 'N/A'}</p>
                     <p><strong>Cliente:</strong> {clienteResolved?.nombre || datosConDefaults.cliente?.nombre || 'Cliente no especificado'}</p>
                     <p><strong>Dirección:</strong> {clienteResolved?.direccion || datosConDefaults.cliente?.direccion || 'Dirección no especificada'}</p>
                     <p><strong>Ciudad:</strong> {clienteResolved?.ciudad || datosConDefaults.cliente?.ciudad || 'Ciudad no especificada'}</p>
