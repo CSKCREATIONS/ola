@@ -976,9 +976,65 @@ export default function ListaDeCotizaciones() {
                   </tr>
                 </thead>
                 <tbody>
-                  {currentItems.map((cot, index) => (
+                  {currentItems.map((cot, index) => {
+                    const rowClass = highlightId === cot._id ? (blinkOn ? 'row-blink' : 'row-blink-off') : '';
+
+                    const statusBadge = isRemisionada(cot) ? (
+                      <span style={{
+                        background: 'linear-gradient(135deg, #7c3aed, #6d28d9)',
+                        color: 'white',
+                        padding: '8px 12px',
+                        borderRadius: '20px',
+                        fontSize: '11px',
+                        fontWeight: '700',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px'
+                      }}>
+                        <i aria-hidden={true} className="fa-solid fa-tag" style={{ fontSize: '10px' }}></i>
+                        <span>REMISIONADA</span>
+                      </span>
+                    ) : isAgendada(cot) ? (
+                      <span style={{
+                        backgroundColor: '#16a34a',
+                        color: 'white',
+                        padding: '8px 12px',
+                        borderRadius: '20px',
+                        fontSize: '11px',
+                        fontWeight: '700',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px'
+                      }}>
+                        <i aria-hidden={true} className="fa-solid fa-calendar-check" style={{ fontSize: '10px' }}></i>
+                        <span>AGENDADA</span>
+                      </span>
+                    ) : (
+                      <span style={{
+                        backgroundColor: '#0ea5e9',
+                        color: 'white',
+                        padding: '8px 12px',
+                        borderRadius: '20px',
+                        fontSize: '11px',
+                        fontWeight: '700',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px'
+                      }}>
+                        <i aria-hidden={true} className="fa-solid fa-clock" style={{ fontSize: '10px' }}></i>
+                        <span>PENDIENTE</span>
+                      </span>
+                    );
+
+                    return (
                     <tr key={cot._id}
-                      className={highlightId === cot._id ? (blinkOn ? 'row-blink' : 'row-blink-off') : ''}
+                      className={rowClass}
                       style={{
                         borderBottom: '1px solid #f3f4f6',
                         transition: 'all 0.2s ease'
@@ -1056,58 +1112,7 @@ export default function ListaDeCotizaciones() {
                         )}
                       </td>
                       <td style={{ padding: '16px 12px', textAlign: 'center' }}>
-                        {isRemisionada(cot) ? (
-                          <span style={{
-                            background: 'linear-gradient(135deg, #7c3aed, #6d28d9)',
-                            color: 'white',
-                            padding: '8px 12px',
-                            borderRadius: '20px',
-                            fontSize: '11px',
-                            fontWeight: '700',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.5px'
-                          }}>
-                            <i aria-hidden={true} className="fa-solid fa-tag" style={{ fontSize: '10px' }}></i>
-                            <span>REMISIONADA</span>
-                          </span>
-                        ) : isAgendada(cot) ? (
-                          <span style={{
-                            backgroundColor: '#16a34a',
-                            color: 'white',
-                            padding: '8px 12px',
-                            borderRadius: '20px',
-                            fontSize: '11px',
-                            fontWeight: '700',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.5px'
-                          }}>
-                            <i aria-hidden={true} className="fa-solid fa-calendar-check" style={{ fontSize: '10px' }}></i>
-                            <span>AGENDADA</span>
-                          </span>
-                        ) : (
-                          <span style={{
-                            backgroundColor: '#0ea5e9',
-                            color: 'white',
-                            padding: '8px 12px',
-                            borderRadius: '20px',
-                            fontSize: '11px',
-                            fontWeight: '700',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.5px'
-                          }}>
-                            <i aria-hidden={true} className="fa-solid fa-clock" style={{ fontSize: '10px' }}></i>
-                            <span>PENDIENTE</span>
-                          </span>
-                        )}
+                        {statusBadge}
                       </td>
                       <td style={{ padding: '16px 12px', textAlign: 'center' }}>
                         <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
@@ -1203,7 +1208,8 @@ export default function ListaDeCotizaciones() {
                         </div>
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
 
                   {cotizacionesFiltradas.length === 0 && (
                     <tr>
@@ -1312,7 +1318,6 @@ export default function ListaDeCotizaciones() {
         <div className="cotizacion-modal-container">
           <div
             className="modal-overlay"
-            role="presentation"
             onClick={(e) => {
               if (e.target === e.currentTarget) {
                 setModoEdicion(false);
@@ -1320,7 +1325,7 @@ export default function ListaDeCotizaciones() {
               }
             }}
           >
-            <div className="modal-content-large" role="dialog" aria-modal="true" aria-label="Editar Cotización">
+            <dialog className="modal-content-large" aria-label="Editar Cotización" open onClick={(e) => e.stopPropagation()}>
               <div className="modal-header">
                 <div className="header-info">
                   <h3>Editar Cotización</h3>
@@ -1709,7 +1714,7 @@ export default function ListaDeCotizaciones() {
                   </button>
                 </div>
               </div>
-            </div>
+            </dialog>
           </div>
 
           {mostrarPreview && cotizacionSeleccionada && (

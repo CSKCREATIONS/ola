@@ -365,7 +365,8 @@ export default function ListaDeUsuarios() {
     fetchUsuarios();
 
     const user = JSON.parse(localStorage.getItem('user'));
-    if (user && user.permissions) {
+    // Prefer optional chaining for concise guard checks
+    if (user?.permissions) {
       setPuedeCrearUsuario(user.permissions.includes('usuarios.crear'));
       setPuedeEditarUsuario(user.permissions.includes('usuarios.editar'));
       setPuedeInhabilitarUsuario(user.permissions.includes('usuarios.inhabilitar'));

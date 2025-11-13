@@ -51,6 +51,78 @@ if (!document.querySelector('#clientes-advanced-styles')) {
   document.head.appendChild(styleSheet);
 }
 
+/*** MODAL EDITAR CLIENTE (moved to module scope) ***/
+const ModalEditarCliente = ({ cliente, onClose, onSave }) => {
+  const [form, setForm] = useState({ ...cliente });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!form.nombre || !form.ciudad || !form.telefono || !form.correo) {
+      Swal.fire('Campos obligatorios', 'Completa todos los campos', 'warning');
+      return;
+    }
+    onSave(form);
+  };
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal-compact">
+        <div className="modal-header">
+          <h5 className="modal-title">Editar Cliente</h5>
+          <button className="modal-close" onClick={onClose}>&times;</button>
+        </div>
+        <form onSubmit={handleSubmit}>
+          <div className="modal-body">
+            <div className="form-group">
+              <label htmlFor="input-cliente-1" className="form-label required">Nombre</label>
+              <input id="input-cliente-1" name="nombre" value={form.nombre} onChange={handleChange} className="form-input" required />
+            </div>
+            <div className="form-group">
+              <label htmlFor="input-cliente-2" className="form-label required">Ciudad</label>
+              <input id="input-cliente-2" name="ciudad" value={form.ciudad} onChange={handleChange} className="form-input" required />
+            </div>
+            <div className="form-group">
+              <label htmlFor="input-cliente-3" className="form-label required">Teléfono</label>
+              <input id="input-cliente-3" name="telefono" value={form.telefono} onChange={handleChange} className="form-input" required />
+            </div>
+            <div className="form-group">
+              <label htmlFor="input-cliente-4" className="form-label required">Correo</label>
+              <input id="input-cliente-4" name="correo" value={form.correo} onChange={handleChange} className="form-input" required />
+            </div>
+          </div>
+          <div className="modal-footer">
+            <button type="button" className="btn btn-cancel" onClick={onClose}>Cancelar</button>
+            <button type="submit" className="btn btn-save">Guardar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// PropTypes for ModalEditarCliente
+ModalEditarCliente.propTypes = {
+  cliente: PropTypes.shape({
+    _id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    nombre: PropTypes.string,
+    ciudad: PropTypes.string,
+    telefono: PropTypes.string,
+    correo: PropTypes.string,
+  }),
+  onClose: PropTypes.func,
+  onSave: PropTypes.func.isRequired,
+};
+
+ModalEditarCliente.defaultProps = {
+  cliente: null,
+  onClose: () => {},
+};
+
 export default function ListaDeClientes() {
   const [clientes, setClientes] = useState([]);
   const [clienteSeleccionado, setClienteSeleccionado] = useState(null);
@@ -95,27 +167,7 @@ export default function ListaDeClientes() {
     cargarClientes();
   }, []);
 
-  const handleEliminar = (id) => {
-    Swal.fire({
-      title: '¿Estás seguro?',
-      text: 'Esta acción eliminará el cliente.',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar'
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        try {
-          await api.delete(`/api/clientes/${id}`);
-          setClientes(clientes.filter(c => c._id !== id));
-          Swal.fire('Eliminado', 'Cliente eliminado correctamente.', 'success');
-        } catch (err) {
-          console.error(err);
-          Swal.fire('Error', 'No se pudo eliminar el cliente.', 'error');
-        }
-      }
-    });
-  };
+  
 
   const handleGuardar = async (clienteActualizado) => {
     try {
@@ -181,77 +233,7 @@ export default function ListaDeClientes() {
     saveAs(data, 'ListaClientes.xlsx');
   };
 
-  /*** MODAL EDITAR CLIENTE ***/
-  const ModalEditarCliente = ({ cliente, onClose, onSave }) => {
-    const [form, setForm] = useState({ ...cliente });
-
-    const handleChange = (e) => {
-      const { name, value } = e.target;
-      setForm(prev => ({ ...prev, [name]: value }));
-    };
-
-    const handleSubmit = (e) => {
-      e.preventDefault();
-      if (!form.nombre || !form.ciudad || !form.telefono || !form.correo) {
-        Swal.fire('Campos obligatorios', 'Completa todos los campos', 'warning');
-        return;
-      }
-      onSave(form);
-    };
-
-    return (
-      <div className="modal-overlay">
-        <div className="modal-compact">
-          <div className="modal-header">
-            <h5 className="modal-title">Editar Cliente</h5>
-            <button className="modal-close" onClick={onClose}>&times;</button>
-          </div>
-          <form onSubmit={handleSubmit}>
-            <div className="modal-body">
-              <div className="form-group">
-                <label htmlFor="input-cliente-1" className="form-label required">Nombre</label>
-                <input id="input-cliente-1" name="nombre" value={form.nombre} onChange={handleChange} className="form-input" required />
-              </div>
-              <div className="form-group">
-                <label htmlFor="input-cliente-2" className="form-label required">Ciudad</label>
-                <input id="input-cliente-2" name="ciudad" value={form.ciudad} onChange={handleChange} className="form-input" required />
-              </div>
-              <div className="form-group">
-                <label htmlFor="input-cliente-3" className="form-label required">Teléfono</label>
-                <input id="input-cliente-3" name="telefono" value={form.telefono} onChange={handleChange} className="form-input" required />
-              </div>
-              <div className="form-group">
-                <label htmlFor="input-cliente-4" className="form-label required">Correo</label>
-                <input id="input-cliente-4" name="correo" value={form.correo} onChange={handleChange} className="form-input" required />
-              </div>
-            </div>
-            <div className="modal-footer">
-              <button type="button" className="btn btn-cancel" onClick={onClose}>Cancelar</button>
-              <button type="submit" className="btn btn-save">Guardar</button>
-            </div>
-          </form>
-        </div>
-      </div>
-    );
-  };
-
-  // PropTypes for ModalEditarCliente
-  ModalEditarCliente.propTypes = {
-    cliente: PropTypes.shape({
-      _id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-      nombre: PropTypes.string,
-      ciudad: PropTypes.string,
-      telefono: PropTypes.string,
-      correo: PropTypes.string,
-    }),
-    onClose: PropTypes.func,
-    onSave: PropTypes.func.isRequired,
-  };
-
-  ModalEditarCliente.defaultProps = {
-    cliente: null,
-    onClose: () => {},
-  };
+  
 
   return (
     <div className="clientes-container">

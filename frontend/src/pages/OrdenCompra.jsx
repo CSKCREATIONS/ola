@@ -228,21 +228,23 @@ function isValidEmail(email) {
   return allLabelsValid;
 }
 
+// Prefer window.crypto, then module/global, then fallback via Function to avoid relying on globalThis
+function getCrypto() {
+  if (typeof window !== 'undefined' && window.crypto) return window.crypto;
+  if (typeof global !== 'undefined' && global.crypto) return global.crypto;
+  try {
+    const g = new Function('return this')();
+    if (g?.crypto) return g.crypto;
+  } catch (e) {
+    // ignore
+  }
+  return null;
+}
+
 // Secure random string for client-side identifiers using Web Crypto when available
 function secureRandomString(length) {
   const alphabet = 'abcdefghijklmnopqrstuvwxyz0123456789';
   // Prefer window.crypto, then module/global, then fallback via Function to avoid relying on globalThis
-  function getCrypto() {
-    if (typeof window !== 'undefined' && window.crypto) return window.crypto;
-    if (typeof global !== 'undefined' && global.crypto) return global.crypto;
-    try {
-      const g = new Function('return this')();
-      if (g?.crypto) return g.crypto;
-    } catch (e) {
-      // ignore
-    }
-    return null;
-  }
   const cryptoObj = getCrypto();
   if (cryptoObj?.getRandomValues) {
     const bytes = new Uint8Array(length);
@@ -344,8 +346,9 @@ async function fetchProductosPorProveedorHelper(proveedorId, setProductosProveed
 }
 
 // Helper: buscar producto por id en distintas estructuras
-function findProductoById(productos = [], id) {
+function findProductoById(id, productos = []) {
   if (!id) return null;
+  productos = productos || [];
   return productos.find(p => p._id === id || p.id === id || p.productoId === id);
 }
 
@@ -368,7 +371,12 @@ function crearProductoFromSelection(productoSeleccionado = {}, productoTemp = {}
 
 // Helper: manejar selección de proveedor para el modal de creación
 async function handleProveedorChangeHelper(eOrId, proveedores, setNuevaOrden, setProductoTemp, fetchProductosPorProveedor, setProductosProveedor) {
-  const proveedorId = typeof eOrId === 'string' ? eOrId : (eOrId.target ? eOrId.target.value : '');
+  let proveedorId;
+  if (typeof eOrId === 'string') {
+    proveedorId = eOrId;
+  } else {
+    proveedorId = eOrId?.target?.value || '';
+  }
   const proveedorSeleccionado = proveedores.find(p => p._id === proveedorId);
 
   setNuevaOrden(prev => ({
@@ -389,7 +397,12 @@ async function handleProveedorChangeHelper(eOrId, proveedores, setNuevaOrden, se
 
 // Helper: manejar selección de proveedor para el modal de edición
 async function handleProveedorChangeEditarHelper(eOrId, proveedores, setOrdenEditando, fetchProductosPorProveedor, setProductosProveedor) {
-  const proveedorId = typeof eOrId === 'string' ? eOrId : (eOrId.target ? eOrId.target.value : '');
+  let proveedorId;
+  if (typeof eOrId === 'string') {
+    proveedorId = eOrId;
+  } else {
+    proveedorId = eOrId?.target?.value || '';
+  }
   const proveedorSeleccionado = proveedores.find(p => p._id === proveedorId);
 
   setOrdenEditando(prev => ({
@@ -407,13 +420,18 @@ async function handleProveedorChangeEditarHelper(eOrId, proveedores, setOrdenEdi
 
 // Helper: manejar cambio de producto en selects (agregar)
 function handleProductoChangeHelper(eOrId, productosProveedor, setProductoTemp) {
-  const productoId = typeof eOrId === 'string' ? eOrId : (eOrId.target ? eOrId.target.value : '');
+  let productoId;
+  if (typeof eOrId === 'string') {
+    productoId = eOrId;
+  } else {
+    productoId = eOrId?.target?.value || '';
+  }
   if (!productoId) {
     setProductoTemp({ producto: '', descripcion: '', cantidad: 1, valorUnitario: 0, descuento: 0, productoId: '' });
     return;
   }
 
-  const productoSeleccionado = findProductoById(productosProveedor, productoId);
+  const productoSeleccionado = findProductoById(productoId, productosProveedor);
   if (productoSeleccionado) {
     setProductoTemp({
       producto: productoSeleccionado.name || productoSeleccionado.nombre,
@@ -655,18 +673,21 @@ async function enviarOrdenPorCorreoHelper(orden) {
       const email = document.getElementById('emailDestino').value;
       const asunto = document.getElementById('asuntoEmail').value;
       const mensaje = document.getElementById('mensajeEmail').value;
-      if (!email) { Swal.showValidationMessage('Por favor ingresa un correo electrónico'); return false; }
+      // Return a consistent object shape so callers can check `valid` instead of relying on truthiness
+      if (!email) { Swal.showValidationMessage('Por favor ingresa un correo electrónico'); return { valid: false }; }
       // Use deterministic validator to avoid any regex backtracking issues
-      if (!isValidEmail(email)) { Swal.showValidationMessage('Por favor ingresa un correo electrónico válido'); return false; }
-      if (!asunto || asunto.trim() === '') { Swal.showValidationMessage('Por favor ingresa un asunto'); return false; }
-      return { email, asunto, mensaje };
+      if (!isValidEmail(email)) { Swal.showValidationMessage('Por favor ingresa un correo electrónico válido'); return { valid: false }; }
+      if (!asunto || asunto.trim() === '') { Swal.showValidationMessage('Por favor ingresa un asunto'); return { valid: false }; }
+      return { valid: true, email, asunto, mensaje };
     }
   });
 
-  if (formValues) {
+  // `formValues` is always an object; check `.valid` to determine success
+  if (formValues?.valid) {
     try {
+      const { email, asunto, mensaje } = formValues;
       Swal.fire({ title: 'Enviando...', text: 'Por favor espera', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
-      await api.post(`/api/ordenes-compra/${orden._id}/enviar-email`, { destinatario: formValues.email, asunto: formValues.asunto, mensaje: formValues.mensaje || 'Orden de compra adjunta' });
+      await api.post(`/api/ordenes-compra/${orden._id}/enviar-email`, { destinatario: email, asunto: asunto, mensaje: mensaje || 'Orden de compra adjunta' });
       Swal.fire({ icon: 'success', title: '¡Enviado!', text: 'La orden de compra ha sido enviada por correo electrónico', confirmButtonColor: '#f39c12' });
     } catch (error) {
       console.error('Error al enviar correo:', error);
@@ -787,7 +808,7 @@ export default function OrdenCompra() {
       Swal.fire('Error', 'Por favor selecciona un producto de la lista', 'error');
       return;
     }
-    const productoSeleccionado = findProductoById(productosProveedor, productoTemp.productoId);
+  const productoSeleccionado = findProductoById(productoTemp.productoId, productosProveedor);
     if (!productoSeleccionado) {
       Swal.fire('Error', 'Producto no encontrado', 'error');
       return;
@@ -817,7 +838,7 @@ export default function OrdenCompra() {
       Swal.fire('Error', 'Por favor selecciona un producto de la lista', 'error');
       return;
     }
-    const productoSeleccionado = findProductoById(productosProveedor, productoTemp.productoId);
+  const productoSeleccionado = findProductoById(productoTemp.productoId, productosProveedor);
     if (!productoSeleccionado) {
       Swal.fire('Error', 'Producto no encontrado', 'error');
       return;
@@ -980,11 +1001,7 @@ export default function OrdenCompra() {
     setErrores({});
   };
 
-  const calcularValorTotalProducto = (p) => {
-    const subtotal = p.cantidad * p.valorUnitario;
-    const descuento = p.descuento || 0;
-    return subtotal - descuento;
-  };
+  // Removed unused local helper `calcularValorTotalProducto` - totals are computed via top-level helpers
 
   // agregarProducto eliminado por no utilizarse (se usa agregarProductoDesdeLista/agregarProductoEdicion)
 
