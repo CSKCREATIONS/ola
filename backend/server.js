@@ -41,35 +41,68 @@ app.use((req, res, next) => {
 });
 
 /* -------------------------------------------------------------
-   🌐 Conexión directa con MongoDB usando MongoClient (Top-level await)
+   🌐/🧩 Conexión a MongoDB y arranque de la app (envuelto en async)
 ------------------------------------------------------------- */
-console.log('MongoClient URI:', dbConfig.url);
 
-try {
-    const mongoClient = await (async () => {
-        console.log('MongoClient URI:', dbConfig.url);
-        const client = new MongoClient(dbConfig.url);
+async function init() {
+    console.log('MongoClient URI:', dbConfig.url);
+
+    try {
+        const mongoClient = await (async () => {
+            console.log('MongoClient URI:', dbConfig.url);
+            const client = new MongoClient(dbConfig.url);
+            try {
+                await client.connect();
+                return client;
+            } catch (error) {
+                console.error('❌ Error conectando a MongoDB:', error);
+                if (process.env.NODE_ENV !== 'production') {
+                    const fallback = 'mongodb://localhost:27017/pangea';
+                    console.log('↩️  Intentando fallback local:', fallback);
+                    const fallbackClient = new MongoClient(fallback);
+                    await fallbackClient.connect();
+                    return fallbackClient;
+                }
+                throw error;
+            }
+        })();
+
+        app.set('mongoDB', mongoClient.db());
+        console.log('✔ Conexión directa a MongoDB establecida');
+    } catch (error) {
+        console.error('❌ No fue posible establecer conexión directa a MongoDB:', error.message);
+    }
+
+    console.log('Mongoose URI:', dbConfig.url);
+    try {
         try {
-            await client.connect();
-            return client;
-        } catch (error) {
-            console.error('❌ Error conectando a MongoDB:', error);
+            await mongoose.connect(dbConfig.url);
+            console.log('✔ Mongoose conectado a MongoDB');
+        } catch (err) {
+            console.error('❌ Error de conexión con Mongoose:', err);
             if (process.env.NODE_ENV !== 'production') {
                 const fallback = 'mongodb://localhost:27017/pangea';
-                console.log('↩️  Intentando fallback local:', fallback);
-                const fallbackClient = new MongoClient(fallback);
-                await fallbackClient.connect();
-                return fallbackClient;
+                console.log('↩️  Mongoose intentando fallback local:', fallback);
+                await mongoose.connect(fallback);
+                console.log('✔ Mongoose conectado con fallback local');
+            } else {
+                throw err;
             }
-            throw error;
         }
-    })();
-    
-    app.set('mongoDB', mongoClient.db());
-    console.log('✔ Conexión directa a MongoDB establecida');
-} catch (error) {
-    console.error('❌ No fue posible establecer conexión directa a MongoDB:', error.message);
+    } catch (error) {
+        console.error('❌ No fue posible conectar Mongoose a MongoDB:', error.message);
+    }
+
+    const PORT = process.env.PORT || 5000;
+    app.listen(PORT, () => {
+        console.log(`Servidor en ejecución 👉 http://localhost:${PORT}`);
+    });
 }
+
+init().catch(err => {
+    console.error('Fatal error iniciando la app:', err);
+    process.exit(1);
+});
 
 /* -------------------------------------------------------------
    🦠 Seguridad, CORS, Sanitización y Logging
@@ -115,31 +148,7 @@ app.use((req, res, next) => {
     next();
 });
 
-/* -------------------------------------------------------------
-   🧩 Conexión de Mongoose (Top-level await)
-------------------------------------------------------------- */
-console.log('Mongoose URI:', dbConfig.url);
-
-try {
-    await (async () => {
-        try {
-            await mongoose.connect(dbConfig.url);
-            console.log('✔ Mongoose conectado a MongoDB');
-        } catch (err) {
-            console.error('❌ Error de conexión con Mongoose:', err);
-            if (process.env.NODE_ENV !== 'production') {
-                const fallback = 'mongodb://localhost:27017/pangea';
-                console.log('↩️  Mongoose intentando fallback local:', fallback);
-                await mongoose.connect(fallback);
-                console.log('✔ Mongoose conectado con fallback local');
-            } else {
-                throw err;
-            }
-        }
-    })();
-} catch (error) {
-    console.error('❌ No fue posible conectar Mongoose a MongoDB:', error.message);
-}
+/* Mongoose startup moved into init() above. */
 
 /* -------------------------------------------------------------
    ✅ Endpoints de salud
@@ -197,10 +206,4 @@ app.use((err, req, res, next) => {
     });
 });
 
-/* -------------------------------------------------------------
-   🚀 Inicio del servidor
-------------------------------------------------------------- */
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-    console.log(`Servidor en ejecución 👉 http://localhost:${PORT}`);
-});
+/* Server start moved into init() above. */
