@@ -966,7 +966,7 @@ function generarHTMLCotizacion(cotizacion) {
   `;
 }
 
-// Convertir cotización a pedido (remisionar)
+// Convertir cotización a remisión — crea solo un documento en la colección 'remisions'
 exports.remisionarCotizacion = async (req, res) => {
   try {
     const { cotizacionId, fechaEntrega, observaciones } = req.body;
@@ -978,85 +978,73 @@ exports.remisionarCotizacion = async (req, res) => {
       return res.status(404).json({ message: 'Cotización no encontrada' });
     }
 
-    
-    // Función para generar número de remisión secuencial
-    const generarNumeroRemision = async () => {
-      const Counter = require('../models/Counter');
-      const counter = await Counter.findByIdAndUpdate(
-        'remision',
-        { $inc: { seq: 1 } },
-        { new: true, upsert: true }
-      );
-      return `REM-${String(counter.seq).padStart(5, '0')}`;
-    };
+    // Generar número de remisión secuencial (Counter._id = 'remision')
+    const Counter = require('../models/Counter');
+    const counter = await Counter.findByIdAndUpdate(
+      'remision',
+      { $inc: { seq: 1 } },
+      { new: true, upsert: true }
+    );
+    const numeroRemision = `REM-${String(counter.seq).padStart(5, '0')}`;
 
-    // Generar números secuenciales
-    const numeroPedido = await generarNumeroPedido();
-    const numeroRemision = await generarNumeroRemision();
-
-    // Mapear productos de cotización a pedido
-    const productosRemision = cotizacion.productos.map(prodCotizacion => ({
-      product: prodCotizacion.producto.id, // Mapear producto.id de cotización a product en pedido
-      cantidad: prodCotizacion.cantidad,
-      precioUnitario: prodCotizacion.valorUnitario || prodCotizacion.precioUnitario || 0
-    }));
-
-    // Crear el pedido/remisión
-    const Pedido = require('../models/Pedido');
-    
-    const nuevoPedido = new Pedido({
-      numeroPedido: numeroPedido,
-      cliente: cotizacion.cliente.referencia._id, // Referenciar al cliente
-      productos: productosRemision,
-      fechaEntrega: fechaEntrega ? new Date(fechaEntrega) : new Date(),
-      estado: 'entregado', // Estado entregado al crear desde cotización (remisión directa)
-      observacion: observaciones || '',
-      cotizacionReferenciada: cotizacionId,
-      cotizacionCodigo: cotizacion.codigo
-    });
-
-    await nuevoPedido.save();
-
-    // Crear la remisión automáticamente
-    const Remision = require('../models/Remision');
-    
-    // Calcular totales para la remisión
-    const total = cotizacion.productos.reduce((sum, prod) => {
-      return sum + (prod.cantidad * (prod.valorUnitario || prod.precioUnitario || 0));
-    }, 0);
-    
-    const cantidadTotal = cotizacion.productos.reduce((sum, prod) => {
-      return sum + prod.cantidad;
-    }, 0);
-
-    // Mapear productos para la remisión
-    const productosRemisionDoc = cotizacion.productos.map(prod => ({
+    // Calcular totales y mapear productos para la remisión
+    const productosRemisionDoc = (cotizacion.productos || []).map(prod => ({
       nombre: prod.producto?.name || prod.nombre || 'Producto sin nombre',
-      cantidad: prod.cantidad,
+      cantidad: prod.cantidad || 0,
       precioUnitario: prod.valorUnitario || prod.precioUnitario || 0,
-      total: prod.cantidad * (prod.valorUnitario || prod.precioUnitario || 0),
+      total: (prod.cantidad || 0) * (prod.valorUnitario || prod.precioUnitario || 0),
       descripcion: prod.descripcion || prod.producto?.description || '',
       codigo: prod.producto?.codigo || prod.codigo || ''
     }));
 
+    const total = productosRemisionDoc.reduce((s, p) => s + (Number(p.total) || 0), 0);
+    const cantidadTotal = productosRemisionDoc.reduce((s, p) => s + (Number(p.cantidad) || 0), 0);
+
+    const Remision = require('../models/Remision');
+
+    // Resolve cliente ObjectId: prefer cotizacion.cliente.referencia; if not present, try find by correo or create
+    let clienteId = null;
+    if (cotizacion.cliente && cotizacion.cliente.referencia) {
+      // referencia may be an ObjectId or a populated object
+      clienteId = (typeof cotizacion.cliente.referencia === 'object') ? (cotizacion.cliente.referencia._id || cotizacion.cliente.referencia) : cotizacion.cliente.referencia;
+    }
+
+    if (!clienteId) {
+      // try to find by correo
+      const correo = (cotizacion.cliente && cotizacion.cliente.correo) ? String(cotizacion.cliente.correo).toLowerCase().trim() : null;
+      if (correo) {
+        let clienteExistente = await Cliente.findOne({ correo });
+        if (!clienteExistente) {
+          clienteExistente = new Cliente({
+            nombre: cotizacion.cliente?.nombre || '',
+            ciudad: cotizacion.cliente?.ciudad || '',
+            direccion: cotizacion.cliente?.direccion || '',
+            telefono: cotizacion.cliente?.telefono || '',
+            correo: correo,
+            esCliente: true
+          });
+          await clienteExistente.save();
+        }
+        clienteId = clienteExistente._id;
+      }
+    }
+
+    if (!clienteId) {
+      return res.status(400).json({ message: 'No se pudo resolver el cliente para crear la remisión' });
+    }
+
     const nuevaRemision = new Remision({
       numeroRemision: numeroRemision,
-      pedidoReferencia: nuevoPedido._id,
-      codigoPedido: numeroPedido,
-      cotizacionReferencia: cotizacionId,
-      codigoCotizacion: cotizacion.codigo,
-      cliente: {
-        nombre: cotizacion.cliente?.nombre || cotizacion.cliente.referencia?.nombre,
-        correo: cotizacion.cliente?.correo || cotizacion.cliente.referencia?.correo,
-        telefono: cotizacion.cliente?.telefono || cotizacion.cliente.referencia?.telefono,
-        ciudad: cotizacion.cliente?.ciudad || cotizacion.cliente.referencia?.ciudad,
-        direccion: cotizacion.cliente?.direccion || cotizacion.cliente.referencia?.direccion
-      },
+      // cotizacionReferencia should be ObjectId reference to the Cotizacion
+      cotizacionReferencia: cotizacion._id,
+      // save codigo in dedicated string field
+      cotizacionCodigo: cotizacion.codigo,
+      cliente: clienteId,
       productos: productosRemisionDoc,
       fechaRemision: new Date(),
       fechaEntrega: fechaEntrega ? new Date(fechaEntrega) : new Date(),
       observaciones: `Remisión generada desde cotización ${cotizacion.codigo}. ${observaciones || ''}`,
-      responsable: req.userId, // ID del usuario que crea la remisión
+      responsable: req.userId || null,
       estado: 'activa',
       total: total,
       cantidadItems: productosRemisionDoc.length,
@@ -1065,30 +1053,24 @@ exports.remisionarCotizacion = async (req, res) => {
 
     await nuevaRemision.save();
 
-    // Actualizar estado de la cotización (persistir que fue remisionada)
-    await Cotizacion.findByIdAndUpdate(cotizacionId, { 
+    // Marcar cotización como remisionada y guardar referencia a la remisión
+    await Cotizacion.findByIdAndUpdate(cotizacionId, {
       estado: 'Remisionada',
-      pedidoReferencia: nuevoPedido._id 
+      remisionReferencia: nuevaRemision._id,
+      codigoRemision: numeroRemision
     });
 
-    // Poblar el pedido para la respuesta
-    const pedidoCompleto = await Pedido.findById(nuevoPedido._id)
-      .populate('cliente')
-      .populate('productos.product');
-
-    // Poblar la remisión para la respuesta
     const remisionCompleta = await Remision.findById(nuevaRemision._id)
       .populate('responsable', 'username firstName surname');
 
-    res.status(201).json({ 
-      message: 'Cotización remisionada exitosamente',
-      pedido: pedidoCompleto,
+    return res.status(201).json({
+      message: 'Remisión creada exitosamente',
       remision: remisionCompleta,
-      numeroPedido: numeroPedido,
-      numeroRemision: numeroRemision
+      numeroRemision: numeroRemision,
+      cotizacionReferencia: cotizacion.codigo
     });
   } catch (error) {
     console.error('Error remisionando cotización:', error);
-    res.status(500).json({ message: 'Error al remisionar cotización', error: error.message });
+    return res.status(500).json({ message: 'Error al remisionar cotización', error: error.message });
   }
 };

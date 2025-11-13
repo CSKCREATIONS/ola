@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const { verifyToken } = require('../middlewares/authJwt');
-const { checkRole } = require('../middlewares/role');
 const cotizacionController = require('../controllers/cotizacionControllers');
 const Cotizacion = require('../models/cotizaciones'); // ajusta la ruta si es diferente
 const Product = require('../models/Products'); // Ensure Product model is loaded

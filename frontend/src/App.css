@@ -529,6 +529,7 @@ li {
 
 .modulos-menu {
   padding-left: 10px;   /* desplaza todo el bloque a la derecha */
+  width: 100%;
 }
 
 .modulos-menu nav li {

@@ -139,7 +139,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
             <i className="fa-solid fa-calendar-check" style={{ fontSize: '1.8rem' }} aria-hidden={true}></i>
             <div>
               <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 'bold' }}>
-                Vista Previa - Pedido Agendado
+                Pedido Agendado
               </h2>
               <p style={{ margin: 0, opacity: 0.9, fontSize: '0.95rem' }}>
                 N° {datos?.numeroPedido || 'Sin número'}

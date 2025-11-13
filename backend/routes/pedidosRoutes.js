@@ -4,7 +4,6 @@ const router = express.Router();
 const Pedido = require('../models/Pedido');
 const { verifyToken } = require('../middlewares/authJwt');
 const pedidoController = require('../controllers/pedidoControllers');
-const { checkRole } = require('../middlewares/role');
 const { checkPermission } = require('../middlewares/role');
 
 // Función para generar número de pedido usando Counter
@@ -130,43 +129,7 @@ router.put('/:id/entregar', verifyToken, async (req, res) => {
 });
 
 
-// Marcar pedido como devuelto
-router.patch('/:id/devolver', verifyToken, async (req, res) => {
-  try {
-    const { motivo } = req.body;
 
-    // 1. Actualizar el pedido
-    const pedido = await Pedido.findByIdAndUpdate(
-      req.params.id,
-      { estado: 'devuelto', motivoDevolucion: motivo },
-      { new: true }
-    );
-
-    if (!pedido) {
-      return res.status(404).json({ message: 'Pedido no encontrado' });
-    }
-
-    // 2. Actualizar la venta relacionada
-    const venta = await Venta.findOneAndUpdate(
-      { pedidoReferenciado: pedido._id },
-      { estado: 'devuelto' },
-      { new: true }
-    );
-
-    if (!venta) {
-      return res.status(404).json({ message: 'Venta no encontrada vinculada al pedido' });
-    }
-
-    res.json({
-      message: 'Pedido y venta marcados como devueltos',
-      pedido,
-      venta
-    });
-  } catch (err) {
-    console.error('Error al marcar como devuelto:', err);
-    res.status(500).json({ message: 'Error interno del servidor' });
-  }
-});
 
 // Cancelar pedido
 router.patch('/:id/cancelar', verifyToken, async (req, res) => {
@@ -188,12 +151,6 @@ router.patch('/:id/cancelar', verifyToken, async (req, res) => {
   }
 });
 
-// Crear remisión desde pedido entregado
-router.post('/:id/crear-remision',
-  verifyToken,
-  checkPermission('pedidos.remisionar'),
-  pedidoController.crearRemisionDesdePedido
-);
 
 // Enviar pedido agendado por correo
 router.post('/:id/enviar-agendado',
@@ -223,12 +180,13 @@ router.post('/:id/enviar-remision-formal',
   pedidoController.enviarRemisionFormalPorCorreo
 );
 
-// Enviar pedido devuelto por correo
-router.post('/:id/enviar-devuelto',
+// Remisionar pedido (crear documento Remision desde un pedido)
+router.post('/:id/remisionar',
   verifyToken,
-  checkPermission('pedidos.enviar'),
-  pedidoController.enviarPedidoDevueltoPorCorreo
+  checkPermission('pedidos.remisionar'),
+  pedidoController.remisionarPedido
 );
+
 
 // Enviar pedido cancelado por correo
 router.post('/:id/enviar-cancelado',

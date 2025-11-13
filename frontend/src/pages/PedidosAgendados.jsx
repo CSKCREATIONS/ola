@@ -333,42 +333,49 @@ export default function PedidosAgendados() {
   };
 
   const marcarComoEntregado = async (id) => {
-    
-    // Confirmación antes de entregar
-    const confirm = await Swal.fire({
-      title: '¿Marcar como entregado?',
-      text: 'Esta acción actualizará el inventario descontando los productos del stock.',
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonText: 'Sí, entregar',
-      cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#10b981'
-    });
-
-    if (!confirm.isConfirmed) return;
-    
+    // Mostrar modal para seleccionar fecha de entrega y luego llamar al endpoint de remisión
     try {
-      const res = await api.patch(`/api/pedidos/${id}/estado`, { estado: 'entregado' });
-      const result = res.data || res;
+      const defaultDate = pedidoDefaultDateForSwal(id);
+      const { value: fechaSeleccionada } = await Swal.fire({
+        title: 'Seleccione la fecha de entrega',
+        input: 'date',
+        inputLabel: 'Fecha de entrega',
+        inputValue: defaultDate,
+        showCancelButton: true,
+        confirmButtonText: 'Confirmar',
+        cancelButtonText: 'Cancelar'
+      });
+
+      if (!fechaSeleccionada) return; // usuario canceló o no escogió
+
+      // Llamar al backend para crear la remisión desde el pedido
+      const res = await api.post(`/api/pedidos/${id}/remisionar`, { fechaEntrega: fechaSeleccionada });
+      const data = res.data || res;
       if (res.status >= 200 && res.status < 300) {
         setPedidos(prev => prev.filter(p => p._id !== id));
-        await Swal.fire({
-          title: '¡Entregado!', 
-          text: 'El pedido ha sido marcado como entregado y el inventario ha sido actualizado.', 
-          icon: 'success',
-          confirmButtonColor: '#10b981'
-        });
+        await Swal.fire('Remisión creada', 'La remisión se ha creado correctamente.', 'success');
         navigate('/PedidosEntregados');
       } else {
-        throw new Error(result.message || 'No se pudo marcar como entregado');
+        throw new Error(data.message || 'No se pudo crear la remisión');
       }
     } catch (error) {
-      console.error('Error al marcar como entregado:', error);
-      Swal.fire({
-        title: 'Error', 
-        text: error.message || 'No se pudo marcar como entregado', 
-        icon: 'error'
-      });
+      console.error('Error al remisionar pedido:', error);
+      Swal.fire('Error', error.message || 'No se pudo remisionar el pedido', 'error');
+    }
+  };
+
+  // Helper: compute YYYY-MM-DD default date for Swal input from pedido fechaEntrega if available
+  const pedidoDefaultDateForSwal = (pedidoId) => {
+    try {
+      const p = pedidos.find(x => x._id === pedidoId) || {};
+      if (!p || !p.fechaEntrega) return '';
+      const d = new Date(p.fechaEntrega);
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    } catch (e) {
+      return '';
     }
   };
 

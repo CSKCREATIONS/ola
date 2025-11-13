@@ -10,7 +10,7 @@ const PedidoSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Cotizacion',
   },
-   productos: [{
+  productos: [{
     product: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Product',
