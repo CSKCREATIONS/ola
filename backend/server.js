@@ -1,53 +1,52 @@
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
+const { MongoClient } = require('mongodb');
 const cors = require('cors');
 const morgan = require('morgan');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const mongoSanitize = require('express-mongo-sanitize');
-const config = require('./config');
-const { MongoClient, ObjectId } = require('mongodb');
-const dbConfig = require('./config/db.js');
-// Use the explicit node: namespace to prefer the Node core module specifier
 const crypto = require('node:crypto');
+const dbConfig = require('./config/db.js');
 
-//Importar Rutas
+// 📦 Importar rutas
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const subcategoryRoutes = require('./routes/subcategoryRoutes');
 const productRoutes = require('./routes/productRoutes');
-const roleRoutes = require('./routes/roleRoutes')
-const clientesRoutes = require('./routes/clientesRoutes'); // Ruta base para clientes
+const roleRoutes = require('./routes/roleRoutes');
+const clientesRoutes = require('./routes/clientesRoutes');
 const proveedorRoutes = require('./routes/proveedorRoutes');
-const comprasRoutes = require('./routes/comprasRoutes'); // Ruta base para compras
+const comprasRoutes = require('./routes/comprasRoutes');
 const cotizacionRoutes = require('./routes/cotizacionRoutes');
 const pedidosRoutes = require('./routes/pedidosRoutes');
 const reportesRoutes = require('./routes/reportesRoutes');
 const ordenCompraRoutes = require('./routes/ordenCompraRoutes');
 const remisionRoutes = require('./routes/remisionRoutes');
 
-
+// Crear aplicación Express
 const app = express();
 
-// Usar analizador de query simple para reducir superficie de ataque
+/* -------------------------------------------------------------
+   🧠 Middleware global: ID de solicitud y configuración básica
+------------------------------------------------------------- */
 app.set('query parser', 'simple');
-
-// Request ID simple para correlación de logs
 app.use((req, res, next) => {
-    // Use crypto.randomBytes for unpredictable request IDs instead of Math.random
     const timePart = Date.now().toString(36);
-    const randPart = crypto.randomBytes(4).toString('hex'); // 8 hex chars
+    const randPart = crypto.randomBytes(4).toString('hex');
     req.id = (timePart + randPart).toUpperCase();
     res.setHeader('X-Request-Id', req.id);
     next();
 });
-// Conexión directa a Mongo con fallback a localhost en desarrollo
+
+/* -------------------------------------------------------------
+   🌐 Conexión directa con MongoDB usando MongoClient
+------------------------------------------------------------- */
 const tryConnectMongoClient = async (primaryUrl) => {
-    let url = primaryUrl;
-    console.log('MongoClient URI:', url);
-    const client = new MongoClient(url);
+    console.log('MongoClient URI:', primaryUrl);
+    const client = new MongoClient(primaryUrl);
     try {
         await client.connect();
         return client;
@@ -56,59 +55,60 @@ const tryConnectMongoClient = async (primaryUrl) => {
         if (process.env.NODE_ENV !== 'production') {
             const fallback = 'mongodb://localhost:27017/pangea';
             console.log('↩️  Intentando fallback local:', fallback);
-            const clientFallback = new MongoClient(fallback);
-            await clientFallback.connect();
-            return clientFallback;
+            const fallbackClient = new MongoClient(fallback);
+            await fallbackClient.connect();
+            return fallbackClient;
         }
         throw error;
     }
 };
 
-// Initialize a MongoClient connection. Keep this as an async function
-// and call it to preserve CommonJS compatibility (top-level await requires ESM).
 async function initMongoClient() {
     try {
         const mongoClient = await tryConnectMongoClient(dbConfig.url);
         app.set('mongoDB', mongoClient.db());
         console.log('✔ Conexión directa a MongoDB establecida');
     } catch (error) {
-        console.error('❌ No fue posible establecer conexión directa a MongoDB');
+        console.error('❌ No fue posible establecer conexión directa a MongoDB:', error.message);
     }
 }
 
-
+// Llamada a la función después de definirla ✅
 initMongoClient();
-// Keep initMongoClient as an async initializer for CommonJS compatibility.
-// When the backend is migrated to ESM we can replace this with top-level await.
 
-// Seguridad básica y utilidades
+/* -------------------------------------------------------------
+   🦠 Seguridad, CORS, Sanitización y Logging
+------------------------------------------------------------- */
 app.use(helmet());
 
-// CORS configurable por entorno: CORS_ORIGINS=orig1,orig2
-const allowedOrigins = (process.env.CORS_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
+// Configurar CORS (acepta dominios desde variable de entorno)
+const allowedOrigins = (process.env.CORS_ORIGINS || '')
+    .split(',')
+    .map(s => s.trim())
+    .filter(Boolean);
+
 app.use(cors({
     origin: allowedOrigins.length ? allowedOrigins : true,
     credentials: allowedOrigins.length ? true : false,
 }));
 
-// Nota Express 5: req.query es de solo lectura; evitamos asignar directamente para no romper
-// Sanitización manual: body y params in-place; query en copia segura req.sanitizedQuery
-
-// Rate limiting para /api/*
+// Rate limiting para evitar abuso de endpoints
 const apiLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 1000, // ajustar según necesidades
+    windowMs: 15 * 60 * 1000, // 15 minutos
+    max: 1000, // máximo de requests
     standardHeaders: true,
     legacyHeaders: false,
 });
 app.use('/api', apiLimiter);
 
-// Logging
+// Logging de solicitudes
 app.use(morgan('dev'));
-app.use(express.json());
-app.use(express.urlencoded({extended:true}));
 
-// Sanitización para Mongo (custom para Express 5)
+// Lectura de body JSON y formularios
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Sanitización para prevenir inyección de Mongo
 app.use((req, res, next) => {
     try {
         if (req.body) req.body = mongoSanitize.sanitize(req.body);
@@ -120,8 +120,11 @@ app.use((req, res, next) => {
     next();
 });
 
-// Conexion a mongo
+/* -------------------------------------------------------------
+   🧩 Conexión de Mongoose
+------------------------------------------------------------- */
 console.log('MongoDB URI:', dbConfig.url);
+
 const connectMongoose = async (primaryUrl) => {
     try {
         await mongoose.connect(primaryUrl);
@@ -138,43 +141,55 @@ const connectMongoose = async (primaryUrl) => {
         }
     }
 };
+
 connectMongoose(dbConfig.url);
 
-// Endpoints de salud
+/* -------------------------------------------------------------
+   ✅ Endpoints de salud
+------------------------------------------------------------- */
 app.get('/health', (req, res) => {
     res.json({ status: 'ok', time: new Date().toISOString() });
 });
+
 app.get('/ready', (req, res) => {
-    const state = mongoose.connection.readyState; // 1 conectado
+    const state = mongoose.connection.readyState;
     const ready = state === 1;
     res.status(ready ? 200 : 503).json({ ready, state });
 });
 
-//rutas
+/* -------------------------------------------------------------
+   📦 Rutas principales
+------------------------------------------------------------- */
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/subcategories', subcategoryRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/roles', roleRoutes);
-app.use('/api/clientes', clientesRoutes); // Ruta base para clientes
-app.use('/api/proveedores', proveedorRoutes); // Ruta base para proveedores
-app.use('/api/compras', comprasRoutes); // Ruta base para compras
+app.use('/api/clientes', clientesRoutes);
+app.use('/api/proveedores', proveedorRoutes);
+app.use('/api/compras', comprasRoutes);
 app.use('/api/cotizaciones', cotizacionRoutes);
 app.use('/api/pedidos', pedidosRoutes);
 app.use('/api/reportes', reportesRoutes);
 app.use('/api/ordenes-compra', ordenCompraRoutes);
 app.use('/api/remisiones', remisionRoutes);
 
-// 404 para rutas no encontradas
-app.use((req, res, next) => {
-    res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Ruta no encontrada' } });
+/* -------------------------------------------------------------
+   ❌ Manejo de errores y rutas inexistentes
+------------------------------------------------------------- */
+app.use((req, res) => {
+    res.status(404).json({
+        error: { code: 'NOT_FOUND', message: 'Ruta no encontrada' }
+    });
 });
 
-// Manejador de errores centralizado
-// eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
-    console.error('❌ Error:', { id: req.id, message: err.message, stack: err.stack });
+    console.error('❌ Error:', {
+        id: req.id,
+        message: err.message,
+        stack: err.stack
+    });
     const status = err.status || 500;
     res.status(status).json({
         error: {
@@ -185,8 +200,10 @@ app.use((err, req, res, next) => {
     });
 });
 
-//Inicio del servidor
+/* -------------------------------------------------------------
+   🚀 Inicio del servidor
+------------------------------------------------------------- */
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-    console.log(`Servidor en http://localhost:${PORT}`);
+    console.log(`Servidor en ejecución 👉 http://localhost:${PORT}`);
 });
