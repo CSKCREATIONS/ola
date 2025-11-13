@@ -1000,8 +1000,43 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
 }
 
 CotizacionPreview.propTypes = {
-  datos: PropTypes.object,
+  datos: PropTypes.shape({
+    _id: PropTypes.string,
+    numeroPedido: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    codigo: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    fecha: PropTypes.string,
+    fechaEntrega: PropTypes.string,
+    estado: PropTypes.string,
+    descripcion: PropTypes.string,
+    condicionesPago: PropTypes.string,
+    cliente: PropTypes.shape({
+      nombre: PropTypes.string,
+      correo: PropTypes.string,
+      telefono: PropTypes.string,
+      direccion: PropTypes.string,
+      ciudad: PropTypes.string,
+    }),
+    empresa: PropTypes.shape({
+      nombre: PropTypes.string,
+      direccion: PropTypes.string,
+    }),
+    productos: PropTypes.arrayOf(PropTypes.shape({
+      producto: PropTypes.object,
+      nombre: PropTypes.string,
+      descripcion: PropTypes.string,
+      cantidad: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+      valorUnitario: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+      descuento: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+    })),
+    total: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  }).isRequired,
   onClose: PropTypes.func,
   onEmailSent: PropTypes.func,
-  onRemisionCreated: PropTypes.func
+  onRemisionCreated: PropTypes.func,
+};
+
+CotizacionPreview.defaultProps = {
+  onClose: () => {},
+  onEmailSent: () => {},
+  onRemisionCreated: () => {},
 };
