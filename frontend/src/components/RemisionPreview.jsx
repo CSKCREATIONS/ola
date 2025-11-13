@@ -80,6 +80,11 @@ export default function RemisionPreview({ datos, onClose }) {
   // Autocompletar información del correo para remisión
   const [correo, setCorreo] = useState(datosConDefaults?.cliente?.correo || '');
   const [asunto, setAsunto] = useState(`Remisión ${datosConDefaults?.numeroRemision || ''} - ${datosConDefaults?.cliente?.nombre || 'Cliente'}`);
+  // Prepare user contact lines to avoid nested template literals
+  const usuarioNombreLinea = `${usuario?.firstName || 'Equipo'} ${usuario?.surname || 'de ventas'}`;
+  const usuarioEmailLinea = usuario?.email ? `\n${usuario.email}` : '';
+  const usuarioTelefonoLinea = usuario?.telefono ? `\nTel: ${usuario.telefono}` : '';
+
   const [mensaje, setMensaje] = useState(
     `Estimado/a ${datosConDefaults?.cliente?.nombre || 'cliente'},
 
@@ -93,10 +98,9 @@ Detalles de la remisión:
 Esta remisión confirma la entrega de los productos solicitados.
 
 Saludos cordiales,
-${usuario?.firstName || 'Equipo'} ${usuario?.surname || 'de ventas'}
-${usuario?.email ? `\n${usuario.email}` : ''}
-${usuario?.telefono ? `\nTel: ${usuario.telefono}` : ''}`
+${usuarioNombreLinea}${usuarioEmailLinea}${usuarioTelefonoLinea}`
   );
+
 
   // Si la remisión trae solo el ObjectId en cliente o no contiene nombre, intentar obtener el cliente poblado
   React.useEffect(() => {
@@ -147,8 +151,12 @@ ${usuario?.telefono ? `\nTel: ${usuario.telefono}` : ''}`
     // Actualizar datos autocompletados cada vez que se abre el modal
     setCorreo(datos?.cliente?.correo || '');
     setAsunto(`Remisión ${datos?.numeroRemision || ''} - ${datos?.cliente?.nombre || 'Cliente'} | ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}`);
-    setMensaje(
-      `Estimado/a ${datos?.cliente?.nombre || 'cliente'},
+  const remitenteLinea = `${usuario?.firstName || usuario?.nombre || 'Equipo de entrega'} ${usuario?.surname || ''}`;
+  const remitenteEmailLinea = usuario?.email ? `\n📧 Correo: ${usuario.email}` : '';
+  const remitenteTelefonoLinea = usuario?.telefono ? `\n📞 Teléfono: ${usuario.telefono}` : '';
+
+  setMensaje(
+    `Estimado/a ${datos?.cliente?.nombre || 'cliente'},
 
 Esperamos se encuentre muy bien. Adjunto encontrará la remisión de entrega con la siguiente información:
 
@@ -167,8 +175,6 @@ Esperamos se encuentre muy bien. Adjunto encontrará la remisión de entrega con
 • Ref. Pedido: ${datos?.codigoPedido || 'N/A'}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Esta remisión confirma oficialmente la entrega exitosa de todos los productos solicitados según las especificaciones acordadas.
-
 ${datos?.observaciones ? `📝 OBSERVACIONES:
 ${datos.observaciones}
 
@@ -178,13 +184,11 @@ Si tiene alguna pregunta o comentario sobre la entrega, no dude en contactarnos.
 
 Saludos cordiales,
 
-${usuario?.firstName || usuario?.nombre || 'Equipo de entrega'} ${usuario?.surname || ''}${usuario?.email ? `
-📧 Correo: ${usuario.email}` : ''}${usuario?.telefono ? `
-📞 Teléfono: ${usuario.telefono}` : ''}
+${remitenteLinea}${remitenteEmailLinea}${remitenteTelefonoLinea}
 
 ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
 🌐 Productos de calidad`
-    );
+  );
     setShowEnviarModal(true);
   };
 

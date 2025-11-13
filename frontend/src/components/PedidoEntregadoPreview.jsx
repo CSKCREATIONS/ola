@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import './FormatoCotizacion.css';
 import api from '../api/axiosConfig';
 
 export default function PedidoEntregadoPreview({ datos, onClose }) {
-  const navigate = useNavigate();
   // Obtener usuario logueado
   const usuario = JSON.parse(localStorage.getItem('user') || '{}');
   const [showEnviarModal, setShowEnviarModal] = useState(false);

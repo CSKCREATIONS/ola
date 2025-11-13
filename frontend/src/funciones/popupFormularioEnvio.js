@@ -31,19 +31,24 @@ export function mostrarFormularioEnvio() {
     confirmButtonText: 'Enviar',
     showCancelButton: true,
     preConfirm: () => {
-      const para = document.getElementById('input-para').value;
-      const asunto = document.getElementById('input-asunto').value;
-      const mensaje = document.getElementById('input-mensaje').value;
+      const para = document.getElementById('input-para').value || '';
+      const asunto = document.getElementById('input-asunto').value || '';
+      const mensaje = document.getElementById('input-mensaje').value || '';
+
+      const payload = { para, asunto, mensaje };
 
       if (!para || !asunto || !mensaje) {
+        // keep showing the validation message for the user, but always
+        // return an object of the same shape so callers can rely on a
+        // consistent return type (no boolean).
         Swal.showValidationMessage('Todos los campos son obligatorios');
-        return false;
+        return { ...payload, valid: false };
       }
 
-      return { para, asunto, mensaje };
+      return { ...payload, valid: true };
     }
   }).then((result) => {
-    if (result.isConfirmed) {
+    if (result.isConfirmed && result.value && result.value.valid !== false) {
       const { para, asunto, mensaje } = result.value;
       console.log('Datos enviados:', { para, asunto, mensaje });
 
