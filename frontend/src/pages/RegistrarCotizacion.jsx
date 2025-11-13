@@ -61,7 +61,10 @@ export default function RegistrarCotizacion() {
   }, []);
 
   const agregarProducto = () => {
+    // create a lightweight stable id for React keys so re-orders/removals don't rely on index
+    const uid = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2,9)}`;
     setProductosSeleccionados([...productosSeleccionados, {
+      uid,
       producto: '', descripcion: '', cantidad: '', valorUnitario: '', descuento: '', valorTotal: ''
     }]);
   };
@@ -1005,7 +1008,7 @@ export default function RegistrarCotizacion() {
                     </thead>
                     <tbody>
                       {productosSeleccionados.map((prod, index) => (
-                        <tr key={index} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                        <tr key={prod.uid || prod.producto || index} style={{ borderBottom: '1px solid #f1f5f9' }}>
                           <td style={{ padding: '1rem 0.75rem', color: '#64748b', fontWeight: '500' }}>{index + 1}</td>
                           <td style={{ padding: '0.5rem 0.75rem' }}>
                             <select
@@ -1236,7 +1239,7 @@ export default function RegistrarCotizacion() {
                 </thead>
                 <tbody>
                   {productosSeleccionados.map((prod, index) => (
-                    <tr key={index}>
+                    <tr key={prod.uid || prod.producto || index}>
                       <td>{index + 1}</td>
                       <td>
                         <select
