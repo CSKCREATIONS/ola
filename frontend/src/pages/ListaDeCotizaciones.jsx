@@ -1312,9 +1312,7 @@ export default function ListaDeCotizaciones() {
         <div className="cotizacion-modal-container">
           <div
             className="modal-overlay"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Editar Cotización"
+            role="presentation"
             onClick={(e) => {
               if (e.target === e.currentTarget) {
                 setModoEdicion(false);
@@ -1322,7 +1320,7 @@ export default function ListaDeCotizaciones() {
               }
             }}
           >
-            <div className="modal-content-large">
+            <div className="modal-content-large" role="dialog" aria-modal="true" aria-label="Editar Cotización">
               <div className="modal-header">
                 <div className="header-info">
                   <h3>Editar Cotización</h3>
