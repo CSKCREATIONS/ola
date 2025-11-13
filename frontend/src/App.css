@@ -253,42 +253,7 @@ h3 {
   background: #f8f9fa;
 }
 
-/* Estilos de impresión */
-@media print {
-  .modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: white;
-    z-index: 9999;
-  }
-
-  .modal-realista {
-    box-shadow: none;
-    border: 1px solid #ccc;
-  }
-
-  .modal-close-realista,
-  .modal-footer {
-    display: none !important;
-    cursor: move;
-  }
-}
-
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
+/* Earlier modal-overlay/general modal print rules consolidated later; duplicates removed. */
 
 .modal-realista {
   background: white;
@@ -803,15 +768,7 @@ li {
   animation: fadeInUp 1s ease forwards;
 }
 
-/* Título */
-.login-title {
-  font-size: 2rem;
-  margin-bottom: 1.5rem;
-  font-weight: bold;
-  color: #001f54;
-  /* azul rey */
-  text-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2);
-}
+/* consolidated .login-title defined later; earlier duplicate removed */
 
 /* Inputs */
 .login-input-container {
@@ -842,25 +799,7 @@ li {
 }
 
 /* Botón */
-.login-button {
-  width: 100%;
-  padding: 0.9rem;
-  margin-top: 0.5rem;
-  border: none;
-  border-radius: 12px;
-  font-size: 1rem;
-  font-weight: bold;
-  color: #fff;
-  cursor: pointer;
-  background: linear-gradient(90deg, #001f54, #004aad);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.3s;
-}
-
-.login-button:hover {
-  transform: translateY(-2px);
-  background: linear-gradient(90deg, #004aad, #005bb5);
-  box-shadow: 0 4px 15px rgba(0, 74, 173, 0.5);
-}
+/* earlier .login-button rules consolidated later; duplicate removed */
 
 /* Error */
 .login-error {
@@ -1209,13 +1148,7 @@ td {
   }
 }
 
-.form-group {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-  gap: 10px;
-}
+/* earlier .form-group duplicate removed; consolidated later */
 
 .entrada {
   flex: 1;
@@ -1366,18 +1299,8 @@ td {
 
 /**********Estilos para informacion de fuente**********/
 
-.form-container {
-  max-width: 400px;
-  padding: 20px;
-  border-radius: 10px;
-  background-color: white;
-}
 
-.button-group {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 20px;
-}
+/* earlier .form-container/.button-group definitions consolidated later; removed duplicate blocks */
 
 .button {
   padding: 10px 20px;
@@ -1922,38 +1845,8 @@ select:focus {
 
 
 
-.p-4 {
-  padding: 1rem;
-  /* ya hace parte de Tailwind, pero lo dejamos por claridad */
-  background-color: #ffffff;
-  border-radius: 1rem;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
-  text-align: center;
-  border: 1px solid #e5e7eb;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
 
-.p-4:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
-}
-
-.p-4 h3 {
-  font-size: 1.125rem;
-  color: #1f2937;
-  margin-bottom: 0.25rem;
-}
-
-.p-4 .text-3xl {
-  font-size: 1.875rem;
-  font-weight: bold;
-  margin-bottom: 0.25rem;
-}
-
-.p-4 .text-sm {
-  font-size: 0.875rem;
-  color: #6b7280;
-}
+/* earlier .p-4 card rules removed; consolidated later in file */
 
 
 /*********************Agregados por Julian***********************************/
