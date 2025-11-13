@@ -35,7 +35,7 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
         setRolesDisponibles(roles);
         setRolesForbidden(false);
       } catch (err) {
-        if (err && err.response && err.response.status === 403) {
+        if (err?.response?.status === 403) {
           console.debug('403 al obtener /api/roles — el usuario no tiene permiso para ver roles');
           setRolesDisponibles([]);
           setRolesForbidden(true);
@@ -169,7 +169,7 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
   return (
     <div 
       id="editUserModal"
-      role="presentation"
+      aria-hidden="true"
       style={{
         position: 'fixed',
         top: 0,
@@ -191,11 +191,9 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
         }
       }}
     >
-      <form 
-        role="dialog"
+      <dialog
         aria-modal="true"
         aria-labelledby="edit-user-title"
-        onSubmit={guardarCambios}
         style={{
           backgroundColor: 'white',
           borderRadius: '20px',
@@ -209,9 +207,12 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
           padding: 0,
           position: 'relative',
           display: 'flex',
-          flexDirection: 'column'
+          flexDirection: 'column',
+          border: 'none'
         }}
+        open
       >
+        <form onSubmit={guardarCambios} style={{ display: 'flex', flexDirection: 'column' }}>
         {/* Header del modal */}
         <div style={{
           background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
@@ -656,6 +657,7 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
           </button>
         </div>
       </form>
+      </dialog>
     </div>
   );
 }
