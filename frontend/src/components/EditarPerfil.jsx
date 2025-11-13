@@ -64,20 +64,23 @@ export default function EditarPerfil() {
     try {
       const res = await api.patch('/api/users/me', form);
       const resData = res.data || res;
-      if (!(res.status >= 200 && res.status < 300)) throw new Error(resData.message || 'Error al actualizar perfil');
+      if (!(res.status >= 200 && res.status < 300)) {
+        throw new Error(resData.message || 'Error al actualizar el perfil');
+      }
 
-      if (passwords.new) {
-        const resPass = await api.patch('/api/users/change-password', { newPassword: passwords.new });
-        const data = resPass.data || resPass;
-        if (!(resPass.status >= 200 && resPass.status < 300)) throw new Error(data.message || 'Error al cambiar la contraseña');
+      if (passwords.new && passwords.confirm && passwords.new === passwords.confirm) {
+        const resPassword = await api.patch('/api/users/change-password', {
+          newPassword: passwords.new
+        });
+        const data = resPassword.data || resPassword;
+        if (!(resPassword.status >= 200 && resPassword.status < 300)) {
+          throw new Error(data.message || 'Error al cambiar la contraseña');
+        }
 
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-
-        Swal.fire({
-          icon: 'success',
+        await Swal.fire({
           title: 'Contraseña actualizada',
-          text: 'Debes iniciar sesión nuevamente',
+          text: 'Tu sesión expirará. Debes iniciar sesión nuevamente.',
+          icon: 'info',
           confirmButtonText: 'OK'
         }).then(() => {
           navigate('/');
@@ -439,22 +442,19 @@ export default function EditarPerfil() {
             border: '1px solid #e2e8f0',
             borderLeft: '4px solid #f59e0b'
           }}>
-              <div 
-              role="button"
-              tabIndex={0}
+              <button
+              type="button"
               onClick={() => setMostrarCambiarPassword(!mostrarCambiarPassword)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  setMostrarCambiarPassword(!mostrarCambiarPassword);
-                }
-              }}
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 cursor: 'pointer',
-                marginBottom: mostrarCambiarPassword ? '1.5rem' : 0
+                marginBottom: mostrarCambiarPassword ? '1.5rem' : 0,
+                background: 'transparent',
+                border: 'none',
+                padding: 0,
+                width: '100%'
               }}
             >
               <h4 style={{
@@ -471,7 +471,7 @@ export default function EditarPerfil() {
               </h4>
           <i className={`fa-solid fa-chevron-${mostrarCambiarPassword ? 'up' : 'down'}`} 
             style={{ color: '#6b7280' }} aria-hidden={true}></i>
-            </div>
+            </button>
 
             {mostrarCambiarPassword && (
               <div>

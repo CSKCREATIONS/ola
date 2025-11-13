@@ -242,20 +242,17 @@ export default function Fijo() {
           <div className="modulos-menu">
             {(puedeVerUsuarios || puedeVerRoles) && (
               <nav>
-                <li
-                  style={{ padding: "10px 0" }}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => toggleSubMenu('submenuUsuarios')}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      toggleSubMenu('submenuUsuarios');
-                    }
-                  }}
-                >
-                  <i className="fas fa-users" aria-hidden={true}></i>
-                  <span>Usuarios</span>
+                <li style={{ padding: "10px 0" }}>
+                  <button
+                    type="button"
+                    onClick={() => toggleSubMenu('submenuUsuarios')}
+                    className="menu-toggle-button"
+                    style={{ background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                    aria-expanded={document.getElementById('submenuUsuarios') ? undefined : undefined}
+                  >
+                    <i className="fas fa-users" aria-hidden={true}></i>
+                    <span>Usuarios</span>
+                  </button>
                 </li>
                 <ul className="dropdown" id="submenuUsuarios">
                   {puedeVerUsuarios && (
@@ -270,20 +267,16 @@ export default function Fijo() {
 
             {(puedeGenerarOrden || puedeVerHCompras || puedeVerProveedores || puedeVerReportesCompras || puedeVerOrdenes) && (
               <nav>
-                <li
-                  style={{ padding: "10px 0" }}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => toggleSubMenu('submenuCompras')}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      toggleSubMenu('submenuCompras');
-                    }
-                  }}
-                >
-                  <i className="fas fa-shopping-cart" aria-hidden={true}></i>
-                  <span>Compras</span>
+                <li style={{ padding: "10px 0" }}>
+                  <button
+                    type="button"
+                    onClick={() => toggleSubMenu('submenuCompras')}
+                    className="menu-toggle-button"
+                    style={{ background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                  >
+                    <i className="fas fa-shopping-cart" aria-hidden={true}></i>
+                    <span>Compras</span>
+                  </button>
                 </li>
                 <ul id="submenuCompras" className="dropdown" >
                   {puedeGenerarOrden && (
@@ -304,20 +297,16 @@ export default function Fijo() {
 
             {(puedeVerCategorias || puedeVerSubcategorias || puedeVerProductos) && (
               <nav>
-                <li
-                  style={{ padding: "10px 0" }}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => toggleSubMenu('submenuProductos')}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      toggleSubMenu('submenuProductos');
-                    }
-                  }}
-                >
-                  <i className="fas fa-boxes" aria-hidden={true}></i>
-                  <span>Productos</span>
+                <li style={{ padding: "10px 0" }}>
+                  <button
+                    type="button"
+                    onClick={() => toggleSubMenu('submenuProductos')}
+                    className="menu-toggle-button"
+                    style={{ background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                  >
+                    <i className="fas fa-boxes" aria-hidden={true}></i>
+                    <span>Productos</span>
+                  </button>
                 </li>
                 <ul id="submenuProductos" className="dropdown">
                   {puedeVerCategorias && (
@@ -340,20 +329,16 @@ export default function Fijo() {
 
             {(puedeRegistrarCotizacion || puedeVerCotizaciones || puedeVerListaDeClientes || puedeVerPedidosCancelados || puedeVerPedidosDevueltos || puedeVerPedidosEntregados || puedeVerProspectos || puedeVerReportesVentas || puedeVerVentasAgendadas) && (
               <nav>
-                <li
-                  style={{ padding: "10px 0" }}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => toggleSubMenu('submenuVentas')}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      toggleSubMenu('submenuVentas');
-                    }
-                  }}
-                >
-                  <i className="fas fa-cash-register" aria-hidden={true}></i>
-                  <span>Ventas</span>
+                <li style={{ padding: "10px 0" }}>
+                  <button
+                    type="button"
+                    onClick={() => toggleSubMenu('submenuVentas')}
+                    className="menu-toggle-button"
+                    style={{ background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                  >
+                    <i className="fas fa-cash-register" aria-hidden={true}></i>
+                    <span>Ventas</span>
+                  </button>
                 </li>
                 <ul id="submenuVentas" className="dropdown">
                   {puedeRegistrarCotizacion && (
