@@ -9,7 +9,7 @@ export default function CotizacionPreview({ datos, onClose, onEmailSent, onRemis
   // Obtener usuario logueado
   const usuario = JSON.parse(localStorage.getItem('user') || '{}');
   const [showEnviarModal, setShowEnviarModal] = useState(false);
-  
+
   // Estados para el formulario de envío de correo
   const [correo, setCorreo] = useState('');
   const [asunto, setAsunto] = useState('');
@@ -32,10 +32,10 @@ export default function CotizacionPreview({ datos, onClose, onEmailSent, onRemis
   const formatDate = (fecha) => {
     if (!fecha) return 'No especificada';
     const date = new Date(fecha);
-    return date.toLocaleDateString('es-ES', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+    return date.toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
     });
   };
 
@@ -53,7 +53,7 @@ export default function CotizacionPreview({ datos, onClose, onEmailSent, onRemis
     const totalFinal = datos?.total || calcularTotal();
     // Fecha de emisión: usar datos.fecha si existe, si no mostrar 'N/A'
     const fechaEmision = datos?.fecha ? new Date(datos.fecha).toLocaleDateString('es-ES') : 'N/A';
-    
+
     setCorreo(datos?.cliente?.correo || '');
     setAsunto(`Cotización ${datos?.codigo || ''} - ${datos?.cliente?.nombre || 'Cliente'} | ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}`);
     setMensaje(
@@ -115,12 +115,12 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
           confirmButtonColor: '#2563eb'
         });
         setShowEnviarModal(false);
-        
+
         // Actualizar el estado local para reflejar que fue enviado
         if (datos) {
           datos.enviadoCorreo = true;
         }
-        
+
         // Llamar al callback para actualizar el componente padre
         if (onEmailSent) {
           onEmailSent(datos._id);
@@ -335,7 +335,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
         }
       });
 
-  if (formValues?.valid) {
+      if (formValues?.valid) {
         // Mostrar loading
         Swal.fire({
           title: 'Procesando...',
@@ -356,11 +356,11 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
 
         const result = res.data || res;
 
-  if (res.status >= 200 && res.status < 300) {
+        if (res.status >= 200 && res.status < 300) {
           Swal.fire({
             icon: 'success',
             title: '¡Cotización Remisionada!',
-           
+
             showDenyButton: true,
             showCancelButton: true,
             cancelButtonText: 'Cerrar',
@@ -373,7 +373,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               navigate('/ListaDeRemisiones'); // Asume que existe esta ruta
             }
           });
-          
+
           // Notificar al componente padre para actualizar la lista (ej. mostrar badge "REMISIONADA")
           try {
             if (onRemisionCreated) {
@@ -530,20 +530,20 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                 newWindow.print();
                 newWindow.close();
               }}
-                style={{
-                  background: 'rgba(255, 255, 255, 0.2)',
-                  border: 'none',
-                  borderRadius: '8px',
-                  padding: '0.75rem',
-                  color: '#0f172a',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  fontSize: '0.9rem',
-                  fontWeight: 'bold',
-                  transition: 'all 0.3s ease'
-                }}
+              style={{
+                background: 'rgba(255, 255, 255, 0.2)',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '0.75rem',
+                color: '#0f172a',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                fontSize: '0.9rem',
+                fontWeight: 'bold',
+                transition: 'all 0.3s ease'
+              }}
               onMouseEnter={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.3)'}
               onMouseLeave={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.2)'}
             >
@@ -609,13 +609,13 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
           <div
             className="pdf-cotizacion"
             id="pdf-cotizacion-block"
-            style={{ 
-              display: 'flex', 
-              flexDirection: 'column', 
-              background: '#fff', 
-              padding: '2rem', 
-              borderRadius: '10px', 
-              boxShadow: '0 2px 8px rgba(0,0,0,0.08)', 
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              background: '#fff',
+              padding: '2rem',
+              borderRadius: '10px',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
               marginTop: '1rem',
               userSelect: 'none',
               WebkitUserSelect: 'none',
@@ -653,28 +653,36 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               marginBottom: '2rem'
             }}>
               <div>
-                <div style={{
-                  background: 'rgba(255, 255, 255, 0.2)',
-                  border: 'none',
-                  borderRadius: '8px',
-                  padding: '0.75rem',
-                  color: '#0f172a',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  fontSize: '0.9rem',
-                  fontWeight: 'bold',
-                  transition: 'all 0.3s ease'
-                }}>
-                  <p style={{ margin: 0 }}><strong>Ciudad:</strong> {datos?.cliente?.ciudad}</p>
+
+                <div>
+                  <h3 style={{
+                    borderBottom: '3px solid #2563eb',
+                    paddingBottom: '0.5rem',
+                    color: '#2563eb',
+                    fontSize: '1.2rem',
+                    fontWeight: 'bold',
+                    marginBottom: '1rem'
+                  }}>
+                    Información Cliente
+                  </h3>
+                  <div style={{ lineHeight: '1.8' }}>
+                    <p style={{ margin: 0 }}><strong>Nombre:</strong> {datos?.cliente?.nombre}</p>
+                    <p style={{ margin: 0 }}><strong>Dirección:</strong> {datos?.cliente?.direccion}</p>
+                    <p style={{ margin: 0 }}><strong>Ciudad:</strong> {datos?.cliente?.ciudad}</p>
+                    <p style={{ margin: 0 }}><strong>Teléfono:</strong> {datos?.cliente?.telefono}</p>
+                  </div>
                 </div>
+
+
+
+
+
               </div>
 
               <div>
-                <h3 style={{ 
-                  borderBottom: '3px solid #2563eb', 
-                  paddingBottom: '0.5rem', 
+                <h3 style={{
+                  borderBottom: '3px solid #2563eb',
+                  paddingBottom: '0.5rem',
                   color: '#2563eb',
                   fontSize: '1.2rem',
                   fontWeight: 'bold',
@@ -686,8 +694,8 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                   <p><strong>Fecha de cotización:</strong> {formatDate(datos?.fecha)}</p>
                   <p><strong>Empresa:</strong> {COMPANY_NAME || (process.env.REACT_APP_COMPANY_NAME || process.env.COMPANY_NAME || '')}</p>
                   <p><strong>Teléfono:</strong> {COMPANY_PHONE}</p>
-                  
-                  
+
+
                 </div>
               </div>
             </div>
@@ -695,9 +703,9 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
             {/* Descripción si existe */}
             {datos?.descripcion && (
               <div style={{ marginBottom: '2rem' }}>
-                <h3 style={{ 
-                  borderBottom: '3px solid #2563eb', 
-                  paddingBottom: '0.5rem', 
+                <h3 style={{
+                  borderBottom: '3px solid #2563eb',
+                  paddingBottom: '0.5rem',
                   color: '#2563eb',
                   fontSize: '1.2rem',
                   fontWeight: 'bold',
@@ -719,9 +727,9 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
 
             {/* Tabla de productos */}
             <div style={{ marginBottom: '2rem' }}>
-              <h3 style={{ 
-                borderBottom: '3px solid #2563eb', 
-                paddingBottom: '0.5rem', 
+              <h3 style={{
+                borderBottom: '3px solid #2563eb',
+                paddingBottom: '0.5rem',
                 color: '#2563eb',
                 fontSize: '1.2rem',
                 fontWeight: 'bold',
@@ -747,7 +755,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                 </thead>
                 <tbody>
                   {datos?.productos?.map((producto, index) => (
-                    <tr key={producto.producto?.id || producto.product?._id || producto.product?.id || producto.codigo || producto._id || index} style={{ 
+                    <tr key={producto.producto?.id || producto.product?._id || producto.product?.id || producto.codigo || producto._id || index} style={{
                       borderBottom: '1px solid #eee',
                       backgroundColor: index % 2 === 0 ? '#fafafa' : 'white'
                     }}>
@@ -774,23 +782,23 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                   ))}
                 </tbody>
                 <tfoot>
-                  <tr style={{ 
-                    background: 'linear-gradient(135deg, #eff6ff, #dbeafe)', 
-                    borderTop: '2px solid #2563eb' 
+                  <tr style={{
+                    background: 'linear-gradient(135deg, #eff6ff, #dbeafe)',
+                    borderTop: '2px solid #2563eb'
                   }}>
-                    <td colSpan="3" style={{ 
-                      padding: '1rem', 
-                      textAlign: 'right', 
-                      fontWeight: 'bold', 
+                    <td colSpan="3" style={{
+                      padding: '1rem',
+                      textAlign: 'right',
+                      fontWeight: 'bold',
                       fontSize: '1.1rem',
                       color: '#2563eb'
                     }}>
                       TOTAL:
                     </td>
-                    <td style={{ 
-                      padding: '1rem', 
-                      textAlign: 'right', 
-                      fontWeight: 'bold', 
+                    <td style={{
+                      padding: '1rem',
+                      textAlign: 'right',
+                      fontWeight: 'bold',
                       fontSize: '1.3rem',
                       color: '#2563eb'
                     }}>
@@ -804,9 +812,9 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
             {/* Condiciones de pago */}
             {datos?.condicionesPago && (
               <div style={{ marginBottom: '2rem' }}>
-                <h3 style={{ 
-                  borderBottom: '3px solid #2563eb', 
-                  paddingBottom: '0.5rem', 
+                <h3 style={{
+                  borderBottom: '3px solid #2563eb',
+                  paddingBottom: '0.5rem',
                   color: '#2563eb',
                   fontSize: '1.2rem',
                   fontWeight: 'bold',
@@ -835,9 +843,9 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               textAlign: 'center',
               borderTop: '3px solid #2563eb'
             }}>
-              <div style={{ 
-                fontSize: '1.1rem', 
-                fontWeight: 'bold', 
+              <div style={{
+                fontSize: '1.1rem',
+                fontWeight: 'bold',
                 color: '#2563eb',
                 marginBottom: '0.5rem'
               }}>
@@ -877,7 +885,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                 <i className="fa-solid fa-envelope icon-gap" style={{}} aria-hidden={true}></i>
                 <span>Enviar Cotización por Correo</span>
               </h3>
-              
+
               <div style={{ marginBottom: '1rem' }}>
                 <label htmlFor="correo-destinatario-cotizacion" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
                   Correo del destinatario:
@@ -985,11 +993,11 @@ CotizacionPreview.propTypes = {
     fecha: PropTypes.string,
     fechaEntrega: PropTypes.string,
     estado: PropTypes.string,
-  descripcion: PropTypes.string,
-  condicionesPago: PropTypes.string,
-  validez: PropTypes.string,
-  tipo: PropTypes.string,
-  fechaVencimiento: PropTypes.string,
+    descripcion: PropTypes.string,
+    condicionesPago: PropTypes.string,
+    validez: PropTypes.string,
+    tipo: PropTypes.string,
+    fechaVencimiento: PropTypes.string,
     cliente: PropTypes.shape({
       nombre: PropTypes.string,
       correo: PropTypes.string,
@@ -1022,7 +1030,7 @@ CotizacionPreview.propTypes = {
 };
 
 CotizacionPreview.defaultProps = {
-  onClose: () => {},
-  onEmailSent: () => {},
-  onRemisionCreated: () => {},
+  onClose: () => { },
+  onEmailSent: () => { },
+  onRemisionCreated: () => { },
 };
