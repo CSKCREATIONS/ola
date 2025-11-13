@@ -25,7 +25,7 @@ router.get('/cliente/:id',
       // Sanitizar el ID del cliente para prevenir inyección NoSQL
       const clienteId = typeof req.params.id === 'string' ? req.params.id.trim() : '';
       
-      if (!clienteId || !clienteId.match(/^[0-9a-fA-F]{24}$/)) {
+      if (!clienteId?.match(/^[0-9a-fA-F]{24}$/)) {
         return res.status(400).json({ message: 'ID de cliente inválido' });
       }
 
@@ -47,7 +47,7 @@ router.get('/cliente/:id',
       const cotObj = cotizacion.toObject();
       if (Array.isArray(cotObj.productos)) {
         cotObj.productos = cotObj.productos.map(p => {
-          if (p.producto && p.producto.id) {
+          if (p.producto?.id) {
             // Handle both populated and non-populated product data
             if (typeof p.producto.id === 'object' && p.producto.id.name) {
               // Populated data
@@ -115,7 +115,7 @@ router.get('/',
         const cotObj = cotizacion.toObject();
         if (Array.isArray(cotObj.productos)) {
           cotObj.productos = cotObj.productos.map(p => {
-            if (p.producto && p.producto.id) {
+            if (p.producto?.id) {
               // Handle both populated and non-populated product data
               if (typeof p.producto.id === 'object' && p.producto.id.name) {
                 // Populated data
@@ -178,7 +178,7 @@ router.get('/:id',
       const cotObj = cotizacion.toObject();
       if (Array.isArray(cotObj.productos)) {
         cotObj.productos = cotObj.productos.map(p => {
-          if (p.producto && p.producto.id) {
+          if (p.producto?.id) {
             // Handle both populated and non-populated product data
             if (typeof p.producto.id === 'object' && p.producto.id.name) {
               // Populated data
