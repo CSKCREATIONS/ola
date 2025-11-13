@@ -1,5 +1,6 @@
 // src/pages/Proveedores.jsx
 import React, { useEffect, useState } from 'react';
+import PropTypes from 'prop-types';
 import api from '../api/axiosConfig';
 import Swal from 'sweetalert2';
 import '../App.css';
@@ -343,7 +344,7 @@ const ProveedorModal = ({ proveedor, onClose, onSave }) => {
               gap: '0.5rem'
             }}>
               <i className="fa-solid fa-user" style={{ color: '#10b981' }}></i>
-              Información Básica
+              <span>Información Básica</span>
             </h4>
             
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
@@ -358,7 +359,7 @@ const ProveedorModal = ({ proveedor, onClose, onSave }) => {
                   fontSize: '1rem'
                 }}>
                   <i className="fa-solid fa-signature" style={{ color: '#10b981', fontSize: '0.9rem' }}></i>
-                  Nombre del Proveedor
+                  <span>Nombre del Proveedor</span>
                   <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <input
@@ -401,7 +402,7 @@ const ProveedorModal = ({ proveedor, onClose, onSave }) => {
                   fontSize: '1rem'
                 }}>
                   <i className="fa-solid fa-building" style={{ color: '#10b981', fontSize: '0.9rem' }}></i>
-                  Empresa (opcional)
+                  <span>Empresa (opcional)</span>
                 </label>
                 <input
                   id="input-proveedor-empresa"
@@ -452,7 +453,7 @@ const ProveedorModal = ({ proveedor, onClose, onSave }) => {
               gap: '0.5rem'
             }}>
               <i className="fa-solid fa-phone" style={{ color: '#3b82f6' }}></i>
-              Información de Contacto
+              <span>Información de Contacto</span>
             </h4>
             
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
@@ -467,7 +468,7 @@ const ProveedorModal = ({ proveedor, onClose, onSave }) => {
                   fontSize: '1rem'
                 }}>
                   <i className="fa-solid fa-phone" style={{ color: '#3b82f6', fontSize: '0.9rem' }}></i>
-                  Teléfono
+                  <span>Teléfono</span>
                   <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <input
@@ -510,7 +511,7 @@ const ProveedorModal = ({ proveedor, onClose, onSave }) => {
                   fontSize: '1rem'
                 }}>
                   <i className="fa-solid fa-envelope" style={{ color: '#3b82f6', fontSize: '0.9rem' }}></i>
-                  Correo Electrónico
+                  <span>Correo Electrónico</span>
                   <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <input
@@ -563,7 +564,7 @@ const ProveedorModal = ({ proveedor, onClose, onSave }) => {
               gap: '0.5rem'
             }}>
               <i className="fa-solid fa-map-marker-alt" style={{ color: '#f59e0b' }}></i>
-              Dirección
+              <span>Dirección</span>
             </h4>
             
             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
@@ -578,7 +579,7 @@ const ProveedorModal = ({ proveedor, onClose, onSave }) => {
                   fontSize: '1rem'
                 }}>
                   <i className="fa-solid fa-road" style={{ color: '#f59e0b', fontSize: '0.9rem' }}></i>
-                  Dirección
+                  <span>Dirección</span>
                   <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <input
@@ -621,7 +622,7 @@ const ProveedorModal = ({ proveedor, onClose, onSave }) => {
                   fontSize: '1rem'
                 }}>
                   <i className="fa-solid fa-globe" style={{ color: '#f59e0b', fontSize: '0.9rem' }}></i>
-                  País
+                  <span>País</span>
                   <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <input
@@ -694,7 +695,7 @@ const ProveedorModal = ({ proveedor, onClose, onSave }) => {
             }}
           >
             <i className="fa-solid fa-times"></i>
-            Cancelar
+            <span>Cancelar</span>
           </button>
           
           <button 
@@ -724,7 +725,7 @@ const ProveedorModal = ({ proveedor, onClose, onSave }) => {
             }}
           >
             <i className="fa-solid fa-truck"></i>
-            Guardar
+            <span>Guardar</span>
           </button>
         </div>
       </form>
@@ -778,6 +779,49 @@ const ModalProductosProveedor = ({ visible, onClose, productos, proveedor }) => 
     </div>
   );
 
+};
+
+ProveedorModal.propTypes = {
+  proveedor: PropTypes.shape({
+    _id: PropTypes.string,
+    nombre: PropTypes.string,
+    contacto: PropTypes.shape({
+      telefono: PropTypes.string,
+      correo: PropTypes.string,
+    }),
+    direccion: PropTypes.shape({
+      calle: PropTypes.string,
+      pais: PropTypes.string,
+    }),
+    empresa: PropTypes.string,
+  }),
+  onClose: PropTypes.func,
+  onSave: PropTypes.func,
+};
+
+ProveedorModal.defaultProps = {
+  proveedor: null,
+  onClose: () => {},
+  onSave: () => {},
+};
+
+ModalProductosProveedor.propTypes = {
+  visible: PropTypes.bool,
+  onClose: PropTypes.func,
+  productos: PropTypes.arrayOf(PropTypes.shape({
+    _id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    name: PropTypes.string,
+    price: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    stock: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  })),
+  proveedor: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+};
+
+ModalProductosProveedor.defaultProps = {
+  visible: false,
+  onClose: () => {},
+  productos: [],
+  proveedor: '',
 };
 
 const GestionProveedores = () => {
@@ -952,7 +996,7 @@ const GestionProveedores = () => {
             onClick={() => { setProveedorEditando(null); setModalVisible(true); }}
           >
             <i className="fa-solid fa-plus"></i>
-            Nuevo Proveedor
+            <span>Nuevo Proveedor</span>
           </button>
           {/* Tabla principal con diseño moderno */}
           <div className="proveedor-table-modern">
@@ -1041,7 +1085,7 @@ const GestionProveedores = () => {
                           }}
                         >
                           <i className="fa-solid fa-boxes icon-gap"></i>
-                          Ver ({prov.productos?.length || 0})
+                          <span>Ver ({prov.productos?.length || 0})</span>
                         </button>
                       </td>
                       <td>
