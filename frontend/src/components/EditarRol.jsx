@@ -210,10 +210,7 @@ export default function EditarRol({ rol }) {
    return (
       <div 
          id="edit-role-modal"
-         role="dialog"
-         aria-modal="true"
-         aria-labelledby="edit-role-title"
-         tabIndex={0}
+         role="presentation"
          style={{
             position: 'fixed',
             top: 0,
@@ -228,20 +225,18 @@ export default function EditarRol({ rol }) {
             backdropFilter: 'blur(4px)',
             padding: '1rem'
          }}
-         // Make backdrop focusable so click handler is keyboard-accessible
+         // Backdrop click-to-close (non-interactive overlay)
          onClick={(e) => {
             if (e.target.id === 'edit-role-modal') {
                closeModal('edit-role-modal');
             }
          }}
-         onKeyDown={(e) => {
-            if ((e.key === 'Escape' || e.key === 'Esc') && e.target.id === 'edit-role-modal') {
-               e.preventDefault();
-               closeModal('edit-role-modal');
-            }
-         }}
+        
       >
          <form 
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="edit-role-title"
             onSubmit={handleSubmit}
             style={{
                backgroundColor: 'white',
@@ -262,7 +257,7 @@ export default function EditarRol({ rol }) {
                padding: '2rem',
                borderRadius: '20px 20px 0 0'
             }}>
-               <h3 style={{ 
+               <h3 id="edit-role-title" style={{ 
                   margin: 0, 
                   fontSize: '1.5rem', 
                   fontWeight: '600',
