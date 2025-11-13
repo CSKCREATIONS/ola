@@ -15,7 +15,7 @@ import api from '../api/axiosConfig';
  */
 export async function resolveRoleForUser(usuario) {
   // Quick guard: nothing to do for missing/non-string role
-  if (!usuario || !usuario.role || typeof usuario.role !== 'string') return usuario;
+  if (typeof usuario?.role !== 'string') return usuario;
 
   const roleStr = String(usuario.role);
   const looksLikeObjectId = /^[0-9a-fA-F]{24}$/.test(roleStr);
@@ -27,9 +27,9 @@ export async function resolveRoleForUser(usuario) {
       const d = res.data || res;
       return d.role || d.data || (Array.isArray(d) ? d[0] : null);
     } catch (err) {
-      if (err && err.response && err.response.status === 403) return { forbidden: true };
+      if (err?.response?.status === 403) return { forbidden: true };
       // Log and return null for 404 or other errors
-      console.debug('getRoleById error:', err && err.response ? { status: err.response.status, data: err.response.data } : err);
+      console.debug('getRoleById error:', err?.response ? { status: err.response.status, data: err.response.data } : err);
       return null;
     }
   };
@@ -42,7 +42,7 @@ export async function resolveRoleForUser(usuario) {
       const arr = Array.isArray(d) ? d : (d.data || []);
       return arr.find(r => r.name === name || (r.name && r.name.toLowerCase() === name.toLowerCase())) || null;
     } catch (err) {
-      console.debug('listAndFindRole error:', err && err.response ? { status: err.response.status, data: err.response.data } : err);
+      console.debug('listAndFindRole error:', err?.response ? { status: err.response.status, data: err.response.data } : err);
       return null;
     }
   };
@@ -53,7 +53,7 @@ export async function resolveRoleForUser(usuario) {
 
     if (looksLikeObjectId) {
       const byId = await getRoleById(roleStr);
-      if (byId && byId.forbidden) forbidden = true;
+      if (byId?.forbidden) forbidden = true;
       else if (byId) roleObj = byId;
     }
 
@@ -83,7 +83,7 @@ export default function Fijo() {
   const [puedeVerUsuarios, setPuedeVerUsuarios] = useState(false);
   const [puedeGenerarOrden, setPuedeGenerarOrden] = useState(false);
   const [puedeVerOrdenes, setPuedeVerOrdenes] = useState(false);
-  const [puedeRegistrarCompras, setPuedeRegistrarCompras] = useState(false);
+  const [, setPuedeRegistrarCompras] = useState(false);
   const [puedeVerProveedores, setPuedeVerProveedores] = useState(false);
   const [puedeVerHCompras, setPuedeVerHCompras] = useState(false);
   const [puedeVerReportesCompras, setPuedeVerReportesCompras] = useState(false);
@@ -151,9 +151,8 @@ export default function Fijo() {
 
     // 3. Manejar click fuera del menú (código original preservado)
     const handleClickOutside = (event) => {
-      const menu = document.getElementById('menu');
-      const closeBtn = document.getElementById('close-menu');
-      const btnMenu = document.getElementById('btn-menu');
+  const menu = document.getElementById('menu');
+  const btnMenu = document.getElementById('btn-menu');
 
       if (menu.classList.contains('mostrar-menu') &&
         !menu.contains(event.target) &&
