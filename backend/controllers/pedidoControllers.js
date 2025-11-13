@@ -498,8 +498,8 @@ exports.remisionarPedido = async (req, res) => {
       else if (pedido.cliente._id && mongoose.Types.ObjectId.isValid(pedido.cliente._id)) clienteId = pedido.cliente._id;
     }
 
-    if (!clienteId && pedido.cliente && pedido.cliente.correo) {
-      const correo = String(pedido.cliente.correo).toLowerCase().trim();
+    if (!clienteId && pedido.cliente?.correo) {
+      const correo = pedido.cliente?.correo ? String(pedido.cliente.correo).toLowerCase().trim() : null;
       let clienteExistente = await Cliente.findOne({ correo });
       if (!clienteExistente) {
         clienteExistente = new Cliente({

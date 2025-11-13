@@ -32,8 +32,8 @@ export default function AgregarUsuario() {
     if (typeof global !== 'undefined' && global.crypto) return global.crypto;
     try {
       // Fallback: try to get the global object via Function constructor
-      const g = new Function('return this')();
-      if (g && g.crypto) return g.crypto;
+  const g = new Function('return this')();
+  if (g?.crypto) return g.crypto;
     } catch (e) {
       // ignore
     }
@@ -65,10 +65,10 @@ export default function AgregarUsuario() {
       try {
         // Check cached user permissions to avoid unauthorized /api/roles calls
         const rawUser = localStorage.getItem('user');
-        let permisos = [];
         try {
           const parsed = rawUser ? JSON.parse(rawUser) : null;
-          permisos = parsed && parsed.permissions ? parsed.permissions : [];
+          // parsed?.permissions can be used here if needed, but currently we
+          // always attempt to fetch /api/roles and handle 403 responses.
         } catch (e) {
           console.warn('⚠️ AgregarUsuario: no se pudo parsear localStorage.user', e);
         }
@@ -85,7 +85,7 @@ export default function AgregarUsuario() {
           setRolesForbidden(false);
         } catch (err) {
           // If the server forbids access, show a friendly message instead of noisy errors
-          if (err && err.response && err.response.status === 403) {
+          if (err?.response?.status === 403) {
             console.debug('403 al obtener /api/roles — el usuario no tiene permiso para ver roles');
             setRolesDisponibles([]);
             setRolesForbidden(true);
@@ -107,9 +107,9 @@ export default function AgregarUsuario() {
   //genera password automaticamente
   const generarPassword = () => {
   // Use Web Crypto API when available for cryptographically secure randomness
-  const cryptoObj = getCrypto();
+    const cryptoObj = getCrypto();
     const secureRandomInt = (max) => {
-      if (cryptoObj && cryptoObj.getRandomValues) {
+      if (cryptoObj?.getRandomValues) {
         // simple method using 32-bit random and scaling — acceptable for UI-generated passwords
         const arr = new Uint32Array(1);
         cryptoObj.getRandomValues(arr);
@@ -149,7 +149,7 @@ export default function AgregarUsuario() {
   const generarUsername = () => {
     const cryptoObj = getCrypto();
     const secureRandomInt = (max) => {
-      if (cryptoObj && cryptoObj.getRandomValues) {
+      if (cryptoObj?.getRandomValues) {
         const arr = new Uint32Array(1);
         cryptoObj.getRandomValues(arr);
         return Math.floor(arr[0] / (0xFFFFFFFF + 1) * max);
@@ -203,6 +203,48 @@ export default function AgregarUsuario() {
       });
     }
   };
+
+  // Prepare role options and information outside of JSX to avoid nested ternaries
+  const rolesFiltered = rolesDisponibles.filter(r => r.enabled !== false);
+  let roleOptions;
+  if (cargandoRoles) {
+    roleOptions = <option disabled>Cargando...</option>;
+  } else if (rolesDisponibles.length === 0) {
+    roleOptions = <option disabled>No hay roles disponibles</option>;
+  } else {
+    roleOptions = rolesFiltered.map(r => (
+      <option key={r._id} value={r.name}>{r.name}</option>
+    ));
+  }
+
+  let rolesInfo;
+  if (cargandoRoles) {
+    rolesInfo = (
+      <span style={{ color: '#3b82f6' }}>
+        <i className="fa-solid fa-spinner fa-spin icon-gap" aria-hidden={true}></i>
+        <span>Cargando roles...</span>
+      </span>
+    );
+  } else if (rolesDisponibles.length === 0) {
+    rolesInfo = rolesForbidden ? (
+      <span style={{ color: '#ef4444' }}>
+        <i className="fa-solid fa-lock icon-gap" aria-hidden={true}></i>
+        <span>No tienes permiso para ver la lista de roles.</span>
+      </span>
+    ) : (
+      <span style={{ color: '#ef4444' }}>
+        <i className="fa-solid fa-exclamation-triangle icon-gap" aria-hidden={true}></i>
+        <span>No se encontraron roles. Verifica tu conexión o permisos.</span>
+      </span>
+    );
+  } else {
+    rolesInfo = (
+      <span style={{ color: '#10b981' }}>
+        <i className="fa-solid fa-check-circle icon-gap" aria-hidden={true}></i>
+        <span>{rolesFiltered.length} roles disponibles</span>
+      </span>
+    );
+  }
 
   return (
     <>
@@ -564,19 +606,7 @@ export default function AgregarUsuario() {
                     <option value="" disabled>
                       {cargandoRoles ? 'Cargando roles...' : 'Seleccione un rol'}
                     </option>
-                    {cargandoRoles ? (
-                      <option disabled>Cargando...</option>
-                    ) : rolesDisponibles.length === 0 ? (
-                      <option disabled>No hay roles disponibles</option>
-                    ) : (
-                      rolesDisponibles
-                        .filter(r => r.enabled !== false) // Solo mostrar roles habilitados
-                        .map(r => (
-                          <option key={r._id} value={r.name}>
-                            {r.name}
-                          </option>
-                        ))
-                    )}
+                    {roleOptions}
                   </select>
                   
                   {/* Información de debug para roles */}
@@ -585,29 +615,7 @@ export default function AgregarUsuario() {
                     fontSize: '0.8rem',
                     color: '#6b7280'
                   }}>
-                    {cargandoRoles ? (
-                      <span style={{ color: '#3b82f6' }}>
-                        <i className="fa-solid fa-spinner fa-spin icon-gap" style={{}} aria-hidden={true}></i>
-                        <span>Cargando roles...</span>
-                      </span>
-                    ) : rolesDisponibles.length === 0 ? (
-                      rolesForbidden ? (
-                        <span style={{ color: '#ef4444' }}>
-                          <i className="fa-solid fa-lock icon-gap" style={{}} aria-hidden={true}></i>
-                          <span>No tienes permiso para ver la lista de roles.</span>
-                        </span>
-                      ) : (
-                        <span style={{ color: '#ef4444' }}>
-                          <i className="fa-solid fa-exclamation-triangle icon-gap" style={{}} aria-hidden={true}></i>
-                          <span>No se encontraron roles. Verifica tu conexión o permisos.</span>
-                        </span>
-                      )
-                    ) : (
-                      <span style={{ color: '#10b981' }}>
-                        <i className="fa-solid fa-check-circle icon-gap" style={{}} aria-hidden={true}></i>
-                        <span>{rolesDisponibles.filter(r => r.enabled !== false).length} roles disponibles</span>
-                      </span>
-                    )}
+                    {rolesInfo}
                   </div>
                 </div>
                 
