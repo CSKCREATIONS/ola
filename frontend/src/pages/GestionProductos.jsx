@@ -819,7 +819,7 @@ const GestionProductos = () => {
           const subData = subRes.data || subRes;
           const subcategoria = subData.data || subData;
 
-          if (subcategoria && subcategoria.activo === false) {
+          if (subcategoria?.activo === false) {
             return Swal.fire('Acción no permitida', 'No se puede activar el producto porque su subcategoría está desactivada', 'error');
           }
 

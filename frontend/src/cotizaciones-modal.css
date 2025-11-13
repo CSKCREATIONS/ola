@@ -106,7 +106,8 @@
 .cotizacion-modal-container .cotizacion-codigo {
   background: rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(10px);
-  color: white;
+  /* Sobre fondo translúcido: usar color oscuro para buen contraste */
+  color: #0f172a;
   padding: 10px 16px;
   border-radius: 16px;
   font-size: 0.9em;
@@ -118,7 +119,8 @@
 }
 
 .cotizacion-modal-container .fecha-cotizacion {
-  color: rgba(255, 255, 255, 0.9);
+  /* Texto en fondo translúcido: usar tono oscuro para accesibilidad */
+  color: #0f172a;
   font-size: 1em;
   font-weight: 500;
   display: flex;
@@ -131,7 +133,7 @@
 }
 
 .cotizacion-modal-container .fecha-cotizacion i {
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(15, 23, 42, 0.75);
   font-size: 1.1em;
 }
 
@@ -140,7 +142,8 @@
   border: 1px solid rgba(255, 255, 255, 0.2);
   font-size: 20px;
   cursor: pointer;
-  color: white;
+  /* Botón sobre fondo translúcido: usar color oscuro para legibilidad */
+  color: #0f172a;
   padding: 12px;
   border-radius: 16px;
   width: 48px;

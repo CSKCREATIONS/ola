@@ -21,7 +21,7 @@ function isValidEmail(email) {
   if (domain.startsWith('.') || domain.endsWith('.')) return false;
   if (domain.indexOf('.') === -1) return false;
   if (!/^[A-Za-z0-9.-]+$/.test(domain)) return false;
-  if (!/^[A-Za-z0-9!#$%&'*+\/=?^_`{|}~.\-]+$/.test(local)) return false;
+  if (!/^[A-Za-z0-9!#$%&'*+/=?^_`{|}~.-]+$/.test(local)) return false;
   return true;
 }
 
@@ -627,30 +627,32 @@ JLA Global Company</textarea>
       confirmButtonColor: '#27ae60',
       cancelButtonColor: '#6c757d',
       preConfirm: () => {
+        // Always return an object with a consistent shape: { ok: boolean, ... }
         const email = document.getElementById('emailDestino').value;
         const asunto = document.getElementById('asuntoEmail').value;
         const mensaje = document.getElementById('mensajeEmail').value;
-        
+
         if (!email) {
           Swal.showValidationMessage('Por favor ingresa un correo electrónico');
-          return false;
+          return { ok: false, error: 'missing_email' };
         }
-        
+
         if (!isValidEmail(email)) {
           Swal.showValidationMessage('Por favor ingresa un correo electrónico válido');
-          return false;
+          return { ok: false, error: 'invalid_email' };
         }
 
         if (!asunto || asunto.trim() === '') {
           Swal.showValidationMessage('Por favor ingresa un asunto');
-          return false;
+          return { ok: false, error: 'missing_subject' };
         }
-        
-        return { email, asunto, mensaje };
+
+        return { ok: true, email, asunto, mensaje };
       }
     });
 
-    if (formValues) {
+    // formValues will always be either undefined (cancelled) or an object with { ok }
+    if (formValues?.ok) {
       try {
         Swal.fire({
           title: 'Enviando...',
