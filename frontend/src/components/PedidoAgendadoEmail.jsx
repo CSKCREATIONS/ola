@@ -25,9 +25,10 @@ export default function PedidoAgendadoEmail({ datos, onClose, onEmailSent }) {
     const totalFinal = datos?.total || totalCalculado;
     
     // Fecha de pedido: preferir createdAt, si no existe usar fecha, si ninguna está presente mostrar 'N/A'
+    const fechaFallback = datos?.fecha ? new Date(datos.fecha).toLocaleDateString('es-ES') : 'N/A';
     const fechaPedido = datos?.createdAt
       ? new Date(datos.createdAt).toLocaleDateString('es-ES')
-      : (datos?.fecha ? new Date(datos.fecha).toLocaleDateString('es-ES') : 'N/A');
+      : fechaFallback;
 
     // Observaciones: extraer el bloque para mejorar legibilidad
     const observacionesBlock = datos?.observacion

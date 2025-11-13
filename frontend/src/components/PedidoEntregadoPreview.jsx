@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
-import api from '../api/axiosConfig';
 import './FormatoCotizacion.css';
 import api from '../api/axiosConfig';
 
@@ -99,7 +98,10 @@ export default function PedidoEntregadoPreview({ datos, onClose }) {
                   <span aria-hidden={true} className="sr-only-decorative"/>COMPROBANTE DE ENTREGA
                 </h2>
                 <p><strong>Pedido:</strong> {datos.numeroPedido || datos.codigo || 'N/A'}</p>
-                <p><strong>Fecha de entrega:</strong> {new Date(datos.updatedAt).toLocaleDateString()}</p>
+                {(() => {
+                  const fechaEntrega = datos?.updatedAt ? new Date(datos.updatedAt).toLocaleDateString() : 'N/A';
+                  return <p><strong>Fecha de entrega:</strong> {fechaEntrega}</p>;
+                })()}
                 <p><strong>Estado:</strong> <span className="entregado-badge">ENTREGADO</span></p>
               </div>
             </div>
@@ -126,9 +128,9 @@ export default function PedidoEntregadoPreview({ datos, onClose }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {datos.productos && datos.productos.length > 0 ? (
+                  {datos?.productos?.length > 0 ? (
                     datos.productos.map((producto, index) => (
-                      <tr key={index}>
+                      <tr key={producto._id || producto.product?._id || producto.codigo || index}>
                         <td>{producto.producto?.name || producto.product?.name || 'Producto no disponible'}</td>
                         <td>{producto.cantidad}</td>
                         <td>${(producto.precio || producto.producto?.price || producto.product?.price || 0).toLocaleString('es-CO')}</td>

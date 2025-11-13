@@ -749,7 +749,7 @@ export default function ListaDeClientes() {
                     </tr>
                   ) : (
                     prospectosPaginados.map((cliente, index) => (
-                      <tr key={index} 
+                      <tr key={cliente._id || cliente.id || index} 
                           style={{
                             borderBottom: '1px solid #f3f4f6',
                             transition: 'all 0.2s ease'

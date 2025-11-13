@@ -190,7 +190,7 @@ useEffect(() => {
                 {productosCotizacion.map((prod, index) => {
                 const nombreProducto = prod.producto?.name || 'Nombre no disponible';
                 return (
-                  <tr key={index}>
+                  <tr key={prod._id || prod.producto?.id || index}>
                     <td>{index + 1}</td>
                     <td><input className="cuadroTexto" value={nombreProducto} readOnly /></td>
                     <td><input className="cuadroTexto" value={prod.cantidad} readOnly /></td>

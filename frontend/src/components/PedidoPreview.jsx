@@ -63,9 +63,12 @@ export default function FormatoCotizacion({ datos, onClose, onEmailSent }) {
       return total + subtotal;
     }, 0) || 0;
     
-    const totalFinal = datos?.total || totalCalculado;
+  const totalFinal = datos?.total || totalCalculado;
     
-    // Actualizar datos autocompletados cada vez que se abre el modal
+  // Fecha de emisión: usar datos.fecha si existe, si no mostrar 'N/A'
+  const fechaEmision = datos?.fecha ? new Date(datos.fecha).toLocaleDateString('es-ES') : 'N/A';
+
+  // Actualizar datos autocompletados cada vez que se abre el modal
     setCorreo(datos?.cliente?.correo || '');
     setAsunto(`Pedido Agendado ${datos?.numeroPedido || datos?.codigo || ''} - ${datos?.cliente?.nombre || 'Cliente'} | ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}`);
     setMensaje(
@@ -76,7 +79,7 @@ Esperamos se encuentre muy bien. Adjunto encontrará la información del pedido 
 📋 DETALLES DEL PEDIDO:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 • Número de pedido: ${datos?.numeroPedido || datos?.codigo || 'N/A'}
-• Fecha de emisión: ${datos?.fecha ? new Date(datos.fecha).toLocaleDateString('es-ES') : 'N/A'}
+• Fecha de emisión: ${fechaEmision}
 • Fecha de entrega programada: ${datos?.fechaEntrega ? new Date(datos.fechaEntrega).toLocaleDateString('es-ES') : 'N/A'}
 • Cliente: ${datos?.cliente?.nombre || 'N/A'}
 • Correo: ${datos?.cliente?.correo || 'N/A'}
@@ -263,7 +266,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
             </thead>
             <tbody>
               {datos.productos.map((p, idx) => (
-                <tr key={idx}>
+                <tr key={p._id || p.producto?.id || p.nombre || idx}>
                   <td>{p.producto?.name || p.nombre || 'Desconocido'}</td>
                   <td>{p.descripcion}</td>
                   <td>{p.cantidad}</td>

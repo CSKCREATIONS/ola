@@ -1315,8 +1315,8 @@ JLA Global Company</textarea>
                             </tr>
                         </thead>
                         <tbody>
-                            {compraSeleccionada.productos?.map((p, i) => (
-                                <tr key={i} style={{ borderBottom: '1px solid #e9ecef' }}>
+              {compraSeleccionada.productos?.map((p, i) => (
+                <tr key={p._id || p.codigo || i} style={{ borderBottom: '1px solid #e9ecef' }}>
                                     <td style={{ padding: '1rem', color: '#666' }}>{i + 1}</td>
                                     <td style={{ padding: '1rem', fontWeight: '500' }}>
                                         {p.producto?.name || p.producto || 'Producto no especificado'}
@@ -1540,7 +1540,7 @@ JLA Global Company</textarea>
                     </div>
 
                     {nuevaCompra.productos.map((prod, index) => (
-                      <div key={index} style={{
+                      <div key={prod.productoId || prod.codigo || index} style={{
                         background: '#f8f9fa',
                         padding: '1rem',
                         borderRadius: '8px',

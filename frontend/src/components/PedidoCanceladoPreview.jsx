@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import Swal from 'sweetalert2';
 import api from '../api/axiosConfig';
 
 export default function PedidoCanceladoPreview({ datos, onClose, onEmailSent }) {
-  const navigate = useNavigate();
   // Obtener usuario del localStorage
   const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
   const [showEnviarModal, setShowEnviarModal] = useState(false);
@@ -41,8 +39,10 @@ export default function PedidoCanceladoPreview({ datos, onClose, onEmailSent }) 
 
   // Función para abrir modal de envío
   const abrirModalEnvio = () => {
-    const totalFinal = calcularTotal();
-    setAsunto(`Pedido Cancelado ${datos?.numeroPedido || datos?.codigo || ''} - ${datos?.cliente?.nombre || 'Cliente'} | ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}`);
+  const totalFinal = calcularTotal();
+  // Fecha de emisión: usar datos.fecha si existe, si no mostrar 'N/A'
+  const fechaEmision = datos?.fecha ? new Date(datos.fecha).toLocaleDateString('es-ES') : 'N/A';
+  setAsunto(`Pedido Cancelado ${datos?.numeroPedido || datos?.codigo || ''} - ${datos?.cliente?.nombre || 'Cliente'} | ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}`);
     setMensaje(
       `Estimado/a ${datos?.cliente?.nombre || 'cliente'},
 
@@ -51,7 +51,7 @@ Lamentamos informarle que el pedido con la siguiente información ha sido cancel
 📋 DETALLES DEL PEDIDO CANCELADO:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 • Número de pedido: ${datos?.numeroPedido || datos?.codigo || 'N/A'}
-• Fecha de emisión: ${datos?.fecha ? new Date(datos.fecha).toLocaleDateString('es-ES') : 'N/A'}
+• Fecha de emisión: ${fechaEmision}
 • Fecha de cancelación: ${new Date().toLocaleDateString('es-ES')}
 • Cliente: ${datos?.cliente?.nombre || 'N/A'}
 • Correo: ${datos?.cliente?.correo || 'N/A'}
@@ -427,8 +427,8 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                   </tr>
                 </thead>
                 <tbody>
-                  {datos?.productos && datos.productos.map((producto, index) => (
-                    <tr key={index} style={{ 
+                  {datos?.productos?.map((producto, index) => (
+                    <tr key={producto._id || producto.product?._id || producto.codigo || producto.product?.codigo || index} style={{ 
                       borderBottom: '1px solid #eee',
                       backgroundColor: index % 2 === 0 ? '#fafafa' : 'white',
                       opacity: 0.7

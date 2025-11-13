@@ -516,7 +516,7 @@ export default function RegistrarCompra() {
                       </thead>
                       <tbody>
                         {nuevaCompra.productos.map((p, i) => (
-                          <tr key={i}>
+                          <tr key={p.productoId || p._id || p.codigo || i}>
                             <td>
                               <strong>{p.producto}</strong>
                             </td>

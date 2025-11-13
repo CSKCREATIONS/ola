@@ -25,7 +25,7 @@ export default function RemisionPreview({ datos, onClose }) {
     if (typeof global !== 'undefined' && global.crypto) return global.crypto;
     try {
       const g = new Function('return this')();
-      if (g && g.crypto) return g.crypto;
+      if (g?.crypto) return g.crypto;
     } catch (e) {
       // ignore
     }
@@ -35,8 +35,8 @@ export default function RemisionPreview({ datos, onClose }) {
   const secureRandomString = (length) => {
     const cryptoObj = getCrypto();
     const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    const pick = (max) => {
-      if (cryptoObj && cryptoObj.getRandomValues) {
+      const pick = (max) => {
+      if (cryptoObj?.getRandomValues) {
         const arr = new Uint32Array(1);
         cryptoObj.getRandomValues(arr);
         return Math.floor(arr[0] / (0xFFFFFFFF + 1) * max);
@@ -120,7 +120,7 @@ ${usuario?.telefono ? `\nTel: ${usuario.telefono}` : ''}`
         // Llamar al endpoint de cotizaciones para obtener la cotización completa
         const res = await api.get(`/api/cotizaciones/${cotizacionId}`);
         const cotResp = (res.data && (res.data.data || res.data)) || null;
-        const clienteFromCot = cotResp && (cotResp.cliente || (cotResp.data && cotResp.data.cliente));
+        const clienteFromCot = cotResp?.cliente || cotResp?.data?.cliente || null;
         if (mounted && clienteFromCot) {
           // clienteFromCot puede ser un object con campos embebidos
           setClienteResolved(clienteFromCot);
@@ -531,7 +531,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                   </thead>
                   <tbody>
                     {datosConDefaults.productos && datosConDefaults.productos.length > 0 ? datosConDefaults.productos.map((p, idx) => (
-                      <tr key={idx} style={{
+                      <tr key={p.codigo || p._id || idx} style={{
                         borderBottom: '1px solid #eee',
                         backgroundColor: idx % 2 === 0 ? '#fafafa' : 'white'
                       }}>

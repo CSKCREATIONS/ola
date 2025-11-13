@@ -1482,8 +1482,8 @@ export default function ListaDeCotizaciones() {
                     </div>
                   ) : (
                     <div className="productos-list">
-                      {cotizacionSeleccionada.productos?.map((producto, index) => (
-                        <div key={index} className="producto-item">
+            {cotizacionSeleccionada.productos?.map((producto, index) => (
+              <div key={producto.producto?.id || producto._id || producto.codigo || index} className="producto-item">
                           <div className="producto-header">
                             <span className="producto-numero">#{index + 1}</span>
                             <button

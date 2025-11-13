@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import { useNavigate } from 'react-router-dom';
 
 
 export default function PedidoDevueltoPreview({ datos, onClose }) {
-  const navigate = useNavigate();
   // Obtener usuario logueado
   const usuario = JSON.parse(localStorage.getItem('user') || '{}');
   const [showEnviarModal, setShowEnviarModal] = useState(false);
@@ -156,7 +154,7 @@ export default function PedidoDevueltoPreview({ datos, onClose }) {
             </thead>
             <tbody>
               {datos.productos && datos.productos.length > 0 ? datos.productos.map((p, idx) => (
-                <tr key={idx} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                <tr key={p._id || p.product?._id || p.codigo || p.product?.codigo || idx} style={{ borderBottom: '1px solid #e5e7eb' }}>
                   <td style={{ padding: '0.6rem', fontWeight: 'bold', fontSize: '0.8rem' }}>
                     {p.cantidad || 0}
                   </td>

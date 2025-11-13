@@ -237,14 +237,14 @@ function secureRandomString(length) {
     if (typeof global !== 'undefined' && global.crypto) return global.crypto;
     try {
       const g = new Function('return this')();
-      if (g && g.crypto) return g.crypto;
+      if (g?.crypto) return g.crypto;
     } catch (e) {
       // ignore
     }
     return null;
   }
   const cryptoObj = getCrypto();
-  if (cryptoObj && cryptoObj.getRandomValues) {
+  if (cryptoObj?.getRandomValues) {
     const bytes = new Uint8Array(length);
     cryptoObj.getRandomValues(bytes);
     let out = '';
@@ -2103,7 +2103,7 @@ export default function OrdenCompra() {
                           </thead>
                           <tbody>
                             {nuevaOrden.productos.map((p, i) => (
-                              <tr key={i}>
+                              <tr key={p.productoId || p._id || p.producto || i}>
                                 <td>
                                   <strong>{p.producto}</strong>
                                 </td>
@@ -2417,7 +2417,7 @@ export default function OrdenCompra() {
                           </thead>
                           <tbody>
                             {ordenEditando.productos.map((p, i) => (
-                              <tr key={i} className={productoEditando.index === i ? 'highlighted-row' : ''}>
+                              <tr key={p.productoId || p._id || p.producto || i} className={productoEditando.index === i ? 'highlighted-row' : ''}>
                                 <td>
                                   <strong>{p.producto}</strong>
                                   {productoEditando.index === i && (

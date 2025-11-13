@@ -51,6 +51,8 @@ export default function CotizacionPreview({ datos, onClose, onEmailSent, onRemis
   // Función para abrir modal con datos actualizados
   const abrirModalEnvio = () => {
     const totalFinal = datos?.total || calcularTotal();
+    // Fecha de emisión: usar datos.fecha si existe, si no mostrar 'N/A'
+    const fechaEmision = datos?.fecha ? new Date(datos.fecha).toLocaleDateString('es-ES') : 'N/A';
     
     setCorreo(datos?.cliente?.correo || '');
     setAsunto(`Cotización ${datos?.codigo || ''} - ${datos?.cliente?.nombre || 'Cliente'} | ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}`);
@@ -62,7 +64,7 @@ Esperamos se encuentre muy bien. Adjunto encontrará la cotización solicitada c
 📋 DETALLES DE LA COTIZACIÓN:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 • Código: ${datos?.codigo || 'N/A'}
-• Fecha de emisión: ${datos?.fecha ? new Date(datos.fecha).toLocaleDateString('es-ES') : 'N/A'}
+• Fecha de emisión: ${fechaEmision}
 • Cliente: ${datos?.cliente?.nombre || 'N/A'}
 • Correo: ${datos?.cliente?.correo || 'N/A'}
 • Teléfono: ${datos?.cliente?.telefono || 'N/A'}

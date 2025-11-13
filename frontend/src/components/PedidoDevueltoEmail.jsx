@@ -25,6 +25,12 @@ export default function PedidoDevueltoEmail({ datos, onClose, onEmailSent }) {
     
     const totalFinal = datos?.total || totalCalculado;
     
+    // Fecha de pedido original: preferir createdAt, si no usar fecha, si ninguna está presente 'N/A'
+    const fechaFallback = datos?.fecha ? new Date(datos.fecha).toLocaleDateString('es-ES') : 'N/A';
+    const fechaPedidoOriginal = datos?.createdAt
+      ? new Date(datos.createdAt).toLocaleDateString('es-ES')
+      : fechaFallback;
+    
     // Actualizar datos autocompletados cada vez que se abre el modal
     setCorreo(datos?.cliente?.correo || '');
     setAsunto(`Pedido Devuelto ${datos?.numeroPedido || ''} - ${datos?.cliente?.nombre || 'Cliente'} | ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}`);
@@ -36,7 +42,7 @@ Lamentamos informarle que su pedido ha sido devuelto. A continuación los detall
 📦 DETALLES DEL PEDIDO DEVUELTO:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 • Número de pedido: ${datos?.numeroPedido || 'N/A'}
-• Fecha de pedido original: ${datos?.createdAt ? new Date(datos.createdAt).toLocaleDateString('es-ES') : datos?.fecha ? new Date(datos.fecha).toLocaleDateString('es-ES') : 'N/A'}
+• Fecha de pedido original: ${fechaPedidoOriginal}
 • Fecha de devolución: ${new Date().toLocaleDateString('es-ES')}
 • Cliente: ${datos?.cliente?.nombre || 'N/A'}
 • Correo: ${datos?.cliente?.correo || 'N/A'}
