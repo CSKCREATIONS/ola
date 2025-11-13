@@ -1395,6 +1395,7 @@ export default function OrdenCompra() {
                       fontSize: '13px',
                       letterSpacing: '0.5px'
                     }}>
+                      
                       ACCIONES
                     </th>
                   </tr>
