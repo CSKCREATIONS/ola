@@ -1037,6 +1037,25 @@ exports.remisionarCotizacion = async (req, res) => {
     }
 
     const Remision = require('../models/Remision');
+    // Construir observaciones y, si existe, actualizar el pedido relacionado
+    let observacionesTexto = `Remisión generada desde cotización ${cotizacion.codigo}. ${observaciones || ''}`;
+
+    const Pedido = require('../models/Pedido');
+    const pedidoRef = cotizacion.pedidoReferencia || cotizacion.pedidoreferencia || cotizacion.pedidoreferencia || null;
+    if (pedidoRef) {
+      try {
+        const pedidoDoc = await Pedido.findById(pedidoRef).lean();
+        if (pedidoDoc) {
+          // Actualizar estado del pedido a 'entregado'
+          await Pedido.findByIdAndUpdate(pedidoDoc._id, { estado: 'entregado' });
+          const pedidoIdent = pedidoDoc.numeroPedido || String(pedidoDoc._id);
+          observacionesTexto += ` y pedido  ${pedidoIdent}.`;
+        }
+      } catch (err) {
+        console.warn('No se pudo actualizar el pedido relacionado:', err?.message || err);
+      }
+    }
+
     const nuevaRemision = new Remision({
       numeroRemision,
       cotizacionReferencia: cotizacion._id,
@@ -1045,7 +1064,7 @@ exports.remisionarCotizacion = async (req, res) => {
       productos: productosRemisionDoc,
       fechaRemision: new Date(),
       fechaEntrega: fechaEntrega ? new Date(fechaEntrega) : new Date(),
-      observaciones: `Remisión generada desde cotización ${cotizacion.codigo}. ${observaciones || ''}`,
+      observaciones: observacionesTexto,
       responsable: req.userId || null,
       estado: 'activa',
       total,

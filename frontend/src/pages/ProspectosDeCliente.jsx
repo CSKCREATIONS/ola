@@ -648,6 +648,7 @@ export default function ListaDeClientes() {
                     background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)',
                     borderBottom: '2px solid #e5e7eb'
                   }}>
+                    <th>#</th>
                     <th style={{ 
                       padding: '16px 12px', 
                       textAlign: 'left', 
@@ -708,6 +709,7 @@ export default function ListaDeClientes() {
                 <tbody>
                   {prospectosPaginados.length === 0 ? (
                     <tr>
+                      <td></td>
                       <td colSpan="5" style={{ textAlign: 'center', padding: '80px 20px' }}>
                         <div style={{
                           display: 'flex',
@@ -761,6 +763,7 @@ export default function ListaDeClientes() {
                             e.currentTarget.style.backgroundColor = 'transparent';
                           }}
                       >
+                        <td></td>
                         <td style={{ padding: '16px 12px', whiteSpace: 'nowrap' }}>
                           {renderCotizacionesForCliente(cliente)}
                         </td>

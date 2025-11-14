@@ -6,7 +6,7 @@ const sgMail = require('@sendgrid/mail');
 const crypto = require('node:crypto');
 // Configurar SendGrid de forma segura para no bloquear el arranque
   try {
-  const apiKey = process.env.SENDGRID_API_KEY;
+  const apiKey = process.env.SENDGRID_RECUPERACION;
   if (apiKey?.startsWith('SG.')) {
     sgMail.setApiKey(apiKey);
     console.log('✉️  SendGrid listo (auth)');
@@ -18,10 +18,6 @@ const crypto = require('node:crypto');
 }
 
 
-// Función para verificar permisos
-const checkPermission = (userRole, allowedRoles) => {
-  return allowedRoles.includes(userRole);
-};
 
 // 1. Registro de usuarios (SOLO ADMIN)
 exports.signup = async (req, res) => {

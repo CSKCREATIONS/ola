@@ -71,6 +71,10 @@ const ClienteSchema = new mongoose.Schema({
   esCliente: {
     type: Boolean,
     default: false
+  },
+  agendaCotiza:{
+    type: String,
+    trim: true
   }
 }, { timestamps: true });
 
