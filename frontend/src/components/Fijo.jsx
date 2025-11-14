@@ -83,7 +83,7 @@ export default function Fijo() {
   const [puedeVerUsuarios, setPuedeVerUsuarios] = useState(false);
   const [puedeGenerarOrden, setPuedeGenerarOrden] = useState(false);
   const [puedeVerOrdenes, setPuedeVerOrdenes] = useState(false);
-  const [, setPuedeRegistrarCompras] = useState(false);
+  const [puedeRegistrarCompras, setPuedeRegistrarCompras] = useState(false);
   const [puedeVerProveedores, setPuedeVerProveedores] = useState(false);
   const [puedeVerHCompras, setPuedeVerHCompras] = useState(false);
   const [puedeVerReportesCompras, setPuedeVerReportesCompras] = useState(false);

@@ -503,11 +503,17 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
             <button
               aria-label="Imprimir cotización"
               onClick={() => {
+                // Create a printable HTML blob and open it in a new window instead of using document.write
                 const printContent = document.querySelector('.pdf-cotizacion');
-                const newWindow = window.open('', '_blank');
-                newWindow.document.write(`
+                if (!printContent) {
+                  Swal.fire('Error', 'No se encontró el contenido para imprimir', 'error');
+                  return;
+                }
+
+                const html = `<!doctype html>
                   <html>
                     <head>
+                      <meta charset="utf-8" />
                       <title>Cotización - ${datos.codigo}</title>
                       <style>
                         body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
@@ -523,12 +529,46 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                     <body>
                       ${printContent.innerHTML}
                     </body>
-                  </html>
-                `);
-                newWindow.document.close();
-                newWindow.focus();
-                newWindow.print();
-                newWindow.close();
+                  </html>`;
+
+                try {
+                  const blob = new Blob([html], { type: 'text/html' });
+                  const url = URL.createObjectURL(blob);
+                  const win = window.open(url, '_blank');
+                  if (!win) {
+                    // Popup blocked — fall back to opening about:blank and writing safely
+                    const fallback = window.open('', '_blank');
+                    if (fallback) {
+                      // Assign the HTML via DOM APIs instead of document.write
+                      fallback.document.open();
+                      fallback.document.documentElement.innerHTML = html;
+                      fallback.document.close();
+                      fallback.focus();
+                      setTimeout(() => { try { fallback.print(); fallback.close(); } catch (_) {} }, 500);
+                    } else {
+                      Swal.fire('Error', 'No se pudo abrir la ventana para imprimir', 'error');
+                    }
+                    return;
+                  }
+
+                  // Wait for the new window to load the blob content, then print
+                  const interval = setInterval(() => {
+                    try {
+                      if (win.document && win.document.readyState === 'complete') {
+                        clearInterval(interval);
+                        try { win.focus(); win.print(); } catch (_) {}
+                        // Revoke the object URL after a short delay to ensure print has started
+                        setTimeout(() => URL.revokeObjectURL(url), 1000);
+                        setTimeout(() => { try { win.close(); } catch (_) {} }, 1500);
+                      }
+                    } catch (err) {
+                      // Accessing win.document may throw if the window is closed; ignore until closed
+                    }
+                  }, 200);
+                } catch (err) {
+                  console.error('Error creating print window:', err);
+                  Swal.fire('Error', 'Ocurrió un error al preparar la impresión', 'error');
+                }
               }}
               style={{
                 background: 'rgba(255, 255, 255, 0.2)',
