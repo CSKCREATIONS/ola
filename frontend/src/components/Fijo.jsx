@@ -280,6 +280,12 @@ export default function Fijo() {
                     type="button"
                     onClick={() => toggleSubMenu('submenuCompras')}
                     className="menu-toggle-button"
+                    aria-controls="submenuCompras"
+                    aria-expanded={
+                      typeof document !== 'undefined' && document.getElementById('submenuCompras')
+                        ? document.getElementById('submenuCompras').classList.contains('visible')
+                        : false
+                    }
                     style={{ background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
                   >
                     <i className="fas fa-shopping-cart" aria-hidden={true}></i>
@@ -310,6 +316,12 @@ export default function Fijo() {
                     type="button"
                     onClick={() => toggleSubMenu('submenuProductos')}
                     className="menu-toggle-button"
+                    aria-controls="submenuProductos"
+                    aria-expanded={
+                      typeof document !== 'undefined' && document.getElementById('submenuProductos')
+                        ? document.getElementById('submenuProductos').classList.contains('visible')
+                        : false
+                    }
                     style={{ background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
                   >
                     <i className="fas fa-boxes" aria-hidden={true}></i>
@@ -342,6 +354,12 @@ export default function Fijo() {
                     type="button"
                     onClick={() => toggleSubMenu('submenuVentas')}
                     className="menu-toggle-button"
+                    aria-controls="submenuVentas"
+                    aria-expanded={
+                      typeof document !== 'undefined' && document.getElementById('submenuVentas')
+                        ? document.getElementById('submenuVentas').classList.contains('visible')
+                        : false
+                    }
                     style={{ background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
                   >
                     <i className="fas fa-cash-register" aria-hidden={true}></i>

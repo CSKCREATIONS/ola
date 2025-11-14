@@ -7,7 +7,6 @@ import api from '../api/axiosConfig';
 import {
   getStoredUser,
   formatDateIso,
-  buildSignature,
   getCompanyName
 } from '../utils/emailHelpers';
 

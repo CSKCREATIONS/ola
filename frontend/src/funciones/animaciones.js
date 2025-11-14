@@ -3,9 +3,18 @@
 /* global globalThis */
 export function toggleSubMenu(menuId){
     const targetMenu = document.getElementById(menuId);
-    if(targetMenu) {
-        targetMenu.classList.toggle('visible')
-    }
+    if(!targetMenu) return;
+    
+    // Cerrar otros submenus abiertos (comportamiento de acordeón)
+    const allSubmenus = document.querySelectorAll('.dropdown');
+    allSubmenus.forEach(submenu => {
+        if(submenu.id !== menuId && submenu.classList.contains('visible')) {
+            submenu.classList.remove('visible');
+        }
+    });
+    
+    // Toggle el submenu actual
+    targetMenu.classList.toggle('visible');
 }
 
 

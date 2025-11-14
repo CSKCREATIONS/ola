@@ -502,7 +502,10 @@ header {
 
 /* Por defecto, submenus ocultos */
 .dropdown {
-  display: none;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
+  opacity: 0;
 }
 
 /* Clase que hace visible el menu */
@@ -641,7 +644,8 @@ li {
 
 /* Mostrar submenú cuando tenga la clase "visible" */
 .dropdown.visible {
-  display: block;
+  max-height: 1000px;
+  opacity: 1;
 }
 
 .custom-footer {

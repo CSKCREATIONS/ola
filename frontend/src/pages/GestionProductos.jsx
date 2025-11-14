@@ -105,13 +105,7 @@ const advancedStyles = `
   }
 `;
 
-// Inyectar estilos
-if (!document.getElementById('productos-advanced-styles')) {
-  const styleSheet = document.createElement('style');
-  styleSheet.id = 'productos-advanced-styles';
-  styleSheet.textContent = advancedStyles;
-  document.head.appendChild(styleSheet);
-}
+// Styles will be injected when the component mounts
 
 const ProductoModal = ({
   producto,
@@ -747,6 +741,26 @@ const GestionProductos = () => {
     loadProductos();
     loadCategorias();
     loadSubcategorias();
+    
+    // Inject styles at mount time (avoids module-level DOM access)
+    if (typeof document !== 'undefined') {
+      const existing = document.getElementById('productos-advanced-styles');
+      if (!existing) {
+        const styleSheet = document.createElement('style');
+        styleSheet.id = 'productos-advanced-styles';
+        styleSheet.textContent = advancedStyles;
+        document.head.appendChild(styleSheet);
+      }
+    }
+
+    return () => {
+      try {
+        const el = document.getElementById('productos-advanced-styles');
+        if (el) el.remove();
+      } catch (e) {
+        console.warn('Failed to remove productos-advanced-styles element:', e);
+      }
+    };
   }, []);
 
   useEffect(() => {

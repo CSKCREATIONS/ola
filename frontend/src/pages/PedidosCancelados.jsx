@@ -7,6 +7,7 @@ import jsPDF from 'jspdf';
 import * as XLSX from 'xlsx';
 import Swal from 'sweetalert2';
 import api from '../api/axiosConfig';
+import { formatDateIso, calculateTotal } from '../utils/emailHelpers';
 
 /* Estilos CSS avanzados para Pedidos Cancelados */
 const pedidosCanceladosStyles = `
@@ -187,15 +188,7 @@ const pedidosCanceladosStyles = `
   </style>
 `;
 
-if (typeof document !== 'undefined') {
-  const existingStyles = document.getElementById('pedidos-cancelados-styles');
-  if (!existingStyles) {
-    const styleElement = document.createElement('div');
-    styleElement.id = 'pedidos-cancelados-styles';
-    styleElement.innerHTML = pedidosCanceladosStyles;
-    document.head.appendChild(styleElement);
-  }
-}
+// Styles are injected when the component mounts to avoid module-level side-effects
 
 export default function PedidosCancelados() {
   const [pedidosCancelados, setPedidosCancelados] = useState([]);
@@ -211,6 +204,25 @@ export default function PedidosCancelados() {
 
   useEffect(() => {
     cargarPedidosCancelados();
+    // Inject styles for this page at mount time (avoids module-level DOM access)
+    if (typeof document !== 'undefined') {
+      const existing = document.getElementById('pedidos-cancelados-styles');
+      if (!existing) {
+        const styleElement = document.createElement('div');
+        styleElement.id = 'pedidos-cancelados-styles';
+        styleElement.innerHTML = pedidosCanceladosStyles;
+        document.head.appendChild(styleElement);
+      }
+    }
+
+    return () => {
+      try {
+        const el = document.getElementById('pedidos-cancelados-styles');
+        if (el) el.remove();
+      } catch (e) {
+        console.warn('Failed to remove pedidos-cancelados-styles element:', e);
+      }
+    };
   }, []);
 
   const cargarPedidosCancelados = async () => {
@@ -354,7 +366,7 @@ export default function PedidosCancelados() {
                 </div>
                 <div>
                   <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                    ${pedidosCancelados.reduce((sum, p) => sum + (p.total || 0), 0).toLocaleString('es-CO')}
+                    ${pedidosCancelados.reduce((sum, p) => sum + calculateTotal(p), 0).toLocaleString('es-CO')}
                   </h3>
                   <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
                     Valor Perdido
@@ -450,7 +462,7 @@ export default function PedidosCancelados() {
                         </div>
                       </td>
                       <td style={{ color: '#6b7280' }}>
-                        {new Date(pedido.updatedAt).toLocaleDateString()}
+                        {formatDateIso(pedido.updatedAt)}
                       </td>
                       <td style={{ fontWeight: '500', color: '#1f2937' }}>
                         {pedido.cliente?.nombre}
@@ -459,7 +471,7 @@ export default function PedidosCancelados() {
                         {pedido.cliente?.ciudad}
                       </td>
                       <td style={{ fontWeight: '600', color: '#ef4444', fontSize: '14px' }}>
-                        ${(pedido.total || 0).toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        ${(calculateTotal(pedido) || 0).toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
                       <td className="no-export">
                         <div style={{ display: 'flex', gap: '5px' }}>
