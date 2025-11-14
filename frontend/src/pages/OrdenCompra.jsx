@@ -1007,7 +1007,6 @@ export default function OrdenCompra() {
     let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
 
     const dragMouseDown = (e) => {
-      e = e || window.event;
       e.preventDefault();
       pos3 = e.clientX;
       pos4 = e.clientY;
@@ -1016,7 +1015,6 @@ export default function OrdenCompra() {
     };
 
     const elementDrag = (e) => {
-      e = e || window.event;
       e.preventDefault();
       pos1 = pos3 - e.clientX;
       pos2 = pos4 - e.clientY;

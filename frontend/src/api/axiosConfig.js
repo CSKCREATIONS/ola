@@ -1,12 +1,12 @@
 import axios from 'axios';
 
 // Prefer environment variable set at build time (REACT_APP_API_URL)
-// Fallback: if running in browser, infer API host from window.location
+// Fallback: if running in browser, infer API host from globalThis.window.location
 const getBaseURL = () => {
   if (process.env.REACT_APP_API_URL) return process.env.REACT_APP_API_URL;
-  if (typeof window !== 'undefined') {
+  if (globalThis.window !== undefined) {
     // Use same host as frontend but port 5000 where the backend runs
-    const { protocol, hostname } = window.location;
+    const { protocol, hostname } = globalThis.window.location;
     return `${protocol}//${hostname}:5000`;
   }
   // final fallback
