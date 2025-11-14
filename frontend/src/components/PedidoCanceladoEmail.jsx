@@ -4,8 +4,9 @@ import Swal from 'sweetalert2';
 import api from '../api/axiosConfig';
 
 export default function PedidoCanceladoEmail({ datos, onClose, onEmailSent }) {
-  // Obtener usuario logueado
-  const usuario = JSON.parse(localStorage.getItem('user') || '{}');
+  // Obtener usuario logueado (evitar JSON.parse sobre null)
+  const _stored = localStorage.getItem('user');
+  const usuario = _stored ? JSON.parse(_stored) : {};
   const [showEnviarModal, setShowEnviarModal] = useState(false);
   
   // Estados para el formulario de envío de correo
@@ -90,6 +91,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
           text: 'La notificación de pedido cancelado ha sido enviada exitosamente'
         });
         setShowEnviarModal(false);
+        if (onClose) onClose();
         
         // Llamar al callback para actualizar el componente padre
         if (onEmailSent) {
@@ -98,8 +100,9 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
       } else {
         throw new Error('Error al enviar correo');
       }
-    } catch (error) {
-      console.error('Error:', error);
+    } catch (error_) {
+      // eslint-disable-next-line no-console
+      console.error('PedidoCanceladoEmail enviarPorCorreo error:', error_);
       Swal.fire({
         icon: 'error',
         title: 'Error',
@@ -128,7 +131,10 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                 <span>Enviar Notificación de Pedido Cancelado</span>
               </h3>
               <button
-                onClick={() => setShowEnviarModal(false)}
+                onClick={() => {
+                  setShowEnviarModal(false);
+                  if (onClose) onClose();
+                }}
                 className="text-gray-400 hover:text-gray-600 text-2xl font-bold"
                 aria-label="Cerrar"
               >
@@ -195,7 +201,10 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
             
             <div className="flex justify-end gap-3 p-6 border-t border-gray-200">
               <button
-                onClick={() => setShowEnviarModal(false)}
+                onClick={() => {
+                  setShowEnviarModal(false);
+                  if (onClose) onClose();
+                }}
                 className="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
               >
                 Cancelar
