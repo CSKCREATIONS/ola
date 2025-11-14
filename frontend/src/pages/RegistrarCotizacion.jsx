@@ -86,15 +86,38 @@ export default function RegistrarCotizacion() {
     loadProducts();
   }, []);
 
-  // Cargar clientes una vez (se filtra en el frontend por nombre)
+  // Cargar clientes y prospectos (esCliente:true y esCliente:false) una sola vez
   useEffect(() => {
     const loadClientes = async () => {
       try {
-        const res = await api.get('/api/clientes');
-        const lista = res.data?.data || res.data || [];
-        setClientes(Array.isArray(lista) ? lista : []);
+        const [clientesRes, prospectosRes] = await Promise.all([
+          api.get('/api/clientes'), // sólo esCliente:true
+          api.get('/api/clientes/prospectos') // esCliente:false
+        ]);
+
+        const listaClientes = clientesRes.data?.data || clientesRes.data || [];
+        const listaProspectos = prospectosRes.data?.data || prospectosRes.data || [];
+
+        // Normalizar y marcar tipo
+        const normalizar = (arr, esClienteFlag) => (Array.isArray(arr) ? arr.map(c => ({ ...c, esCliente: !!esClienteFlag })) : []);
+        const todos = [...normalizar(listaClientes, true), ...normalizar(listaProspectos, false)];
+
+        // De-duplicar por correo (preferir cliente real sobre prospecto si coincide)
+        const dedupMap = new Map();
+        for (const c of todos) {
+          const key = (c.correo || '').toLowerCase().trim() || c._id;
+          if (!dedupMap.has(key)) {
+            dedupMap.set(key, c);
+          } else {
+            const existente = dedupMap.get(key);
+            // Si el existente es prospecto y el nuevo es cliente, reemplazar
+            if (!existente.esCliente && c.esCliente) dedupMap.set(key, c);
+          }
+        }
+        const resultado = Array.from(dedupMap.values()).sort((a,b) => (a.nombre || '').localeCompare(b.nombre || ''));
+        setClientes(resultado);
       } catch (err) {
-        console.error('Error al cargar clientes:', err);
+        console.error('Error al cargar clientes y prospectos:', err);
       }
     };
     loadClientes();
@@ -475,7 +498,6 @@ export default function RegistrarCotizacion() {
                         setTimeout(() => setShowDropdown(false), 150);
                       }}
                     />
-
                     {showDropdown && filteredClientes.length > 0 && (
                       <div
                         style={{
@@ -508,7 +530,6 @@ export default function RegistrarCotizacion() {
                               setClienteDireccion(direccion);
                               setClienteTelefono(telefono);
                               setClienteCorreo(correo);
-                              // también reflejar en el input ciudad si existe
                               const ciudadEl = document.getElementById('ciudad');
                               if (ciudadEl) ciudadEl.value = ciudad;
                               const direccionEl = document.getElementById('direccion');
@@ -539,7 +560,22 @@ export default function RegistrarCotizacion() {
                             }}
                             aria-label={`Seleccionar cliente ${c.nombre || ''}`}
                           >
-                            <span style={{ fontWeight: 600, color: '#111827' }}>{c.nombre}</span>
+                            <span style={{ fontWeight: 600, color: '#111827' }}>
+                              {c.nombre}
+                              {!c.esCliente && (
+                                <span
+                                  style={{
+                                    marginLeft: '6px',
+                                    background: '#6366f1',
+                                    color: '#ffffff',
+                                    fontSize: '10px',
+                                    padding: '2px 6px',
+                                    borderRadius: '12px',
+                                    fontWeight: 600
+                                  }}
+                                >PROSPECTO</span>
+                              )}
+                            </span>
                             <span style={{ fontSize: '12px', color: '#6b7280' }}>
                               {c.ciudad || 'Ciudad no especificada'}
                             </span>

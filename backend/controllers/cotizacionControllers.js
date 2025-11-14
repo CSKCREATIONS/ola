@@ -1027,6 +1027,13 @@ exports.remisionarCotizacion = async (req, res) => {
       return res.status(400).json({ message: 'No se pudo resolver el cliente para crear la remisión' });
     }
 
+    // Asegurar que el cliente esté marcado como cliente real (esCliente: true)
+    try {
+      await Cliente.updateOne({ _id: clienteId, esCliente: false }, { $set: { esCliente: true } });
+    } catch (e) {
+      console.warn('No se pudo actualizar esCliente a true para el cliente:', e?.message || e);
+    }
+
     const nuevaRemision = new Remision({
       numeroRemision: numeroRemision,
       // cotizacionReferencia should be ObjectId reference to the Cotizacion

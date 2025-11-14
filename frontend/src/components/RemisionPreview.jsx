@@ -21,14 +21,12 @@ export default function RemisionPreview({ datos, onClose }) {
   // Helper: obtain a crypto object in a cross-environment safe way without using
   // restricted global identifiers (avoids ESLint `no-restricted-globals` on `self`).
   const getCrypto = () => {
-    // Prefer direct undefined checks and globalThis to avoid restricted globals
-    if (globalThis.window !== undefined && globalThis.window.crypto) return globalThis.window.crypto;
-    if (globalThis.global !== undefined && globalThis.global.crypto) return globalThis.global.crypto;
+    if (typeof window !== 'undefined' && window.crypto) return window.crypto;
+    if (typeof global !== 'undefined' && global.crypto) return global.crypto;
     try {
       const g = new Function('return this')();
       if (g?.crypto) return g.crypto;
     } catch (error_) {
-      // Non-fatal fallback failure — debug only
       console.debug('getCrypto fallback failed:', error_);
     }
     return null;
@@ -283,10 +281,14 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
           </div>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             {/* Botón de imprimir */}
-            <button
+                <button
               onClick={() => {
                 const printContent = document.querySelector('.pdf-remision');
-                const newWindow = globalThis.window.open('', '_blank');
+                const newWindow = (typeof window !== 'undefined' && window.open) ? window.open('', '_blank') : null;
+                if (!newWindow) {
+                  console.warn('No window available for printing.');
+                  return;
+                }
                 newWindow.document.write(`
                   <html>
                     <head>
@@ -303,7 +305,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                       </style>
                     </head>
                     <body>
-                      ${printContent.innerHTML}
+                      ${printContent?.innerHTML || ''}
                     </body>
                   </html>
                 `);
