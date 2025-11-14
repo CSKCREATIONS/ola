@@ -1,7 +1,7 @@
 /* global globalThis */
  // Generar PDF
     async function generarPDF() {
-      const jspdfLib = globalThis?.jspdf ?? (typeof window !== 'undefined' ? window.jspdf : undefined);
+      const jspdfLib = globalThis?.jspdf ?? globalThis?.window?.jspdf;
       const jsPDF = jspdfLib?.jsPDF ?? jspdfLib;
       if (!jsPDF) {
         console.error('jsPDF is not available on globalThis or window.');
