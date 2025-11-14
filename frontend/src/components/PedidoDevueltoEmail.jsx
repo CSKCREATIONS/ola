@@ -4,8 +4,9 @@ import Swal from 'sweetalert2';
 import api from '../api/axiosConfig';
 
 export default function PedidoDevueltoEmail({ datos, onClose, onEmailSent }) {
-  // Obtener usuario logueado
-  const usuario = JSON.parse(localStorage.getItem('user') || '{}');
+  // Obtener usuario logueado (evitar JSON.parse sobre null)
+  const _stored = localStorage.getItem('user');
+  const usuario = _stored ? JSON.parse(_stored) : {};
   const [showEnviarModal, setShowEnviarModal] = useState(false);
   
   // Estados para el formulario de envío de correo
@@ -91,6 +92,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
           text: 'La notificación de pedido devuelto ha sido enviada exitosamente'
         });
         setShowEnviarModal(false);
+        if (onClose) onClose();
         
         // Llamar al callback para actualizar el componente padre
         if (onEmailSent) {
@@ -99,8 +101,9 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
       } else {
         throw new Error('Error al enviar correo');
       }
-    } catch (error) {
-      console.error('Error:', error);
+    } catch (error_) {
+      // eslint-disable-next-line no-console
+      console.error('PedidoDevueltoEmail enviarPorCorreo error:', error_);
       Swal.fire({
         icon: 'error',
         title: 'Error',
