@@ -491,6 +491,7 @@ export default function ListaDeClientes() {
                     background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)',
                     borderBottom: '2px solid #e5e7eb'
                   }}>
+                    <th>#</th>
                     <th style={{ 
                       padding: '16px 12px', 
                       textAlign: 'left', 
@@ -549,7 +550,7 @@ export default function ListaDeClientes() {
                   </tr>
                 </thead>
                 <tbody>
-                  {currentItems.map((cliente) => (
+                  {currentItems.map((cliente, index) => (
                     <tr key={cliente._id} 
                         style={{
                           borderBottom: '1px solid #f3f4f6',
@@ -562,6 +563,9 @@ export default function ListaDeClientes() {
                           e.currentTarget.style.backgroundColor = 'transparent';
                         }}
                     >
+                      <td style={{ padding: '16px 12px', fontWeight: '700', color: '#374151', textAlign: 'left' }}>
+                        {index + 1 + (currentPage - 1) * itemsPerPage}
+                      </td>
                       <td style={{ padding: '16px 12px' }}>
                         <div style={{ fontWeight: '600', color: '#1f2937', fontSize: '14px' }}>
                           {cliente.nombre || cliente.clienteInfo?.nombre || 'Sin nombre'}

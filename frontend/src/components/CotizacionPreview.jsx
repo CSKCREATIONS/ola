@@ -452,7 +452,7 @@ ${getCompanyName()}
           </div>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             {/* Botón de editar */}
-            {datos.tipo !== 'pedido' && (
+            {datos.tipo !== 'pedido' && !isRemisionada && (
               <button
                 onClick={() => { onClose(); navigate('/RegistrarCotizacion', { state: { datos } }); }}
                 style={{
