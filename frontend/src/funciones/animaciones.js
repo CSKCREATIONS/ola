@@ -1,5 +1,6 @@
 
 /*Funcion para desplegar los submenus de la barra lateral*/ 
+/* global globalThis */
 export function toggleSubMenu(menuId){
     const targetMenu = document.getElementById(menuId);
     if(targetMenu) {
@@ -50,10 +51,12 @@ export function openModal(modalId) {
     }
     
     // Para los nuevos modales controlados por React
-    if (modalId === 'agregar-usuario' && window.openModalUsuario) {
-        window.openModalUsuario();
-    } else if (modalId === 'crear-rol' && window.openModalRol) {
-        window.openModalRol();
+    if (modalId === 'agregar-usuario') {
+        const opener = globalThis?.openModalUsuario ?? globalThis?.window?.openModalUsuario;
+        opener?.();
+    } else if (modalId === 'crear-rol') {
+        const opener = globalThis?.openModalRol ?? globalThis?.window?.openModalRol;
+        opener?.();
     }
 }
 export function closeModal(modalId) {

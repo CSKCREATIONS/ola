@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import './FormatoCotizacion.css';
 import api from '../api/axiosConfig';
+/* global globalThis */
 
 export default function RemisionPreview({ datos, onClose }) {
   // Obtener usuario logueado con fallback
@@ -21,16 +22,15 @@ export default function RemisionPreview({ datos, onClose }) {
   // Helper: obtain a crypto object in a cross-environment safe way without using
   // restricted global identifiers (avoids ESLint `no-restricted-globals` on `self`).
   const getCrypto = () => {
-    // Prefer direct undefined checks and globalThis to avoid restricted globals
-    if (globalThis.window !== undefined && globalThis.window.crypto) return globalThis.window.crypto;
-    if (globalThis.global !== undefined && globalThis.global.crypto) return globalThis.global.crypto;
     try {
+      if (globalThis?.window?.crypto) return globalThis.window.crypto;
+      if (globalThis?.crypto) return globalThis.crypto;
       const g = new Function('return this')();
-      if (g?.crypto) return g.crypto;
+      return g?.crypto || null;
     } catch (error_) {
       console.debug('getCrypto fallback failed:', error_);
+      return null;
     }
-    return null;
   };
   // Helper: secure random alphanumeric string using Web Crypto when available
   const secureRandomString = (length) => {
@@ -131,8 +131,8 @@ ${usuarioNombreLinea}${usuarioEmailLinea}${usuarioTelefonoLinea}`
           setClienteResolved(clienteFromCot);
           return;
         }
-      } catch (err) {
-        console.warn('No se pudo poblar cliente desde la cotización para remisión:', err?.message || err);
+      } catch (error_) {
+        console.warn('No se pudo poblar cliente desde la cotización para remisión:', error_?.message || error_);
       }
     };
     fetchFromCotizacion();
@@ -214,8 +214,8 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
       } else {
         throw new Error('Error al enviar remisión');
       }
-    } catch (error) {
-      console.error('Error:', error);
+    } catch (error_) {
+      console.error('Error:', error_);
       const Swal = (await import('sweetalert2')).default;
       Swal.fire({
         icon: 'error',
@@ -236,6 +236,78 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
   console.log('💰 Total:', datos?.total);
   console.log('📅 Fecha remisión:', datos?.fechaRemision);
   console.log('🔄 Estado:', datos?.estado);
+
+  // Helper: try to set document using DOM APIs (preferred over document.write)
+  const trySetDocWithDOM = (doc, title, htmlContent, styleText) => {
+    doc.title = title;
+    const head = doc.head || doc.getElementsByTagName('head')[0];
+    const styleEl = doc.createElement('style');
+    try {
+      styleEl.appendChild(doc.createTextNode(styleText));
+    } catch (e) {
+      // some environments may not allow createTextNode on cross-window docs
+      styleEl.innerHTML = styleText;
+    }
+    if (head) head.appendChild(styleEl);
+    if (doc.body) {
+      doc.body.innerHTML = htmlContent;
+    } else {
+      const body = doc.createElement('body');
+      body.innerHTML = htmlContent;
+      doc.documentElement.appendChild(body);
+    }
+  };
+
+  const trySetDocOuterHTML = (doc, title, htmlContent, styleText) => {
+    const full = `<!doctype html><html><head><meta charset="utf-8"><title>${title}</title><style>${styleText}</style></head><body>${htmlContent}</body></html>`;
+    // Try assigning outerHTML as a safer alternative to document.write
+    doc.documentElement.outerHTML = full;
+  };
+
+  const buildPrintStyle = () => `
+    body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+    .header { text-align: center; margin-bottom: 30px; padding: 20px; background: linear-gradient(135deg, #059669, #065f46); color: white; border-radius: 10px; }
+    .info-section { margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; }
+    table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+    th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+    th { background: linear-gradient(135deg, #059669, #065f46); color: white; font-weight: bold; }
+    .total-row { background: #d1fae5; font-weight: bold; }
+    .status-badge { background: #059669; color: white; padding: 8px 16px; border-radius: 20px; display: inline-block; }
+  `;
+
+  const handlePrint = () => {
+    const printContent = document.querySelector('.pdf-remision');
+    const newWindow = globalThis?.window?.open?.('', '_blank') ?? null;
+    if (!newWindow) {
+      console.warn('No window available for printing.');
+      return;
+    }
+    const title = `Remisión - ${numeroRemision}`;
+    const style = buildPrintStyle();
+    try {
+      trySetDocWithDOM(newWindow.document, title, printContent?.innerHTML || '', style);
+    } catch (error_) {
+      try {
+        trySetDocOuterHTML(newWindow.document, title, printContent?.innerHTML || '', style);
+      } catch (error2) {
+        // final fallback: use blob URL
+        try {
+          const full = `<!doctype html><html><head><meta charset="utf-8"><title>${title}</title><style>${style}</style></head><body>${printContent?.innerHTML || ''}</body></html>`;
+          const blob = new Blob([full], { type: 'text/html' });
+          const url = URL.createObjectURL(blob);
+          newWindow.location.href = url;
+        } catch (error3) {
+          console.error('Failed to set print document:', error_, error2, error3);
+          newWindow.close();
+          return;
+        }
+      }
+    }
+    try { newWindow.document.close?.(); } catch (e) { /* ignore */ }
+    try { newWindow.focus?.(); } catch (e) { /* ignore */ }
+    try { newWindow.print?.(); } catch (e) { /* ignore */ }
+    try { newWindow.close?.(); } catch (e) { /* ignore */ }
+  };
 
   return (
     <div className="modal-cotizacion-overlay" style={{
@@ -283,38 +355,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             {/* Botón de imprimir */}
                 <button
-              onClick={() => {
-                const printContent = document.querySelector('.pdf-remision');
-                const newWindow = (typeof window !== 'undefined' && window.open) ? window.open('', '_blank') : null;
-                if (!newWindow) {
-                  console.warn('No window available for printing.');
-                  return;
-                }
-                newWindow.document.write(`
-                  <html>
-                    <head>
-                      <title>Remisión - ${numeroRemision}</title>
-                      <style>
-                        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
-                        .header { text-align: center; margin-bottom: 30px; padding: 20px; background: linear-gradient(135deg, #059669, #065f46); color: white; border-radius: 10px; }
-                        .info-section { margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; }
-                        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-                        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-                        th { background: linear-gradient(135deg, #059669, #065f46); color: white; font-weight: bold; }
-                        .total-row { background: #d1fae5; font-weight: bold; }
-                        .status-badge { background: #059669; color: white; padding: 8px 16px; border-radius: 20px; display: inline-block; }
-                      </style>
-                    </head>
-                    <body>
-                      ${printContent?.innerHTML || ''}
-                    </body>
-                  </html>
-                `);
-                newWindow.document.close();
-                newWindow.focus();
-                newWindow.print();
-                newWindow.close();
-              }}
+              onClick={handlePrint}
               style={{
                 background: 'rgba(255, 255, 255, 0.2)',
                 border: 'none',
