@@ -294,6 +294,13 @@ const writeDocBlobFallbackOrden = (win, html) => {
   win.location.href = url;
 };
 
+// Safely call window actions (focus/print/close) with logging; keeps main flow simple
+const safeWindowActions = (win) => {
+  try { win.focus(); } catch (error_) { console.debug('focus failed:', error_); }
+  try { win.print(); } catch (error_) { console.debug('print failed:', error_); }
+  try { win.close(); } catch (error_) { console.debug('close failed:', error_); }
+};
+
 // Helper: imprimir orden en nueva ventana (limpio y simple)
 function imprimirOrdenHelper(orden) {
   if (!orden) {
@@ -304,8 +311,6 @@ function imprimirOrdenHelper(orden) {
   const productos = orden.productos || [];
   const totales = calcularTotalesProductos(productos);
 
-  // Use top-level helpers to keep this function small
-
   const rows = buildProductRowsOrden(productos);
   const html = prepareHtmlOrden(orden, rows, totales);
 
@@ -315,55 +320,31 @@ function imprimirOrdenHelper(orden) {
     return;
   }
 
+  // 1) Primary: try DOM/adopt or innerHTML via helper
   try {
-    // Primary attempt: DOM/adopt or direct write (top-level helper)
     writeDocPrimaryOrden(win, html);
-    try { win.focus(); } catch (error_) { console.debug('focus failed:', error_); }
-    try { win.print(); } catch (error_) { console.debug('print failed:', error_); }
-    try { win.close(); } catch (error_) { console.debug('close failed:', error_); }
+    safeWindowActions(win);
     return;
   } catch (error__) {
-    // Blob fallback
-    const primaryErr_ = error__;
-    try {
-      writeDocBlobFallbackOrden(win, html);
-    } catch (error__) {
-      const blobErr_ = error__;
-      // Final fallback: try to set documentElement.innerHTML first (avoids deprecated document.write when possible),
-      // otherwise fall back to document.write as a last resort.
-      try {
-        if (win?.document?.documentElement && 'innerHTML' in win.document.documentElement) {
-          try {
-            win.document.open();
-            win.document.documentElement.innerHTML = html;
-            win.document.close();
-            return;
-          } catch (error_) {
-            // If setting innerHTML fails, fall through to an alternative below.
-            console.debug('innerHTML assignment failed, falling back to data URL navigation:', error_);
-          }
-        }
-        // Fallback: navigate the opened window to a data URL to avoid using the deprecated document.write API.
-        try {
-          win.location.href = 'data:text/html;charset=utf-8,' + encodeURIComponent(html);
-          return;
-        } catch (error_) {
-          // As a last resort, attempt a direct write using available DOM APIs
-          try {
-            win.document.open();
-            win.document.write(html);
-            win.document.close();
-            return;
-          } catch (error_) {
-            console.error('Final fallback failed:', error_);
-            throw error_;
-          }
-        }
-      } catch (error__) {
-        console.error('Impresión fallida:', primaryErr_, blobErr_, error__);
-        Swal.fire('Error', 'No se pudo preparar la impresión', 'error');
-      }
-    }
+    console.debug('Primary write failed, attempting blob fallback:', error__);
+  }
+
+  // 2) Blob fallback
+  try {
+    writeDocBlobFallbackOrden(win, html);
+    // blob navigation should be enough for printing in most browsers
+    return;
+  } catch (error__) {
+    console.debug('Blob fallback failed, attempting data URL fallback:', error__);
+  }
+
+  // 3) Data URL fallback
+  try {
+    win.location.href = 'data:text/html;charset=utf-8,' + encodeURIComponent(html);
+    return;
+  } catch (error__) {
+    console.error('Data URL navigation failed:', error__);
+    Swal.fire('Error', 'No se pudo preparar la impresión', 'error');
   }
 }
 
