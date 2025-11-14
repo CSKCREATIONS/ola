@@ -45,7 +45,7 @@ exports.createCotizacion = async (req, res) => {
     } = req.body;
 
     // Validar que responsable.id sea un ObjectId válido
-    if (!responsable?.id?.match(/^[0-9a-fA-F]{24}$/)) {
+    if (!/^[0-9a-fA-F]{24}$/.exec(responsable?.id)) {
       return res.status(400).json({ message: 'El responsable debe ser el id del usuario registrado.' });
     }
     if (!cliente?.correo) {
@@ -239,7 +239,7 @@ exports.getCotizacionById = async (req, res) => {
     const cotizacionId = typeof req.params.id === 'string' ? req.params.id.trim() : '';
     
     // Validate ObjectId format
-    if (!cotizacionId?.match(/^[0-9a-fA-F]{24}$/)) {
+    if (!/^[0-9a-fA-F]{24}$/.exec(cotizacionId)) {
       return res.status(400).json({ message: 'ID de cotización inválido' });
     }
 
@@ -286,7 +286,7 @@ exports.updateCotizacion = async (req, res) => {
     // Sanitizar y validar el ID para prevenir inyección NoSQL
     const cotizacionId = typeof req.params.id === 'string' ? req.params.id.trim() : '';
     
-    if (!cotizacionId?.match(/^[0-9a-fA-F]{24}$/)) {
+    if (!/^[0-9a-fA-F]{24}$/.exec(cotizacionId)) {
       return res.status(400).json({ message: 'ID de cotización inválido' });
     }
 
@@ -329,7 +329,7 @@ exports.deleteCotizacion = async (req, res) => {
     // Sanitizar y validar el ID para prevenir inyección NoSQL
     const cotizacionId = typeof req.params.id === 'string' ? req.params.id.trim() : '';
     
-    if (!cotizacionId?.match(/^[0-9a-fA-F]{24}$/)) {
+    if (!/^[0-9a-fA-F]{24}$/.exec(cotizacionId)) {
       return res.status(400).json({ message: 'ID de cotización inválido' });
     }
 
@@ -369,7 +369,7 @@ exports.updateEstadoCotizacion = async (req, res) => {
     // Sanitizar y validar el ID para prevenir inyección NoSQL
     const cotizacionId = typeof req.params.id === 'string' ? req.params.id.trim() : '';
     
-    if (!cotizacionId?.match(/^[0-9a-fA-F]{24}$/)) {
+    if (!/^[0-9a-fA-F]{24}$/.exec(cotizacionId)) {
       return res.status(400).json({ message: 'ID de cotización inválido' });
     }
 
@@ -394,7 +394,7 @@ exports.getUltimaCotizacionPorCliente = async (req, res) => {
     const clienteId = typeof cliente === 'string' ? cliente.trim() : '';
     
     // Validate ObjectId format
-    if (!clienteId?.match(/^[0-9a-fA-F]{24}$/)) {
+    if (!/^[0-9a-fA-F]{24}$/.exec(clienteId)) {
       return res.status(400).json({ message: 'ID de cliente inválido' });
     }
 
@@ -431,7 +431,7 @@ exports.getUltimaCotizacionPorCliente = async (req, res) => {
 // Helper: validate and return trimmed ObjectId or null
 function validateObjectId(raw) {
   const id = typeof raw === 'string' ? raw.trim() : '';
-  return id?.match(/^[0-9a-fA-F]{24}$/) ? id : null;
+  return /^[0-9a-fA-F]{24}$/.exec(id) ? id : null;
 }
 
 // Helper: fetch cotizacion with necessary populations
@@ -523,8 +523,8 @@ exports.enviarCotizacionPorCorreo = async (req, res) => {
         await enviarConGmail(destinatario, asuntoFinal, htmlCompleto, attachments);
         await markCotizacionAsSent(cotizacionId);
         return res.status(200).json({ message: '¡Cotización enviada por correo exitosamente!', details: { destinatario, asunto: asuntoFinal, enviado: true, metodo: 'Gmail SMTP', fecha: new Date().toLocaleString('es-CO') } });
-      } catch (gmailErr) {
-        console.log('🔄 Intentando con SendGrid como fallback... Gmail error:', gmailErr?.message || gmailErr);
+      } catch (error_) {
+        console.log('🔄 Intentando con SendGrid como fallback... Gmail error:', error_?.message || error_);
       }
     }
 

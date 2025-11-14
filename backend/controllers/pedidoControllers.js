@@ -14,7 +14,8 @@ const { enviarConGmail } = require('../utils/gmailSender');
 // Helper function para sanitizar IDs y prevenir inyección NoSQL
 const sanitizarId = (id) => {
   const idSanitizado = typeof id === 'string' ? id.trim() : '';
-  if (!idSanitizado?.match(/^[0-9a-fA-F]{24}$/)) {
+  // Use RegExp.exec for deterministic behavior (avoids returning arrays like String.match)
+  if (!/^[0-9a-fA-F]{24}$/.exec(idSanitizado)) {
     return null;
   }
   return idSanitizado;
@@ -732,10 +733,11 @@ async function enviarCorreoConAttachment(destinatario, asunto, htmlContent, pdfA
       await enviarConGmail(destinatario, asunto, htmlContent, attachments);
       console.log('✅ Correo enviado exitosamente con Gmail');
       return;
-    } catch (gmailError) {
-      console.error('❌ Error con Gmail:', gmailError.message);
-      console.error('❌ Código de error Gmail:', gmailError.code);
-      console.error('❌ Detalles del error Gmail:', gmailError.response || 'Sin detalles adicionales');
+    } catch (error_) {
+      // Standardized error variable name across controllers
+      console.error('❌ Error con Gmail:', error_?.message || error_);
+      console.error('❌ Código de error Gmail:', error_?.code || 'N/A');
+      console.error('❌ Detalles del error Gmail:', error_?.response || 'Sin detalles adicionales');
       console.log('🔄 Intentando con SendGrid como fallback...');
     }
   }

@@ -97,7 +97,8 @@ exports.reporteProductos = async (req, res) => {
     // Sanitizar categoría para prevenir inyección NoSQL
     if (categoria) {
       const categoriaSanitizada = typeof categoria === 'string' ? categoria.trim() : '';
-      if (categoriaSanitizada?.match(/^[0-9a-fA-F]{24}$/)) {
+      // Validate ObjectId-like string using RegExp.exec for deterministic result
+      if (/^[0-9a-fA-F]{24}$/.exec(categoriaSanitizada)) {
         filters.category = categoriaSanitizada;
       }
     }

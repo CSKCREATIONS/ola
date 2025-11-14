@@ -176,8 +176,8 @@ exports.desactivarSubcategoriaYProductos = async (req, res) => {
   try {
     // Sanitizar el ID para prevenir inyección NoSQL
     const subcategoriaId = typeof id === 'string' ? id.trim() : '';
-    
-        if (!subcategoriaId?.match(/^[0-9a-fA-F]{24}$/)) {
+    // Deterministic validation using RegExp.exec
+        if (!/^[0-9a-fA-F]{24}$/.exec(subcategoriaId)) {
             return res.status(400).json({ message: 'ID de subcategoría inválido' });
         }
 

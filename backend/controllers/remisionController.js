@@ -41,7 +41,8 @@ function isValidEmail(email) {
 async function fetchRemisionOrThrow(id) {
   // Validate id early to avoid costly DB lookups with invalid input
   const idStr = typeof id === 'string' ? id.trim() : '';
-  if (!idStr?.match(/^[0-9a-fA-F]{24}$/)) {
+  // Use exec for deterministic regex validation
+  if (!/^[0-9a-fA-F]{24}$/.exec(idStr)) {
     const err = new Error('ID inválido para remisión');
     err.code = 'INVALID_ID';
     throw err;
@@ -441,7 +442,7 @@ exports.updateEstadoRemision = async (req, res) => {
 exports.getByCotizacionReferencia = async (req, res) => {
   try {
     const cotizacionId = typeof req.params.id === 'string' ? req.params.id.trim() : '';
-    if (!cotizacionId?.match(/^[0-9a-fA-F]{24}$/)) {
+    if (!/^[0-9a-fA-F]{24}$/.exec(cotizacionId)) {
       return res.status(400).json({ message: 'ID de cotización inválido' });
     }
 

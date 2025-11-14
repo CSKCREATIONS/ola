@@ -23,8 +23,9 @@ router.get('/cliente/:id',
     try {
       // Sanitizar el ID del cliente para prevenir inyección NoSQL
       const clienteId = typeof req.params.id === 'string' ? req.params.id.trim() : '';
-      
-      if (!clienteId?.match(/^[0-9a-fA-F]{24}$/)) {
+
+      // Use RegExp.exec for deterministic validation of ObjectId-like strings
+      if (!/^[0-9a-fA-F]{24}$/.exec(clienteId)) {
         return res.status(400).json({ message: 'ID de cliente inválido' });
       }
 
