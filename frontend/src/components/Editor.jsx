@@ -28,15 +28,15 @@ export default function FormularioConEditor() {
           init={{
             height: 1000,
             menubar: false,
+            // Nota: el soporte de cadenas multilínea con continuaciones puede ser
+            // problemático en navegadores muy antiguos. Usamos una sola línea
+            // para el `toolbar` y documentamos la limitación.
             plugins: [
               "advlist autolink lists link image charmap print preview anchor",
               "searchreplace visualblocks code fullscreen",
               "insertdatetime media table paste code help wordcount",
             ],
-            toolbar:
-              "undo redo | formatselect | bold italic backcolor | \
-              alignleft aligncenter alignright alignjustify | \
-              bullist numlist outdent indent | removeformat | help",
+            toolbar: "undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help",
           }}
           onEditorChange={handleEditorChange}
         />

@@ -88,8 +88,8 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
       } else {
         throw new Error('Error al enviar correo');
       }
-    } catch (error) {
-      console.error('Error:', error);
+    } catch (error_) {
+      console.error('Error:', error_);
       Swal.fire({
         icon: 'error',
         title: 'Error',
@@ -120,7 +120,6 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
       doc.title = title;
 
       const styleEl = doc.createElement('style');
-      styleEl.type = 'text/css';
       styleEl.appendChild(doc.createTextNode(style));
 
       if (!doc.head) {
@@ -230,139 +229,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             {/* Botón de imprimir */}
               <button
-              onClick={() => {
-                const printContent = document.querySelector('.pdf-pedido-agendado');
-                const newWindow = window.open('', '_blank');
-                if (newWindow?.document) {
-                  const doc = newWindow.document;
-                  // Open document for writing and build content via DOM methods to avoid deprecated document.write
-                  doc.open();
-                  try {
-                    // set the title
-                    doc.title = `Pedido Agendado - ${datos?.numeroPedido}`;
-
-                    // create and append style element
-                    const styleEl = doc.createElement('style');
-                    styleEl.type = 'text/css';
-                    styleEl.appendChild(doc.createTextNode(`
-                      body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
-                      .header { text-align: center; margin-bottom: 30px; padding: 20px; background: linear-gradient(135deg, #fd7e14, #e85d04); color: white; border-radius: 10px; }
-                      .info-section { margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; }
-                      table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-                      th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-                      th { background: linear-gradient(135deg, #fd7e14, #e85d04); color: white; font-weight: bold; }
-                      .total-row { background: #fef3c7; font-weight: bold; }
-                      .status-badge { background: #fd7e14; color: white; padding: 8px 16px; border-radius: 20px; display: inline-block; }
-                    `));
-                    // ensure head exists
-                    if (!doc.head) {
-                      const head = doc.createElement('head');
-                      doc.documentElement.appendChild(head);
-                    }
-                    doc.head.appendChild(styleEl);
-
-                    // set body content
-                    if (!doc.body) {
-                      const body = doc.createElement('body');
-                      doc.documentElement.appendChild(body);
-                    }
-                    doc.body.innerHTML = printContent?.innerHTML || '';
-
-                  } catch (err) {
-                    // fallback: if DOM manipulation fails, try setting outerHTML of the documentElement
-                    console.error('Error creating print document:', err);
-                    try {
-                      const html = `
-                        <html>
-                          <head>
-                            <title>Pedido Agendado - ${datos?.numeroPedido}</title>
-                            <style>
-                              body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
-                              .header { text-align: center; margin-bottom: 30px; padding: 20px; background: linear-gradient(135deg, #fd7e14, #e85d04); color: white; border-radius: 10px; }
-                              .info-section { margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; }
-                              table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-                              th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-                              th { background: linear-gradient(135deg, #fd7e14, #e85d04); color: white; font-weight: bold; }
-                              .total-row { background: #fef3c7; font-weight: bold; }
-                              .status-badge { background: #fd7e14; color: white; padding: 8px 16px; border-radius: 20px; display: inline-block; }
-                            </style>
-                          </head>
-                          <body>
-                            ${printContent?.innerHTML || ''}
-                          </body>
-                        </html>
-                      `;
-                      doc.documentElement.outerHTML = html;
-                    } catch (innerErr) {
-                      // last resort: attempt to replace document using DOM APIs instead of doc.write
-                      console.error('Error setting outerHTML:', innerErr);
-                      const html = `
-                        <html>
-                          <head>
-                            <title>Pedido Agendado - ${datos?.numeroPedido}</title>
-                            <style>
-                              body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
-                              .header { text-align: center; margin-bottom: 30px; padding: 20px; background: linear-gradient(135deg, #fd7e14, #e85d04); color: white; border-radius: 10px; }
-                              .info-section { margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; }
-                              table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-                              th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-                              th { background: linear-gradient(135deg, #fd7e14, #e85d04); color: white; font-weight: bold; }
-                              .total-row { background: #fef3c7; font-weight: bold; }
-                              .status-badge { background: #fd7e14; color: white; padding: 8px 16px; border-radius: 20px; display: inline-block; }
-                            </style>
-                          </head>
-                          <body>
-                            ${printContent?.innerHTML || ''}
-                          </body>
-                        </html>
-                      `;
-
-                      try {
-                        // Prefer replacing the entire documentElement if possible
-                        if (doc.documentElement && typeof doc.documentElement.outerHTML !== 'undefined') {
-                          doc.documentElement.outerHTML = html;
-                        } else if (doc.head || doc.body) {
-                          // Rebuild head and body safely via DOM methods
-                          // Clear existing head/body
-                          if (doc.head) {
-                            while (doc.head.firstChild) doc.head.removeChild(doc.head.firstChild);
-                          }
-                          if (doc.body) {
-                            while (doc.body.firstChild) doc.body.removeChild(doc.body.firstChild);
-                          }
-
-                          // Populate head
-                          const tmp = document.createElement('div');
-                          tmp.innerHTML = html;
-                          const tmpHead = tmp.querySelector('head');
-                          const tmpBody = tmp.querySelector('body');
-
-                          if (tmpHead && doc.head) {
-                            Array.from(tmpHead.childNodes).forEach(node => {
-                              doc.head.appendChild(doc.importNode(node, true));
-                            });
-                          }
-
-                          if (tmpBody && doc.body) {
-                            Array.from(tmpBody.childNodes).forEach(node => {
-                              doc.body.appendChild(doc.importNode(node, true));
-                            });
-                          }
-                        } else {
-                          console.error('Unable to replace document content safely.');
-                        }
-                      } catch (replaceErr) {
-                        console.error('Fallback replace failed:', replaceErr);
-                      }
-                    }
-                  } finally {
-                    doc.close();
-                    newWindow.focus();
-                    newWindow.print();
-                    newWindow.close();
-                  }
-                }
-              }}
+              onClick={handlePrint}
               style={{
                 background: 'rgba(255, 255, 255, 0.2)',
                 border: 'none',
