@@ -20,13 +20,7 @@ const validateCliente = [
 
 // RUTAS
 
-// POST /api/clientes - Crear cliente 
-router.post('/',
-    verifyToken,
-    checkPermission('clientes.crear'),
-    validateCliente,
-    clienteController.createCliente
-);
+
 
 router.get('/estado-de-clientes',
    verifyToken,
@@ -42,14 +36,22 @@ router.get('/',
   clienteController.getClientes
 );
 
+// GET /api/prospectos - Obtener todos los prospectos (esCliente: false)
+router.get('/prospectos',
+  verifyToken,
+  checkPermission('clientes.ver'),
+  clienteController.getProspectos
+);
+
 
 
 // GET /api/clientes/:id - Obtener cliente por ID
 router.get('/:id',
-    verifyToken,
-    checkPermission('clientes.ver'),
-    clienteController.getClienteById
+  verifyToken,
+  checkPermission('clientes.ver'),
+  clienteController.getClienteById
 );
+
 
 
 // PUT /api/clientes/:id - Actualizar cliente

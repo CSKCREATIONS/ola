@@ -6,19 +6,30 @@ const { validationResult } = require('express-validator');
 // Obtener todos los clientes
 exports.getClientes = async (req, res) => {
   try {
-    const filtro = {};
+    // Por defecto retornamos sólo los documentos que representan clientes
+    // (campo `esCliente: true`). Si en el futuro se quiere soportar
+    // otros filtros se puede extender esta lógica.
+    const filtro = { esCliente: true };
 
-    if (req.query.esCliente === 'true') {
-      filtro.esCliente = true;
-    } else if (req.query.esCliente === 'false') {
-      filtro.esCliente = false;
-    }
-
-    const clientes = await Cliente.find(filtro);
+    // Ordenar por fecha de creación descendente para mostrar primero los más recientes
+    const clientes = await Cliente.find(filtro).sort({ createdAt: -1 });
     res.json(clientes);
   } catch (error) {
     console.error('Error al obtener clientes', error);
     res.status(500).json({ message: 'Error al obtener clientes' });
+  }
+};
+
+// Obtener todos los prospectos (esCliente: false)
+exports.getProspectos = async (req, res) => {
+  try {
+    // Traer sólo los registros marcados como prospectos
+    const filtro = { esCliente: false };
+    const prospectos = await Cliente.find(filtro).sort({ createdAt: -1 });
+    res.json(prospectos);
+  } catch (error) {
+    console.error('Error al obtener prospectos', error);
+    res.status(500).json({ message: 'Error al obtener prospectos' });
   }
 };
 
@@ -107,3 +118,5 @@ exports.getClientesConEstado = async (req, res) => {
     res.status(500).json({ message: 'Error al obtener los estados' });
   }
 };
+
+

@@ -28,25 +28,23 @@ export default function AgregarUsuario() {
   // Helper: obtain a crypto object in a cross-environment safe way without using
   // restricted global identifiers (avoids ESLint `no-restricted-globals` on `self`).
   const getCrypto = () => {
-    // Prefer direct undefined comparison to avoid using `typeof` and prefer globalThis
-    if (globalThis.window !== undefined && globalThis.window.crypto) return globalThis.window.crypto;
-    if (globalThis.global !== undefined && globalThis.global.crypto) return globalThis.global.crypto;
+    if (typeof window !== 'undefined' && window.crypto) return window.crypto;
+    if (typeof global !== 'undefined' && global.crypto) return global.crypto;
     try {
-      // Fallback: try to get the global object via Function constructor
       const g = new Function('return this')();
       if (g?.crypto) return g.crypto;
     } catch (error_) {
-      // Non-fatal: crypto fallback failed (debug only)
       console.debug('getCrypto fallback failed:', error_);
     }
     return null;
   };
 
   // Función para abrir el modal (puede ser llamada desde el componente padre)
-  // Attach to the global object via globalThis to avoid direct `window` usage in non-browser envs
-  globalThis.openModalUsuario = () => {
-    setIsVisible(true);
-  };
+  if (typeof window !== 'undefined') {
+    window.openModalUsuario = () => {
+      setIsVisible(true);
+    };
+  }
 
   // Secure RNG factories — two different implementations so callers are not identical
   const getSecureRandomIntPrimary = () => {

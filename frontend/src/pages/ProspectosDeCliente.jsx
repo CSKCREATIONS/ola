@@ -231,8 +231,8 @@ export default function ListaDeClientes() {
 
   const fetchProspectos = async () => {
     try {
-      // Use centralized axios client; add cache-buster param to avoid 304 cached responses
-      const clientesRes = await api.get(`/api/clientes?esCliente=false&t=${Date.now()}`);
+      // Usa el nuevo endpoint de prospectos; agrega cache-buster para evitar 304
+      const clientesRes = await api.get(`/api/clientes/prospectos?t=${Date.now()}`);
       const data = clientesRes.data;
       // controller returns array of clientes
       const listaProspectos = Array.isArray(data) ? data : (data.data || []);

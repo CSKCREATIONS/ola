@@ -1609,7 +1609,7 @@ JLA Global Company</textarea>
                       </button>
                     </div>
 
-                    {nuevaCompra.productos.map((prod) => (
+                    {nuevaCompra.productos.map((prod, index) => (
                       <div key={prod._tmpId || prod._id || prod.id || prod.productoId || prod.producto || JSON.stringify(prod)} style={{
                         background: '#f8f9fa',
                         padding: '1rem',

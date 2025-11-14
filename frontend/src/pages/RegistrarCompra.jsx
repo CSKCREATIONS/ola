@@ -221,9 +221,9 @@ export default function RegistrarCompra() {
   const secureRandomString = (length) => {
     const alphabet = 'abcdefghijklmnopqrstuvwxyz0123456789';
     // Prefer Web Crypto API for secure randomness
-    if (globalThis.window !== undefined && globalThis.window.crypto?.getRandomValues) {
+    if (typeof window !== 'undefined' && window.crypto?.getRandomValues) {
       const array = new Uint8Array(length);
-      globalThis.window.crypto.getRandomValues(array);
+      window.crypto.getRandomValues(array);
       let out = '';
       for (let i = 0; i < length; i++) {
         out += alphabet[array[i] % alphabet.length];
