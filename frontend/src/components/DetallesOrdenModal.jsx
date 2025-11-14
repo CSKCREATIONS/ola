@@ -162,7 +162,7 @@ export default function DetallesOrdenModal({ visible, orden, onClose, onPrint, o
                     </tr>
                   </thead>
                   <tbody>
-                    {orden.productos && orden.productos.map((p, i) => (
+                    {orden.productos?.map((p, i) => (
                       <tr key={i} style={{ borderBottom: '1px solid #eee', backgroundColor: i % 2 === 0 ? '#fafafa' : 'white' }}>
                         <td style={{ padding: '12px' }}>{p.producto || p.nombre || 'Producto'}</td>
                         <td style={{ padding: '12px', textAlign: 'center' }}>{p.cantidad}</td>
