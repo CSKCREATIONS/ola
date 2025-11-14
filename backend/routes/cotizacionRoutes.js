@@ -23,7 +23,7 @@ function normalizeCotizacion(cotizacionDoc) {
 
   cotObj.productos = cotObj.productos.map((p) => {
     try {
-      const prodRef = p.producto && p.producto.id;
+      const prodRef = p.producto?.id;
       if (prodRef && typeof prodRef === 'object' && (prodRef.name || prodRef.price || prodRef.description)) {
         p.producto = {
           ...p.producto,
