@@ -28,20 +28,23 @@ export default function AgregarUsuario() {
   // Helper: obtain a crypto object in a cross-environment safe way without using
   // restricted global identifiers (avoids ESLint `no-restricted-globals` on `self`).
   const getCrypto = () => {
-    if (typeof globalThis.window !== 'undefined' && globalThis.window.crypto) return globalThis.window.crypto;
-    if (typeof global !== 'undefined' && global.crypto) return global.crypto;
+    // Prefer direct undefined comparison to avoid using `typeof` and prefer globalThis
+    if (globalThis.window !== undefined && globalThis.window.crypto) return globalThis.window.crypto;
+    if (globalThis.global !== undefined && globalThis.global.crypto) return globalThis.global.crypto;
     try {
       // Fallback: try to get the global object via Function constructor
-  const g = new Function('return this')();
-  if (g?.crypto) return g.crypto;
-    } catch (e) {
-      // ignore
+      const g = new Function('return this')();
+      if (g?.crypto) return g.crypto;
+    } catch (error_) {
+      // Non-fatal: crypto fallback failed (debug only)
+      console.debug('getCrypto fallback failed:', error_);
     }
     return null;
   };
 
   // Función para abrir el modal (puede ser llamada desde el componente padre)
-  globalThis.window.openModalUsuario = () => {
+  // Attach to the global object via globalThis to avoid direct `window` usage in non-browser envs
+  globalThis.openModalUsuario = () => {
     setIsVisible(true);
   };
 
@@ -96,8 +99,8 @@ export default function AgregarUsuario() {
             // parse just to validate structure if present; we don't need the
             // parsed object here. Keep this lightweight and silent on success.
             JSON.parse(rawUser);
-          } catch (e) {
-            console.warn('⚠️ AgregarUsuario: no se pudo parsear localStorage.user', e);
+          } catch (error_) {
+            console.warn('⚠️ AgregarUsuario: no se pudo parsear localStorage.user', error_);
           }
         }
 
@@ -111,20 +114,20 @@ export default function AgregarUsuario() {
           console.log('📋 Respuesta del servidor roles:', roles);
           setRolesDisponibles(roles);
           setRolesForbidden(false);
-        } catch (err) {
+        } catch (error_) {
           // If the server forbids access, show a friendly message instead of noisy errors
-          if (err?.response?.status === 403) {
+          if (error_?.response?.status === 403) {
             console.debug('403 al obtener /api/roles — el usuario no tiene permiso para ver roles');
             setRolesDisponibles([]);
             setRolesForbidden(true);
           } else {
-            console.error('❌ Error al cargar roles:', err);
+            console.error('❌ Error al cargar roles:', error_);
             setRolesDisponibles([]);
             setRolesForbidden(false);
           }
         }
-      } catch (err) {
-        console.error('❌ Error al cargar roles (outer):', err);
+      } catch (error_) {
+        console.error('❌ Error al cargar roles (outer):', error_);
         setRolesDisponibles([]);
       } finally {
         setCargandoRoles(false);

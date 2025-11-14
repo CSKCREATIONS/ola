@@ -130,7 +130,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
       }
     } catch (error) {
       console.error('Error:', error);
-      Swal.fire({
+        Swal.fire({
         icon: 'error',
         title: 'Error',
         text: 'No se pudo enviar el correo',

@@ -21,13 +21,15 @@ export default function RemisionPreview({ datos, onClose }) {
   // Helper: obtain a crypto object in a cross-environment safe way without using
   // restricted global identifiers (avoids ESLint `no-restricted-globals` on `self`).
   const getCrypto = () => {
-    if (typeof window !== 'undefined' && window.crypto) return window.crypto;
-    if (typeof global !== 'undefined' && global.crypto) return global.crypto;
+    // Prefer direct undefined checks and globalThis to avoid restricted globals
+    if (globalThis.window !== undefined && globalThis.window.crypto) return globalThis.window.crypto;
+    if (globalThis.global !== undefined && globalThis.global.crypto) return globalThis.global.crypto;
     try {
       const g = new Function('return this')();
       if (g?.crypto) return g.crypto;
-    } catch (e) {
-      // ignore
+    } catch (error_) {
+      // Non-fatal fallback failure — debug only
+      console.debug('getCrypto fallback failed:', error_);
     }
     return null;
   };
@@ -284,7 +286,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
             <button
               onClick={() => {
                 const printContent = document.querySelector('.pdf-remision');
-                const newWindow = window.open('', '_blank');
+                const newWindow = globalThis.window.open('', '_blank');
                 newWindow.document.write(`
                   <html>
                     <head>

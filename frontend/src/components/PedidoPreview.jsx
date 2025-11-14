@@ -23,9 +23,9 @@ export default function FormatoCotizacion({ datos, onClose, onEmailSent }) {
         tmp.innerHTML = html;
         const text = (tmp.textContent || tmp.innerText || '').trim();
         return text === '';
-      } catch (e) {
+      } catch (error_) {
         // fallthrough to safe fallback
-        console.warn('isEmptyHTML: DOM parsing failed, using fallback stripper', e);
+        console.warn('isEmptyHTML: DOM parsing failed, using fallback stripper', error_);
       }
     }
 
@@ -184,7 +184,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
             <button className="btn-cotizacion moderno" title="Imprimir" onClick={() => {
               // Método seguro de impresión sin manipular DOM
               const printContent = document.getElementById('pdf-pedido-block');
-              const newWindow = window.open('', '_blank');
+              const newWindow = globalThis.window.open('', '_blank');
               newWindow.document.write(`
                 <html>
                   <head>

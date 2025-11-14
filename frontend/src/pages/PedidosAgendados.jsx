@@ -256,8 +256,8 @@ export default function PedidosAgendados() {
       const agendados = (Array.isArray(pedidosData) ? pedidosData : pedidosData.data || []).filter(p => p.estado === 'agendado');
       const agendadosOrdenados = agendados.sort((a, b) => new Date(b.createdAt || b.fechaCreacion) - new Date(a.createdAt || a.fechaCreacion));
       setPedidos(agendadosOrdenados);
-    } catch (err) {
-      console.error('❌ Error al cargar pedidos agendados:', err);
+    } catch (error_) {
+      console.error('❌ Error al cargar pedidos agendados:', error_);
     }
   };
 
@@ -373,7 +373,7 @@ export default function PedidosAgendados() {
       const mm = String(d.getMonth() + 1).padStart(2, '0');
       const dd = String(d.getDate()).padStart(2, '0');
       return `${yyyy}-${mm}-${dd}`;
-    } catch (e) {
+    } catch (error_) {
       return '';
     }
   };

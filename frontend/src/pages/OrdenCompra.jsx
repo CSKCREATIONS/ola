@@ -61,8 +61,8 @@ async function fetchOrdenesHelper(setOrdenes) {
     } else {
       setOrdenes([]);
     }
-  } catch (e) {
-    console.error('fetchOrdenesHelper error', e);
+  } catch (error_) {
+    console.error('fetchOrdenesHelper error', error_);
     setOrdenes([]);
   }
 }
@@ -81,8 +81,8 @@ async function fetchProveedoresHelper(setProveedores) {
     } else {
       setProveedores([]);
     }
-  } catch (e) {
-    console.error('fetchProveedoresHelper error', e);
+  } catch (error_) {
+    console.error('fetchProveedoresHelper error', error_);
     setProveedores([]);
   }
 }
@@ -114,8 +114,8 @@ async function fetchProductosPorProveedorHelper(proveedorId, setProductosProveed
     } else {
       setProductosProveedor(allProducts);
     }
-  } catch (e) {
-    console.error('fetchProductosPorProveedorHelper error', e);
+  } catch (error_) {
+    console.error('fetchProductosPorProveedorHelper error', error_);
     setProductosProveedor([]);
   } finally {
     setCargandoProductos(false);
@@ -196,8 +196,8 @@ async function marcarComoCompletadaHelper(orden, fetchOrdenes) {
       console.error('marcarComoCompletadaHelper respuesta inesperada', data);
       Swal.fire('Error', data?.message || 'No se pudo completar la orden', 'error');
     }
-  } catch (e) {
-    console.error('marcarComoCompletadaHelper error', e);
+  } catch (error_) {
+    console.error('marcarComoCompletadaHelper error', error_);
     Swal.fire('Error', 'No se pudo marcar como completada', 'error');
   }
 }

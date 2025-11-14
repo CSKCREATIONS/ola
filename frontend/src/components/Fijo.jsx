@@ -64,10 +64,10 @@ export async function resolveRoleForUser(usuario) {
 
     if (roleObj) {
       usuario.role = roleObj;
-      try { localStorage.setItem('user', JSON.stringify(usuario)); } catch (e) { /* ignore storage errors */ }
+      try { localStorage.setItem('user', JSON.stringify(usuario)); } catch (error_) { /* ignore storage errors */ }
     }
-  } catch (err) {
-    console.error('resolveRoleForUser error:', err);
+  } catch (error_) {
+    console.error('resolveRoleForUser error:', error_);
   }
 
   return usuario;
