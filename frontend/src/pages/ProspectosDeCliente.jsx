@@ -709,7 +709,9 @@ export default function ListaDeClientes() {
                 <tbody>
                   {prospectosPaginados.length === 0 ? (
                     <tr>
-                      <td></td>
+                      <td>
+                        
+                      </td>
                       <td colSpan="5" style={{ textAlign: 'center', padding: '80px 20px' }}>
                         <div style={{
                           display: 'flex',
