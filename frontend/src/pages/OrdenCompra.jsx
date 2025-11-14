@@ -219,22 +219,25 @@ function imprimirOrdenHelper(orden) {
   const productos = orden.productos || [];
   const totales = calcularTotalesProductos(productos);
 
-  const productosHTML = productos.length > 0 ? productos.map((p, idx) => `
-    <tr>
-      <td style="text-align:center;padding:8px;border-bottom:1px solid #e0e0e0;">${idx + 1}</td>
-      <td style="padding:8px;border-bottom:1px solid #e0e0e0;">${p.producto || ''}</td>
-      <td style="text-align:center;padding:8px;border-bottom:1px solid #e0e0e0;">${p.cantidad}</td>
-      <td style="text-align:right;padding:8px;border-bottom:1px solid #e0e0e0;">$${(p.valorUnitario || 0).toLocaleString()}</td>
-      <td style="text-align:right;padding:8px;border-bottom:1px solid #e0e0e0;">$${(p.valorTotal || 0).toLocaleString()}</td>
-    </tr>
-  `).join('') : '<tr><td colspan="5" style="text-align:center;padding:20px;">No hay productos</td></tr>';
+  const buildProductRows = (items) => {
+    if (!items || items.length === 0) return '<tr><td colspan="5" style="text-align:center;padding:20px;">No hay productos</td></tr>';
+    return items.map((p, idx) => `
+      <tr>
+        <td style="text-align:center;padding:8px;border-bottom:1px solid #e0e0e0;">${idx + 1}</td>
+        <td style="padding:8px;border-bottom:1px solid #e0e0e0;">${p.producto || ''}</td>
+        <td style="text-align:center;padding:8px;border-bottom:1px solid #e0e0e0;">${p.cantidad}</td>
+        <td style="text-align:right;padding:8px;border-bottom:1px solid #e0e0e0;">$${(p.valorUnitario || 0).toLocaleString()}</td>
+        <td style="text-align:right;padding:8px;border-bottom:1px solid #e0e0e0;">$${(p.valorTotal || 0).toLocaleString()}</td>
+      </tr>
+    `).join('');
+  };
 
-  const html = `
+  const prepareHtml = (o, rows, totals) => `
     <!doctype html>
     <html lang="es">
       <head>
         <meta charset="utf-8" />
-        <title>Orden de Compra - ${orden.numeroOrden || 'N/A'}</title>
+        <title>Orden de Compra - ${o.numeroOrden || 'N/A'}</title>
         <style>
           body { font-family: Arial, sans-serif; color: #222; padding: 24px; }
           .header { text-align:center; background: linear-gradient(135deg,#6a1b9a,#9b59b6); color: #fff; padding: 18px; border-radius: 8px; }
@@ -246,11 +249,11 @@ function imprimirOrdenHelper(orden) {
         </style>
       </head>
       <body>
-        <div class="header"><h2>ORDEN DE COMPRA</h2><div>N° ${orden.numeroOrden || '—'}</div></div>
+        <div class="header"><h2>ORDEN DE COMPRA</h2><div>N° ${o.numeroOrden || '—'}</div></div>
         <div class="section">
-          <strong>Proveedor:</strong> ${orden.proveedor || '-'}<br />
-          <strong>Solicitado por:</strong> ${orden.solicitadoPor || '-'}<br />
-          <strong>Fecha:</strong> ${new Date(orden.fechaOrden || Date.now()).toLocaleDateString('es-ES')}
+          <strong>Proveedor:</strong> ${o.proveedor || '-'}<br />
+          <strong>Solicitado por:</strong> ${o.solicitadoPor || '-'}<br />
+          <strong>Fecha:</strong> ${new Date(o.fechaOrden || Date.now()).toLocaleDateString('es-ES')}
         </div>
         <div class="section">
           <table>
@@ -258,72 +261,72 @@ function imprimirOrdenHelper(orden) {
               <tr><th style="width:40px;">#</th><th>Producto</th><th style="width:100px;text-align:center;">Cantidad</th><th style="width:140px;text-align:right;">Precio Unit.</th><th style="width:140px;text-align:right;">Subtotal</th></tr>
             </thead>
             <tbody>
-              ${productosHTML}
+              ${rows}
             </tbody>
           </table>
         </div>
         <div class="totales">
-          <div><div>Subtotal: $${totales.subtotal.toLocaleString()}</div><div style="font-weight:700;margin-top:6px;">Total: $${totales.total.toLocaleString()}</div></div>
+          <div><div>Subtotal: $${totals.subtotal.toLocaleString()}</div><div style="font-weight:700;margin-top:6px;">Total: $${totals.total.toLocaleString()}</div></div>
         </div>
       </body>
     </html>
   `;
 
-  const win = window.open('', '_blank', 'width=900,height=700');
+  const writeDocPrimary = (win, html) => {
+    const parser = new DOMParser();
+    const newDoc = parser.parseFromString(html, 'text/html');
+    if (win.document && win.document.documentElement && newDoc && newDoc.documentElement) {
+      try {
+        win.document.replaceChild(win.document.adoptNode(newDoc.documentElement), win.document.documentElement);
+        return true;
+      } catch (adoptErr) {
+        // fallback to direct write
+      }
+    }
+    try {
+      win.document.open();
+      win.document.write(html);
+      win.document.close();
+      return true;
+    } catch (writeErr) {
+      throw writeErr;
+    }
+  };
+
+  const writeDocBlobFallback = (win, html) => {
+    const blob = new Blob([html], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    win.location.href = url;
+  };
+
+  const rows = buildProductRows(productos);
+  const html = prepareHtml(orden, rows, totales);
+
+  const win = globalThis?.window?.open?.('', '_blank', 'width=900,height=700') ?? null;
   if (!win) {
     Swal.fire('Error', 'No se pudo abrir la ventana de impresión', 'error');
     return;
   }
 
-  // Try a straightforward write using DOMParser/adoptNode or document.write as primary approach,
-  // then fallback to blob URL only if the primary attempt throws.
   try {
-    const parser = new DOMParser();
-    const newDoc = parser.parseFromString(html, 'text/html');
-
-    // If possible, replace the whole document element in the new window.
-    if (win.document && win.document.documentElement && newDoc && newDoc.documentElement) {
-      try {
-        win.document.replaceChild(win.document.adoptNode(newDoc.documentElement), win.document.documentElement);
-      } catch (e) {
-        // If replaceChild/adoptNode fails for any reason, fallback to writing the HTML string.
-        try {
-          win.document.open();
-          win.document.write(html);
-          win.document.close();
-        } catch (writeErr) {
-          // Let outer catch handle failure.
-          throw writeErr;
-        }
-      }
-    } else {
-      // Fallback: write HTML directly into the new window.
-      win.document.open();
-      try {
-        win.document.write(html);
-      } finally {
-        try { win.document.close(); } catch (ignore) {}
-      }
-    }
-
-    win.focus();
-    win.print();
-    win.close();
+    // Primary attempt: DOM/adopt or direct write
+    writeDocPrimary(win, html);
+    try { win.focus(); } catch (focusErr) { console.debug('focus failed:', focusErr); }
+    try { win.print(); } catch (printErr) { console.debug('print failed:', printErr); }
+    try { win.close(); } catch (closeErr) { console.debug('close failed:', closeErr); }
     return;
   } catch (primaryErr) {
-    // Attempt blob URL fallback
+    // Blob fallback
     try {
-      const blob = new Blob([html], { type: 'text/html' });
-      const url = URL.createObjectURL(blob);
-      win.location.href = url;
+      writeDocBlobFallback(win, html);
     } catch (blobErr) {
-      // Final attempt: document.write in case other APIs are restricted
+      // Final fallback: try document.write one more time
       try {
         win.document.open();
         win.document.write(html);
         win.document.close();
-      } catch (finalErr) {
-        console.error('Impresión fallida:', primaryErr, blobErr, finalErr);
+      } catch (error_) {
+        console.error('Impresión fallida:', primaryErr, blobErr, error_);
         Swal.fire('Error', 'No se pudo preparar la impresión', 'error');
       }
     }
@@ -635,7 +638,7 @@ export default function OrdenCompra() {
       if (data.success) {
         Swal.fire({
           icon: 'success',
-          title: !estadoActual ? 'Orden marcada como enviada' : 'Orden marcada como no enviada',
+          title: estadoActual ? 'Orden marcada como no enviada' : 'Orden marcada como enviada',
           showConfirmButton: false,
           timer: 1500
         });
