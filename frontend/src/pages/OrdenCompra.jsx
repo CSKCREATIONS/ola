@@ -209,6 +209,91 @@ if (!document.getElementById('orden-compra-advanced-styles')) {
   document.head.appendChild(styleEl);
 }
  
+// Top-level helpers for printing to keep `imprimirOrdenHelper` simple
+const buildProductRowsOrden = (items) => {
+  if (!items || items.length === 0) return '<tr><td colspan="5" style="text-align:center;padding:20px;">No hay productos</td></tr>';
+  return items.map((p, idx) => `
+    <tr>
+      <td style="text-align:center;padding:8px;border-bottom:1px solid #e0e0e0;">${idx + 1}</td>
+      <td style="padding:8px;border-bottom:1px solid #e0e0e0;">${p.producto || ''}</td>
+      <td style="text-align:center;padding:8px;border-bottom:1px solid #e0e0e0;">${p.cantidad}</td>
+      <td style="text-align:right;padding:8px;border-bottom:1px solid #e0e0e0;">$${(p.valorUnitario || 0).toLocaleString()}</td>
+      <td style="text-align:right;padding:8px;border-bottom:1px solid #e0e0e0;">$${(p.valorTotal || 0).toLocaleString()}</td>
+    </tr>
+  `).join('');
+};
+
+const prepareHtmlOrden = (o, rows, totals) => `
+  <!doctype html>
+  <html lang="es">
+    <head>
+      <meta charset="utf-8" />
+      <title>Orden de Compra - ${o.numeroOrden || 'N/A'}</title>
+      <style>
+        body { font-family: Arial, sans-serif; color: #222; padding: 24px; }
+        .header { text-align:center; background: linear-gradient(135deg,#6a1b9a,#9b59b6); color: #fff; padding: 18px; border-radius: 8px; }
+        .section { margin-top: 18px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+        th, td { padding: 8px; }
+        th { background: #f3f4f6; text-align: left; }
+        .totales { margin-top: 18px; display:flex; justify-content:flex-end; gap: 16px; }
+      </style>
+    </head>
+    <body>
+      <div class="header"><h2>ORDEN DE COMPRA</h2><div>N° ${o.numeroOrden || '—'}</div></div>
+      <div class="section">
+        <strong>Proveedor:</strong> ${o.proveedor || '-'}<br />
+        <strong>Solicitado por:</strong> ${o.solicitadoPor || '-'}<br />
+        <strong>Fecha:</strong> ${new Date(o.fechaOrden || Date.now()).toLocaleDateString('es-ES')}
+      </div>
+      <div class="section">
+        <table>
+          <thead>
+            <tr><th style="width:40px;">#</th><th>Producto</th><th style="width:100px;text-align:center;">Cantidad</th><th style="width:140px;text-align:right;">Precio Unit.</th><th style="width:140px;text-align:right;">Subtotal</th></tr>
+          </thead>
+          <tbody>
+            ${rows}
+          </tbody>
+        </table>
+      </div>
+      <div class="totales">
+        <div><div>Subtotal: $${totals.subtotal.toLocaleString()}</div><div style="font-weight:700;margin-top:6px;">Total: $${totals.total.toLocaleString()}</div></div>
+      </div>
+    </body>
+  </html>
+`;
+
+const writeDocPrimaryOrden = (win, html) => {
+  const parser = new DOMParser();
+  const newDoc = parser.parseFromString(html, 'text/html');
+  if (win?.document?.documentElement && newDoc?.documentElement) {
+    try {
+      win.document.replaceChild(win.document.adoptNode(newDoc.documentElement), win.document.documentElement);
+      return true;
+    } catch (error_) {
+      console.debug('adoptNode/replaceChild failed:', error_);
+    }
+  }
+
+  // Prefer assigning `innerHTML` when available; if it fails we continue to the safer fallbacks.
+  if (win?.document?.documentElement && 'innerHTML' in win.document.documentElement) {
+    try {
+      win.document.open();
+      win.document.documentElement.innerHTML = html;
+      win.document.close();
+      return true;
+    } catch (error_) {
+      console.debug('primary innerHTML assignment failed, will try other fallbacks:', error_);
+    }
+  }
+};
+
+const writeDocBlobFallbackOrden = (win, html) => {
+  const blob = new Blob([html], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  win.location.href = url;
+};
+
 // Helper: imprimir orden en nueva ventana (limpio y simple)
 function imprimirOrdenHelper(orden) {
   if (!orden) {
@@ -219,89 +304,10 @@ function imprimirOrdenHelper(orden) {
   const productos = orden.productos || [];
   const totales = calcularTotalesProductos(productos);
 
-  const buildProductRows = (items) => {
-    if (!items || items.length === 0) return '<tr><td colspan="5" style="text-align:center;padding:20px;">No hay productos</td></tr>';
-    return items.map((p, idx) => `
-      <tr>
-        <td style="text-align:center;padding:8px;border-bottom:1px solid #e0e0e0;">${idx + 1}</td>
-        <td style="padding:8px;border-bottom:1px solid #e0e0e0;">${p.producto || ''}</td>
-        <td style="text-align:center;padding:8px;border-bottom:1px solid #e0e0e0;">${p.cantidad}</td>
-        <td style="text-align:right;padding:8px;border-bottom:1px solid #e0e0e0;">$${(p.valorUnitario || 0).toLocaleString()}</td>
-        <td style="text-align:right;padding:8px;border-bottom:1px solid #e0e0e0;">$${(p.valorTotal || 0).toLocaleString()}</td>
-      </tr>
-    `).join('');
-  };
+  // Use top-level helpers to keep this function small
 
-  const prepareHtml = (o, rows, totals) => `
-    <!doctype html>
-    <html lang="es">
-      <head>
-        <meta charset="utf-8" />
-        <title>Orden de Compra - ${o.numeroOrden || 'N/A'}</title>
-        <style>
-          body { font-family: Arial, sans-serif; color: #222; padding: 24px; }
-          .header { text-align:center; background: linear-gradient(135deg,#6a1b9a,#9b59b6); color: #fff; padding: 18px; border-radius: 8px; }
-          .section { margin-top: 18px; }
-          table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-          th, td { padding: 8px; }
-          th { background: #f3f4f6; text-align: left; }
-          .totales { margin-top: 18px; display:flex; justify-content:flex-end; gap: 16px; }
-        </style>
-      </head>
-      <body>
-        <div class="header"><h2>ORDEN DE COMPRA</h2><div>N° ${o.numeroOrden || '—'}</div></div>
-        <div class="section">
-          <strong>Proveedor:</strong> ${o.proveedor || '-'}<br />
-          <strong>Solicitado por:</strong> ${o.solicitadoPor || '-'}<br />
-          <strong>Fecha:</strong> ${new Date(o.fechaOrden || Date.now()).toLocaleDateString('es-ES')}
-        </div>
-        <div class="section">
-          <table>
-            <thead>
-              <tr><th style="width:40px;">#</th><th>Producto</th><th style="width:100px;text-align:center;">Cantidad</th><th style="width:140px;text-align:right;">Precio Unit.</th><th style="width:140px;text-align:right;">Subtotal</th></tr>
-            </thead>
-            <tbody>
-              ${rows}
-            </tbody>
-          </table>
-        </div>
-        <div class="totales">
-          <div><div>Subtotal: $${totals.subtotal.toLocaleString()}</div><div style="font-weight:700;margin-top:6px;">Total: $${totals.total.toLocaleString()}</div></div>
-        </div>
-      </body>
-    </html>
-  `;
-
-  const writeDocPrimary = (win, html) => {
-    const parser = new DOMParser();
-    const newDoc = parser.parseFromString(html, 'text/html');
-    if (win.document && win.document.documentElement && newDoc && newDoc.documentElement) {
-      try {
-        win.document.replaceChild(win.document.adoptNode(newDoc.documentElement), win.document.documentElement);
-        return true;
-      } catch (error_) {
-        console.debug('adoptNode/replaceChild failed:', error_);
-      }
-    }
-    try {
-      win.document.open();
-      // document.write is a last-resort fallback; prefer DOM/adopt when possible.
-      win.document.write(html);
-      win.document.close();
-      return true;
-    } catch (error_) {
-      throw error_;
-    }
-  };
-
-  const writeDocBlobFallback = (win, html) => {
-    const blob = new Blob([html], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    win.location.href = url;
-  };
-
-  const rows = buildProductRows(productos);
-  const html = prepareHtml(orden, rows, totales);
+  const rows = buildProductRowsOrden(productos);
+  const html = prepareHtmlOrden(orden, rows, totales);
 
   const win = globalThis?.window?.open?.('', '_blank', 'width=900,height=700') ?? null;
   if (!win) {
@@ -310,8 +316,8 @@ function imprimirOrdenHelper(orden) {
   }
 
   try {
-    // Primary attempt: DOM/adopt or direct write
-    writeDocPrimary(win, html);
+    // Primary attempt: DOM/adopt or direct write (top-level helper)
+    writeDocPrimaryOrden(win, html);
     try { win.focus(); } catch (error_) { console.debug('focus failed:', error_); }
     try { win.print(); } catch (error_) { console.debug('print failed:', error_); }
     try { win.close(); } catch (error_) { console.debug('close failed:', error_); }
@@ -320,26 +326,39 @@ function imprimirOrdenHelper(orden) {
     // Blob fallback
     const primaryErr_ = error__;
     try {
-      writeDocBlobFallback(win, html);
+      writeDocBlobFallbackOrden(win, html);
     } catch (error__) {
       const blobErr_ = error__;
       // Final fallback: try to set documentElement.innerHTML first (avoids deprecated document.write when possible),
       // otherwise fall back to document.write as a last resort.
       try {
-        if (win.document && win.document.documentElement && 'innerHTML' in win.document.documentElement) {
+        if (win?.document?.documentElement && 'innerHTML' in win.document.documentElement) {
           try {
             win.document.open();
             win.document.documentElement.innerHTML = html;
             win.document.close();
             return;
           } catch (error_) {
-            // If setting innerHTML fails, fall through to document.write below.
-            console.debug('innerHTML assignment failed, falling back to document.write:', error_);
+            // If setting innerHTML fails, fall through to an alternative below.
+            console.debug('innerHTML assignment failed, falling back to data URL navigation:', error_);
           }
         }
-        win.document.open();
-        win.document.write(html);
-        win.document.close();
+        // Fallback: navigate the opened window to a data URL to avoid using the deprecated document.write API.
+        try {
+          win.location.href = 'data:text/html;charset=utf-8,' + encodeURIComponent(html);
+          return;
+        } catch (error_) {
+          // As a last resort, attempt a direct write using available DOM APIs
+          try {
+            win.document.open();
+            win.document.write(html);
+            win.document.close();
+            return;
+          } catch (error_) {
+            console.error('Final fallback failed:', error_);
+            throw error_;
+          }
+        }
       } catch (error__) {
         console.error('Impresión fallida:', primaryErr_, blobErr_, error__);
         Swal.fire('Error', 'No se pudo preparar la impresión', 'error');
