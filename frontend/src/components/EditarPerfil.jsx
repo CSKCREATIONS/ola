@@ -45,8 +45,13 @@ export default function EditarPerfil() {
     try {
       e.target.style.borderColor = '#e5e7eb';
       e.target.style.boxShadow = 'none';
-    } catch (err) {
-      // ignore
+    } catch (error_) {
+      // Only log in non-production to avoid noisy output in production
+      if (typeof process !== 'undefined' && process.env && process.env.NODE_ENV !== 'production') {
+        // provide context to help debugging focus/blur issues
+        // eslint-disable-next-line no-console
+        console.warn('EditarPerfil.handleBlur: failed to reset element styles', error_);
+      }
     }
   };
 
