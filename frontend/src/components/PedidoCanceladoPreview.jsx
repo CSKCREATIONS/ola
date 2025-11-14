@@ -2,10 +2,16 @@ import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import Swal from 'sweetalert2';
 import api from '../api/axiosConfig';
+import {
+  getStoredUser,
+  formatDateIso,
+  buildSignature,
+  getCompanyName
+} from '../utils/emailHelpers';
 
 export default function PedidoCanceladoPreview({ datos, onClose, onEmailSent }) {
   // Obtener usuario del localStorage
-  const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+  const usuario = getStoredUser();
   const [showEnviarModal, setShowEnviarModal] = useState(false);
   const [correo, setCorreo] = useState('');
   const [asunto, setAsunto] = useState('');
@@ -41,8 +47,8 @@ export default function PedidoCanceladoPreview({ datos, onClose, onEmailSent }) 
   const abrirModalEnvio = () => {
   const totalFinal = calcularTotal();
   // Fecha de emisión: usar datos.fecha si existe, si no mostrar 'N/A'
-  const fechaEmision = datos?.fecha ? new Date(datos.fecha).toLocaleDateString('es-ES') : 'N/A';
-  setAsunto(`Pedido Cancelado ${datos?.numeroPedido || datos?.codigo || ''} - ${datos?.cliente?.nombre || 'Cliente'} | ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}`);
+  const fechaEmision = formatDateIso(datos?.fecha);
+  setAsunto(`Pedido Cancelado ${datos?.numeroPedido || datos?.codigo || ''} - ${datos?.cliente?.nombre || 'Cliente'} | ${getCompanyName()}`);
     setMensaje(
       `Estimado/a ${datos?.cliente?.nombre || 'cliente'},
 
@@ -52,7 +58,7 @@ Lamentamos informarle que el pedido con la siguiente información ha sido cancel
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 • Número de pedido: ${datos?.numeroPedido || datos?.codigo || 'N/A'}
 • Fecha de emisión: ${fechaEmision}
-• Fecha de cancelación: ${new Date().toLocaleDateString('es-ES')}
+• Fecha de cancelación: ${formatDateIso(new Date().toISOString())}
 • Cliente: ${datos?.cliente?.nombre || 'N/A'}
 • Correo: ${datos?.cliente?.correo || 'N/A'}
 • Teléfono: ${datos?.cliente?.telefono || 'N/A'}
@@ -71,11 +77,9 @@ Agradecemos su comprensión y esperamos poder atenderle en futuras oportunidades
 
 Saludos cordiales,
 
-${usuario?.firstName || usuario?.nombre || 'Equipo de atención'} ${usuario?.surname || ''}${usuario?.email ? `
-📧 Correo: ${usuario.email}` : ''}${usuario?.telefono ? `
-📞 Teléfono: ${usuario.telefono}` : ''}
+${buildSignature(usuario)}
 
-${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
+${getCompanyName()}
 🌐 Productos de calidad`
     );
     setShowEnviarModal(true);

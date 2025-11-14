@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import './FormatoCotizacion.css';
 import api from '../api/axiosConfig';
+import { getStoredUser } from '../utils/emailHelpers';
 
 export default function PedidoEntregadoPreview({ datos, onClose }) {
   // Obtener usuario logueado
-  const usuario = JSON.parse(localStorage.getItem('user') || '{}');
+  const usuario = getStoredUser();
   const [showEnviarModal, setShowEnviarModal] = useState(false);
   const [correo, setCorreo] = useState('');
   const [asunto, setAsunto] = useState('Comprobante de Entrega - Pedido');

@@ -5,6 +5,7 @@ import '../App.css';
 import Fijo from '../components/Fijo';
 import NavCompras from '../components/NavCompras';
 import DetallesOrdenModal from '../components/DetallesOrdenModal';
+/* global globalThis */
 
 // Small helper utilities (local fallbacks used by this page)
 const advancedStyles = `

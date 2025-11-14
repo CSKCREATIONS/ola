@@ -4,11 +4,17 @@ import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import './FormatoCotizacion.css';
 import api from '../api/axiosConfig';
+import {
+  getStoredUser,
+  formatDateIso,
+  buildSignature,
+  getCompanyName
+} from '../utils/emailHelpers';
 
 export default function FormatoCotizacion({ datos, onClose, onEmailSent }) {
   const navigate = useNavigate();
   // Obtener usuario logueado
-  const usuario = JSON.parse(localStorage.getItem('user') || '{}');
+  const usuario = getStoredUser();
   const [showEnviarModal, setShowEnviarModal] = useState(false);
   
   // Función para verificar si el HTML está vacío o contiene solo etiquetas vacías
@@ -63,13 +69,13 @@ export default function FormatoCotizacion({ datos, onClose, onEmailSent }) {
     }, 0) || 0;
     
   const totalFinal = datos?.total || totalCalculado;
-    
+
   // Fecha de emisión: usar datos.fecha si existe, si no mostrar 'N/A'
-  const fechaEmision = datos?.fecha ? new Date(datos.fecha).toLocaleDateString('es-ES') : 'N/A';
+  const fechaEmision = formatDateIso(datos?.fecha);
 
   // Actualizar datos autocompletados cada vez que se abre el modal
     setCorreo(datos?.cliente?.correo || '');
-    setAsunto(`Pedido Agendado ${datos?.numeroPedido || datos?.codigo || ''} - ${datos?.cliente?.nombre || 'Cliente'} | ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}`);
+    setAsunto(`Pedido Agendado ${datos?.numeroPedido || datos?.codigo || ''} - ${datos?.cliente?.nombre || 'Cliente'} | ${getCompanyName()}`);
     setMensaje(
       `Estimado/a ${datos?.cliente?.nombre || 'cliente'},
 
@@ -79,7 +85,7 @@ Esperamos se encuentre muy bien. Adjunto encontrará la información del pedido 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 • Número de pedido: ${datos?.numeroPedido || datos?.codigo || 'N/A'}
 • Fecha de emisión: ${fechaEmision}
-• Fecha de entrega programada: ${datos?.fechaEntrega ? new Date(datos.fechaEntrega).toLocaleDateString('es-ES') : 'N/A'}
+• Fecha de entrega programada: ${formatDateIso(datos?.fechaEntrega)}
 • Cliente: ${datos?.cliente?.nombre || 'N/A'}
 • Correo: ${datos?.cliente?.correo || 'N/A'}
 • Teléfono: ${datos?.cliente?.telefono || 'N/A'}

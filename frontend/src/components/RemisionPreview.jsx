@@ -2,11 +2,16 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import './FormatoCotizacion.css';
 import api from '../api/axiosConfig';
+import {
+  getStoredUser,
+  formatDateIso,
+  getCompanyName
+} from '../utils/emailHelpers';
 /* global globalThis */
 
 export default function RemisionPreview({ datos, onClose }) {
   // Obtener usuario logueado con fallback
-  const usuarioStorage = JSON.parse(localStorage.getItem('user') || '{}');
+  const usuarioStorage = getStoredUser();
   const usuario = {
     firstName: usuarioStorage.firstName || 'Equipo',
     surname: usuarioStorage.surname || 'Pangea',
@@ -15,7 +20,7 @@ export default function RemisionPreview({ datos, onClose }) {
     ...usuarioStorage
   };
   // Empresa desde variables de entorno con fallback
-  const COMPANY_NAME = process.env.REACT_APP_COMPANY_NAME || process.env.COMPANY_NAME || 'JLA GLOBAL COMPANY';
+  const COMPANY_NAME = getCompanyName();
   const COMPANY_PHONE = process.env.REACT_APP_COMPANY_PHONE || process.env.COMPANY_PHONE || '(555) 123-4567';
   const [showEnviarModal, setShowEnviarModal] = useState(false);
   const [clienteResolved, setClienteResolved] = useState(null);
@@ -151,7 +156,7 @@ ${usuarioNombreLinea}${usuarioEmailLinea}${usuarioTelefonoLinea}`
 
     // Actualizar datos autocompletados cada vez que se abre el modal
     setCorreo(datos?.cliente?.correo || '');
-    setAsunto(`Remisión ${datos?.numeroRemision || ''} - ${datos?.cliente?.nombre || 'Cliente'} | ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}`);
+    setAsunto(`Remisión ${datos?.numeroRemision || ''} - ${datos?.cliente?.nombre || 'Cliente'} | ${getCompanyName()}`);
   const remitenteLinea = `${usuario?.firstName || usuario?.nombre || 'Equipo de entrega'} ${usuario?.surname || ''}`;
   const remitenteEmailLinea = usuario?.email ? `\n📧 Correo: ${usuario.email}` : '';
   const remitenteTelefonoLinea = usuario?.telefono ? `\n📞 Teléfono: ${usuario.telefono}` : '';
@@ -164,8 +169,8 @@ Esperamos se encuentre muy bien. Adjunto encontrará la remisión de entrega con
 📦 DETALLES DE LA REMISIÓN:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 • Número de remisión: ${datos?.numeroRemision || 'N/A'}
-• Fecha de remisión: ${datos?.fechaRemision ? new Date(datos.fechaRemision).toLocaleDateString('es-ES') : 'N/A'}
-• Fecha de entrega: ${datos?.fechaEntrega ? new Date(datos.fechaEntrega).toLocaleDateString('es-ES') : 'N/A'}
+• Fecha de remisión: ${formatDateIso(datos?.fechaRemision)}
+• Fecha de entrega: ${formatDateIso(datos?.fechaEntrega)}
 • Cliente: ${datos?.cliente?.nombre || 'N/A'}
 • Correo: ${datos?.cliente?.correo || 'N/A'}
 • Teléfono: ${datos?.cliente?.telefono || 'N/A'}
@@ -187,7 +192,7 @@ Saludos cordiales,
 
 ${remitenteLinea}${remitenteEmailLinea}${remitenteTelefonoLinea}
 
-${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
+${getCompanyName()}
 🌐 Productos de calidad`
   );
     setShowEnviarModal(true);

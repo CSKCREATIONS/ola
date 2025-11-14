@@ -5,6 +5,8 @@ import { openModal } from '../funciones/animaciones';
 import EditarPerfil from '../components/EditarPerfil';
 import Swal from 'sweetalert2';
 
+/* global globalThis */
+
 export default function Perfil() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
