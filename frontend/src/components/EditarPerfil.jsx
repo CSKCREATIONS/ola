@@ -12,7 +12,8 @@ export default function EditarPerfil() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('user'));
+    const stored = localStorage.getItem('user');
+    const user = stored ? JSON.parse(stored) : null;
     if (!user) return;
 
     setForm({
@@ -25,6 +26,29 @@ export default function EditarPerfil() {
       role: typeof user.role === 'object' ? user.role.name : user.role
     });
   }, []);
+
+  // Shared focus/blur handlers to reduce duplicated inline code
+  const handleFocus = (e) => {
+    const color = e?.target?.dataset?.focusColor || '#6366f1';
+    const box = e?.target?.dataset?.focusBox || 'rgba(99, 102, 241, 0.1)';
+    // Only apply styles if the event target is a DOM element with a style property
+    if (e?.target?.style) {
+      e.target.style.borderColor = color;
+      e.target.style.boxShadow = `0 0 0 3px ${box}`;
+    } else if (typeof process !== 'undefined' && process.env && process.env.NODE_ENV !== 'production') {
+      // Not a DOM element — no-op, but log in development to aid debugging
+      console.warn('handleFocus: event target is not a DOM element', e?.target);
+    }
+  };
+
+  const handleBlur = (e) => {
+    try {
+      e.target.style.borderColor = '#e5e7eb';
+      e.target.style.boxShadow = 'none';
+    } catch (err) {
+      // ignore
+    }
+  };
 
   // Attach Escape key handler at document level to avoid adding keyboard
   // listeners directly to non-interactive elements (satisfies a11y lint rules)
@@ -250,17 +274,13 @@ export default function EditarPerfil() {
                 <label htmlFor="firstName" style={labelStyle}><i className="fa-solid fa-user" style={{ color: '#6366f1', fontSize: '0.875rem' }} aria-hidden={true}></i><span>Primer nombre</span></label><input id="firstName" 
                   type="text" 
                   name="firstName" 
-                  value={form.firstName || ''} 
+                  value={form.firstName || ''}
                   onChange={handleChange}
                   style={inputStyle}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = '#6366f1';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(99, 102, 241, 0.1)';
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = '#e5e7eb';
-                    e.target.style.boxShadow = 'none';
-                  }}
+                  data-focus-color="#6366f1"
+                  data-focus-box="rgba(99, 102, 241, 0.1)"
+                  onFocus={handleFocus}
+                  onBlur={handleBlur}
                 />
               </div>
 
@@ -268,17 +288,13 @@ export default function EditarPerfil() {
                 <label htmlFor="secondName" style={labelStyle}><i className="fa-solid fa-user" style={{ color: '#6366f1', fontSize: '0.875rem' }} aria-hidden={true}></i><span>Segundo nombre</span></label><input id="secondName" 
                   type="text" 
                   name="secondName" 
-                  value={form.secondName || ''} 
+                  value={form.secondName || ''}
                   onChange={handleChange}
                   style={inputStyle}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = '#6366f1';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(99, 102, 241, 0.1)';
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = '#e5e7eb';
-                    e.target.style.boxShadow = 'none';
-                  }}
+                  data-focus-color="#6366f1"
+                  data-focus-box="rgba(99, 102, 241, 0.1)"
+                  onFocus={handleFocus}
+                  onBlur={handleBlur}
                 />
               </div>
 
@@ -291,17 +307,13 @@ export default function EditarPerfil() {
                   id="surname"
                   type="text" 
                   name="surname" 
-                  value={form.surname || ''} 
+                  value={form.surname || ''}
                   onChange={handleChange}
                   style={inputStyle}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = '#6366f1';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(99, 102, 241, 0.1)';
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = '#e5e7eb';
-                    e.target.style.boxShadow = 'none';
-                  }}
+                  data-focus-color="#6366f1"
+                  data-focus-box="rgba(99, 102, 241, 0.1)"
+                  onFocus={handleFocus}
+                  onBlur={handleBlur}
                 />
               </div>
 
@@ -314,17 +326,13 @@ export default function EditarPerfil() {
                   id="secondSurname"
                   type="text" 
                   name="secondSurname" 
-                  value={form.secondName || ''} 
+                  value={form.secondSurname || ''}
                   onChange={handleChange}
                   style={inputStyle}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = '#6366f1';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(99, 102, 241, 0.1)';
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = '#e5e7eb';
-                    e.target.style.boxShadow = 'none';
-                  }}
+                  data-focus-color="#6366f1"
+                  data-focus-box="rgba(99, 102, 241, 0.1)"
+                  onFocus={handleFocus}
+                  onBlur={handleBlur}
                 />
               </div>
             </div>
@@ -366,17 +374,13 @@ export default function EditarPerfil() {
                   id="email-perfil"
                   type="email" 
                   name="email" 
-                  value={form.email || ''} 
+                  value={form.email || ''}
                   onChange={handleChange}
                   style={inputStyle}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = '#10b981';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)';
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = '#e5e7eb';
-                    e.target.style.boxShadow = 'none';
-                  }}
+                  data-focus-color="#10b981"
+                  data-focus-box="rgba(16, 185, 129, 0.1)"
+                  onFocus={handleFocus}
+                  onBlur={handleBlur}
                 />
               </div>
 
@@ -389,17 +393,13 @@ export default function EditarPerfil() {
                   id="username-perfil"
                   type="text" 
                   name="username" 
-                  value={form.username || ''} 
+                  value={form.username || ''}
                   onChange={handleChange}
                   style={inputStyle}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = '#10b981';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)';
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = '#e5e7eb';
-                    e.target.style.boxShadow = 'none';
-                  }}
+                  data-focus-color="#10b981"
+                  data-focus-box="rgba(16, 185, 129, 0.1)"
+                  onFocus={handleFocus}
+                  onBlur={handleBlur}
                 />
               </div>
 
@@ -504,14 +504,10 @@ export default function EditarPerfil() {
                       onChange={handlePasswordChange}
                       placeholder="Mínimo 6 caracteres"
                       style={inputStyle}
-                      onFocus={(e) => {
-                        e.target.style.borderColor = '#f59e0b';
-                        e.target.style.boxShadow = '0 0 0 3px rgba(245, 158, 11, 0.1)';
-                      }}
-                      onBlur={(e) => {
-                        e.target.style.borderColor = '#e5e7eb';
-                        e.target.style.boxShadow = 'none';
-                      }}
+                      data-focus-color="#f59e0b"
+                      data-focus-box="rgba(245, 158, 11, 0.1)"
+                      onFocus={handleFocus}
+                      onBlur={handleBlur}
                     />
                   </div>
                   <div>
@@ -527,14 +523,10 @@ export default function EditarPerfil() {
                       onChange={handlePasswordChange}
                       placeholder="Repite la contraseña"
                       style={inputStyle}
-                      onFocus={(e) => {
-                        e.target.style.borderColor = '#f59e0b';
-                        e.target.style.boxShadow = '0 0 0 3px rgba(245, 158, 11, 0.1)';
-                      }}
-                      onBlur={(e) => {
-                        e.target.style.borderColor = '#e5e7eb';
-                        e.target.style.boxShadow = 'none';
-                      }}
+                      data-focus-color="#f59e0b"
+                      data-focus-box="rgba(245, 158, 11, 0.1)"
+                      onFocus={handleFocus}
+                      onBlur={handleBlur}
                     />
                   </div>
                 </div>
