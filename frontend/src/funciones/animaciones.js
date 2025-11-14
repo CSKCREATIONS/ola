@@ -7,11 +7,11 @@ export function toggleSubMenu(menuId){
     
     // Cerrar otros submenus abiertos (comportamiento de acordeón)
     const allSubmenus = document.querySelectorAll('.dropdown');
-    allSubmenus.forEach(submenu => {
-        if(submenu.id !== menuId && submenu.classList.contains('visible')) {
+    for (const submenu of allSubmenus) {
+        if (submenu.id !== menuId && submenu.classList.contains('visible')) {
             submenu.classList.remove('visible');
         }
-    });
+    }
     
     // Toggle el submenu actual
     targetMenu.classList.toggle('visible');
