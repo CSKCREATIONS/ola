@@ -279,17 +279,18 @@ function imprimirOrdenHelper(orden) {
       try {
         win.document.replaceChild(win.document.adoptNode(newDoc.documentElement), win.document.documentElement);
         return true;
-      } catch (adoptErr) {
-        // fallback to direct write
+      } catch (error_) {
+        console.debug('adoptNode/replaceChild failed:', error_);
       }
     }
     try {
       win.document.open();
+      // document.write is a last-resort fallback; prefer DOM/adopt when possible.
       win.document.write(html);
       win.document.close();
       return true;
-    } catch (writeErr) {
-      throw writeErr;
+    } catch (error_) {
+      throw error_;
     }
   };
 
@@ -311,22 +312,36 @@ function imprimirOrdenHelper(orden) {
   try {
     // Primary attempt: DOM/adopt or direct write
     writeDocPrimary(win, html);
-    try { win.focus(); } catch (focusErr) { console.debug('focus failed:', focusErr); }
-    try { win.print(); } catch (printErr) { console.debug('print failed:', printErr); }
-    try { win.close(); } catch (closeErr) { console.debug('close failed:', closeErr); }
+    try { win.focus(); } catch (error_) { console.debug('focus failed:', error_); }
+    try { win.print(); } catch (error_) { console.debug('print failed:', error_); }
+    try { win.close(); } catch (error_) { console.debug('close failed:', error_); }
     return;
-  } catch (primaryErr) {
+  } catch (error__) {
     // Blob fallback
+    const primaryErr_ = error__;
     try {
       writeDocBlobFallback(win, html);
-    } catch (blobErr) {
-      // Final fallback: try document.write one more time
+    } catch (error__) {
+      const blobErr_ = error__;
+      // Final fallback: try to set documentElement.innerHTML first (avoids deprecated document.write when possible),
+      // otherwise fall back to document.write as a last resort.
       try {
+        if (win.document && win.document.documentElement && 'innerHTML' in win.document.documentElement) {
+          try {
+            win.document.open();
+            win.document.documentElement.innerHTML = html;
+            win.document.close();
+            return;
+          } catch (error_) {
+            // If setting innerHTML fails, fall through to document.write below.
+            console.debug('innerHTML assignment failed, falling back to document.write:', error_);
+          }
+        }
         win.document.open();
         win.document.write(html);
         win.document.close();
-      } catch (error_) {
-        console.error('Impresión fallida:', primaryErr, blobErr, error_);
+      } catch (error__) {
+        console.error('Impresión fallida:', primaryErr_, blobErr_, error__);
         Swal.fire('Error', 'No se pudo preparar la impresión', 'error');
       }
     }
