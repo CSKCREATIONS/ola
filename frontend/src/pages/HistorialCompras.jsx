@@ -19,7 +19,7 @@ function isValidEmail(email) {
   if (!local || local.length > 64) return false;
   if (!domain || domain.length > 255) return false;
   if (domain.startsWith('.') || domain.endsWith('.')) return false;
-  if (domain.indexOf('.') === -1) return false;
+  if (!domain.includes('.')) return false;
   if (!/^[A-Za-z0-9.-]+$/.test(domain)) return false;
   if (!/^[A-Za-z0-9!#$%&'*+/=?^_`{|}~.-]+$/.test(local)) return false;
   return true;

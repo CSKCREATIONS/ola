@@ -19,13 +19,13 @@ const roundMoney = (n) => {
 
 const calcularTotalesProductos = (productos = [], ivaPercent = 0) => {
   let subtotal = 0;
-  productos.forEach(p => {
+  for (const p of productos) {
     const qty = Number(p.cantidad) || 0;
     const unit = Number(p.valorUnitario || p.precio || 0) || 0;
     const desc = Number(p.descuento || 0) || 0;
     const line = roundMoney(qty * unit - desc);
     subtotal += line;
-  });
+  }
   subtotal = roundMoney(subtotal);
   const ivaNum = Number(ivaPercent) || 0;
   const impuestos = roundMoney(subtotal * (ivaNum / 100));

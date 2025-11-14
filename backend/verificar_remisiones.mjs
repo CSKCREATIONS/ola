@@ -22,14 +22,14 @@ try {
 
   if (remisiones.length > 0) {
     console.log('\n📋 Últimas 5 remisiones:');
-    remisiones.forEach((remision, index) => {
+    for (const [index, remision] of remisiones.entries()) {
       console.log(`${index + 1}. ID: ${remision._id}`);
       console.log(`   Número: ${remision.numeroRemision}`);
       console.log(`   Cliente: ${remision.cliente?.nombre}`);
       console.log(`   Estado: ${remision.estado}`);
       console.log(`   Fecha: ${remision.fechaRemision}`);
       console.log('');
-    });
+    }
   } else {
     console.log('❌ No se encontraron remisiones en la base de datos');
   }

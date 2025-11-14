@@ -544,22 +544,24 @@ function validateId(raw) {
 async function populateProductosIfNeeded(compra) {
   if (!compra || !Array.isArray(compra.productos)) return compra;
   const Producto = require('../models/Products');
-  // Use a for-of loop for simple iteration and mutate the item in-place when needed
+
+  // Early-continue reduces nesting and cognitive complexity
   for (const item of compra.productos) {
-    if (item.producto && typeof item.producto === 'string') {
-      try {
-        const producto = await Producto.findById(item.producto);
-        if (producto) {
-          // mutate the item directly instead of indexing into the array
-          item.producto = { _id: producto._id, name: producto.name, description: producto.description };
-        }
-      } catch (err) {
-        // Log full error details to ease debugging while keeping function resilient
-        console.warn('⚠️ No se pudo poblar el producto:', item.producto, '; error:', err?.message || err);
-        if (err && err.stack) console.debug(err.stack);
-      }
+    if (!(item.producto && typeof item.producto === 'string')) continue;
+
+    try {
+      // lean+exec for slightly better performance and consistent returns
+      const producto = await Producto.findById(item.producto).lean().exec();
+      if (!producto) continue;
+      // Mutate the item directly
+      item.producto = { _id: producto._id, name: producto.name, description: producto.description };
+    } catch (err) {
+      // Keep function resilient but provide useful debug info
+      console.warn('⚠️ No se pudo poblar el producto:', item.producto, '; error:', err?.message || err);
+      if (err?.stack) console.debug(err.stack);
     }
   }
+
   return compra;
 }
 

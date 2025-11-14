@@ -95,9 +95,9 @@ const ordenCompraSchema = new mongoose.Schema({
 // Hook para calcular subtotal, impuestos y total
 ordenCompraSchema.pre('save', function(next) {
   if (this.productos && this.productos.length > 0) {
-    this.productos.forEach(p => {
+    for (const p of this.productos) {
       p.valorTotal = p.cantidad * p.valorUnitario;
-    });
+    }
     this.subtotal = this.productos.reduce((acc, p) => acc + p.valorTotal, 0);
     this.impuestos = this.subtotal * 0.19;
     this.total = this.subtotal + this.impuestos;

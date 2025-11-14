@@ -56,14 +56,16 @@ async function init() {
                 return client;
             } catch (error) {
                 console.error('❌ Error conectando a MongoDB:', error);
-                if (process.env.NODE_ENV !== 'production') {
+                // Prefer throwing in production so the process can fail fast and be restarted by the orchestrator.
+                if (process.env.NODE_ENV === 'production') {
+                    throw error;
+                } else {
                     const fallback = 'mongodb://localhost:27017/pangea';
                     console.log('↩️  Intentando fallback local:', fallback);
                     const fallbackClient = new MongoClient(fallback);
                     await fallbackClient.connect();
                     return fallbackClient;
                 }
-                throw error;
             }
         })();
 
@@ -80,13 +82,14 @@ async function init() {
             console.log('✔ Mongoose conectado a MongoDB');
         } catch (err) {
             console.error('❌ Error de conexión con Mongoose:', err);
-            if (process.env.NODE_ENV !== 'production') {
+            // In production, don't swallow the error — fail fast.
+            if (process.env.NODE_ENV === 'production') {
+                throw err;
+            } else {
                 const fallback = 'mongodb://localhost:27017/pangea';
                 console.log('↩️  Mongoose intentando fallback local:', fallback);
                 await mongoose.connect(fallback);
                 console.log('✔ Mongoose conectado con fallback local');
-            } else {
-                throw err;
             }
         }
     } catch (error) {
@@ -125,7 +128,8 @@ const allowedOrigins = (process.env.CORS_ORIGINS || '')
 
 app.use(cors({
     origin: allowedOrigins.length ? allowedOrigins : true,
-    credentials: allowedOrigins.length ? true : false,
+    // credentials should be true only when we have explicit allowed origins configured
+    credentials: allowedOrigins.length > 0,
 }));
 
 // Rate limiting para evitar abuso de endpoints

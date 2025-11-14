@@ -86,8 +86,8 @@ function mapearProductos(productos) {
 async function savePedidoWithRetry(nuevoPedido) {
   try {
     return await nuevoPedido.save();
-  } catch (saveErr) {
-    if (saveErr?.code === 11000) {
+  } catch (error_) {
+    if (error_?.code === 11000) {
       const counter2 = await Counter.findOneAndUpdate(
         { _id: 'pedido' },
         { $inc: { seq: 1 } },
@@ -97,7 +97,7 @@ async function savePedidoWithRetry(nuevoPedido) {
       nuevoPedido.numeroPedido = numeroPedido2;
       return await nuevoPedido.save();
     }
-    throw saveErr;
+    throw error_;
   }
 }
 
@@ -280,8 +280,8 @@ exports.createPedido = async (req, res) => {
     let clienteId;
     try {
       clienteId = await resolveClienteId(cliente);
-    } catch (cErr) {
-      return res.status(400).json({ message: cErr.message || 'Falta información del cliente' });
+    } catch (error_) {
+      return res.status(400).json({ message: error_.message || 'Falta información del cliente' });
     }
 
     // Mapear productos
@@ -467,8 +467,8 @@ exports.remisionarPedido = async (req, res) => {
     let clienteId;
     try {
       clienteId = await resolveClienteId(pedido.cliente);
-    } catch (cliErr) {
-      return res.status(400).json({ message: cliErr?.message || 'No se pudo resolver el cliente para crear la remisión' });
+    } catch (error_) {
+      return res.status(400).json({ message: error_?.message || 'No se pudo resolver el cliente para crear la remisión' });
     }
 
     const RemisionModel = require('../models/Remision');
@@ -1430,8 +1430,8 @@ exports.enviarPedidoPorCorreo = async (req, res) => {
     // Marcar como enviado (intento no-fatal)
     try {
       await Pedido.findByIdAndUpdate(pedidoId, { enviadoCorreo: true });
-    } catch (uErr) {
-      console.warn('⚠️ No se pudo marcar pedido como enviado:', uErr?.message || uErr);
+    } catch (error_) {
+      console.warn('⚠️ No se pudo marcar pedido como enviado:', error_?.message || error_);
     }
 
     return res.status(200).json({

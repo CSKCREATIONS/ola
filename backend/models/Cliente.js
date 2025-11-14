@@ -41,8 +41,8 @@ const ClienteSchema = new mongoose.Schema({
         const [local, domain] = parts;
         if (!local || local.length > 64) return false;
         if (!domain || domain.length > 255) return false;
-        if (domain.startsWith('.') || domain.endsWith('.')) return false;
-        if (domain.indexOf('.') === -1) return false; // require a dot in domain
+  if (domain.startsWith('.') || domain.endsWith('.')) return false;
+  if (!domain.includes('.')) return false; // require a dot in domain
 
         // Domain: only letters, digits, hyphen and dot
         if (!/^[A-Za-z0-9.-]+$/.test(domain)) return false;

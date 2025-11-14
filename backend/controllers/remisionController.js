@@ -25,7 +25,8 @@ function isValidEmail(email) {
   // Domain must include at least one dot and not start or end with a dot
   if (!domain || domain.length > 255) return false;
   if (domain.startsWith('.') || domain.endsWith('.')) return false;
-  if (domain.indexOf('.') === -1) return false;
+  // Use includes for clarity when checking presence of a dot in domain
+  if (!domain.includes('.')) return false;
 
   // Basic allowed chars checks (conservative): letters, digits, - and . in domain
   if (!/^[A-Za-z0-9.-]+$/.test(domain)) return false;
@@ -249,8 +250,8 @@ exports.probarGmail = async (req, res) => {
       return res.status(400).json({ 
         message: 'Gmail SMTP no configurado',
         faltantes: {
-          usuario: !emailUser ? 'EMAIL_USER o GMAIL_USER' : null,
-          contraseña: !emailPass ? 'EMAIL_PASS o GMAIL_APP_PASSWORD' : null
+          usuario: emailUser ? null : 'EMAIL_USER o GMAIL_USER',
+          contraseña: emailPass ? null : 'EMAIL_PASS o GMAIL_APP_PASSWORD'
         }
       });
     }

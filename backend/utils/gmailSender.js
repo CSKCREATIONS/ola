@@ -28,8 +28,8 @@ function getGmailTransporter() {
         requireTLS: true,
         tls: { minVersion: 'TLSv1.2' }
       });
-    } catch (err) {
-      console.error('❌ Error creando transporter OAuth2:', err?.message || err);
+    } catch (error_) {
+      console.error('gmailSender.getGmailTransporter - Error creating OAuth2 transporter:', error_.message || error_);
       // Fallthrough to App Password mode if OAuth2 fails
     }
   }
@@ -50,8 +50,8 @@ function getGmailTransporter() {
       connectionTimeout: 10000,
       greetingTimeout: 5000
     });
-  } catch (err) {
-    console.error('❌ Error creando transporter (SMTPS):', err?.message || err);
+  } catch (error_) {
+    console.error('gmailSender.getGmailTransporter - Error creating SMTPS transporter:', error_.message || error_);
     return null;
   }
 }

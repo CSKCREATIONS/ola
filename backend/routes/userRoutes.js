@@ -78,10 +78,10 @@ router.patch('/:id/toggle-enabled',
       const { enabled } = req.body;
       const usuario = await User.findByIdAndUpdate(id, { enabled }, { new: true });
       res.json({ success: true, data: usuario });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ success: false, message: 'Error al cambiar el estado' });
-    }
+    } catch (error_) {
+        console.error('userRoutes - toggle-enabled:', error_);
+        res.status(500).json({ success: false, message: 'Error al cambiar el estado' });
+      }
   }
 );
 
@@ -99,7 +99,8 @@ router.patch('/:id/confirm-password-change',
     try {
       await User.findByIdAndUpdate(req.params.id, { mustChangePassword: false });
       res.json({ success: true });
-    } catch (err) {
+    } catch (error_) {
+      console.error('userRoutes - confirm-password-change:', error_);
       res.status(500).json({ success: false, message: 'Error al actualizar estado de contraseña' });
     }
   }

@@ -37,17 +37,20 @@ const createGmailTransporter = () => {
 // Helper: poblar productos dentro de la orden (si vienen como IDs)
 async function populateOrdenProductos(orden) {
   if (!orden || !Array.isArray(orden.productos)) return;
-  for (let i = 0; i < orden.productos.length; i++) {
-    const item = orden.productos[i];
+  // Use for-of for simple iteration and mutate the item directly for clarity
+  for (const item of orden.productos) {
     try {
       if (item.producto && (typeof item.producto === 'string' || item.producto._bsontype === 'ObjectID')) {
         const productoDoc = await Producto.findById(item.producto).lean().exec();
         if (productoDoc) {
-          orden.productos[i].producto = { _id: productoDoc._id, name: productoDoc.name, description: productoDoc.description };
+          // Mutate the item directly to avoid index-based mutations
+          item.producto = { _id: productoDoc._id, name: productoDoc.name, description: productoDoc.description };
         }
       }
     } catch (err) {
-      console.warn('⚠️ No se pudo poblar el producto:', item.producto, err.message);
+      // Include message and stack for better debugging while keeping behavior non-fatal
+      console.warn('⚠️ No se pudo poblar el producto:', item.producto, err?.message || err);
+      if (err?.stack) console.debug(err.stack);
       // continue - non-fatal
     }
   }
