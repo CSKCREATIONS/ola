@@ -1,3 +1,4 @@
+/* global globalThis */
 import React, { useEffect, useState } from 'react';
 import { closeModal } from '../funciones/animaciones';
 import Swal from 'sweetalert2';
@@ -128,7 +129,7 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
             name: rolActualizado ? rolActualizado.name : userLogged.role?.name || ''
           }
         }));
-        window.dispatchEvent(new Event('storage'));
+        globalThis.dispatchEvent(new Event('storage'));
       }
 
       Swal.fire({

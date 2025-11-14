@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+/* global globalThis */
 import Swal from 'sweetalert2';
 import { closeModal } from '../funciones/animaciones';
 import api from '../api/axiosConfig';
@@ -94,7 +95,7 @@ export default function EditarPerfil() {
       };
 
       localStorage.setItem('user', JSON.stringify(updatedUser));
-      window.dispatchEvent(new Event('storage'));
+      globalThis.dispatchEvent(new Event('storage'));
 
       Swal.fire('Éxito', 'Perfil actualizado correctamente', 'success');
       closeModal('editar-perfil');

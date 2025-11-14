@@ -139,7 +139,7 @@ const ProductoModal = ({
 
   const handleSubmit = e => {
     e.preventDefault();
-    if (Object.values(form).some(field => field === '')) {
+    if (Object.values(form).includes('')) {
       Swal.fire('Error', 'Todos los campos son obligatorios', 'warning');
       return;
     }
@@ -772,7 +772,9 @@ const GestionProductos = () => {
       const productosOrdenados = (Array.isArray(lista) ? lista : []).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       setProductos(productosOrdenados);
     } catch (err) {
-      Swal.fire('Error', 'No se pudieron cargar los productos', 'error');
+      console.error('Error loading products', err);
+      Swal.fire('Error', `No se pudieron cargar los productos: ${err?.message || err}`, 'error');
+      setProductos([]);
     }
   };
 

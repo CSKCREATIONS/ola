@@ -25,7 +25,7 @@ export default function PedidoDevueltoPreview({ datos, onClose }) {
               // Método seguro de impresión sin manipular DOM
               const printContent = document.getElementById('pdf-devuelto-block');
               const newWindow = window.open('', '_blank');
-              newWindow.document.write(`
+              newWindow.document.documentElement.innerHTML = `
                 <html>
                   <head>
                     <title>Pedido Devuelto</title>
@@ -43,8 +43,7 @@ export default function PedidoDevueltoPreview({ datos, onClose }) {
                     ${printContent.innerHTML}
                   </body>
                 </html>
-              `);
-              newWindow.document.close();
+              `;
               newWindow.focus();
               newWindow.print();
               newWindow.close();

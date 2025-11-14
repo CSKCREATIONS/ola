@@ -18,8 +18,8 @@ export default function Perfil() {
     };
 
     loadUser();
-    window.addEventListener('storage', loadUser);
-    return () => window.removeEventListener('storage', loadUser);
+    globalThis.addEventListener('storage', loadUser);
+    return () => globalThis.removeEventListener('storage', loadUser);
   }, []);
 
   const handleClick = async () => {

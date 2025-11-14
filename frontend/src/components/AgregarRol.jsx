@@ -1,3 +1,4 @@
+/* global globalThis */
 import { useState, useEffect } from "react";
 import { toggleSubMenu } from "../funciones/animaciones";
 import { registerModalRol } from "../funciones/modalController";
@@ -120,12 +121,31 @@ export default function AgregarRol() {
    // Registrar el modal al montar el componente
    useEffect(() => {
       registerModalRol(setIsVisible);
-   }, []);
 
-   // Función para abrir el modal (puede ser llamada desde el componente padre)
-   window.openModalRol = () => {
-      setIsVisible(true);
-   };
+      // Expose opener on `globalThis` for backward-compatibility instead of `window`.
+      // We attach in an effect so we can clean up on unmount and avoid leaking globals.
+      try {
+         if (typeof globalThis !== 'undefined') {
+            globalThis.openModalRol = () => setIsVisible(true);
+         }
+      } catch (error_) {
+         console.debug('Could not attach openModalRol to globalThis:', error_?.message || error_);
+      }
+
+      return () => {
+         try {
+            if (typeof globalThis !== 'undefined' && globalThis.openModalRol) {
+               try { 
+                  delete globalThis.openModalRol; 
+               } catch (e) { 
+                  console.debug('Could not delete openModalRol from globalThis:', e?.message || e);
+               }
+            }
+         } catch (cleanupError) {
+            console.debug('Error during cleanup of openModalRol on globalThis:', cleanupError?.message || cleanupError);
+         }
+      };
+   }, []);
 
    const handleSubmit = async (e) => {
       e.preventDefault();

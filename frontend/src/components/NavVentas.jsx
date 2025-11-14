@@ -14,10 +14,10 @@ export default function NavVentas() {
   const [puedeVerPedidosEntregados, setPuedeVerPedidosEntregados] = useState(false);
   const [puedeVerPedidosCancelados, setPuedeVerPedidosCancelados] = useState(false);
   const [puedeVerListaDeVentas, setPuedeVerListaDeVentas] = useState(false);
+  const [puedeVerRemisiones, setPuedeVerRemisiones] = useState(false);
   const [puedeVerListaDeClientes, setPuedeVerListaDeClientes] = useState(false);
   const [puedeVerProspectos, setPuedeVerProspectos] = useState(false);
   const [puedeVerReportesVentas, setPuedeVerReportesVentas] = useState(false);
-  const [puedeVerRemisiones, setPuedeVerRemisiones] = useState(false);
 
   // Leer permisos desde localStorage
   useEffect(() => {

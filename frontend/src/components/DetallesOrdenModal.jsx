@@ -72,7 +72,8 @@ export default function DetallesOrdenModal({ visible, orden, onClose, onPrint, o
                     const printContent = document.querySelector('.pdf-orden-compra');
                     if (!printContent) return;
                     const newWindow = window.open('', '_blank');
-                    newWindow.document.write(`
+                    if (!newWindow) return;
+                    const html = `
                       <html>
                         <head>
                           <title>Orden de Compra - ${orden.numeroOrden}</title>
@@ -91,8 +92,12 @@ export default function DetallesOrdenModal({ visible, orden, onClose, onPrint, o
                           ${printContent.innerHTML}
                         </body>
                       </html>
-                    `);
-                    newWindow.document.close();
+                    `;
+                    const doc = newWindow.document;
+                    // Avoid deprecated document.write by setting the documentElement's HTML
+                    doc.open();
+                    doc.documentElement.innerHTML = html;
+                    doc.close();
                     newWindow.focus();
                     newWindow.print();
                     newWindow.close();

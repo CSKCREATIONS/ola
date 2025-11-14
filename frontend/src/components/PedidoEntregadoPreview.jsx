@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import Swal from 'sweetalert2';
 import './FormatoCotizacion.css';
 import api from '../api/axiosConfig';
 
@@ -53,7 +52,7 @@ export default function PedidoEntregadoPreview({ datos, onClose }) {
             <button className="btn-cotizacion moderno" title="Imprimir" onClick={() => {
               const printContent = document.getElementById('pdf-pedido-entregado-block');
               const newWindow = window.open('', '_blank');
-              newWindow.document.write(`
+              const html = `
                 <html>
                   <head>
                     <title>Comprobante de Entrega - Pedido ${datos.numeroPedido || ''}</title>
@@ -72,8 +71,8 @@ export default function PedidoEntregadoPreview({ datos, onClose }) {
                     ${printContent.innerHTML}
                   </body>
                 </html>
-              `);
-              newWindow.document.close();
+              `;
+              newWindow.document.documentElement.innerHTML = html;
               newWindow.focus();
               newWindow.print();
               newWindow.close();

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Fijo from '../components/Fijo';
 import NavVentas from '../components/NavVentas';
@@ -235,7 +235,8 @@ export default function ListaDeCotizaciones() {
         const productId = (p?.producto?.id && (p.producto.id._id || p.producto.id)) || p?.producto;
         if (!productId) return null;
         const cantidadNum = Number(p?.cantidad);
-        const precioNum = p?.valorUnitario != null ? Number(p.valorUnitario) : Number(p?.producto?.price);
+        const precioRaw = p?.valorUnitario ?? p?.producto?.price;
+        const precioNum = Number(precioRaw);
         return {
           product: productId,
           cantidad: Number.isFinite(cantidadNum) && cantidadNum > 0 ? cantidadNum : 1,
@@ -734,7 +735,7 @@ export default function ListaDeCotizaciones() {
               }}>
                 <i aria-hidden={true} className="fa-solid fa-info-circle" style={{ color: '#3b82f6', fontSize: '14px' }}></i>
                 <span style={{ fontSize: '14px', color: '#475569', fontWeight: '500' }}>
-                  {cotizacionesFiltradas.length} cotización{cotizacionesFiltradas.length !== 1 ? 'es' : ''} encontrada{cotizacionesFiltradas.length !== 1 ? 's' : ''}
+                  {cotizacionesFiltradas.length} cotización{cotizacionesFiltradas.length === 1 ? '' : 'es'} encontrada{cotizacionesFiltradas.length === 1 ? '' : 's'}
                 </span>
               </div>
             </div>
@@ -883,7 +884,7 @@ export default function ListaDeCotizaciones() {
                     Cotizaciones Registradas
                   </h4>
                   <p style={{ margin: 0, color: '#6b7280', fontSize: '14px' }}>
-                    Total: {cotizacionesFiltradas.length} cotización{cotizacionesFiltradas.length !== 1 ? 'es' : ''}
+                    Total: {cotizacionesFiltradas.length} cotización{cotizacionesFiltradas.length === 1 ? '' : 'es'}
                   </p>
                 </div>
               </div>
@@ -1338,6 +1339,9 @@ export default function ListaDeCotizaciones() {
         <div className="cotizacion-modal-container">
           <div
             className="modal-overlay"
+            role="button"
+            tabIndex={0}
+            aria-label="Cerrar modal"
             onClick={(e) => {
               // click outside the dialog closes the modal
               if (e.target === e.currentTarget) {
@@ -1346,6 +1350,13 @@ export default function ListaDeCotizaciones() {
             }}
             onTouchStart={(e) => {
               if (e.target === e.currentTarget) closeModal();
+            }}
+            onKeyDown={(e) => {
+              // support keyboard users: close when Enter or Space is pressed while overlay is focused
+              if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+                e.preventDefault(); // prevent scrolling on Space
+                if (e.target === e.currentTarget) closeModal();
+              }
             }}
           >
             <dialog

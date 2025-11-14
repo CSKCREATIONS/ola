@@ -562,7 +562,7 @@ const GestionSubcategorias = () => {
       const data = result.categories || result.data || result || [];
       const activas = Array.isArray(data) ? data.filter(cat => cat.activo) : [];
       setCategorias(activas);
-    } catch (err) {
+    } catch {
       Swal.fire('Error', 'No se pudieron cargar las categorías', 'error');
     }
   };

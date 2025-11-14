@@ -23,7 +23,7 @@ function isValidEmail(email) {
 
   const at = trimmed.indexOf('@');
   // single @ and not first/last
-  if (at <= 0 || trimmed.indexOf('@', at + 1) !== -1) return false;
+  if (at <= 0 || trimmed.includes('@', at + 1)) return false;
 
   const local = trimmed.slice(0, at);
   const domain = trimmed.slice(at + 1);
@@ -210,10 +210,10 @@ export default function RegistrarCotizacion() {
     }).then((result) => {
       if (result.isConfirmed) {
         const inputIds = ['cliente', 'ciudad', 'direccion', 'telefono', 'email', 'fecha'];
-        inputIds.forEach(id => {
+        for (const id of inputIds) {
           const input = document.getElementById(id);
           if (input) input.value = '';
-        });
+        }
 
         setProductosSeleccionados([]);
 
@@ -339,7 +339,11 @@ export default function RegistrarCotizacion() {
       const allInputs = document.querySelectorAll('.cuadroTexto');
       // use optional chaining: querySelectorAll never returns null, but this is concise and
       // avoids a verbose length check while remaining safe if APIs change.
-      allInputs?.forEach(input => { if (input) input.value = ''; });
+      if (allInputs) {
+        for (const input of allInputs) {
+          if (input) input.value = '';
+        }
+      }
       setProductosSeleccionados([]);
       if (descripcionRef.current) descripcionRef.current.setContent('');
       if (condicionesPagoRef.current) condicionesPagoRef.current.setContent('');

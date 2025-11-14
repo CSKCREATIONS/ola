@@ -1,3 +1,4 @@
+/* global globalThis */
 import axios from 'axios';
 
 // Prefer environment variable set at build time (REACT_APP_API_URL)

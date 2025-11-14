@@ -30,21 +30,20 @@ export default function FormatoCotizacion({ datos, onClose, onEmailSent }) {
     }
 
     // Fallback: linear-time HTML tag stripper (no regex/backtracking)
-    let inTag = false;
-    let out = '';
-    for (let i = 0; i < html.length; i++) {
-      const ch = html[i];
-      if (ch === '<') {
-        inTag = true;
-        continue;
-      }
-      if (ch === '>') {
-        inTag = false;
-        continue;
-      }
-      if (!inTag) out += ch;
-    }
-    return out.trim() === '';
+        let inTag = false;
+        let out = '';
+        for (const ch of html) {
+          if (ch === '<') {
+            inTag = true;
+            continue;
+          }
+          if (ch === '>') {
+            inTag = false;
+            continue;
+          }
+          if (!inTag) out += ch;
+        }
+        return out.trim() === '';
   };
   
   // Estados para el formulario de envío de correo
@@ -182,10 +181,10 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               <span>Enviar</span>
             </button>
             <button className="btn-cotizacion moderno" title="Imprimir" onClick={() => {
-              // Método seguro de impresión sin manipular DOM
+              // Método seguro de impresión sin manipular DOM (evita el uso de document.write)
               const printContent = document.getElementById('pdf-pedido-block');
               const newWindow = globalThis.window.open('', '_blank');
-              newWindow.document.write(`
+              const contentHtml = `
                 <html>
                   <head>
                     <title>Pedido</title>
@@ -200,14 +199,54 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                     </style>
                   </head>
                   <body>
-                    ${printContent.innerHTML}
+                    ${printContent ? printContent.innerHTML : ''}
                   </body>
                 </html>
-              `);
-              newWindow.document.close();
-              newWindow.focus();
-              newWindow.print();
-              newWindow.close();
+              `;
+              try {
+                if (newWindow?.document?.documentElement) {
+                  // Prefer replacing the documentElement's innerHTML instead of calling document.write
+                  newWindow.document.documentElement.innerHTML = contentHtml;
+                } else if (newWindow?.document?.body) {
+                  // Fallback: set body.innerHTML if documentElement isn't available
+                  newWindow.document.body.innerHTML = contentHtml;
+                } else {
+                  // As a last resort, navigate the new window to a Blob URL containing the HTML
+                  // This avoids using document.write (which is deprecated in some typings/environments).
+                  try {
+                    const blob = new Blob([contentHtml], { type: 'text/html' });
+                    const url = URL.createObjectURL(blob);
+                    newWindow.location.href = url;
+                    // Revoke the object URL after a short delay to free resources
+                    setTimeout(() => {
+                      try {
+                        if (url && typeof URL.revokeObjectURL === 'function') {
+                          URL.revokeObjectURL(url);
+                        }
+                      } catch (error_) {
+                        console.warn('Failed to revoke object URL', error_);
+                      }
+                    }, 5000);
+                  } catch (e) {
+                    // If Blob creation/navigation fails, log the error and attempt to open using a data URL as a safer fallback
+                    console.warn('Blob creation/navigation failed, attempting data URL fallback', e);
+                    try {
+                      newWindow.location.href = 'data:text/html;charset=utf-8,' + encodeURIComponent(contentHtml);
+                    } catch (err) {
+                      // Give up gracefully; the window might remain blank
+                      console.warn('Unable to populate new window content via Blob or data URL', err);
+                    }
+                  }
+                }
+                newWindow?.focus();
+                newWindow?.print();
+                // Delay closing to allow print dialog to appear in some browsers
+                setTimeout(() => { try { newWindow?.close(); } catch (e) { console.warn('Failed to close print window', e); } }, 500);
+              } catch (err) {
+                console.error('Error printing content', err);
+                // If printing fails, ensure the window is closed gracefully
+                try { newWindow?.close(); } catch (e) { console.warn('Failed to close print window', e); }
+              }
             }} aria-label="Imprimir">
               <i className="fa-solid fa-print icon-gap" style={{ fontSize: '1.2rem' }} aria-hidden={true}></i>
             </button>
@@ -436,7 +475,7 @@ FormatoCotizacion.propTypes = {
     productosLista: PropTypes.arrayOf(PropTypes.object),
     total: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     enviadoCorreo: PropTypes.bool,
-  }).isRequired,
+  }),
   onClose: PropTypes.func,
   onEmailSent: PropTypes.func,
 };

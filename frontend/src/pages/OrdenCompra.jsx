@@ -219,7 +219,7 @@ function imprimirOrdenHelper(orden) {
   const productos = orden.productos || [];
   const totales = calcularTotalesProductos(productos);
 
-  const productosHTML = productos.map((p, idx) => `
+  const productosHTML = productos.length > 0 ? productos.map((p, idx) => `
     <tr>
       <td style="text-align:center;padding:8px;border-bottom:1px solid #e0e0e0;">${idx + 1}</td>
       <td style="padding:8px;border-bottom:1px solid #e0e0e0;">${p.producto || ''}</td>
@@ -227,7 +227,7 @@ function imprimirOrdenHelper(orden) {
       <td style="text-align:right;padding:8px;border-bottom:1px solid #e0e0e0;">$${(p.valorUnitario || 0).toLocaleString()}</td>
       <td style="text-align:right;padding:8px;border-bottom:1px solid #e0e0e0;">$${(p.valorTotal || 0).toLocaleString()}</td>
     </tr>
-  `).join('') || '<tr><td colspan="5" style="text-align:center;padding:20px;">No hay productos</td></tr>';
+  `).join('') : '<tr><td colspan="5" style="text-align:center;padding:20px;">No hay productos</td></tr>';
 
   const html = `
     <!doctype html>
@@ -270,11 +270,49 @@ function imprimirOrdenHelper(orden) {
   `;
 
   const win = window.open('', '_blank', 'width=900,height=700');
-  win.document.write(html);
-  win.document.close();
-  win.focus();
-  win.print();
-  win.close();
+  if (!win) {
+    Swal.fire('Error', 'No se pudo abrir la ventana de impresión', 'error');
+    return;
+  }
+
+  // Try a straightforward write using DOMParser/adoptNode or document.write as primary approach,
+  // then fallback to blob URL only if the primary attempt throws.
+  try {
+    const parser = new DOMParser();
+    const newDoc = parser.parseFromString(html, 'text/html');
+
+    if (win.document && win.document.documentElement && newDoc && newDoc.documentElement) {
+      // Prefer replaceChild/adoptNode when available
+      win.document.replaceChild(win.document.adoptNode(newDoc.documentElement), win.document.documentElement);
+    } else {
+      // Simpler fallback: write the html directly
+      win.document.open();
+      win.document.write(html);
+      win.document.close();
+    }
+
+    win.focus();
+    win.print();
+    win.close();
+    return;
+  } catch (primaryErr) {
+    // Attempt blob URL fallback
+    try {
+      const blob = new Blob([html], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      win.location.href = url;
+    } catch (blobErr) {
+      // Final attempt: document.write in case other APIs are restricted
+      try {
+        win.document.open();
+        win.document.write(html);
+        win.document.close();
+      } catch (finalErr) {
+        console.error('Impresión fallida:', primaryErr, blobErr, finalErr);
+        Swal.fire('Error', 'No se pudo preparar la impresión', 'error');
+      }
+    }
+  }
 }
 
 // Helper: enviar orden por correo (separado para reducir complejidad del componente)
@@ -390,7 +428,6 @@ export default function OrdenCompra() {
   const itemsPerPage = 10;
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  function paginate(pageNumber) { setCurrentPage(pageNumber); }
 
   // Delegador: obtener órdenes de compra (usa el helper top-level)
   const fetchOrdenes = async () => {
@@ -468,42 +505,6 @@ export default function OrdenCompra() {
   };
 
   // Función para agregar producto en edición (EDITAR)
-  function agregarProductoEdicion() {
-    if (!productoTemp.productoId) {
-      Swal.fire('Error', 'Por favor selecciona un producto de la lista', 'error');
-      return;
-    }
-    const productoSeleccionado = findProductoById(productosProveedor, productoTemp.productoId);
-    if (!productoSeleccionado) {
-      Swal.fire('Error', 'Producto no encontrado', 'error');
-      return;
-    }
-
-    const nuevoProducto = crearProductoFromSelection(productoSeleccionado, productoTemp);
-
-    setOrdenEditando({
-      ...ordenEditando,
-      productos: [...ordenEditando.productos, nuevoProducto]
-    });
-
-    // Resetear el formulario temporal
-    setProductoTemp({
-      producto: '',
-      descripcion: '',
-      cantidad: 1,
-      valorUnitario: 0,
-      descuento: 0,
-      productoId: ''
-    });
-
-    Swal.fire({
-      icon: 'success',
-      title: 'Producto agregado',
-      text: `${productoSeleccionado.name || productoSeleccionado.nombre} se ha agregado a la orden`,
-      timer: 1500,
-      showConfirmButton: false
-    });
-  }
 
   // Cuando se selecciona un proveedor (AGREGAR)
   const handleProveedorChange = async (e) => {
@@ -521,9 +522,6 @@ export default function OrdenCompra() {
   };
 
   // Cuando se selecciona un producto de la lista desplegable (EDITAR)
-  function handleProductoChangeEditar(e) {
-    handleProductoChangeEditarHelper(e, productosProveedor, setProductoTemp);
-  }
 
   // Obtener órdenes pendientes para mostrar en la tabla
   const ordenesPendientes = ordenes.filter(orden => orden.estado === 'Pendiente');
@@ -666,11 +664,6 @@ export default function OrdenCompra() {
     setErrores({});
   };
 
-  function calcularValorTotalProducto(p) {
-    const subtotal = p.cantidad * p.valorUnitario;
-    const descuento = p.descuento || 0;
-    return subtotal - descuento;
-  }
 
   // agregarProducto eliminado por no utilizarse (se usa agregarProductoDesdeLista/agregarProductoEdicion)
 
@@ -861,16 +854,6 @@ export default function OrdenCompra() {
     }
   };
 
-  function validarOrdenEdicion(orden) {
-    const nuevosErrores = {};
-
-    if (!orden.proveedor) nuevosErrores.proveedor = 'Seleccione un proveedor';
-    if (!orden.solicitadoPor || !orden.solicitadoPor.trim()) nuevosErrores.solicitadoPor = 'Ingrese el solicitante';
-    if ((orden.productos || []).length === 0) nuevosErrores.productos = 'Agregue al menos un producto';
-
-    setErrores(nuevosErrores);
-    return Object.keys(nuevosErrores).length === 0;
-  }
 
   const actualizarOrden = async () => {
     // Validación básica
@@ -1636,7 +1619,7 @@ export default function OrdenCompra() {
               <div style={{ padding: '12px 20px', display: 'flex', justifyContent: 'flex-end', gap: '8px', alignItems: 'center' }}>
                 {Array.from({ length: totalPages }).map((_, i) => (
                   <button
-                    key={i}
+                    key={i + 1}
                     onClick={() => setCurrentPage(i + 1)}
                     style={{
                       padding: '8px 16px',

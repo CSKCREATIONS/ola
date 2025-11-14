@@ -245,12 +245,12 @@ export default function ListaDeClientes() {
         const cotData = cotRes.data;
         const cotList = Array.isArray(cotData) ? cotData : (cotData.data || []);
         const map = {};
-        cotList.forEach(cot => {
+        for (const cot of cotList) {
           const email = (cot.cliente?.correo || '').toLowerCase();
-          if (!email) return;
+          if (!email) continue;
           if (!map[email]) map[email] = [];
           if (cot.codigo) map[email].push({ codigo: cot.codigo, id: cot._id });
-        });
+        }
         setCotizacionesMap(map);
       } catch (err) {
         console.error('Error al cargar cotizaciones:', err);

@@ -544,7 +544,14 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                       fallback.document.documentElement.innerHTML = html;
                       fallback.document.close();
                       fallback.focus();
-                      setTimeout(() => { try { fallback.print(); fallback.close(); } catch (_) {} }, 500);
+                      setTimeout(() => { 
+                        try { 
+                          fallback.print(); 
+                          fallback.close(); 
+                        } catch (error_) {
+                          console.error('Error printing/closing fallback window:', error_);
+                        }
+                      }, 500);
                     } else {
                       Swal.fire('Error', 'No se pudo abrir la ventana para imprimir', 'error');
                     }
@@ -554,19 +561,31 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                   // Wait for the new window to load the blob content, then print
                   const interval = setInterval(() => {
                     try {
-                      if (win.document && win.document.readyState === 'complete') {
+                      if (win?.document?.readyState === 'complete') {
                         clearInterval(interval);
-                        try { win.focus(); win.print(); } catch (_) {}
+                        try { 
+                          win.focus(); 
+                          win.print(); 
+                        } catch (error_) {
+                          console.error('Error focusing/printing window:', error_);
+                        }
                         // Revoke the object URL after a short delay to ensure print has started
                         setTimeout(() => URL.revokeObjectURL(url), 1000);
-                        setTimeout(() => { try { win.close(); } catch (_) {} }, 1500);
+                        setTimeout(() => { 
+                          try { 
+                            win.close(); 
+                          } catch (error_) {
+                            console.error('Error closing print window:', error_);
+                          }
+                        }, 1500);
                       }
-                    } catch (err) {
-                      // Accessing win.document may throw if the window is closed; ignore until closed
+                    } catch (error_) {
+                      // Accessing win.document may throw if the window is closed or cross-origin
+                      console.debug('Window document access error (expected if closed):', error_.message);
                     }
                   }, 200);
-                } catch (err) {
-                  console.error('Error creating print window:', err);
+                } catch (error_) {
+                  console.error('Error creating print window:', error_);
                   Swal.fire('Error', 'Ocurrió un error al preparar la impresión', 'error');
                 }
               }}

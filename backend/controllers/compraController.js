@@ -545,24 +545,34 @@ async function populateProductosIfNeeded(compra) {
   if (!compra || !Array.isArray(compra.productos)) return compra;
   const Producto = require('../models/Products');
 
-  // Early-continue reduces nesting and cognitive complexity
-  for (const item of compra.productos) {
-    if (!(item.producto && typeof item.producto === 'string')) continue;
+  // Build a new productos array to avoid mutating the original referencia
+  const productosPopulados = await Promise.all(compra.productos.map(async (item) => {
+    if (typeof item?.producto !== 'string') {
+      // already populated or malformed - keep as-is
+      return item;
+    }
 
     try {
       // lean+exec for slightly better performance and consistent returns
       const producto = await Producto.findById(item.producto).lean().exec();
-      if (!producto) continue;
-      // Mutate the item directly
-      item.producto = { _id: producto._id, name: producto.name, description: producto.description };
+      if (!producto) return item;
+      // Return a new item with producto replaced by populated object
+      return {
+        ...item,
+        producto: { _id: producto._id, name: producto.name, description: producto.description }
+      };
     } catch (err) {
       // Keep function resilient but provide useful debug info
       console.warn('⚠️ No se pudo poblar el producto:', item.producto, '; error:', err?.message || err);
       if (err?.stack) console.debug(err.stack);
+      return item;
     }
-  }
+  }));
 
-  return compra;
+  // Return a new compra object (plain object if possible) so the reference changes
+  const compraObj = typeof compra.toObject === 'function' ? compra.toObject() : { ...compra };
+  compraObj.productos = productosPopulados;
+  return compraObj;
 }
 
 // Helper: generate PDF attachment safely

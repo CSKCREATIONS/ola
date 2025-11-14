@@ -397,7 +397,7 @@ export default function ListaDeClientes() {
               }}>
                 <i className="fa-solid fa-info-circle" style={{ color: '#3b82f6', fontSize: '14px' }}></i>
                 <span style={{ fontSize: '14px', color: '#475569', fontWeight: '500' }}>
-                  {clientesFiltrados.length} cliente{clientesFiltrados.length !== 1 ? 's' : ''} encontrado{clientesFiltrados.length !== 1 ? 's' : ''}
+                  {clientesFiltrados.length} cliente{clientesFiltrados.length === 1 ? '' : 's'} encontrado{clientesFiltrados.length === 1 ? '' : 's'}
                 </span>
               </div>
             </div>

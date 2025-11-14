@@ -1,3 +1,4 @@
+/* global globalThis */
 import React, { useEffect, useState } from 'react';
 import '../App.css';
 import { Link, useNavigate } from 'react-router-dom';
@@ -64,7 +65,11 @@ export async function resolveRoleForUser(usuario) {
 
     if (roleObj) {
       usuario.role = roleObj;
-      try { localStorage.setItem('user', JSON.stringify(usuario)); } catch (error_) { /* ignore storage errors */ }
+      try { 
+        localStorage.setItem('user', JSON.stringify(usuario)); 
+      } catch (error_) { 
+        console.error('Failed to save user to localStorage:', error_);
+      }
     }
   } catch (error_) {
     console.error('resolveRoleForUser error:', error_);
@@ -83,7 +88,6 @@ export default function Fijo() {
   const [puedeVerUsuarios, setPuedeVerUsuarios] = useState(false);
   const [puedeGenerarOrden, setPuedeGenerarOrden] = useState(false);
   const [puedeVerOrdenes, setPuedeVerOrdenes] = useState(false);
-  const [puedeRegistrarCompras, setPuedeRegistrarCompras] = useState(false);
   const [puedeVerProveedores, setPuedeVerProveedores] = useState(false);
   const [puedeVerHCompras, setPuedeVerHCompras] = useState(false);
   const [puedeVerReportesCompras, setPuedeVerReportesCompras] = useState(false);
@@ -120,10 +124,9 @@ export default function Fijo() {
       setPuedeVerUsuarios(has('usuarios.ver'));
       setPuedeVerRoles(has('roles.ver'));
       setPuedeGenerarOrden(has('ordenes.generar'));
+      setPuedeGenerarOrden(has('ordenes.generar'));
       setPuedeVerOrdenes(has('ordenesCompra.ver'));
-      setPuedeRegistrarCompras(has('compras.crear'));
       setPuedeVerProveedores(has('proveedores.ver'));
-      setPuedeVerHCompras(has('hcompras.ver'));
       setPuedeVerReportesCompras(has('reportesCompras.ver'));
       setPuedeVerCategorias(has('categorias.ver'));
       setPuedeVerSubcategorias(has('subcategorias.ver'));
@@ -147,7 +150,7 @@ export default function Fijo() {
     const handleStorageChange = () => {
       loadUserAndPermissions();
     };
-    window.addEventListener('storage', handleStorageChange);
+    globalThis.addEventListener('storage', handleStorageChange);
 
     // 3. Manejar click fuera del menú (código original preservado)
     const handleClickOutside = (event) => {
@@ -164,7 +167,7 @@ export default function Fijo() {
 
     // Cleanup
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
+      globalThis.removeEventListener('storage', handleStorageChange);
       document.removeEventListener('click', handleClickOutside);
     };
   }, []);

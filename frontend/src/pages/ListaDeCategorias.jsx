@@ -558,30 +558,8 @@ const ListaDeCategorias = () => {
       setModalVisible(false);
       setCategoriaEditando(null);
       loadCategories();
-    } catch (err) {
+  } catch (err) {
       console.error('❌ Error en handleSave:', err);
-      Swal.fire('Error', err.message, 'error');
-    }
-  };
-
-  async function deleteCategory(id) {
-    const confirm = await Swal.fire({
-      title: '¿Estás seguro?',
-      text: 'Esta acción eliminará la categoría y todas sus subcategorías',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar'
-    });
-
-    if (!confirm.isConfirmed) return;
-
-    try {
-      const res = await api.delete(`/api/categories/${id}`);
-      if (!(res.status >= 200 && res.status < 300)) throw new Error('No se pudo eliminar la categoría');
-      Swal.fire('Eliminado', 'Categoría eliminada correctamente', 'success');
-      loadCategories();
-    } catch (err) {
       Swal.fire('Error', err.message, 'error');
     }
   };

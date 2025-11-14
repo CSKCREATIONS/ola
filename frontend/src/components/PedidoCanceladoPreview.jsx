@@ -175,28 +175,57 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               onClick={() => {
                 const printContent = document.querySelector('.pdf-pedido-cancelado');
                 const newWindow = window.open('', '_blank');
-                newWindow.document.write(`
-                  <button
-                    onClick={enviarPorCorreo}
-                    aria-label="Enviar notificación de cancelación"
-                    style={{
-                      padding: '0.75rem 1.5rem',
-                      border: 'none',
-                      borderRadius: '6px',
-                      backgroundColor: '#dc2626',
-                      color: 'white',
-                      cursor: 'pointer',
-                      fontWeight: 'bold'
-                    }}
-                  >
-                    <i className="fa-solid fa-envelope icon-gap" style={{}} aria-hidden={true}></i>
-                    <span>Enviar Notificación</span>
-                  </button>
-                      ${printContent.innerHTML}
+                if (!newWindow) return;
+
+                const contentHtml = printContent ? printContent.innerHTML : '';
+
+                const html = `
+                  <!doctype html>
+                  <html>
+                    <head>
+                      <meta charset="utf-8">
+                      <title>Pedido Cancelado</title>
+                      <style>
+                        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial; padding: 20px; color: #333; }
+                        .print-button { padding: 0.75rem 1.5rem; border: none; border-radius: 6px; background-color: #dc2626; color: white; cursor: pointer; font-weight: bold; margin-bottom: 1rem; }
+                      </style>
+                      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+                    </head>
+                    <body>
+                      <div>
+                        <button class="print-button" aria-label="Enviar notificación de cancelación">
+                          <i class="fa-solid fa-envelope icon-gap" aria-hidden="true"></i>
+                          <span>Enviar Notificación</span>
+                        </button>
+                      </div>
+                      ${contentHtml}
                     </body>
                   </html>
-                `);
-                newWindow.document.close();
+                `;
+
+                try {
+                  // Preferred: replace the documentElement's HTML without using document.write
+                  newWindow.document.documentElement.innerHTML = html;
+                } catch (err) {
+                  // Fallback: populate body safely using DOM methods
+                  try {
+                    newWindow.document.open();
+                    newWindow.document.close();
+                    if (newWindow.document.body) {
+                      newWindow.document.body.innerHTML = contentHtml;
+                    } else {
+                      const body = newWindow.document.createElement('body');
+                      body.innerHTML = contentHtml;
+                      newWindow.document.documentElement.appendChild(body);
+                    }
+                  } catch (e) {
+                    // If even fallback fails, close the window to avoid leaving a blank popup
+                    console.error('Error while preparing print window', e);
+                    newWindow.close();
+                    return;
+                  }
+                }
+
                 newWindow.focus();
                 newWindow.print();
                 newWindow.close();

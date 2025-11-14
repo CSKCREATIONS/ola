@@ -147,34 +147,105 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
           </div>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             {/* Botón de imprimir */}
-            <button
+              <button
               onClick={() => {
                 const printContent = document.querySelector('.pdf-pedido-agendado');
                 const newWindow = window.open('', '_blank');
-                newWindow.document.write(`
-                  <html>
-                    <head>
-                      <title>Pedido Agendado - ${datos?.numeroPedido}</title>
-                      <style>
-                        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
-                        .header { text-align: center; margin-bottom: 30px; padding: 20px; background: linear-gradient(135deg, #fd7e14, #e85d04); color: white; border-radius: 10px; }
-                        .info-section { margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; }
-                        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-                        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-                        th { background: linear-gradient(135deg, #fd7e14, #e85d04); color: white; font-weight: bold; }
-                        .total-row { background: #fef3c7; font-weight: bold; }
-                        .status-badge { background: #fd7e14; color: white; padding: 8px 16px; border-radius: 20px; display: inline-block; }
-                      </style>
-                    </head>
-                    <body>
-                      ${printContent.innerHTML}
-                    </body>
-                  </html>
-                `);
-                newWindow.document.close();
-                newWindow.focus();
-                newWindow.print();
-                newWindow.close();
+                if (newWindow?.document) {
+                  const doc = newWindow.document;
+                  // Open document for writing and build content via DOM methods to avoid deprecated document.write
+                  doc.open();
+                  try {
+                    // set the title
+                    doc.title = `Pedido Agendado - ${datos?.numeroPedido}`;
+
+                    // create and append style element
+                    const styleEl = doc.createElement('style');
+                    styleEl.type = 'text/css';
+                    styleEl.appendChild(doc.createTextNode(`
+                      body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+                      .header { text-align: center; margin-bottom: 30px; padding: 20px; background: linear-gradient(135deg, #fd7e14, #e85d04); color: white; border-radius: 10px; }
+                      .info-section { margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; }
+                      table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                      th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+                      th { background: linear-gradient(135deg, #fd7e14, #e85d04); color: white; font-weight: bold; }
+                      .total-row { background: #fef3c7; font-weight: bold; }
+                      .status-badge { background: #fd7e14; color: white; padding: 8px 16px; border-radius: 20px; display: inline-block; }
+                    `));
+                    // ensure head exists
+                    if (!doc.head) {
+                      const head = doc.createElement('head');
+                      doc.documentElement.appendChild(head);
+                    }
+                    doc.head.appendChild(styleEl);
+
+                    // set body content
+                    if (!doc.body) {
+                      const body = doc.createElement('body');
+                      doc.documentElement.appendChild(body);
+                    }
+                    doc.body.innerHTML = printContent?.innerHTML || '';
+
+                  } catch (err) {
+                    // fallback: if DOM manipulation fails, try setting outerHTML of the documentElement
+                    console.error('Error creating print document:', err);
+                    try {
+                      const html = `
+                        <html>
+                          <head>
+                            <title>Pedido Agendado - ${datos?.numeroPedido}</title>
+                            <style>
+                              body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+                              .header { text-align: center; margin-bottom: 30px; padding: 20px; background: linear-gradient(135deg, #fd7e14, #e85d04); color: white; border-radius: 10px; }
+                              .info-section { margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; }
+                              table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                              th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+                              th { background: linear-gradient(135deg, #fd7e14, #e85d04); color: white; font-weight: bold; }
+                              .total-row { background: #fef3c7; font-weight: bold; }
+                              .status-badge { background: #fd7e14; color: white; padding: 8px 16px; border-radius: 20px; display: inline-block; }
+                            </style>
+                          </head>
+                          <body>
+                            ${printContent?.innerHTML || ''}
+                          </body>
+                        </html>
+                      `;
+                      doc.documentElement.outerHTML = html;
+                    } catch (innerErr) {
+                      // last resort: write using deprecated API only if all else fails
+                      console.error('Error setting outerHTML:', innerErr);
+                      if (doc.write && typeof doc.write === 'function') {
+                        doc.write(`
+                          <html>
+                            <head>
+                              <title>Pedido Agendado - ${datos?.numeroPedido}</title>
+                              <style>
+                                body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+                                .header { text-align: center; margin-bottom: 30px; padding: 20px; background: linear-gradient(135deg, #fd7e14, #e85d04); color: white; border-radius: 10px; }
+                                .info-section { margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; }
+                                table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                                th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+                                th { background: linear-gradient(135deg, #fd7e14, #e85d04); color: white; font-weight: bold; }
+                                .total-row { background: #fef3c7; font-weight: bold; }
+                                .status-badge { background: #fd7e14; color: white; padding: 8px 16px; border-radius: 20px; display: inline-block; }
+                              </style>
+                            </head>
+                            <body>
+                              ${printContent?.innerHTML || ''}
+                            </body>
+                          </html>
+                        `);
+                      } else {
+                        console.error('Unable to write to document');
+                      }
+                    }
+                  } finally {
+                    doc.close();
+                    newWindow.focus();
+                    newWindow.print();
+                    newWindow.close();
+                  }
+                }
               }}
               style={{
                 background: 'rgba(255, 255, 255, 0.2)',

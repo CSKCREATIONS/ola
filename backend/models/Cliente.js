@@ -39,17 +39,29 @@ const ClienteSchema = new mongoose.Schema({
         if (parts.length !== 2) return false; // exactly one @
 
         const [local, domain] = parts;
-        if (!local || local.length > 64) return false;
-        if (!domain || domain.length > 255) return false;
-  if (domain.startsWith('.') || domain.endsWith('.')) return false;
-  if (!domain.includes('.')) return false; // require a dot in domain
+        if (!local || local.length > 64) {
+          return false;
+        }
+        if (!domain || domain.length > 255) {
+          return false;
+        }
+  if (domain.startsWith('.') || domain.endsWith('.')) {
+    return false;
+  }
+  if (!domain.includes('.')) {
+    return false; // require a dot in domain
+  }
 
         // Domain: only letters, digits, hyphen and dot
-        if (!/^[A-Za-z0-9.-]+$/.test(domain)) return false;
+        if (!/^[A-Za-z0-9.-]+$/.test(domain)) {
+          return false;
+        }
 
         // Local: allow common characters but keep it conservative
         // Keep hyphen escaped to avoid any ambiguity inside the character class
-        if (!/^[A-Za-z0-9!#$%&'*+/?^_`{|}~.-]+$/.test(local)) return false;
+        if (!/^[A-Za-z0-9!#$%&'*+/?^_`{|}~.-]+$/.test(local)) {
+          return false;
+        }
 
         return true;
       },

@@ -777,24 +777,23 @@ exports.reporteSubcategorias = async (req, res) => {
                 {
                   $project: {
                     mes: {
-                      $switch: {
-                        // eslint-disable-next-line quote-props
-                        branches: [
-                          { case: { $eq: ["$_id", 1] }, then: "Enero" },
-                          { case: { $eq: ["$_id", 2] }, then: "Febrero" },
-                          { case: { $eq: ["$_id", 3] }, then: "Marzo" },
-                          { case: { $eq: ["$_id", 4] }, then: "Abril" },
-                          { case: { $eq: ["$_id", 5] }, then: "Mayo" },
-                          { case: { $eq: ["$_id", 6] }, then: "Junio" },
-                          { case: { $eq: ["$_id", 7] }, then: "Julio" },
-                          { case: { $eq: ["$_id", 8] }, then: "Agosto" },
-                          { case: { $eq: ["$_id", 9] }, then: "Septiembre" },
-                          { case: { $eq: ["$_id", 10] }, then: "Octubre" },
-                          { case: { $eq: ["$_id", 11] }, then: "Noviembre" },
-                          { case: { $eq: ["$_id", 12] }, then: "Diciembre" }
+                      $arrayElemAt: [
+                        [
+                          "Enero",
+                          "Febrero",
+                          "Marzo",
+                          "Abril",
+                          "Mayo",
+                          "Junio",
+                          "Julio",
+                          "Agosto",
+                          "Septiembre",
+                          "Octubre",
+                          "Noviembre",
+                          "Diciembre"
                         ],
-                        default: "Desconocido"
-                      }
+                        { $subtract: ["$_id", 1] }
+                      ]
                     },
                     ventas: 1,
                     ingresos: 1
@@ -913,7 +912,7 @@ exports.reporteSubcategorias = async (req, res) => {
                 },
                 {
                   $project: {
-                    name: { $cond: { if: "$_id", then: "Activos", else: "Inactivos" } },
+                    name: { $cond: { if: "$_id", "then": "Activos", "else": "Inactivos" } },
                     value: 1,
                     _id: 0
                   }

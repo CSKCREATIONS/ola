@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+/* global globalThis */
 import api from '../api/axiosConfig';
 import Swal from 'sweetalert2';
 import '../App.css';
