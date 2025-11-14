@@ -224,7 +224,8 @@ export default function HistorialCompras() {
       productos: [...nuevaCompra.productos, {
         producto: '',
         cantidad: 1,
-        precioUnitario: 0
+        precioUnitario: 0,
+        _tmpId: `tmp-${Date.now()}-${Math.random().toString(36).slice(2,8)}`
       }]
     });
   };
@@ -343,9 +344,10 @@ export default function HistorialCompras() {
 
   // Productos filtrados por el proveedor seleccionado en la nueva compra
   const productosFiltrados = nuevaCompra.proveedor
-    ? productos.filter(p => {
-        let prov = p.proveedor || p.proveedorId || (p.proveedor && p.proveedor._id) || p.proveedor;
-        if (typeof prov === 'object') prov = prov._id || prov.id;
+      ? productos.filter(p => {
+        // Prefer optional chaining for clarity and safety
+        let prov = p.proveedor?._id ?? p.proveedorId ?? p.proveedor;
+        if (typeof prov === 'object') prov = prov._id ?? prov.id;
         return String(prov) === String(nuevaCompra.proveedor);
       })
     : productos;
@@ -626,7 +628,7 @@ export default function HistorialCompras() {
   };
 
   const enviarCompraPorCorreo = async () => {
-    if (!compraSeleccionada || !compraSeleccionada._id) {
+    if (!compraSeleccionada?._id) {
       Swal.fire('Error', 'No hay compra seleccionada', 'error');
       return;
     }
@@ -691,26 +693,28 @@ JLA Global Company</textarea>
       cancelButtonText: 'Cancelar',
       confirmButtonColor: '#27ae60',
       cancelButtonColor: '#6c757d',
-      preConfirm: () => {
+      preConfirm: async () => {
+        // Make this an async preConfirm so it always returns a Promise (consistent type).
         const email = document.getElementById('emailDestino').value;
         const asunto = document.getElementById('asuntoEmail').value;
         const mensaje = document.getElementById('mensajeEmail').value;
-        
+
         if (!email) {
           Swal.showValidationMessage('Por favor ingresa un correo electrónico');
-          return false;
+          // Throw to reject the Promise and keep the modal open
+          throw new Error('validation');
         }
-        
+
         if (!isValidEmail(email)) {
           Swal.showValidationMessage('Por favor ingresa un correo electrónico válido');
-          return false;
+          throw new Error('validation');
         }
 
         if (!asunto || asunto.trim() === '') {
           Swal.showValidationMessage('Por favor ingresa un asunto');
-          return false;
+          throw new Error('validation');
         }
-        
+
         return { email, asunto, mensaje };
       }
     });
@@ -1380,8 +1384,8 @@ JLA Global Company</textarea>
                             </tr>
                         </thead>
                         <tbody>
-                            {compraSeleccionada.productos?.map((p, i) => (
-                                <tr key={i} style={{ borderBottom: '1px solid #e9ecef' }}>
+          {compraSeleccionada.productos?.map((p, i) => (
+            <tr key={p._id || p.id || p.productoId || p.producto?._id || p.producto?.id || JSON.stringify(p)} style={{ borderBottom: '1px solid #e9ecef' }}>
                                     <td style={{ padding: '1rem', color: '#666' }}>{i + 1}</td>
                                     <td style={{ padding: '1rem', fontWeight: '500' }}>
                                         {p.producto?.name || p.producto || 'Producto no especificado'}
@@ -1605,8 +1609,8 @@ JLA Global Company</textarea>
                       </button>
                     </div>
 
-                    {nuevaCompra.productos.map((prod, index) => (
-                      <div key={index} style={{
+                    {nuevaCompra.productos.map((prod) => (
+                      <div key={prod._tmpId || prod._id || prod.id || prod.productoId || prod.producto || JSON.stringify(prod)} style={{
                         background: '#f8f9fa',
                         padding: '1rem',
                         borderRadius: '8px',

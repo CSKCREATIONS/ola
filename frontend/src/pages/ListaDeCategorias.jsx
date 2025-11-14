@@ -564,7 +564,7 @@ const ListaDeCategorias = () => {
     }
   };
 
-  const deleteCategory = async (id) => {
+  async function deleteCategory(id) {
     const confirm = await Swal.fire({
       title: '¿Estás seguro?',
       text: 'Esta acción eliminará la categoría y todas sus subcategorías',
