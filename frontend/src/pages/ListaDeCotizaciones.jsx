@@ -1514,7 +1514,7 @@ export default function ListaDeCotizaciones() {
                       <i aria-hidden={true} className="fa-solid fa-shopping-cart"></i>
                       <h4>Productos y Servicios</h4>
                       <span className="productos-count">
-                        {cotizacionSeleccionada.productos?.length || 0} elemento{(cotizacionSeleccionada.productos?.length || 0) !== 1 ? 's' : ''}
+                        {cotizacionSeleccionada.productos?.length || 0} elemento{(cotizacionSeleccionada.productos?.length || 0) === 1 ? '' : 's'}
                       </span>
                     </div>
                     <button className="btn-add" onClick={agregarProducto}>
