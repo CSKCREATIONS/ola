@@ -114,37 +114,9 @@ exports.reporteSubcategorias = async (req, res) => {
       
       exports.reporteConsolidado = async (req, res) => {
         try {
-          const totalProductos = await Product.countDocuments();
-          const productosBajoStock = await Product.countDocuments({ stock: { $lt: 10 } });
-      
-          const productosPorEstado = await Product.aggregate([
-            {
-              $group: {
-                _id: '$activo',
-                count: { $sum: 1 }
-              }
-            }
-          ]);
-      
-          const productosPorCategoria = await Category.aggregate([
-                {
-                  $lookup: {
-                    from: 'subcategories',
-                    localField: '_id',
-                    foreignField: 'category',
-                    as: 'subcategorias'
-                  }
-                },
-                {
-                  $project: {
-                    name: 1,
-                    description: 1,
-                    activo: 1,
-                    createdAt: 1,
-                    totalSubcategorias: { $size: '$subcategorias' }
-                  }
-                }
-              ]);
+          // Removed unused local declarations (totalProductos, productosBajoStock,
+          // productosPorEstado, productosPorCategoria). If you need these
+          // metrics here, reintroduce them and use them in the response.
 
               res.status(200).json({ success: true, data: categorias });
             } catch (error) {

@@ -60,7 +60,8 @@ exports.toggleEnabled = async (req, res) => {
       { new: true }
     );
     res.json({ success: true, role: updated });
-  } catch (err) {
+  } catch (error_) {
+    console.error('roleController.toggleEnabled - Error updating role enabled state:', error_);
     res.status(500).json({ success: false, message: 'Error actualizando el estado del rol' });
   }
 };
