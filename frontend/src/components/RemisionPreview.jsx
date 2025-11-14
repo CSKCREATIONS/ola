@@ -242,10 +242,20 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
     doc.title = title;
     const head = doc.head || doc.getElementsByTagName('head')[0];
     const styleEl = doc.createElement('style');
-    try {
-      styleEl.appendChild(doc.createTextNode(styleText));
-    } catch (e) {
-      // some environments may not allow createTextNode on cross-window docs
+    // Prefer creating a text node when available; otherwise fall back to innerHTML.
+    if (doc && typeof doc.createTextNode === 'function') {
+      try {
+        styleEl.appendChild(doc.createTextNode(styleText));
+      } catch (error_) {
+        // In the unlikely case creating/appending the text node fails, fallback to innerHTML and log the error.
+        // Logging the error ensures the exception is handled (and helpful for debugging) instead of being ignored.
+        /* eslint-disable no-console */
+        console.debug('styleEl.appendChild/createTextNode failed, falling back to innerHTML', error_);
+        /* eslint-enable no-console */
+        styleEl.innerHTML = styleText;
+      }
+    } else {
+      // Environments without createTextNode (or when doc is not a typical Document)
       styleEl.innerHTML = styleText;
     }
     if (head) head.appendChild(styleEl);
