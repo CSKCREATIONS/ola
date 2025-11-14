@@ -122,11 +122,14 @@ async function fetchProductosPorProveedorHelper(proveedorId, setProductosProveed
   }
 }
 
-const findProductoById = (lista = [], id) => lista.find(p => {
-  const pid = String(id || '');
-  const cand = String(p && (p._id || p.id || p.productoId || ''));
-  return cand === pid;
-});
+const findProductoById = (lista, id) => {
+  lista = lista || [];
+  return lista.find(p => {
+    const pid = String(id || '');
+    const cand = String(p && (p._id || p.id || p.productoId || ''));
+    return cand === pid;
+  });
+};
 
 const crearProductoFromSelection = (productoSeleccionado, productoTemp = {}) => {
   const cantidad = Number(productoTemp.cantidad) || 1;
@@ -181,17 +184,17 @@ const handleProductoChangeEditarHelper = (e, productosProveedor, setProductoTemp
 };
 
 async function marcarComoCompletadaHelper(orden, fetchOrdenes) {
-  if (!orden || !orden._id) return;
+  if (!orden?._id) return;
   try {
     // Use the dedicated completar endpoint so backend runs stock update + creates Compra
     const res = await api.put(`/api/ordenes-compra/${orden._id}/completar`);
     const data = res.data || res;
-    if (data && data.success) {
+    if (data?.success) {
       await fetchOrdenes();
       Swal.fire('OK', 'Orden marcada como completada y movida al historial', 'success');
     } else {
       console.error('marcarComoCompletadaHelper respuesta inesperada', data);
-      Swal.fire('Error', data.message || 'No se pudo completar la orden', 'error');
+      Swal.fire('Error', data?.message || 'No se pudo completar la orden', 'error');
     }
   } catch (e) {
     console.error('marcarComoCompletadaHelper error', e);
@@ -276,7 +279,7 @@ function imprimirOrdenHelper(orden) {
 
 // Helper: enviar orden por correo (separado para reducir complejidad del componente)
 async function enviarOrdenPorCorreoHelper(orden) {
-  if (!orden || !orden._id) {
+  if (!orden?._id) {
     Swal.fire('Error', 'No hay orden seleccionada', 'error');
     return;
   }
@@ -300,14 +303,14 @@ async function enviarOrdenPorCorreoHelper(orden) {
     cancelButtonText: 'Cancelar',
     confirmButtonColor: '#f39c12',
     cancelButtonColor: '#6c757d',
-    preConfirm: () => {
+    preConfirm: async () => {
       const email = document.getElementById('emailDestino').value;
       const asunto = document.getElementById('asuntoEmail').value;
       const mensaje = document.getElementById('mensajeEmail').value;
-      if (!email) { Swal.showValidationMessage('Por favor ingresa un correo electrónico'); return false; }
+      if (!email) { Swal.showValidationMessage('Por favor ingresa un correo electrónico'); throw new Error('validation'); }
       // Use deterministic validator to avoid any regex backtracking issues
-      if (!isValidEmail(email)) { Swal.showValidationMessage('Por favor ingresa un correo electrónico válido'); return false; }
-      if (!asunto || asunto.trim() === '') { Swal.showValidationMessage('Por favor ingresa un asunto'); return false; }
+      if (!isValidEmail(email)) { Swal.showValidationMessage('Por favor ingresa un correo electrónico válido'); throw new Error('validation'); }
+      if (!asunto || asunto.trim() === '') { Swal.showValidationMessage('Por favor ingresa un asunto'); throw new Error('validation'); }
       return { email, asunto, mensaje };
     }
   });
@@ -387,7 +390,7 @@ export default function OrdenCompra() {
   const itemsPerPage = 10;
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+  function paginate(pageNumber) { setCurrentPage(pageNumber); }
 
   // Delegador: obtener órdenes de compra (usa el helper top-level)
   const fetchOrdenes = async () => {
@@ -465,7 +468,7 @@ export default function OrdenCompra() {
   };
 
   // Función para agregar producto en edición (EDITAR)
-  const agregarProductoEdicion = () => {
+  function agregarProductoEdicion() {
     if (!productoTemp.productoId) {
       Swal.fire('Error', 'Por favor selecciona un producto de la lista', 'error');
       return;
@@ -500,7 +503,7 @@ export default function OrdenCompra() {
       timer: 1500,
       showConfirmButton: false
     });
-  };
+  }
 
   // Cuando se selecciona un proveedor (AGREGAR)
   const handleProveedorChange = async (e) => {
@@ -518,9 +521,9 @@ export default function OrdenCompra() {
   };
 
   // Cuando se selecciona un producto de la lista desplegable (EDITAR)
-  const handleProductoChangeEditar = (e) => {
+  function handleProductoChangeEditar(e) {
     handleProductoChangeEditarHelper(e, productosProveedor, setProductoTemp);
-  };
+  }
 
   // Obtener órdenes pendientes para mostrar en la tabla
   const ordenesPendientes = ordenes.filter(orden => orden.estado === 'Pendiente');
@@ -663,11 +666,11 @@ export default function OrdenCompra() {
     setErrores({});
   };
 
-  const calcularValorTotalProducto = (p) => {
+  function calcularValorTotalProducto(p) {
     const subtotal = p.cantidad * p.valorUnitario;
     const descuento = p.descuento || 0;
     return subtotal - descuento;
-  };
+  }
 
   // agregarProducto eliminado por no utilizarse (se usa agregarProductoDesdeLista/agregarProductoEdicion)
 
@@ -858,16 +861,16 @@ export default function OrdenCompra() {
     }
   };
 
-  const validarOrdenEdicion = (orden) => {
+  function validarOrdenEdicion(orden) {
     const nuevosErrores = {};
 
     if (!orden.proveedor) nuevosErrores.proveedor = 'Seleccione un proveedor';
-    if (!orden.solicitadoPor.trim()) nuevosErrores.solicitadoPor = 'Ingrese el solicitante';
-    if (orden.productos.length === 0) nuevosErrores.productos = 'Agregue al menos un producto';
+    if (!orden.solicitadoPor || !orden.solicitadoPor.trim()) nuevosErrores.solicitadoPor = 'Ingrese el solicitante';
+    if ((orden.productos || []).length === 0) nuevosErrores.productos = 'Agregue al menos un producto';
 
     setErrores(nuevosErrores);
     return Object.keys(nuevosErrores).length === 0;
-  };
+  }
 
   const actualizarOrden = async () => {
     // Validación básica

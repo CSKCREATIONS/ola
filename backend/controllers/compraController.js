@@ -544,16 +544,19 @@ function validateId(raw) {
 async function populateProductosIfNeeded(compra) {
   if (!compra || !Array.isArray(compra.productos)) return compra;
   const Producto = require('../models/Products');
-  for (let i = 0; i < compra.productos.length; i++) {
-    const item = compra.productos[i];
+  // Use a for-of loop for simple iteration and mutate the item in-place when needed
+  for (const item of compra.productos) {
     if (item.producto && typeof item.producto === 'string') {
       try {
         const producto = await Producto.findById(item.producto);
         if (producto) {
-          compra.productos[i].producto = { _id: producto._id, name: producto.name, description: producto.description };
+          // mutate the item directly instead of indexing into the array
+          item.producto = { _id: producto._id, name: producto.name, description: producto.description };
         }
       } catch (err) {
-        console.warn('⚠️ No se pudo poblar el producto:', item.producto);
+        // Log full error details to ease debugging while keeping function resilient
+        console.warn('⚠️ No se pudo poblar el producto:', item.producto, '; error:', err?.message || err);
+        if (err && err.stack) console.debug(err.stack);
       }
     }
   }
