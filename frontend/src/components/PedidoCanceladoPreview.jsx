@@ -207,7 +207,8 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                   // Preferred: replace the documentElement's HTML without using document.write
                   newWindow.document.documentElement.innerHTML = html;
                 } catch (err) {
-                  // Fallback: populate body safely using DOM methods
+                  // Log the original error and fallback to safer DOM methods
+                  console.warn('Failed to set newWindow.document.documentElement.innerHTML, falling back to safe DOM population.', err);
                   try {
                     newWindow.document.open();
                     newWindow.document.close();

@@ -393,14 +393,17 @@ export default function PedidosAgendados() {
   // Helper: compute YYYY-MM-DD default date for Swal input from pedido fechaEntrega if available
   const pedidoDefaultDateForSwal = (pedidoId) => {
     try {
-  const p = pedidos.find(x => x._id === pedidoId) || {};
-  if (!p?.fechaEntrega) return '';
+      const p = pedidos.find(x => x._id === pedidoId) || {};
+      if (!p?.fechaEntrega) {
+        return '';
+      }
       const d = new Date(p.fechaEntrega);
       const yyyy = d.getFullYear();
       const mm = String(d.getMonth() + 1).padStart(2, '0');
       const dd = String(d.getDate()).padStart(2, '0');
       return `${yyyy}-${mm}-${dd}`;
     } catch (error_) {
+      console.error('Error computing default date for pedido:', error_);
       return '';
     }
   };

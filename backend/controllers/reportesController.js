@@ -912,7 +912,7 @@ exports.reporteSubcategorias = async (req, res) => {
                 },
                 {
                   $project: {
-                    name: { $cond: { if: "$_id", "then": "Activos", "else": "Inactivos" } },
+                    name: { $cond: [ { $eq: ['$_id', true] }, 'Activos', 'Inactivos' ] },
                     value: 1,
                     _id: 0
                   }
@@ -989,7 +989,13 @@ exports.reporteSubcategorias = async (req, res) => {
                 },
                 {
                   $project: {
-                    estado: { $cond: { if: "$__id", then: "Activos", else: "Inactivos" } },
+                    estado: {
+                      $cond: [
+                        { $eq: ['$_id', true] },
+                        'Activos',
+                        'Inactivos'
+                      ]
+                    },
                     cantidad: 1,
                     _id: 0
                   }

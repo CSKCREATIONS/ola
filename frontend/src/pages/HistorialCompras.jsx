@@ -624,20 +624,21 @@ export default function HistorialCompras() {
     `;
 
     // Inject HTML into the opened window without using document.write (deprecated)
-    const parsed = new DOMParser().parseFromString(html, 'text/html');
-    // create doctype and import the parsed <html> element
-    const doctype = win.document.implementation.createDocumentType('html', '', '');
-    const importedHtml = win.document.importNode(parsed.documentElement, true);
-    // clear any existing children and append doctype + html
-    while (win.document.firstChild) {
-      win.document.removeChild(win.document.firstChild);
-    }
-    win.document.appendChild(doctype);
-    win.document.appendChild(importedHtml);
-    win.document.close();
-    win.focus();
-    win.print();
-    win.close();
+        const parsed = new DOMParser().parseFromString(html, 'text/html');
+        // create doctype and import the parsed <html> element
+        const doctype = win.document.implementation.createDocumentType('html', '', '');
+        const importedHtml = win.document.importNode(parsed.documentElement, true);
+        // clear any existing children and append doctype + html
+        while (win.document.firstChild) {
+          // Prefer calling remove() on the child node instead of parent.removeChild(child)
+          win.document.firstChild.remove();
+        }
+        win.document.appendChild(doctype);
+        win.document.appendChild(importedHtml);
+        win.document.close();
+        win.focus();
+        win.print();
+        win.close();
   };
 
   const enviarCompraPorCorreo = async () => {

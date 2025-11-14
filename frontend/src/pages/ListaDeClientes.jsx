@@ -474,7 +474,7 @@ export default function ListaDeClientes() {
                     Clientes Registrados
                   </h4>
                   <p style={{ margin: 0, color: '#6b7280', fontSize: '14px' }}>
-                    Total: {clientesFiltrados.length} cliente{clientesFiltrados.length !== 1 ? 's' : ''}
+                    Total: {clientesFiltrados.length} cliente{clientesFiltrados.length === 1 ? '' : 's'}
                   </p>
                 </div>
               </div>

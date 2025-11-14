@@ -13,8 +13,6 @@ export default function NavVentas() {
   const [puedeVerVentasAgendadas, setPuedeVerVentasAgendadas] = useState(false);
   const [puedeVerPedidosEntregados, setPuedeVerPedidosEntregados] = useState(false);
   const [puedeVerPedidosCancelados, setPuedeVerPedidosCancelados] = useState(false);
-  const [puedeVerListaDeVentas, setPuedeVerListaDeVentas] = useState(false);
-  const [puedeVerRemisiones, setPuedeVerRemisiones] = useState(false);
   const [puedeVerListaDeClientes, setPuedeVerListaDeClientes] = useState(false);
   const [puedeVerProspectos, setPuedeVerProspectos] = useState(false);
   const [puedeVerReportesVentas, setPuedeVerReportesVentas] = useState(false);
@@ -28,15 +26,11 @@ export default function NavVentas() {
       setPuedeVerVentasAgendadas(usuario.permissions.includes('pedidosAgendados.ver'));
       setPuedeVerPedidosEntregados(usuario.permissions.includes('pedidosEntregados.ver'));
       setPuedeVerPedidosCancelados(usuario.permissions.includes('pedidosCancelados.ver'));
-      setPuedeVerListaDeVentas(usuario.permissions.includes('listaDeVentas.ver'));
       setPuedeVerListaDeClientes(usuario.permissions.includes('clientes.ver'));
       setPuedeVerProspectos(usuario.permissions.includes('prospectos.ver'));
       setPuedeVerReportesVentas(usuario.permissions.includes('reportesVentas.ver'));
-      setPuedeVerRemisiones(usuario.permissions.includes('remisiones.ver'));
     }
   }, []);
-
-  // Links con su estado de permiso asociado
   const allLinks = useMemo(() => [
     { path: "/RegistrarCotizacion", label: "Registrar cotización", visible: puedeRegistrarCotizacion },
     { path: "/ListaDeCotizaciones", label: "Lista de cotizaciones", visible: puedeVerCotizaciones },
@@ -80,8 +74,8 @@ export default function NavVentas() {
       const visible = [];
       const hidden = [];
 
-  try {
-        filteredLinks.forEach((link) => {
+      try {
+        for (const link of filteredLinks) {
           const linkElement = document.createElement('div');
           linkElement.className = 'nav-item';
           linkElement.textContent = link.label;
@@ -95,7 +89,7 @@ export default function NavVentas() {
           } else {
             hidden.push(link);
           }
-        });
+        }
       } finally {
         // Asegurar que siempre se remueva el elemento temporal
         if (tempContainer.parentNode) {

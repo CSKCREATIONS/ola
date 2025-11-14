@@ -1339,26 +1339,30 @@ export default function ListaDeCotizaciones() {
         <div className="cotizacion-modal-container">
           <div
             className="modal-overlay"
-            role="button"
-            tabIndex={0}
             aria-label="Cerrar modal"
-            onClick={(e) => {
-              // click outside the dialog closes the modal
-              if (e.target === e.currentTarget) {
-                closeModal();
-              }
-            }}
-            onTouchStart={(e) => {
-              if (e.target === e.currentTarget) closeModal();
-            }}
-            onKeyDown={(e) => {
-              // support keyboard users: close when Enter or Space is pressed while overlay is focused
-              if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
-                e.preventDefault(); // prevent scrolling on Space
-                if (e.target === e.currentTarget) closeModal();
-              }
-            }}
           >
+            <button
+              type="button"
+              className="overlay-button"
+              aria-label="Cerrar modal"
+              style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', border: 'none', background: 'transparent', padding: 0 }}
+              onClick={(e) => {
+                // click on the overlay-button closes the modal
+                if (e.target === e.currentTarget) {
+                  closeModal();
+                }
+              }}
+              onTouchStart={(e) => {
+                if (e.target === e.currentTarget) closeModal();
+              }}
+              onKeyDown={(e) => {
+                // support keyboard users: close when Enter or Space is pressed while overlay-button is focused
+                if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+                  e.preventDefault(); // prevent scrolling on Space
+                  if (e.target === e.currentTarget) closeModal();
+                }
+              }}
+            />
             <dialog
               className="modal-content-large"
               aria-label="Editar Cotización"

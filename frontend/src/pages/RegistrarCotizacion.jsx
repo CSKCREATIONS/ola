@@ -54,6 +54,11 @@ function isValidEmail(email) {
   return allLabelsValid;
 }
 
+// Normalizar y marcar tipo: mover a alcance de módulo para evitar funciones anidadas profundas
+function normalizarClientes(arr, esClienteFlag) {
+  return Array.isArray(arr) ? arr.map(c => ({ ...c, esCliente: !!esClienteFlag })) : [];
+}
+
 export default function RegistrarCotizacion() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
@@ -91,30 +96,29 @@ export default function RegistrarCotizacion() {
     const loadClientes = async () => {
       try {
         const [clientesRes, prospectosRes] = await Promise.all([
-          api.get('/api/clientes'), // sólo esCliente:true
-          api.get('/api/clientes/prospectos') // esCliente:false
+          api.get('/api/clientes'),
+          api.get('/api/prospectos')
         ]);
 
         const listaClientes = clientesRes.data?.data || clientesRes.data || [];
         const listaProspectos = prospectosRes.data?.data || prospectosRes.data || [];
 
-        // Normalizar y marcar tipo
-        const normalizar = (arr, esClienteFlag) => (Array.isArray(arr) ? arr.map(c => ({ ...c, esCliente: !!esClienteFlag })) : []);
-        const todos = [...normalizar(listaClientes, true), ...normalizar(listaProspectos, false)];
+        // Normalizar y marcar tipo (usar helper de módulo)
+        const todos = [...normalizarClientes(listaClientes, true), ...normalizarClientes(listaProspectos, false)];
 
         // De-duplicar por correo (preferir cliente real sobre prospecto si coincide)
         const dedupMap = new Map();
         for (const c of todos) {
           const key = (c.correo || '').toLowerCase().trim() || c._id;
-          if (!dedupMap.has(key)) {
-            dedupMap.set(key, c);
-          } else {
+          if (dedupMap.has(key)) {
             const existente = dedupMap.get(key);
             // Si el existente es prospecto y el nuevo es cliente, reemplazar
             if (!existente.esCliente && c.esCliente) dedupMap.set(key, c);
+          } else {
+            dedupMap.set(key, c);
           }
         }
-        const resultado = Array.from(dedupMap.values()).sort((a,b) => (a.nombre || '').localeCompare(b.nombre || ''));
+        const resultado = Array.from(dedupMap.values()).sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
         setClientes(resultado);
       } catch (err) {
         console.error('Error al cargar clientes y prospectos:', err);

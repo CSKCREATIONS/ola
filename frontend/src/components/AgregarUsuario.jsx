@@ -30,8 +30,8 @@ export default function AgregarUsuario() {
   // restricted global identifiers (avoids ESLint `no-restricted-globals` on `self`).
   const getCrypto = () => {
     // Prefer direct undefined comparison to avoid using `typeof` and prefer globalThis
-    if (globalThis.window !== undefined && globalThis.window.crypto) return globalThis.window.crypto;
-    if (globalThis.global !== undefined && globalThis.global.crypto) return globalThis.global.crypto;
+    if (globalThis.window?.crypto) return globalThis.window.crypto;
+    if (globalThis.global?.crypto) return globalThis.global.crypto;
     try {
       const g = new Function('return this')();
       if (g?.crypto) return g.crypto;
@@ -42,8 +42,8 @@ export default function AgregarUsuario() {
   };
 
   // Función para abrir el modal (puede ser llamada desde el componente padre)
-  if (typeof window !== 'undefined') {
-    window.openModalUsuario = () => {
+  if (globalThis?.window) {
+    globalThis.window.openModalUsuario = () => {
       setIsVisible(true);
     };
   }

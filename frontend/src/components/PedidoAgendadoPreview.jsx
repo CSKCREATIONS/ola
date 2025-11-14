@@ -99,30 +99,112 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
     }
   };
 
+  // Helpers to build/print the pedido content in a new window.
+  const buildStyle = () => {
+    return `
+      body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+      .header { text-align: center; margin-bottom: 30px; padding: 20px; background: linear-gradient(135deg, #fd7e14, #e85d04); color: white; border-radius: 10px; }
+      .info-section { margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; }
+      table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+      th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+      th { background: linear-gradient(135deg, #fd7e14, #e85d04); color: white; font-weight: bold; }
+      .total-row { background: #fef3c7; font-weight: bold; }
+      .status-badge { background: #fd7e14; color: white; padding: 8px 16px; border-radius: 20px; display: inline-block; }
+    `;
+  };
+
+  const trySetDocWithDOM = (doc, title, htmlContent, style) => {
+    // Preferred: manipulate DOM to set head and body safely
+    doc.open();
+    try {
+      doc.title = title;
+
+      const styleEl = doc.createElement('style');
+      styleEl.type = 'text/css';
+      styleEl.appendChild(doc.createTextNode(style));
+
+      if (!doc.head) {
+        const head = doc.createElement('head');
+        doc.documentElement.appendChild(head);
+      }
+      doc.head.appendChild(styleEl);
+
+      if (!doc.body) {
+        const body = doc.createElement('body');
+        doc.documentElement.appendChild(body);
+      }
+      doc.body.innerHTML = htmlContent;
+      return true;
+    } finally {
+      doc.close();
+    }
+  };
+
+  const trySetDocOuterHTML = (doc, title, htmlContent, style) => {
+    // Fallback: set outerHTML of documentElement
+    const html = `
+      <html>
+        <head>
+          <title>${title}</title>
+          <style>${style}</style>
+        </head>
+        <body>
+          ${htmlContent}
+        </body>
+      </html>
+    `;
+    doc.open();
+    try {
+      doc.documentElement.outerHTML = html;
+      return true;
+    } finally {
+      doc.close();
+    }
+  };
+
+  const handlePrint = () => {
+    const printContent = document.querySelector('.pdf-pedido-agendado');
+    const newWindow = window.open('', '_blank');
+    if (newWindow?.document) {
+      const doc = newWindow.document;
+      const title = `Pedido Agendado - ${datos?.numeroPedido}`;
+      const htmlContent = printContent?.innerHTML || '';
+      const style = buildStyle();
+
+      // Try DOM manipulation first
+      if (!trySetDocWithDOM(doc, title, htmlContent, style)) {
+        // Fallback to outerHTML
+        trySetDocOuterHTML(doc, title, htmlContent, style);
+      }
+
+      newWindow.focus();
+      newWindow.print();
+      newWindow.close();
+    }
+  };
+
   return (
-    <div className="modal-cotizacion-overlay" style={{
+    <div style={{
       position: 'fixed',
       top: 0,
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor: 'rgba(0, 0, 0, 0.8)',
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      zIndex: 1000,
-      padding: '1rem'
+      zIndex: 999
     }}>
       <div style={{
         backgroundColor: 'white',
-        borderRadius: '15px',
-        padding: '0',
-        maxWidth: '95vw',
-        maxHeight: '95vh',
-        width: '1000px',
+        width: '95%',
+        maxWidth: '1200px',
+        height: '90vh',
+        borderRadius: '12px',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
         display: 'flex',
         flexDirection: 'column',
-        boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
         overflow: 'hidden'
       }}>
         {/* Header del modal */}
@@ -212,31 +294,65 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                       `;
                       doc.documentElement.outerHTML = html;
                     } catch (innerErr) {
-                      // last resort: write using deprecated API only if all else fails
+                      // last resort: attempt to replace document using DOM APIs instead of doc.write
                       console.error('Error setting outerHTML:', innerErr);
-                      if (doc.write && typeof doc.write === 'function') {
-                        doc.write(`
-                          <html>
-                            <head>
-                              <title>Pedido Agendado - ${datos?.numeroPedido}</title>
-                              <style>
-                                body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
-                                .header { text-align: center; margin-bottom: 30px; padding: 20px; background: linear-gradient(135deg, #fd7e14, #e85d04); color: white; border-radius: 10px; }
-                                .info-section { margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; }
-                                table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-                                th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-                                th { background: linear-gradient(135deg, #fd7e14, #e85d04); color: white; font-weight: bold; }
-                                .total-row { background: #fef3c7; font-weight: bold; }
-                                .status-badge { background: #fd7e14; color: white; padding: 8px 16px; border-radius: 20px; display: inline-block; }
-                              </style>
-                            </head>
-                            <body>
-                              ${printContent?.innerHTML || ''}
-                            </body>
-                          </html>
-                        `);
-                      } else {
-                        console.error('Unable to write to document');
+                      const html = `
+                        <html>
+                          <head>
+                            <title>Pedido Agendado - ${datos?.numeroPedido}</title>
+                            <style>
+                              body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+                              .header { text-align: center; margin-bottom: 30px; padding: 20px; background: linear-gradient(135deg, #fd7e14, #e85d04); color: white; border-radius: 10px; }
+                              .info-section { margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; }
+                              table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                              th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+                              th { background: linear-gradient(135deg, #fd7e14, #e85d04); color: white; font-weight: bold; }
+                              .total-row { background: #fef3c7; font-weight: bold; }
+                              .status-badge { background: #fd7e14; color: white; padding: 8px 16px; border-radius: 20px; display: inline-block; }
+                            </style>
+                          </head>
+                          <body>
+                            ${printContent?.innerHTML || ''}
+                          </body>
+                        </html>
+                      `;
+
+                      try {
+                        // Prefer replacing the entire documentElement if possible
+                        if (doc.documentElement && typeof doc.documentElement.outerHTML !== 'undefined') {
+                          doc.documentElement.outerHTML = html;
+                        } else if (doc.head || doc.body) {
+                          // Rebuild head and body safely via DOM methods
+                          // Clear existing head/body
+                          if (doc.head) {
+                            while (doc.head.firstChild) doc.head.removeChild(doc.head.firstChild);
+                          }
+                          if (doc.body) {
+                            while (doc.body.firstChild) doc.body.removeChild(doc.body.firstChild);
+                          }
+
+                          // Populate head
+                          const tmp = document.createElement('div');
+                          tmp.innerHTML = html;
+                          const tmpHead = tmp.querySelector('head');
+                          const tmpBody = tmp.querySelector('body');
+
+                          if (tmpHead && doc.head) {
+                            Array.from(tmpHead.childNodes).forEach(node => {
+                              doc.head.appendChild(doc.importNode(node, true));
+                            });
+                          }
+
+                          if (tmpBody && doc.body) {
+                            Array.from(tmpBody.childNodes).forEach(node => {
+                              doc.body.appendChild(doc.importNode(node, true));
+                            });
+                          }
+                        } else {
+                          console.error('Unable to replace document content safely.');
+                        }
+                      } catch (replaceErr) {
+                        console.error('Fallback replace failed:', replaceErr);
                       }
                     }
                   } finally {

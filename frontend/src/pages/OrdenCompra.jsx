@@ -281,14 +281,29 @@ function imprimirOrdenHelper(orden) {
     const parser = new DOMParser();
     const newDoc = parser.parseFromString(html, 'text/html');
 
+    // If possible, replace the whole document element in the new window.
     if (win.document && win.document.documentElement && newDoc && newDoc.documentElement) {
-      // Prefer replaceChild/adoptNode when available
-      win.document.replaceChild(win.document.adoptNode(newDoc.documentElement), win.document.documentElement);
+      try {
+        win.document.replaceChild(win.document.adoptNode(newDoc.documentElement), win.document.documentElement);
+      } catch (e) {
+        // If replaceChild/adoptNode fails for any reason, fallback to writing the HTML string.
+        try {
+          win.document.open();
+          win.document.write(html);
+          win.document.close();
+        } catch (writeErr) {
+          // Let outer catch handle failure.
+          throw writeErr;
+        }
+      }
     } else {
-      // Simpler fallback: write the html directly
+      // Fallback: write HTML directly into the new window.
       win.document.open();
-      win.document.write(html);
-      win.document.close();
+      try {
+        win.document.write(html);
+      } finally {
+        try { win.document.close(); } catch (ignore) {}
+      }
     }
 
     win.focus();
