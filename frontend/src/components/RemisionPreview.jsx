@@ -299,24 +299,45 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
     } catch (error_) {
       try {
         trySetDocOuterHTML(newWindow.document, title, printContent?.innerHTML || '', style);
-      } catch (error2) {
+      } catch (error__) {
         // final fallback: use blob URL
+        console.debug('trySetDocOuterHTML failed, trying blob URL fallback:', error__);
         try {
           const full = `<!doctype html><html><head><meta charset="utf-8"><title>${title}</title><style>${style}</style></head><body>${printContent?.innerHTML || ''}</body></html>`;
           const blob = new Blob([full], { type: 'text/html' });
           const url = URL.createObjectURL(blob);
           newWindow.location.href = url;
-        } catch (error3) {
-          console.error('Failed to set print document:', error_, error2, error3);
-          newWindow.close();
+        } catch (error___) {
+          console.error('Failed to set print document:', error_, error__, error___);
+          try {
+            newWindow.close();
+          } catch (closeError) {
+            console.debug('Failed to close newWindow after print document error:', closeError);
+          }
           return;
         }
       }
     }
-    try { newWindow.document.close?.(); } catch (e) { /* ignore */ }
-    try { newWindow.focus?.(); } catch (e) { /* ignore */ }
-    try { newWindow.print?.(); } catch (e) { /* ignore */ }
-    try { newWindow.close?.(); } catch (e) { /* ignore */ }
+    try {
+      newWindow.document.close?.();
+    } catch (error__) {
+      console.debug('print helper: document.close failed:', error__);
+    }
+    try {
+      newWindow.focus?.();
+    } catch (error__) {
+      console.debug('print helper: focus failed:', error__);
+    }
+    try {
+      newWindow.print?.();
+    } catch (error__) {
+      console.debug('print helper: print failed:', error__);
+    }
+    try {
+      newWindow.close?.();
+    } catch (error__) {
+      console.debug('print helper: close failed:', error__);
+    }
   };
 
   return (
