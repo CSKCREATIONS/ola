@@ -1338,8 +1338,6 @@ export default function ListaDeCotizaciones() {
         <div className="cotizacion-modal-container">
           <div
             className="modal-overlay"
-            role="presentation"
-            aria-hidden="true"
             onClick={(e) => {
               // click outside the dialog closes the modal
               if (e.target === e.currentTarget) {
