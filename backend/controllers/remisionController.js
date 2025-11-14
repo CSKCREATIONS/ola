@@ -256,29 +256,37 @@ exports.probarGmail = async (req, res) => {
       });
     }
 
-    console.log('🧪 Probando Gmail SMTP con configuración:', {
-      usuario: emailUser,
-      contraseña: emailPass.substring(0, 4) + '...'
-    });
+    // Do not log secrets. Only indicate whether credentials are present.
+    console.log('🧪 Probando Gmail SMTP - usuario configurado:', !!emailUser);
 
+    // Use explicit SMTPS settings to enforce TLS (avoid generic 'service: gmail')
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: emailUser,
-        pass: emailPass
-      }
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
+      auth: { user: emailUser, pass: emailPass },
+      requireTLS: true,
+      tls: { minVersion: 'TLSv1.2' },
+      connectionTimeout: 10000
     });
 
-    // Verificar la conexión
+    // Verificar la conexión (throws on failure)
     await transporter.verify();
-    
-    console.log('✅ Gmail SMTP verificado correctamente');
-    
+
+    console.log('✅ Gmail SMTPS verificado correctamente');
+
+    // Warn if APP_URL is configured with http (insecure) so the operator can fix config
+    const appUrl = process.env.APP_URL || process.env.FRONTEND_URL;
+    if (appUrl && typeof appUrl === 'string' && appUrl.startsWith('http://')) {
+      console.warn('⚠️ APP_URL está usando http:// — se recomienda usar https:// en producción');
+    }
+
     res.json({
       message: 'Gmail SMTP configurado y verificado correctamente',
       configuracion: {
         usuario: emailUser,
-        servicio: 'gmail'
+        servicio: 'gmail_smtps',
+        secure: true
       }
     });
 
