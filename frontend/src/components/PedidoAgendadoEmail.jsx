@@ -6,9 +6,9 @@ import {
   getStoredUser,
   calculateTotal,
   formatDateIso,
-  buildSignature,
-  getCompanyName
+  
 } from '../utils/emailHelpers';
+import { makePedidoAgendadoTemplate } from '../utils/emailTemplates';
 
 export default function PedidoAgendadoEmail({ datos, onClose, onEmailSent }) {
   // Obtener usuario logueado
@@ -23,8 +23,7 @@ export default function PedidoAgendadoEmail({ datos, onClose, onEmailSent }) {
   // Función para abrir modal con datos actualizados
   const abrirModalEnvio = () => {
     // Calcular total dinámicamente si no existe
-    const totalCalculado = calculateTotal(datos) || 0;
-    const totalFinal = datos?.total || totalCalculado;
+      const totalCalculado = calculateTotal(datos) || 0;
 
     // Fecha de pedido: preferir createdAt, si no existe usar fecha, si ninguna está presente mostrar 'N/A'
     const fechaPedido = datos?.createdAt ? formatDateIso(datos.createdAt) : formatDateIso(datos?.fecha);
@@ -39,39 +38,10 @@ ${datos.observacion}
 
     // Actualizar datos autocompletados cada vez que se abre el modal
     setCorreo(datos?.cliente?.correo || '');
-    setAsunto(`Pedido Agendado ${datos?.numeroPedido || ''} - ${datos?.cliente?.nombre || 'Cliente'} | ${getCompanyName()}`);
-    setMensaje(
-      `Estimado/a ${datos?.cliente?.nombre || 'cliente'},
-
-Esperamos se encuentre muy bien. Su pedido ha sido agendado exitosamente con la siguiente información:
-
-📦 DETALLES DEL PEDIDO AGENDADO:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Número de pedido: ${datos?.numeroPedido || 'N/A'}
-• Fecha de pedido: ${fechaPedido}
-• Fecha de entrega programada: ${datos?.fechaEntrega ? formatDateIso(datos.fechaEntrega) : 'Por definir'}
-• Cliente: ${datos?.cliente?.nombre || 'N/A'}
-• Correo: ${datos?.cliente?.correo || 'N/A'}
-• Teléfono: ${datos?.cliente?.telefono || 'N/A'}
-• Ciudad: ${datos?.cliente?.ciudad || 'N/A'}
-• Estado: Agendado ✅
-• Total de productos: ${datos?.productos?.length || 0} artículos
-• TOTAL GENERAL: $${totalFinal.toLocaleString('es-ES')}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Su pedido será procesado y entregado en las fechas programadas. Mantendremos comunicación constante sobre el progreso de su orden.
-
-${observacionesBlock}¡Gracias por confiar en nosotros y esperamos cumplir con todas sus expectativas!
-
-Si tiene alguna pregunta sobre su pedido, no dude en contactarnos.
-
-Saludos cordiales,
-
-${buildSignature(usuario)}
-
-${getCompanyName()}
-🌐 Soluciones tecnológicas integrales`
-    );
+    // Use shared template helper to build subject and message
+    const { asunto: tplAsunto, mensaje: tplMensaje } = makePedidoAgendadoTemplate(datos, usuario);
+    setAsunto(tplAsunto);
+    setMensaje(tplMensaje);
     setShowEnviarModal(true);
   };
 

@@ -9,6 +9,7 @@ import {
   formatDateIso,
   getCompanyName
 } from '../utils/emailHelpers';
+import { makeCotizacionTemplate } from '../utils/emailTemplates';
 import { calcularSubtotalProducto, calcularTotales } from '../utils/calculations';
 import { formatCurrency } from '../utils/formatters';
 
@@ -64,51 +65,16 @@ export default function FormatoCotizacion({ datos, onClose, onEmailSent }) {
     const totales = calcularTotales(datos?.productos || []);
     const totalFinal = datos?.total || totales.total;
 
-  // Fecha de emisión: usar datos.fecha si existe, si no mostrar 'N/A'
-  const fechaEmision = formatDateIso(datos?.fecha);
+// Fecha de emisión: usar datos.fecha si existe, si no mostrar 'N/A'
+const fechaEmision = formatDateIso(datos?.fecha);
 
-  // Actualizar datos autocompletados cada vez que se abre el modal
-    setCorreo(datos?.cliente?.correo || '');
-    setAsunto(`Pedido Agendado ${datos?.numeroPedido || datos?.codigo || ''} - ${datos?.cliente?.nombre || 'Cliente'} | ${getCompanyName()}`);
-    setMensaje(
-      `Estimado/a ${datos?.cliente?.nombre || 'cliente'},
-
-Esperamos se encuentre muy bien. Adjunto encontrará la información del pedido agendado:
-
-📋 DETALLES DEL PEDIDO:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Número de pedido: ${datos?.numeroPedido || datos?.codigo || 'N/A'}
-• Fecha de emisión: ${fechaEmision}
-• Fecha de entrega programada: ${formatDateIso(datos?.fechaEntrega)}
-• Cliente: ${datos?.cliente?.nombre || 'N/A'}
-• Correo: ${datos?.cliente?.correo || 'N/A'}
-• Teléfono: ${datos?.cliente?.telefono || 'N/A'}
-• Ciudad: ${datos?.cliente?.ciudad || 'N/A'}
-• Estado actual: ${datos?.estado || 'Agendado'}
-• Total de productos: ${datos?.productos?.length || 0} artículos
-• TOTAL PEDIDO: $${totalFinal.toLocaleString('es-ES')}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-${datos?.descripcion ? `📝 DESCRIPCIÓN:
-${datos.descripcion}
-
-` : ''}${datos?.condicionesPago ? `💳 CONDICIONES DE PAGO:
-${datos.condicionesPago}
-
-` : ''}Su pedido ha sido programado y se encuentra en proceso de preparación. Le notificaremos cuando esté listo para entrega.
-
-¡Gracias por confiar en nosotros!
-
-Saludos cordiales,
-
-${usuario?.firstName || usuario?.nombre || 'Equipo de ventas'} ${usuario?.surname || ''}${usuario?.email ? `
-📧 Correo: ${usuario.email}` : ''}${usuario?.telefono ? `
-📞 Teléfono: ${usuario.telefono}` : ''}
-
-${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
-🌐 Soluciones tecnológicas integrales`
-    );
-    setShowEnviarModal(true);
+// Actualizar datos autocompletados cada vez que se abre el modal
+// Usar la plantilla compartida para asunto/mensaje y prellenar el correo destinatario
+setCorreo(datos?.cliente?.correo || '');
+const { asunto: tplAsunto, mensaje: tplMensaje } = makeCotizacionTemplate(datos, usuario);
+setAsunto(tplAsunto);
+setMensaje(tplMensaje);
+setShowEnviarModal(true);
   };
 
   // Función para enviar por correo
