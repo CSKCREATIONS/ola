@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import Fijo from '../components/Fijo'
 import AgregarUsuario from '../components/AgregarUsuario'
 import NavUsuarios from '../components/NavUsuarios'
+import SharedListHeaderCard from '../components/SharedListHeaderCard'
 import { openModal } from '../funciones/animaciones'
 import EditarUsuario from '../components/EditarUsuario'
 import Swal from 'sweetalert2';
@@ -485,137 +486,76 @@ export default function ListaDeUsuarios() {
       <div className="content">
         <NavUsuarios />
         <div className="contenido-modulo">
-          {/* Encabezado profesional */}
-          <div style={{
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            borderRadius: '20px',
-            padding: '30px',
-            marginBottom: '30px',
-            color: 'white',
-            position: 'relative',
-            overflow: 'hidden'
-          }}>
-            <div style={{
-              position: 'absolute',
-              top: '-50%',
-              right: '-10%',
-              width: '300px',
-              height: '300px',
-              background: 'rgba(255,255,255,0.1)',
-              borderRadius: '50%',
-              zIndex: 1
-            }}></div>
-            <div style={{ position: 'relative', zIndex: 2 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '20px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                  <div style={{
-                    background: 'rgba(255,255,255,0.2)',
-                    borderRadius: '16px',
-                    padding: '20px',
-                    backdropFilter: 'blur(10px)'
-                  }}>
-                    <i className="fa-solid fa-users" style={{ fontSize: '2.5rem', color: 'white' }}></i>
-                  </div>
-                  <div>
-                    <h2 style={{ margin: '0 0 8px 0', fontSize: '2rem', fontWeight: '700' }}>
-                      Gestión de Usuarios
-                    </h2>
-                    <p style={{ margin: 0, fontSize: '1.1rem', opacity: 0.9 }}>
-                      Administre y supervise todos los usuarios del sistema
-                    </p>
-                  </div>
-                </div>
-                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                  <button
-                    onClick={() => exportToExcel(todosLosUsuarios)}
-                    style={{
-                      background: 'rgba(255,255,255,0.2)',
-                      border: '2px solid rgba(255,255,255,0.3)',
-                      borderRadius: '12px',
-                      padding: '12px 20px',
-                      color: 'white',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      cursor: 'pointer',
-                      transition: 'all 0.3s ease',
-                      backdropFilter: 'blur(10px)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.target.style.background = 'rgba(255,255,255,0.3)';
-                      e.target.style.transform = 'translateY(-2px)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.target.style.background = 'rgba(255,255,255,0.2)';
-                      e.target.style.transform = 'translateY(0)';
-                    }}
-                  >
-                    <i className="fa-solid fa-file-excel"></i><span>Exportar Excel</span>
-                  </button>
-                  <button
-                    onClick={exportarPDF}
-                    style={{
-                      background: 'rgba(255,255,255,0.2)',
-                      border: '2px solid rgba(255,255,255,0.3)',
-                      borderRadius: '12px',
-                      padding: '12px 20px',
-                      color: 'white',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      cursor: 'pointer',
-                      transition: 'all 0.3s ease',
-                      backdropFilter: 'blur(10px)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.target.style.background = 'rgba(255,255,255,0.3)';
-                      e.target.style.transform = 'translateY(-2px)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.target.style.background = 'rgba(255,255,255,0.2)';
-                      e.target.style.transform = 'translateY(0)';
-                    }}
-                   >
-                    <i className="fa-solid fa-file-pdf"></i><span>Exportar PDF</span>
-                  </button>
-                  {puedeCrearUsuario && (
-                    <button 
-                      onClick={() => openModal('agregar-usuario')}
-                      style={{
-                        background: 'linear-gradient(135deg, #10b981, #059669)',
-                        border: 'none',
-                        borderRadius: '12px',
-                        padding: '12px 24px',
-                        color: 'white',
-                        fontSize: '14px',
-                        fontWeight: '600',
-                        cursor: 'pointer',
-                        transition: 'all 0.3s ease',
-                        boxShadow: '0 4px 15px rgba(16, 185, 129, 0.4)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.target.style.transform = 'translateY(-2px)';
-                        e.target.style.boxShadow = '0 6px 20px rgba(16, 185, 129, 0.6)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.target.style.transform = 'translateY(0)';
-                        e.target.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.4)';
-                      }}
-               >
-                 <i className="fa-solid fa-plus"></i><span>Crear Usuario</span>
-                    </button>
-                  )}
-                </div>
-              </div>
+          <SharedListHeaderCard
+            title="Gestión de Usuarios"
+            subtitle="Administre y supervise todos los usuarios del sistema"
+            iconClass="fa-solid fa-users"
+          >
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+              <button
+                onClick={() => exportToExcel(todosLosUsuarios)}
+                style={{
+                  background: 'rgba(255,255,255,0.2)',
+                  border: '2px solid rgba(255,255,255,0.3)',
+                  borderRadius: '12px',
+                  padding: '12px 20px',
+                  color: 'white',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  backdropFilter: 'blur(10px)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+              >
+                <i className="fa-solid fa-file-excel"></i><span>Exportar Excel</span>
+              </button>
+              <button
+                onClick={exportarPDF}
+                style={{
+                  background: 'rgba(255,255,255,0.2)',
+                  border: '2px solid rgba(255,255,255,0.3)',
+                  borderRadius: '12px',
+                  padding: '12px 20px',
+                  color: 'white',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  backdropFilter: 'blur(10px)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+              >
+                <i className="fa-solid fa-file-pdf"></i><span>Exportar PDF</span>
+              </button>
+              {puedeCrearUsuario && (
+                <button 
+                  onClick={() => openModal('agregar-usuario')}
+                  style={{
+                    background: 'linear-gradient(135deg, #10b981, #059669)',
+                    border: 'none',
+                    borderRadius: '12px',
+                    padding: '12px 24px',
+                    color: 'white',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    boxShadow: '0 4px 15px rgba(16, 185, 129, 0.4)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}
+                >
+                  <i className="fa-solid fa-plus"></i><span>Crear Usuario</span>
+                </button>
+              )}
             </div>
-          </div>
+          </SharedListHeaderCard>
 
           {/* Estadísticas avanzadas */}
           <div style={{

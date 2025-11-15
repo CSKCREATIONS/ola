@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { calcularSubtotalProducto } from '../utils/calculations';
 import { formatCurrency } from '../utils/formatters';
+import OrderDetailsHeader from './OrderDetailsHeader';
 
 export default function DetallesOrdenModal({ visible, orden, onClose, onPrint, onSendEmail }) {
   const modalRef = useRef(null);
@@ -27,8 +28,8 @@ export default function DetallesOrdenModal({ visible, orden, onClose, onPrint, o
       pos2 = pos4 - e.clientY;
       pos3 = e.clientX;
       pos4 = e.clientY;
-      modal.style.top = (modal.offsetTop - pos2) + 'px';
-      modal.style.left = (modal.offsetLeft - pos1) + 'px';
+      modal.style.top = (modal.offsetTop - pos2) + "px";
+      modal.style.left = (modal.offsetLeft - pos1) + "px";
     };
 
     const closeDragElement = () => {
@@ -36,8 +37,10 @@ export default function DetallesOrdenModal({ visible, orden, onClose, onPrint, o
       document.onmousemove = null;
     };
 
-    const header = modal.querySelector('.pdf-orden-compra .header') || modal.querySelector('.modal-header-realista');
-    if (header) header.onmousedown = dragMouseDown;
+    const header = modal.querySelector('.modal-header-realista');
+    if (header) {
+      header.onmousedown = dragMouseDown;
+    }
 
     return () => {
       if (header) header.onmousedown = null;
@@ -46,82 +49,72 @@ export default function DetallesOrdenModal({ visible, orden, onClose, onPrint, o
     };
   }, [visible]);
 
-  if (!visible || !orden) return null;
-
   return (
-    <div className="modal-overlay">
-      <div
-        className="modal-realista modal-md"
-        style={{ maxWidth: '700px', width: '90%', position: 'fixed', cursor: 'move' }}
-        id="modalMovible"
-        ref={modalRef}
-      >
-        
+      <div className="modal-overlay">
+        <div
+          className="modal-realista modal-md"
+          style={{ maxWidth: '700px', width: '90%', position: 'fixed', cursor: 'move' }}
+          id="modalMovible"
+          ref={modalRef}
+        >
 
-        <div className="modal-body" style={{ padding: 0, maxHeight: '70vh', overflowY: 'auto' }}>
-          <div style={{ background: 'linear-gradient(135deg, #6a1b9a, #9b59b6)', color: 'white', padding: '1.5rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                <i className="fa-solid fa-file-invoice" style={{ fontSize: '1.8rem' }} aria-hidden={true}></i>
-                <div>
-                  <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 'bold' }}>ORDEN DE COMPRA</h2>
-                  <p style={{ margin: 0, opacity: 0.95, fontSize: '0.95rem' }}>N° {orden.numeroOrden || 'Sin número'}</p>
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                <button
-                  onClick={() => {
-                    const printContent = document.querySelector('.pdf-orden-compra');
-                    if (!printContent) return;
-                    const newWindow = window.open('', '_blank');
-                    if (!newWindow) return;
-                    const html = `
-                      <html>
-                        <head>
-                          <title>Orden de Compra - ${orden.numeroOrden}</title>
-                                <style>
-                                  body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
-                                  .header { text-align: center; margin-bottom: 30px; padding: 20px; background: linear-gradient(135deg, #6a1b9a, #9b59b6); color: white; border-radius: 10px; }
-                                  .info-section { margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; }
-                                  table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-                                  th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-                                  th { background: linear-gradient(135deg, #6a1b9a, #9b59b6); color: white; font-weight: bold; }
-                                  .total-row { background: #fef3c7; font-weight: bold; }
-                                  .status-badge { background: #6a1b9a; color: white; padding: 8px 16px; border-radius: 20px; display: inline-block; }
-                                </style>
-                        </head>
-                        <body>
-                          ${printContent.innerHTML}
-                        </body>
-                      </html>
-                    `;
-                    const doc = newWindow.document;
-                    // Avoid deprecated document.write by setting the documentElement's HTML
-                    doc.open();
-                    doc.documentElement.innerHTML = html;
-                    doc.close();
-                    newWindow.focus();
-                    newWindow.print();
-                    newWindow.close();
-                  }}
-                  style={{
-                    background: 'rgba(255,255,255,0.2)',
-                    border: 'none',
-                    borderRadius: '8px',
-                    padding: '0.6rem 0.8rem',
-                    color: 'white',
-                    cursor: 'pointer'
-                  }}
-                >
-                  <i className="fa-solid fa-print" aria-hidden={true}></i>
-                </button>
-                <button className="btn" onClick={() => onSendEmail(orden)} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: '8px', padding: '0.6rem 0.8rem', color: 'white', cursor: 'pointer' }}><i className="fa-solid fa-envelope"></i></button>
-                <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: '8px', padding: '0.6rem 0.8rem', color: 'white', cursor: 'pointer' }}><i className="fa-solid fa-times"></i></button>
-              </div>
-            </div>
-          </div>
+          <div className="modal-body" style={{ padding: 0, maxHeight: '70vh', overflowY: 'auto' }}>
+            <OrderDetailsHeader
+              iconClass="fa-solid fa-file-invoice"
+              title="ORDEN DE COMPRA"
+              subtitle={`N° ${orden.numeroOrden || 'Sin número'}`}
+              onClose={onClose}
+            >
+              <button
+                onClick={() => {
+                  const printContent = document.querySelector('.pdf-orden-compra .header') || modalRef.current.querySelector('.pdf-orden-compra .header');
+                  if (!printContent) return;
+                  const newWindow = window.open('', '_blank');
+                  if (!newWindow) return;
+                  const html = `
+                    <html>
+                      <head>
+                        <title>Orden de Compra - ${orden.numeroOrden}</title>
+                              <style>
+                                body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+                                .header { text-align: center; margin-bottom: 30px; padding: 20px; background: linear-gradient(135deg, #6a1b9a, #9b59b6); color: white; border-radius: 10px; }
+                                .info-section { margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; }
+                                table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                                th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+                                th { background: linear-gradient(135deg, #6a1b9a, #9b59b6); color: white; font-weight: bold; }
+                                .total-row { background: #fef3c7; font-weight: bold; }
+                                .status-badge { background: #6a1b9a; color: white; padding: 8px 16px; border-radius: 20px; display: inline-block; }
+                              </style>
+                      </head>
+                      <body>
+                        ${printContent.innerHTML}
+                      </body>
+                    </html>
+                  `;
+                  const doc = newWindow.document;
+                  // Avoid deprecated document.write by setting the documentElement's HTML
+                  doc.open();
+                  doc.documentElement.innerHTML = html;
+                  doc.close();
+                  newWindow.focus();
+                  newWindow.print();
+                  newWindow.close();
+                }}
+                style={{
+                  background: 'rgba(255,255,255,0.2)',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '0.6rem 0.8rem',
+                  color: 'white',
+                  cursor: 'pointer'
+                }}
+              >
+                <i className="fa-solid fa-print" aria-hidden={true}></i>
+              </button>
+              <button className="btn" onClick={() => onSendEmail(orden)} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: '8px', padding: '0.6rem 0.8rem', color: 'white', cursor: 'pointer' }}><i className="fa-solid fa-envelope"></i></button>
+            </OrderDetailsHeader>
 
-          <div style={{ flex: 1, overflow: 'auto', padding: '1.5rem', backgroundColor: '#f8f9fa' }}>
+            <div style={{ flex: 1, overflow: 'auto', padding: '1.5rem', backgroundColor: '#f8f9fa' }}>
             <div
               className="pdf-orden-compra"
               style={{ background: '#fff', padding: '2rem', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}

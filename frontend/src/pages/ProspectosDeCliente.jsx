@@ -1,5 +1,6 @@
 import Fijo from '../components/Fijo'
 import NavVentas from '../components/NavVentas'
+import SharedListHeaderCard from '../components/SharedListHeaderCard'
 import { useLocation } from 'react-router-dom';
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
@@ -340,109 +341,56 @@ export default function ListaDeClientes() {
       <div className="content">
         <NavVentas />
         <div className="contenido-modulo">
-          {/* Encabezado profesional */}
-          <div style={{
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            borderRadius: '20px',
-            padding: '30px',
-            marginBottom: '30px',
-            color: 'white',
-            position: 'relative',
-            overflow: 'hidden'
-          }}>
-            <div style={{
-              position: 'absolute',
-              top: '-50%',
-              right: '-10%',
-              width: '300px',
-              height: '300px',
-              background: 'rgba(255,255,255,0.1)',
-              borderRadius: '50%',
-              zIndex: 1
-            }}></div>
-            <div style={{ position: 'relative', zIndex: 2 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '20px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                  <div style={{
-                    background: 'rgba(255,255,255,0.2)',
-                    borderRadius: '16px',
-                    padding: '20px',
-                    backdropFilter: 'blur(10px)'
-                  }}>
-                    <i className="fa-solid fa-chart-line" style={{ fontSize: '2.5rem', color: 'white' }}></i>
-                  </div>
-                  <div>
-                    <h2 style={{ margin: '0 0 8px 0', fontSize: '2rem', fontWeight: '700' }}>
-                      Prospectos de Clientes
-                    </h2>
-                    <p style={{ margin: 0, fontSize: '1.1rem', opacity: 0.9 }}>
-                      Gestiona y supervisa los clientes potenciales
-                    </p>
-                  </div>
-                </div>
-                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                  <button
-                    onClick={exportToExcel}
-                    style={{
-                      background: 'rgba(255,255,255,0.2)',
-                      border: '2px solid rgba(255,255,255,0.3)',
-                      borderRadius: '12px',
-                      padding: '12px 20px',
-                      color: 'white',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      cursor: 'pointer',
-                      transition: 'all 0.3s ease',
-                      backdropFilter: 'blur(10px)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.target.style.background = 'rgba(255,255,255,0.3)';
-                      e.target.style.transform = 'translateY(-2px)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.target.style.background = 'rgba(255,255,255,0.2)';
-                      e.target.style.transform = 'translateY(0)';
-                    }}
-                  >
-                    <i className="fa-solid fa-file-excel"></i>
-                    <span>Exportar Excel</span>
-                  </button>
-                  <button
-                    onClick={exportarPDF}
-                    style={{
-                      background: 'rgba(255,255,255,0.2)',
-                      border: '2px solid rgba(255,255,255,0.3)',
-                      borderRadius: '12px',
-                      padding: '12px 20px',
-                      color: 'white',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      cursor: 'pointer',
-                      transition: 'all 0.3s ease',
-                      backdropFilter: 'blur(10px)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.target.style.background = 'rgba(255,255,255,0.3)';
-                      e.target.style.transform = 'translateY(-2px)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.target.style.background = 'rgba(255,255,255,0.2)';
-                      e.target.style.transform = 'translateY(0)';
-                    }}
-                  >
-                    <i className="fa-solid fa-file-pdf"></i>
-                    <span>Exportar PDF</span>
-                  </button>
-                </div>
-              </div>
+          <SharedListHeaderCard
+            title="Prospectos de Clientes"
+            subtitle="Gestiona y supervisa los clientes potenciales"
+            iconClass="fa-solid fa-chart-line"
+          >
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+              <button
+                onClick={exportToExcel}
+                style={{
+                  background: 'rgba(255,255,255,0.2)',
+                  border: '2px solid rgba(255,255,255,0.3)',
+                  borderRadius: '12px',
+                  padding: '12px 20px',
+                  color: 'white',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  backdropFilter: 'blur(10px)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+              >
+                <i className="fa-solid fa-file-excel"></i>
+                <span>Exportar Excel</span>
+              </button>
+              <button
+                onClick={exportarPDF}
+                style={{
+                  background: 'rgba(255,255,255,0.2)',
+                  border: '2px solid rgba(255,255,255,0.3)',
+                  borderRadius: '12px',
+                  padding: '12px 20px',
+                  color: 'white',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  backdropFilter: 'blur(10px)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+              >
+                <i className="fa-solid fa-file-pdf"></i>
+                <span>Exportar PDF</span>
+              </button>
             </div>
-          </div>
+          </SharedListHeaderCard>
 
           {/* Estadísticas avanzadas */}
           <div style={{

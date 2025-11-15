@@ -6,7 +6,6 @@ import './FormatoCotizacion.css';
 import api from '../api/axiosConfig';
 import {
   getStoredUser,
-  formatDateIso
 } from '../utils/emailHelpers';
 import { makeCotizacionTemplate } from '../utils/emailTemplates';
 import { calcularSubtotalProducto, calcularTotales } from '../utils/calculations';
@@ -61,19 +60,16 @@ export default function FormatoCotizacion({ datos, onClose, onEmailSent }) {
   // Función para abrir modal con datos actualizados
   const abrirModalEnvio = () => {
     // Calcular total dinámicamente usando helper compartido
-    const totales = calcularTotales(datos?.productos || []);
-    const totalFinal = datos?.total || totales.total;
 
 // Fecha de emisión: usar datos.fecha si existe, si no mostrar 'N/A'
-const fechaEmision = formatDateIso(datos?.fecha);
 
 // Actualizar datos autocompletados cada vez que se abre el modal
 // Usar la plantilla compartida para asunto/mensaje y prellenar el correo destinatario
-setCorreo(datos?.cliente?.correo || '');
-const { asunto: tplAsunto, mensaje: tplMensaje } = makeCotizacionTemplate(datos, usuario);
-setAsunto(tplAsunto);
-setMensaje(tplMensaje);
-setShowEnviarModal(true);
+    setCorreo(datos?.cliente?.correo || '');
+    const { asunto: tplAsunto, mensaje: tplMensaje } = makeCotizacionTemplate(datos, usuario);
+    setAsunto(tplAsunto);
+    setMensaje(tplMensaje);
+    setShowEnviarModal(true);
   };
 
   // Función para enviar por correo

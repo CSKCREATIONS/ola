@@ -9,6 +9,7 @@ import api from '../api/axiosConfig';
 import { randomString } from '../utils/secureRandom';
 import { calcularTotales as calcularTotalesShared, sumarProp } from '../utils/calculations';
 import { isValidEmail } from '../utils/emailHelpers';
+import OrderDetailsHeader from '../components/OrderDetailsHeader';
 
 // CSS inyectado para diseño avanzado
 const advancedStyles = `
@@ -1145,71 +1146,22 @@ JLA Global Company</textarea>
             </div>
           )}
 
-          {/* Modal de detalles de la compra */}
-          {modalDetallesVisible && compraSeleccionada && (
-    <div className="modal-overlay">
-        <div className="modal-realista modal-lg" style={{ 
+            {/* Modal de detalles de la compra */}
+            {modalDetallesVisible && compraSeleccionada && (
+        <div className="modal-overlay">
+          <div className="modal-realista modal-lg" style={{ 
             maxWidth: '900px', 
             width: '95%',
             cursor: 'move'
-        }} id="modalCompraMovible">
+          }} id="modalCompraMovible">
             
-            {/* Header mejorado */}
-            <div className="modal-header-realista" style={{
-              background: 'linear-gradient(135deg, #6a1b9a, #9b59b6)',
-                color: 'white',
-                padding: '1.5rem 2rem',
-                borderTopLeftRadius: '12px',
-                borderTopRightRadius: '12px',
-                cursor: 'move'
-            }}>
-                <div style={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    alignItems: 'center',
-                    width: '100%'
-                }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                        <i className="fa-solid fa-receipt" style={{ fontSize: '1.8rem' }} aria-hidden={true}></i>
-                        <div>
-                            <h5 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 'bold' }}>
-                                COMPRA CONFIRMADA
-                            </h5>
-                            <p style={{ margin: 0, opacity: 0.9, fontSize: '1rem' }}>
-                                N°: <strong>{compraSeleccionada.numeroOrden}</strong>
-                            </p>
-                        </div>
-                    </div>
-                    <button 
-                        className="modal-close-realista" 
-                        onClick={() => setModalDetallesVisible(false)}
-                        style={{
-                            background: 'rgba(255,255,255,0.2)',
-                            border: 'none',
-                            color: 'white',
-                            fontSize: '1.8rem',
-                            cursor: 'pointer',
-                            borderRadius: '50%',
-                            width: '40px',
-                            height: '40px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            transition: 'all 0.3s ease'
-                        }}
-                        onMouseEnter={(e) => {
-                            e.target.style.background = 'rgba(255,255,255,0.3)';
-                            e.target.style.transform = 'scale(1.1)';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.target.style.background = 'rgba(255,255,255,0.2)';
-                            e.target.style.transform = 'scale(1)';
-                        }}
-                    >
-                        &times;
-                    </button>
-                </div>
-            </div>
+            {/* Header mejorado (shared) */}
+            <OrderDetailsHeader
+              iconClass="fa-solid fa-receipt"
+              title="COMPRA CONFIRMADA"
+              subtitle={<>N°: <strong>{compraSeleccionada.numeroOrden}</strong></>}
+              onClose={() => setModalDetallesVisible(false)}
+            />
 
             {/* Body con diseño mejorado */}
             <div className="modal-body" style={{ padding: '2rem', maxHeight: '70vh', overflowY: 'auto' }}>
