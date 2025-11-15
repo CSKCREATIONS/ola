@@ -7,9 +7,12 @@ import jsPDF from "jspdf";
 import api from '../api/axiosConfig';
 import Swal from 'sweetalert2';
 import '../App.css';
+import '../cotizaciones-modal.css';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import CotizacionPreview from '../components/CotizacionPreview';
+import { calcularSubtotalProducto, calcularTotales } from '../utils/calculations';
+import { formatCurrency } from '../utils/formatters';
 
 export default function ListaDeCotizaciones() {
   const [cotizaciones, setCotizaciones] = useState([]);
@@ -331,7 +334,7 @@ export default function ListaDeCotizaciones() {
     });
 
     try {
-      // Calcular subtotales antes de guardar
+      // Calcular subtotales antes de guardar usando helper compartido
       const cotizacionConSubtotales = {
         ...cotizacionSeleccionada,
         productos: cotizacionSeleccionada.productos?.map(p => ({
@@ -493,21 +496,8 @@ export default function ListaDeCotizaciones() {
     setCotizacionSeleccionada(null);
   };
 
-  // Funciones de cálculo mejoradas
-  const calcularSubtotalProducto = (producto) => {
-    const cantidad = Number.parseFloat(producto?.cantidad) || 0;
-    const precio = Number.parseFloat(producto?.valorUnitario) || 0;
-    const descuento = Number.parseFloat(producto?.descuento) || 0;
-    return cantidad * precio * (1 - descuento / 100);
-  };
-
-  // calcularTotalDescuentos y calcularTotalFinal eliminadas (no utilizadas directamente)
-
-  const subtotal = cotizacionSeleccionada?.productos?.reduce((acc, p) => {
-    const cantidad = Number.parseFloat(p?.cantidad) || 0;
-    const precio = Number.parseFloat(p?.valorUnitario) || 0;
-    return acc + cantidad * precio;
-  }, 0) || 0;
+  // Cálculo de subtotales usando helper compartido
+  const subtotal = calcularTotales(cotizacionSeleccionada?.productos || []).subtotal;
 
   // enviarCorreo, imprimir y abrirFormato eliminados (no usados)
 
@@ -1646,7 +1636,7 @@ export default function ListaDeCotizaciones() {
                             <div className="subtotal-producto">
                               <span>Subtotal: </span>
                               <strong>
-                                ${((producto.cantidad || 0) * (producto.valorUnitario || 0) * (1 - (producto.descuento || 0) / 100)).toLocaleString('es-CO', { minimumFractionDigits: 2 })}
+                                {formatCurrency(calcularSubtotalProducto(producto))}
                               </strong>
                             </div>
                           </div>
@@ -1657,32 +1647,25 @@ export default function ListaDeCotizaciones() {
 
                   <div className="total-section">
                     <div className="total-breakdown">
-                      <div className="total-row">
-                        <span>Subtotal:</span>
-                        <span>${subtotal.toLocaleString('es-CO', { minimumFractionDigits: 2 })}</span>
-                      </div>
-                      <div className="total-row descuentos">
-                        <span>Descuentos aplicados:</span>
-                        <span>
-                          ${(cotizacionSeleccionada.productos?.reduce((acc, p) => {
-                            const cantidad = Number.parseFloat(p?.cantidad) || 0;
-                            const precio = Number.parseFloat(p?.valorUnitario) || 0;
-                            const descuento = Number.parseFloat(p?.descuento) || 0;
-                            return acc + (cantidad * precio * descuento / 100);
-                          }, 0) || 0).toLocaleString('es-CO', { minimumFractionDigits: 2 })}
-                        </span>
-                      </div>
-                      <div className="total-row total-final">
-                        <span>Total Final:</span>
-                        <strong>
-                          ${(cotizacionSeleccionada.productos?.reduce((acc, p) => {
-                            const cantidad = Number.parseFloat(p?.cantidad) || 0;
-                            const precio = Number.parseFloat(p?.valorUnitario) || 0;
-                            const descuento = Number.parseFloat(p?.descuento) || 0;
-                            return acc + (cantidad * precio * (1 - descuento / 100));
-                          }, 0) || 0).toLocaleString('es-CO', { minimumFractionDigits: 2 })}
-                        </strong>
-                      </div>
+                      {(() => {
+                        const totales = calcularTotales(cotizacionSeleccionada.productos || []);
+                        return (
+                          <>
+                            <div className="total-row">
+                              <span>Subtotal:</span>
+                              <span>{formatCurrency(totales.subtotal)}</span>
+                            </div>
+                            <div className="total-row descuentos">
+                              <span>Descuentos aplicados:</span>
+                              <span>{formatCurrency(totales.descuentos)}</span>
+                            </div>
+                            <div className="total-row total-final">
+                              <span>Total Final:</span>
+                              <strong>{formatCurrency(totales.total)}</strong>
+                            </div>
+                          </>
+                        );
+                      })()}
                     </div>
                   </div>
                 </div>

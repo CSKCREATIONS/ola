@@ -7,7 +7,7 @@ import jsPDF from 'jspdf';
 import * as XLSX from 'xlsx';
 import Swal from 'sweetalert2';
 import api from '../api/axiosConfig';
-import { formatDateIso, calculateTotal } from '../utils/emailHelpers';
+import { formatDateIso, calculateTotal, sumarTotalesLista } from '../utils/emailHelpers';
 
 /* Estilos CSS avanzados para Pedidos Cancelados */
 const pedidosCanceladosStyles = `
@@ -366,7 +366,7 @@ export default function PedidosCancelados() {
                 </div>
                 <div>
                   <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                    ${pedidosCancelados.reduce((sum, p) => sum + calculateTotal(p), 0).toLocaleString('es-CO')}
+                    ${sumarTotalesLista(pedidosCancelados).toLocaleString('es-CO')}
                   </h3>
                   <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
                     Valor Perdido

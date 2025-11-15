@@ -9,6 +9,8 @@ import {
   formatDateIso,
   getCompanyName
 } from '../utils/emailHelpers';
+import { calcularSubtotalProducto, calcularTotales } from '../utils/calculations';
+import { formatCurrency } from '../utils/formatters';
 
 export default function FormatoCotizacion({ datos, onClose, onEmailSent }) {
   const navigate = useNavigate();
@@ -58,16 +60,9 @@ export default function FormatoCotizacion({ datos, onClose, onEmailSent }) {
 
   // Función para abrir modal con datos actualizados
   const abrirModalEnvio = () => {
-    // Calcular total dinámicamente si no existe
-    const totalCalculado = datos?.productos?.reduce((total, producto) => {
-      const cantidad = Number.parseFloat(producto.cantidad) || 0;
-      const valorUnitario = Number.parseFloat(producto.valorUnitario) || 0;
-      const descuento = Number.parseFloat(producto.descuento) || 0;
-      const subtotal = cantidad * valorUnitario * (1 - descuento / 100);
-      return total + subtotal;
-    }, 0) || 0;
-    
-  const totalFinal = datos?.total || totalCalculado;
+    // Calcular total dinámicamente usando helper compartido
+    const totales = calcularTotales(datos?.productos || []);
+    const totalFinal = datos?.total || totales.total;
 
   // Fecha de emisión: usar datos.fecha si existe, si no mostrar 'N/A'
   const fechaEmision = formatDateIso(datos?.fecha);
@@ -316,15 +311,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                   <td>{p.cantidad}</td>
                   <td>{p.valorUnitario}</td>
                   <td>{p.descuento}</td>
-                  <td>{
-                    (() => {
-                      const cantidad = Number.parseFloat(p.cantidad) || 0;
-                      const valorUnitario = Number.parseFloat(p.valorUnitario) || 0;
-                      const descuento = Number.parseFloat(p.descuento) || 0;
-                      const subtotal = cantidad * valorUnitario * (1 - descuento / 100);
-                      return subtotal.toFixed(2);
-                    })()
-                  }</td>
+                  <td>{formatCurrency(calcularSubtotalProducto(p), { withSymbol: false })}</td>
                 </tr>
               ))}
               {/* Fila de total */}
@@ -333,15 +320,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                   <td colSpan={4}></td>
                   <td style={{ fontWeight: 'bold', textAlign: 'right' }}>Total</td>
                   <td style={{ fontWeight: 'bold' }}>
-                    {datos.productos
-                      .reduce((acc, p) => {
-                        const cantidad = Number.parseFloat(p.cantidad) || 0;
-                        const valorUnitario = Number.parseFloat(p.valorUnitario) || 0;
-                        const descuento = Number.parseFloat(p.descuento) || 0;
-                        const subtotal = cantidad * valorUnitario * (1 - descuento / 100);
-                        return acc + subtotal;
-                      }, 0)
-                      .toFixed(2)}
+                    {formatCurrency(calcularTotales(datos.productos).total, { withSymbol: false })}
                   </td>
                 </tr>
               )}
@@ -374,13 +353,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               <div style={{ backgroundColor: '#f8f9fa', padding: '10px', borderRadius: '5px', marginBottom: '1rem', fontSize: '14px' }}>
                 <strong>Pedido:</strong> {datos?.numeroPedido || datos?.codigo}<br/>
                 <strong>Cliente:</strong> {datos?.cliente?.nombre}<br/>
-                <strong>Total:</strong> ${datos?.productos?.reduce((acc, p) => {
-                  const cantidad = Number.parseFloat(p.cantidad) || 0;
-                  const valorUnitario = Number.parseFloat(p.valorUnitario) || 0;
-                  const descuento = Number.parseFloat(p.descuento) || 0;
-                  const subtotal = cantidad * valorUnitario * (1 - descuento / 100);
-                  return acc + subtotal;
-                }, 0)?.toLocaleString('es-ES') || '0'}
+                <strong>Total:</strong> {formatCurrency(calcularTotales(datos?.productos || []).total)}
               </div>
 
               <div style={{ marginBottom: '1rem' }}>

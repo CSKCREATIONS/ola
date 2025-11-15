@@ -8,6 +8,8 @@ import {
   buildSignature,
   getCompanyName
 } from '../utils/emailHelpers';
+import { formatDate } from '../utils/formatters';
+import { calcularTotales } from '../utils/calculations';
 
 export default function PedidoCanceladoPreview({ datos, onClose, onEmailSent }) {
   // Obtener usuario del localStorage
@@ -17,23 +19,14 @@ export default function PedidoCanceladoPreview({ datos, onClose, onEmailSent }) 
   const [asunto, setAsunto] = useState('');
   const [mensaje, setMensaje] = useState('');
 
-  // Función para formatear fecha
-  const formatDate = (fecha) => {
-    if (!fecha) return 'No especificada';
-    const date = new Date(fecha);
-    return date.toLocaleDateString('es-ES', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    });
-  };
-
-  // Función para calcular total
+  // Función para calcular total (usa util compartido)
   const calcularTotal = () => {
-    if (!datos?.productos) return 0;
-    return datos.productos.reduce((total, producto) => {
-      return total + (producto.cantidad * Number.parseFloat(producto.precioUnitario || 0));
-    }, 0);
+    try {
+      return Number(calcularTotales(datos?.productos || []).total) || 0;
+    } catch (err) {
+      console.error('calcularTotal error', err);
+      return 0;
+    }
   };
 
   // Autocompletar datos del cliente al abrir modal
@@ -513,7 +506,7 @@ ${getCompanyName()}
                       color: '#dc2626',
                       textDecoration: 'line-through'
                     }}>
-                      S/. {calcularTotal().toFixed(2)}
+                      S/. {Number(calcularTotal()).toFixed(2)}
                     </td>
                   </tr>
                 </tfoot>

@@ -3,10 +3,9 @@ const Cliente = require('../models/Cliente');
 const Producto = require('../models/Products');
 const Product = require('../models/Products'); // Ensure both references work
 const sgMail = require('@sendgrid/mail');
-const nodemailer = require('nodemailer');
 const PDFService = require('../services/pdfService');
 const crypto = require('node:crypto');
-const { enviarConGmail } = require('../utils/gmailSender');
+const { sendMail } = require('../utils/emailSender');
 
 const { validationResult } = require('express-validator');
 
@@ -520,7 +519,7 @@ exports.enviarCotizacionPorCorreo = async (req, res) => {
     if (useGmail) {
       try {
         const attachments = pdfAttachment ? [{ filename: pdfAttachment.filename, content: pdfAttachment.content, contentType: pdfAttachment.contentType }] : [];
-        await enviarConGmail(destinatario, asuntoFinal, htmlCompleto, attachments);
+        await sendMail(destinatario, asuntoFinal, htmlCompleto, attachments);
         await markCotizacionAsSent(cotizacionId);
         return res.status(200).json({ message: '¡Cotización enviada por correo exitosamente!', details: { destinatario, asunto: asuntoFinal, enviado: true, metodo: 'Gmail SMTP', fecha: new Date().toLocaleString('es-CO') } });
       } catch (error_) {

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { getStoredUser } from '../utils/emailHelpers';
+import { calcularTotales } from '../utils/calculations';
 
 export default function PedidoDevueltoPreview({ datos, onClose }) {
   // Obtener usuario logueado
@@ -200,13 +201,16 @@ export default function PedidoDevueltoPreview({ datos, onClose }) {
                   TOTAL DEVUELTO:
                 </td>
                 <td style={{ padding: '0.75rem', textAlign: 'right', fontSize: '1rem', color: '#f59e0b' }}>
-                  ${datos.productos && datos.productos.length > 0 ? datos.productos
-                    .reduce((acc, p) => {
-                      const cantidad = Number.parseFloat(p.cantidad) || 0;
-                      const precio = Number.parseFloat(p.valorUnitario || p.precioUnitario || p.product?.price) || 0;
-                      return acc + (cantidad * precio);
-                    }, 0)
-                    .toLocaleString('es-CO') : '0'}
+                  ${ (() => {
+                      try {
+                        return (datos.productos && datos.productos.length > 0)
+                          ? calcularTotales(datos.productos).total.toLocaleString('es-CO')
+                          : '0';
+                      } catch (e) {
+                        console.error('Error calculating total devuelto', e);
+                        return '0';
+                      }
+                    })() }
                 </td>
                 <td style={{ padding: '0.75rem' }}></td>
               </tr>

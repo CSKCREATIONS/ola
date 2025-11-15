@@ -6,6 +6,8 @@ import Fijo from '../components/Fijo';
 import NavCompras from '../components/NavCompras';
 
 import api from '../api/axiosConfig';
+import { randomString } from '../utils/secureRandom';
+import { calcularTotales as calcularTotalesShared } from '../utils/calculations';
 
 // Deterministic email validator to avoid catastrophic regex backtracking
 function isValidEmail(email) {
@@ -225,7 +227,7 @@ export default function HistorialCompras() {
         producto: '',
         cantidad: 1,
         precioUnitario: 0,
-        _tmpId: `tmp-${Date.now()}-${Math.random().toString(36).slice(2,8)}`
+        _tmpId: `tmp-${Date.now()}-${randomString(6)}`
       }]
     });
   };
@@ -284,12 +286,12 @@ export default function HistorialCompras() {
     }
 
     try {
-      const subtotal = nuevaCompra.productos.reduce((sum, p) => sum + (p.cantidad * (p.precioUnitario || p.valorUnitario || 0)), 0);
-      const impuestos = subtotal * 0.19;
-      const total = subtotal + impuestos;
+      const { subtotal = 0 } = calcularTotalesShared(nuevaCompra.productos || []);
+      const impuestos = Number((subtotal * 0.19).toFixed(2));
+      const total = Number((subtotal + impuestos).toFixed(2));
 
       // Generar número de orden si no se provee uno
-      const generarNumeroOrden = () => `COM-${Date.now()}-${Math.random().toString(36).slice(2,8).toUpperCase()}`;
+      const generarNumeroOrden = () => `COM-${Date.now()}-${randomString(6).toUpperCase()}`;
 
       // Mapear productos al formato esperado por el backend
       const productosPayload = nuevaCompra.productos.map(p => {
@@ -364,10 +366,7 @@ export default function HistorialCompras() {
       return;
     }
 
-    const totalCalculado = compraSeleccionada.productos?.reduce((total, producto) => {
-      const subtotal = Number(producto.cantidad * producto.precioUnitario) || 0;
-      return total + subtotal;
-    }, 0) || 0;
+    const totalCalculado = (calcularTotalesShared(compraSeleccionada.productos || []).total) || 0;
 
     const totalFinal = Number(compraSeleccionada.total) || totalCalculado;
     const subtotalFinal = Number(compraSeleccionada.subtotal) || totalCalculado;
@@ -1760,19 +1759,19 @@ JLA Global Company</textarea>
                         <div>
                           <div style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.25rem' }}>Subtotal</div>
                           <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#2c3e50' }}>
-                            ${nuevaCompra.productos.reduce((sum, p) => sum + (p.cantidad * p.precioUnitario), 0).toLocaleString()}
+                            ${calcularTotalesShared(nuevaCompra.productos || []).subtotal.toLocaleString()}
                           </div>
                         </div>
                         <div>
                           <div style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.25rem' }}>IVA (19%)</div>
                           <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#2c3e50' }}>
-                            ${(nuevaCompra.productos.reduce((sum, p) => sum + (p.cantidad * p.precioUnitario), 0) * 0.19).toLocaleString()}
+                            ${Number((calcularTotalesShared(nuevaCompra.productos || []).subtotal * 0.19).toFixed(2)).toLocaleString()}
                           </div>
                         </div>
                         <div>
                           <div style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.25rem' }}>TOTAL</div>
                           <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#10b981' }}>
-                            ${(nuevaCompra.productos.reduce((sum, p) => sum + (p.cantidad * p.precioUnitario), 0) * 1.19).toLocaleString()}
+                            ${Number((calcularTotalesShared(nuevaCompra.productos || []).subtotal * 1.19).toFixed(2)).toLocaleString()}
                           </div>
                         </div>
                       </div>

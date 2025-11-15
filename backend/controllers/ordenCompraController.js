@@ -2,37 +2,11 @@
 const OrdenCompra = require('../models/ordenCompra');
 const Compra = require('../models/compras'); // Asegúrate de que la ruta es correcta
 const Producto = require('../models/Products'); // Importar modelo de productos
-const nodemailer = require('nodemailer');
 const PDFService = require('../services/pdfService');
+const emailSender = require('../utils/emailSender');
+const { normalizeProducto, calcularTotales } = require('../utils/normalize');
 
-// Configurar Gmail transporter (usar SMTPS explícito para garantizar TLS)
-const createGmailTransporter = () => {
-  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD || process.env.GMAIL_APP_PASSWORD === 'PENDIENTE_GENERAR') {
-    console.warn('⚠️  Gmail no configurado correctamente');
-    return null;
-  }
-
-  try {
-    return nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 465,
-      secure: true, // SMTPS
-      auth: {
-        user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_APP_PASSWORD
-      },
-      requireTLS: true,
-      tls: {
-        minVersion: 'TLSv1.2'
-      },
-      connectionTimeout: 10000,
-      greetingTimeout: 5000
-    });
-  } catch (error) {
-    console.error('❌ Error creando transporter (SMTPS):', error);
-    return null;
-  }
-};
+// Email sending handled by `backend/utils/emailSender.js`
 
 // Helper: poblar productos dentro de la orden (si vienen como IDs)
 async function populateOrdenProductos(orden) {
@@ -230,23 +204,15 @@ const enviarOrdenPorCorreo = async (req, res) => {
     // Poblar productos (no-fatal)
     await populateOrdenProductos(orden);
 
-    const transporter = createGmailTransporter();
-    if (!transporter) return res.status(500).json({ success: false, message: 'Servicio de correo no configurado. Verifica las credenciales de Gmail en el archivo .env' });
-
     const ordenHTML = generarHTMLOrden(orden, mensaje);
     const pdfAttachment = await generatePdfAttachmentSafeOrden(orden);
 
     const asuntoFinal = asunto || `Orden de Compra - N° ${orden.numeroOrden || 'N/A'} - JLA Global Company`;
 
-    const mailOptions = {
-      from: `"JLA Global Company" <${process.env.GMAIL_USER || process.env.EMAIL_USER}>`,
-      to: destinatario,
-      subject: asuntoFinal,
-      html: ordenHTML,
-      attachments: pdfAttachment ? [{ filename: pdfAttachment.filename, content: pdfAttachment.content, contentType: pdfAttachment.contentType }] : []
-    };
+    const attachments = pdfAttachment ? [{ filename: pdfAttachment.filename, content: pdfAttachment.content, contentType: pdfAttachment.contentType }] : [];
 
-    await transporter.sendMail(mailOptions);
+    // Use centralized email sender
+    await emailSender.sendMail(destinatario, asuntoFinal, ordenHTML, attachments);
 
     return res.status(200).json({ success: true, message: `¡Orden de compra enviada por correo exitosamente!${pdfAttachment ? ' con PDF adjunto' : ''}`, details: { destinatario, asunto: asuntoFinal, numeroOrden: orden.numeroOrden, pdfAdjunto: !!pdfAttachment, fecha: new Date().toLocaleString('es-CO') } });
   } catch (error) {

@@ -6,10 +6,9 @@ const Counter = require('../models/Counter');
 const Cliente = require('../models/Cliente');
 const Remision = require('../models/Remision');
 const mongoose = require('mongoose');
-const nodemailer = require('nodemailer');
 const sgMail = require('@sendgrid/mail');
 const PDFService = require('../services/pdfService');
-const { enviarConGmail } = require('../utils/gmailSender');
+const { sendMail } = require('../utils/emailSender');
 
 // Helper function para sanitizar IDs y prevenir inyección NoSQL
 const sanitizarId = (id) => {
@@ -730,7 +729,7 @@ async function enviarCorreoConAttachment(destinatario, asunto, htmlContent, pdfA
     try {
       console.log('📧 Enviando con Gmail centralizado...');
       const attachments = pdfAttachment ? [{ filename: pdfAttachment.filename, content: pdfAttachment.content, contentType: pdfAttachment.contentType }] : [];
-      await enviarConGmail(destinatario, asunto, htmlContent, attachments);
+      await sendMail(destinatario, asunto, htmlContent, attachments);
       console.log('✅ Correo enviado exitosamente con Gmail');
       return;
     } catch (error_) {

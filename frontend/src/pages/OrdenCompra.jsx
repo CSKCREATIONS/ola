@@ -5,6 +5,9 @@ import '../App.css';
 import Fijo from '../components/Fijo';
 import NavCompras from '../components/NavCompras';
 import DetallesOrdenModal from '../components/DetallesOrdenModal';
+import { roundMoney } from '../utils/formatters';
+import { randomString } from '../utils/secureRandom';
+import { calcularTotales as calcularTotalesShared } from '../utils/calculations';
 /* global globalThis */
 
 // Small helper utilities (local fallbacks used by this page)
@@ -13,25 +16,19 @@ const advancedStyles = `
   .orden-compra-advanced-table { box-shadow: 0 6px 20px rgba(0,0,0,0.06); }
 `;
 
-const roundMoney = (n) => {
-  const v = Number(n) || 0;
-  return Math.round((v + Number.EPSILON) * 100) / 100;
-};
-
 const calcularTotalesProductos = (productos = [], ivaPercent = 0) => {
-  let subtotal = 0;
-  for (const p of productos) {
-    const qty = Number(p.cantidad) || 0;
-    const unit = Number(p.valorUnitario || p.precio || 0) || 0;
-    const desc = Number(p.descuento || 0) || 0;
-    const line = roundMoney(qty * unit - desc);
-    subtotal += line;
+  try {
+    // Use the shared calculation helper for subtotal/discounts
+    const { subtotal = 0 } = calcularTotalesShared(productos || []);
+    const subtotalRounded = roundMoney(subtotal || 0);
+    const ivaNum = Number(ivaPercent) || 0;
+    const impuestos = roundMoney(subtotalRounded * (ivaNum / 100));
+    const total = roundMoney(subtotalRounded + impuestos);
+    return { subtotal: subtotalRounded, impuestos, total };
+  } catch (err) {
+    console.error('calcularTotalesProductos error', err);
+    return { subtotal: 0, impuestos: 0, total: 0 };
   }
-  subtotal = roundMoney(subtotal);
-  const ivaNum = Number(ivaPercent) || 0;
-  const impuestos = roundMoney(subtotal * (ivaNum / 100));
-  const total = roundMoney(subtotal + impuestos);
-  return { subtotal, impuestos, total };
 };
 
 function isValidEmail(email) {
@@ -40,12 +37,7 @@ function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-const secureRandomString = (length = 8) => {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let out = '';
-  for (let i = 0; i < length; i++) out += chars.charAt(Math.floor(Math.random() * chars.length));
-  return out;
-};
+// Use shared secure random helper from utils
 
 // API helpers (lightweight wrappers used by this page)
 async function fetchOrdenesHelper(setOrdenes) {
@@ -859,7 +851,7 @@ export default function OrdenCompra() {
     const { subtotal, impuestos, total } = calcularTotalesProductos(nuevaOrden.productos, nuevaOrden.iva || 0);
 
     const ordenCompleta = {
-      numeroOrden: `OC-${Date.now()}-${secureRandomString(9)}`,
+      numeroOrden: `OC-${Date.now()}-${randomString(9)}`,
       proveedor: nuevaOrden.proveedor,
       productos: nuevaOrden.productos,
       subtotal: subtotal,

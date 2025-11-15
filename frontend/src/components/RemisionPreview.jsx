@@ -7,6 +7,8 @@ import {
   formatDateIso,
   getCompanyName
 } from '../utils/emailHelpers';
+import { randomString } from '../utils/secureRandom';
+import { calcularTotales } from '../utils/calculations';
 /* global globalThis */
 
 export default function RemisionPreview({ datos, onClose }) {
@@ -24,38 +26,7 @@ export default function RemisionPreview({ datos, onClose }) {
   const COMPANY_PHONE = process.env.REACT_APP_COMPANY_PHONE || process.env.COMPANY_PHONE || '(555) 123-4567';
   const [showEnviarModal, setShowEnviarModal] = useState(false);
   const [clienteResolved, setClienteResolved] = useState(null);
-  // Helper: obtain a crypto object in a cross-environment safe way without using
-  // restricted global identifiers (avoids ESLint `no-restricted-globals` on `self`).
-  const getCrypto = () => {
-    if (typeof globalThis !== 'undefined' && globalThis.window && globalThis.window.crypto) return globalThis.window.crypto;
-    try {
-      if (globalThis?.window?.crypto) return globalThis.window.crypto;
-      if (globalThis?.crypto) return globalThis.crypto;
-      const g = new Function('return this')();
-      return g?.crypto || null;
-    } catch (error_) {
-      console.debug('getCrypto fallback failed:', error_);
-      return null;
-    }
-  };
-  // Helper: secure random alphanumeric string using Web Crypto when available
-  const secureRandomString = (length) => {
-    const cryptoObj = getCrypto();
-    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-      const pick = (max) => {
-      if (cryptoObj?.getRandomValues) {
-        const arr = new Uint32Array(1);
-        cryptoObj.getRandomValues(arr);
-        return Math.floor(arr[0] / (0xFFFFFFFF + 1) * max);
-      }
-      return Math.floor(Math.random() * max);
-    };
-    let out = '';
-    for (let i = 0; i < length; i++) {
-      out += alphabet.charAt(pick(alphabet.length));
-    }
-    return out;
-  };
+  // Use shared secure random helper (`randomString`) from utils for IDs
 
   // Agregar datos por defecto si faltan
   const datosConDefaults = {
@@ -147,11 +118,8 @@ ${usuarioNombreLinea}${usuarioEmailLinea}${usuarioTelefonoLinea}`
 
   // Función para abrir modal con datos actualizados
   const abrirModalEnvio = () => {
-    // Calcular total dinámicamente si no existe
-    const totalCalculado = datos?.productos?.reduce((total, producto) => {
-      const subtotal = Number(producto.total) || Number(producto.precioUnitario * producto.cantidad) || 0;
-      return total + subtotal;
-    }, 0) || 0;
+    // Calcular total dinámicamente si no existe usando helper compartido
+    const totalCalculado = calcularTotales(datos?.productos || []).total || 0;
 
     const totalFinal = datos?.total || totalCalculado;
 
@@ -232,7 +200,7 @@ ${getCompanyName()}
   };
 
   // Generar número de remisión si no existe
-  const numeroRemision = datosConDefaults.numeroRemision || `REM-${secureRandomString(6)}`;
+  const numeroRemision = datosConDefaults.numeroRemision || `REM-${randomString(6)}`;
 
   // Debug: Ver qué datos están llegando
   console.log('📦 Datos de remisión recibidos:', datos);
@@ -610,13 +578,7 @@ ${getCompanyName()}
                         fontSize: '1.3rem',
                         color: '#059669'
                       }}>
-                        S/. {datosConDefaults.total || (datosConDefaults.productos && datosConDefaults.productos.length > 0 ? datosConDefaults.productos
-                          .reduce((acc, p) => {
-                            const cantidad = Number.parseFloat(p.cantidad) || 0;
-                            const precio = Number.parseFloat(p.precioUnitario || p.valorUnitario || p.product?.price) || 0;
-                            return acc + (cantidad * precio);
-                          }, 0)
-                          .toLocaleString('es-ES') : '0')}
+                        S/. {datosConDefaults.total || (datosConDefaults.productos && datosConDefaults.productos.length > 0 ? calcularTotales(datosConDefaults.productos).total.toLocaleString('es-ES') : '0')}
                       </td>
                     </tr>
                   </tfoot>

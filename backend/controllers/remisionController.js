@@ -1,9 +1,10 @@
 const Remision = require('../models/Remision');
 const Pedido = require('../models/Pedido');
 const Counter = require('../models/Counter');
-const nodemailer = require('nodemailer');
 const PDFService = require('../services/pdfService');
 const sgMail = require('@sendgrid/mail');
+const emailSender = require('../utils/emailSender');
+const { normalizeProducto, calcularTotales } = require('../utils/normalize');
 
 // --- Helpers (moved to top-level) ---
 function isValidEmail(email) {
@@ -84,42 +85,7 @@ function configureSendGridIfAvailable() {
   return false;
 }
 
-async function trySendWithGmail(correoDestino, asunto, mensaje, htmlContent, pdfAttachment) {
-  if (!(process.env.EMAIL_USER || process.env.GMAIL_USER) || !(process.env.EMAIL_PASS || process.env.GMAIL_APP_PASSWORD)) {
-    return { ok: false, reason: 'Gmail no configurado' };
-  }
-
-  try {
-    const emailUser = process.env.EMAIL_USER || process.env.GMAIL_USER;
-    const emailPass = process.env.EMAIL_PASS || process.env.GMAIL_APP_PASSWORD;
-
-    // Use explicit SMTPS settings to enforce TLS (avoid generic 'service: gmail')
-    const transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 465,
-      secure: true,
-      auth: { user: emailUser, pass: emailPass },
-      requireTLS: true,
-      tls: { minVersion: 'TLSv1.2' },
-      connectionTimeout: 10000,
-      greetingTimeout: 5000
-    });
-
-    await transporter.sendMail({
-      from: `"${process.env.COMPANY_NAME || 'Sistema de Remisiones'}" <${emailUser}>`,
-      to: correoDestino,
-      subject: asunto,
-      html: htmlContent,
-      text: mensaje,
-      attachments: pdfAttachment ? [{ filename: pdfAttachment.filename, content: pdfAttachment.content, contentType: pdfAttachment.contentType }] : []
-    });
-
-    return { ok: true };
-  } catch (err) {
-    console.error('❌ Error Gmail SMTP:', err?.message || err);
-    return { ok: false, reason: 'Gmail failed', error: err };
-  }
-}
+// trySendWithGmail removed — now handled by emailSender.sendMail wrapper
 
 async function trySendWithSendGrid(correoDestino, asunto, mensaje, htmlContent, pdfAttachment) {
   const configured = configureSendGridIfAvailable();
@@ -181,16 +147,22 @@ exports.enviarRemisionPorCorreo = async (req, res) => {
 
     const pdfAttachment = await generatePdfAttachmentSafe(remision);
 
-    // Intentar Gmail
-    let result = await trySendWithGmail(correoDestino, asuntoFinal, mensaje, htmlContent, pdfAttachment);
-    if (result.ok) return res.json({ message: 'Remisión enviada por correo exitosamente', proveedor: 'Gmail' });
+    // First try centralized email sender (prefers Gmail transporter / OAuth when configured)
+    try {
+      const attachments = pdfAttachment ? [{ filename: pdfAttachment.filename, content: pdfAttachment.content, contentType: pdfAttachment.contentType }] : [];
+      await emailSender.sendMail(correoDestino, asuntoFinal, htmlContent, attachments);
+      // If sendMail resolved, assume success (gmailSender throws on failure)
+      return res.json({ message: 'Remisión enviada por correo exitosamente', proveedor: 'Gmail/Configured' });
+    } catch (error_) {
+      console.warn('emailSender failed, falling back to SendGrid or simulation:', error_?.message || error_);
+    }
 
-    // Intentar SendGrid
-    result = await trySendWithSendGrid(correoDestino, asuntoFinal, mensaje, htmlContent, pdfAttachment);
-    if (result.ok) return res.json({ message: 'Remisión enviada por correo exitosamente', proveedor: 'SendGrid' });
+    // Fallback: try SendGrid
+    const sgResult = await trySendWithSendGrid(correoDestino, asuntoFinal, mensaje, htmlContent, pdfAttachment);
+    if (sgResult.ok) return res.json({ message: 'Remisión enviada por correo exitosamente', proveedor: 'SendGrid' });
 
-    // Nada funcionó
-    return respondSimulatedOrError(res, result.error || null, correoDestino, asuntoFinal);
+    // Nothing worked — respond with simulated/dev behavior or error
+    return respondSimulatedOrError(res, sgResult.error || null, correoDestino, asuntoFinal);
   } catch (error) {
     console.error('❌ Error al enviar remisión por correo:', error);
     return res.status(500).json({ message: 'Error al enviar remisión por correo', error: error.message });
@@ -240,9 +212,10 @@ exports.getAllRemisiones = async (req, res) => {
 };
 
 
-// Probar configuración de Gmail SMTP
+// Probar configuración de Gmail SMTP (usa wrapper centralizado)
 exports.probarGmail = async (req, res) => {
   try {
+    const { getGmailTransporter } = require('../utils/gmailSender');
     const emailUser = process.env.EMAIL_USER || process.env.GMAIL_USER;
     const emailPass = process.env.EMAIL_PASS || process.env.GMAIL_APP_PASSWORD;
 
@@ -256,26 +229,20 @@ exports.probarGmail = async (req, res) => {
       });
     }
 
-    // Do not log secrets. Only indicate whether credentials are present.
     console.log('🧪 Probando Gmail SMTP - usuario configurado:', !!emailUser);
 
-    // Use explicit SMTPS settings to enforce TLS (avoid generic 'service: gmail')
-    const transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 465,
-      secure: true,
-      auth: { user: emailUser, pass: emailPass },
-      requireTLS: true,
-      tls: { minVersion: 'TLSv1.2' },
-      connectionTimeout: 10000
-    });
+    // Use centralized transporter factory (ensures consistent TLS config)
+    const transporter = getGmailTransporter();
+    if (!transporter) {
+      return res.status(500).json({ message: 'No se pudo crear transporter de Gmail (revise credenciales en .env)' });
+    }
 
     // Verificar la conexión (throws on failure)
     await transporter.verify();
 
     console.log('✅ Gmail SMTPS verificado correctamente');
 
-    // Warn if APP_URL is configured with http (insecure) so the operator can fix config
+    // Warn if APP_URL is configured with http (insecure)
     const appUrl = process.env.APP_URL || process.env.FRONTEND_URL;
     if (appUrl && typeof appUrl === 'string' && appUrl.startsWith('http://')) {
       console.warn('⚠️ APP_URL está usando http:// — se recomienda usar https:// en producción');

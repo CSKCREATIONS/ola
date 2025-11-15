@@ -3,6 +3,7 @@ import  { useState, useEffect } from "react";
 import { registerModalUsuario } from "../funciones/modalController";
 import Swal from "sweetalert2";
 import api from '../api/axiosConfig';
+import { randomInt } from '../utils/secureRandom';
 
 export default function AgregarUsuario() {
   const [isVisible, setIsVisible] = useState(false);
@@ -26,55 +27,12 @@ export default function AgregarUsuario() {
     registerModalUsuario(setIsVisible);
   }, []);
 
-  // Helper: obtain a crypto object in a cross-environment safe way without using
-  // restricted global identifiers (avoids ESLint `no-restricted-globals` on `self`).
-  const getCrypto = () => {
-
-    // Prefer direct undefined comparison to avoid using `typeof` and prefer globalThis
-    if (globalThis.window?.crypto) return globalThis.window.crypto;
-    if (globalThis.global?.crypto) return globalThis.global.crypto;
-    try {
-      const g = new Function('return this')();
-      if (g?.crypto) return g.crypto;
-    } catch (error_) {
-      console.debug('getCrypto fallback failed:', error_);
-    }
-    return null;
-  };
-
-  // Función para abrir el modal (puede ser llamada desde el componente padre)
-
+  // Use shared secure random `randomInt` from utils; expose global opener helper
   if (globalThis?.window) {
     globalThis.window.openModalUsuario = () => {
       setIsVisible(true);
     };
   }
-
-  // Secure RNG factories — two different implementations so callers are not identical
-  const getSecureRandomIntPrimary = () => {
-    const cryptoObj = getCrypto();
-    if (cryptoObj?.getRandomValues) {
-      return (max) => {
-        const arr = new Uint32Array(1);
-        cryptoObj.getRandomValues(arr);
-        return Math.floor(arr[0] / (0xFFFFFFFF + 1) * max);
-      };
-    }
-    return (max) => Math.floor(Math.random() * max);
-  };
-
-  const getSecureRandomIntAlt = () => {
-    const cryptoObj = getCrypto();
-    if (cryptoObj?.getRandomValues) {
-      return (max) => {
-        // Slightly different approach: use 16-bit source and scale accordingly
-        const arr = new Uint16Array(1);
-        cryptoObj.getRandomValues(arr);
-        return Math.floor(arr[0] / (0xFFFF + 1) * max);
-      };
-    }
-    return (max) => Math.floor(Math.random() * max);
-  };
 
   
 
@@ -139,8 +97,8 @@ export default function AgregarUsuario() {
 
   //genera password automaticamente
   const generarPassword = () => {
-    // Use primary secure RNG implementation for password generation
-    const secureRandomInt = getSecureRandomIntPrimary();
+    // Use shared secure RNG implementation for password generation
+    const secureRandomInt = randomInt;
 
     const letrasMayus = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     const letrasMinus = 'abcdefghijklmnopqrstuvwxyz';
@@ -170,8 +128,8 @@ export default function AgregarUsuario() {
 
   //genera nombre de usuario automaticamente con prefigo jla
   const generarUsername = () => {
-    // Use alternate secure RNG implementation for username generation
-    const secureRandomInt = getSecureRandomIntAlt();
+    // Use shared secure RNG implementation for username generation
+    const secureRandomInt = randomInt;
     const random = 100 + secureRandomInt(900); // 100..999
     return `jla${random}`;
   };

@@ -3,6 +3,8 @@ import PropTypes from 'prop-types';
 import Swal from 'sweetalert2';
 import api from '../api/axiosConfig';
 import { getCompanyName } from '../utils/emailHelpers';
+import { formatDate } from '../utils/formatters';
+import { calcularTotales } from '../utils/calculations';
 
 const PedidoAgendadoPreview = ({ datos, onClose, onEmailSent, onRemisionar }) => {
   const [showEnviarModal, setShowEnviarModal] = useState(false);
@@ -12,23 +14,14 @@ const PedidoAgendadoPreview = ({ datos, onClose, onEmailSent, onRemisionar }) =>
 
   // Obtener usuario del localStorage
   
-  // Función para formatear fecha
-  const formatDate = (fecha) => {
-    if (!fecha) return 'No especificada';
-    const date = new Date(fecha);
-    return date.toLocaleDateString('es-ES', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
-
-  // Función para calcular total
+  // Función para calcular total usando util compartido
   const calcularTotal = () => {
-    if (!datos?.productos) return 0;
-    return datos.productos.reduce((total, producto) => {
-      return total + (producto.cantidad * Number.parseFloat(producto.precioUnitario || 0));
-    }, 0);
+    try {
+      return Number(calcularTotales(datos?.productos || []).total) || 0;
+    } catch (err) {
+      console.error('calcularTotal error', err);
+      return 0;
+    }
   };
 
   // Autocompletar datos del cliente al abrir modal
@@ -492,14 +485,14 @@ ${getCompanyName()}
                     }}>
                       TOTAL:
                     </td>
-                    <td style={{
+                      <td style={{
                       padding: '1rem',
                       textAlign: 'right',
                       fontWeight: 'bold',
                       fontSize: '1.3rem',
                       color: '#fd7e14'
                     }}>
-                      S/. {calcularTotal().toFixed(2)}
+                      S/. {Number(calcularTotal()).toFixed(2)}
                     </td>
                   </tr>
                 </tfoot>

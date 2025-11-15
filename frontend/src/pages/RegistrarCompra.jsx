@@ -5,6 +5,8 @@ import Swal from 'sweetalert2';
 import '../App.css';
 import Fijo from '../components/Fijo';
 import NavCompras from '../components/NavCompras';
+import { randomString } from '../utils/secureRandom';
+import { calcularTotales as calcularTotalesShared } from '../utils/calculations';
 
 export default function RegistrarCompra() {
   const [proveedores, setProveedores] = useState([]);
@@ -210,40 +212,22 @@ export default function RegistrarCompra() {
     setNuevaCompra({ ...nuevaCompra, productos: nuevosProductos });
   };
 
-  // Función para calcular totales
-  const calcularTotales = (productos) => {
-    const subtotal = productos.reduce((acc, p) => acc + (p.valorTotal || 0), 0);
-    const impuestos = subtotal * 0.19;
-    const total = subtotal + impuestos;
-    return { subtotal, impuestos, total };
-  };
-
-  // Generar número de compra aleatorio (crypto-secure)
-  const secureRandomString = (length) => {
-    const alphabet = 'abcdefghijklmnopqrstuvwxyz0123456789';
-    // Prefer Web Crypto API for secure randomness
-
-      if (globalThis?.window?.crypto?.getRandomValues) {
-        const array = new Uint8Array(length);
-        globalThis.window.crypto.getRandomValues(array);
-        let out = '';
-        for (let i = 0; i < length; i++) {
-          out += alphabet[array[i] % alphabet.length];
-        }
-        return out;
-      }
-
-    // Fallback: non-crypto PRNG only if Web Crypto unavailable (very unlikely in modern browsers)
-    let out = '';
-    for (let i = 0; i < length; i++) {
-      out += alphabet[Math.floor(Math.random() * alphabet.length)];
+  // Reuse shared calcularTotales and apply IVA (19%) for purchases
+  const calcularTotalesCompra = (productos) => {
+    try {
+      const { subtotal = 0 } = calcularTotalesShared(productos || []);
+      const impuestos = Number((subtotal * 0.19).toFixed(2));
+      const total = Number((subtotal + impuestos).toFixed(2));
+      return { subtotal, impuestos, total };
+    } catch (e) {
+      console.error('Error calculando totales de compra:', e);
+      return { subtotal: 0, impuestos: 0, total: 0 };
     }
-    return out;
   };
 
+  // Use shared secure random helper for generating suffixes
   const generarNumeroCompra = () => {
-    // Keep the timestamp prefix (useful and monotonic) but replace the random suffix
-    return `COM-${Date.now()}-${secureRandomString(9)}`;
+    return `COM-${Date.now()}-${randomString(9)}`;
   };
 
   const guardarCompra = async () => {
@@ -262,7 +246,7 @@ export default function RegistrarCompra() {
       return;
     }
 
-    const { subtotal, impuestos, total } = calcularTotales(nuevaCompra.productos);
+    const { subtotal, impuestos, total } = calcularTotalesCompra(nuevaCompra.productos);
 
     const compraCompleta = {
       numeroCompra: generarNumeroCompra(),
@@ -553,20 +537,20 @@ export default function RegistrarCompra() {
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
                     <div>
                       <div style={{ fontSize: '0.9rem', opacity: '0.9' }}>Subtotal</div>
-                      <div style={{ fontSize: '1.3rem', fontWeight: 'bold' }}>
-                        ${calcularTotales(nuevaCompra.productos).subtotal.toLocaleString()}
+                        <div style={{ fontSize: '1.3rem', fontWeight: 'bold' }}>
+                        ${calcularTotalesCompra(nuevaCompra.productos).subtotal.toLocaleString()}
                       </div>
                     </div>
                     <div>
                       <div style={{ fontSize: '0.9rem', opacity: '0.9' }}>IVA (19%)</div>
-                      <div style={{ fontSize: '1.3rem', fontWeight: 'bold' }}>
-                        ${calcularTotales(nuevaCompra.productos).impuestos.toLocaleString()}
+                        <div style={{ fontSize: '1.3rem', fontWeight: 'bold' }}>
+                        ${calcularTotalesCompra(nuevaCompra.productos).impuestos.toLocaleString()}
                       </div>
                     </div>
                     <div>
                       <div style={{ fontSize: '0.9rem', opacity: '0.9' }}>Total</div>
-                      <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#f39c12' }}>
-                        ${calcularTotales(nuevaCompra.productos).total.toLocaleString()}
+                        <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#f39c12' }}>
+                        ${calcularTotalesCompra(nuevaCompra.productos).total.toLocaleString()}
                       </div>
                     </div>
                   </div>

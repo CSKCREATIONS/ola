@@ -5,6 +5,8 @@ import { useNavigate } from 'react-router-dom';
 import { Editor } from "@tinymce/tinymce-react";
 import { useRef, useState, useEffect } from 'react';
 import api from '../api/axiosConfig';
+import { uid as secureUid } from '../utils/secureRandom';
+import { calcularTotales } from '../utils/calculations';
 
 // Move small pure helpers to module scope to avoid re-creating them on each render
 function obtenerFechaLocal(inputDate) {
@@ -23,7 +25,7 @@ function isValidEmail(email) {
 
   const at = trimmed.indexOf('@');
   // single @ and not first/last
-  if (at <= 0 || trimmed.indexOf('@', at + 1) !== -1) return false;
+  if (at <= 0 || trimmed.includes('@', at + 1)) return false;
 
   const local = trimmed.slice(0, at);
   const domain = trimmed.slice(at + 1);
@@ -52,6 +54,12 @@ function isValidEmail(email) {
   });
 
   return allLabelsValid;
+}
+
+// Normalizar moved to module scope to avoid deep nesting inside useEffect/loadClientes
+function normalizar(arr, esClienteFlag) {
+  if (!Array.isArray(arr)) return [];
+  return arr.map(c => ({ ...c, esCliente: !!esClienteFlag }));
 }
 
 export default function RegistrarCotizacion() {
@@ -91,16 +99,17 @@ export default function RegistrarCotizacion() {
     const loadClientes = async () => {
       try {
         const [clientesRes, prospectosRes] = await Promise.all([
-          api.get('/api/clientes'), // sólo esCliente:true
-          api.get('/api/clientes/prospectos') // esCliente:false
+          api.get('/api/clientes'),
+          api.get('/api/prospectos')
         ]);
-
+        
         const listaClientes = clientesRes.data?.data || clientesRes.data || [];
         const listaProspectos = prospectosRes.data?.data || prospectosRes.data || [];
 
-        // Normalizar y marcar tipo
-        const normalizar = (arr, esClienteFlag) => (Array.isArray(arr) ? arr.map(c => ({ ...c, esCliente: !!esClienteFlag })) : []);
-        const todos = [...normalizar(listaClientes, true), ...normalizar(listaProspectos, false)];
+        // Normalizar y marcar tipo (usar helper en scope del módulo)
+        const clientesNorm = normalizar(listaClientes, true);
+        const prospectosNorm = normalizar(listaProspectos, false);
+        const todos = [...clientesNorm, ...prospectosNorm];
 
         // De-duplicar por correo (preferir cliente real sobre prospecto si coincide)
         const dedupMap = new Map();
@@ -133,7 +142,7 @@ export default function RegistrarCotizacion() {
 
   const agregarProducto = () => {
     // create a lightweight stable id for React keys so re-orders/removals don't rely on index
-    const uid = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2,9)}`;
+    const uid = secureUid();
     setProductosSeleccionados([...productosSeleccionados, {
       uid,
       producto: '', descripcion: '', cantidad: '', valorUnitario: '', descuento: '', valorTotal: ''
@@ -195,6 +204,16 @@ export default function RegistrarCotizacion() {
     nuevosProductos[index].valorTotal = subtotal.toFixed(2);
 
     setProductosSeleccionados(nuevosProductos);
+  };
+
+  // Calcular total general usando el helper compartido
+  const calcularTotal = () => {
+    try {
+      return calcularTotales(productosSeleccionados || []).total;
+    } catch (e) {
+      console.error('Error calculando totales en RegistrarCotizacion:', e);
+      return 0;
+    }
   };
 
   const handleCancelado = () => {
@@ -1251,9 +1270,7 @@ export default function RegistrarCotizacion() {
                             color: '#059669',
                             fontSize: '1.2rem'
                           }}>
-                            S/. {productosSeleccionados
-                              .reduce((acc, prod) => acc + (Number.parseFloat(prod.subtotal) || 0), 0)
-                              .toLocaleString('es-ES', { minimumFractionDigits: 2 })}
+                            S/. {calcularTotal().toLocaleString('es-ES', { minimumFractionDigits: 2 })}
                           </td>
                           <td style={{ padding: '1rem 0.75rem' }}></td>
                         </tr>
@@ -1313,9 +1330,7 @@ export default function RegistrarCotizacion() {
                       <td colSpan={5}></td>
                       <td style={{ fontWeight: 'bold', textAlign: 'right' }}>Total</td>
                       <td style={{ fontWeight: 'bold' }}>
-                        {productosSeleccionados
-                          .reduce((acc, prod) => acc + (Number.parseFloat(prod.subtotal) || 0), 0)
-                          .toFixed(2)}
+                          {calcularTotal().toFixed(2)}
                       </td>
                       <td></td>
                     </tr>

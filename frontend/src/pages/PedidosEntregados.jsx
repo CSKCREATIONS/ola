@@ -7,6 +7,7 @@ import * as XLSX from 'xlsx';
 import Swal from 'sweetalert2';
 import api from '../api/axiosConfig';
 import RemisionPreview from '../components/RemisionPreview';
+import { sumarProp } from '../utils/calculations';
 
 /* Estilos CSS avanzados para Pedidos Entregados */
 const pedidosEntregadosStyles = `
@@ -372,7 +373,7 @@ export default function PedidosEntregados() {
                 </div>
                 <div>
                   <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                    ${pedidosEntregados.reduce((sum, p) => sum + (p.total || 0), 0).toLocaleString('es-CO')}
+                    ${sumarProp(pedidosEntregados, 'total').toLocaleString('es-CO')}
                   </h3>
                   <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
                     Ingresos Totales

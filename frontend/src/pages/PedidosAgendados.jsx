@@ -9,6 +9,7 @@ import jsPDF from 'jspdf';
 import * as XLSX from 'xlsx';
 import EditarPedido from '../components/EditarPedido';
 import PedidoAgendadoPreview from '../components/PedidoAgendadoPreview';
+import { sumarProp } from '../utils/calculations';
 
 /* Estilos CSS avanzados para Pedidos Agendados */
 const pedidosAgendadosStyles = `
@@ -478,7 +479,7 @@ export default function PedidosAgendados() {
                 </div>
                 <div>
                   <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                    ${pedidos.reduce((sum, p) => sum + (p.total || 0), 0).toLocaleString('es-CO')}
+                    ${sumarProp(pedidos, 'total').toLocaleString('es-CO')}
                   </h3>
                   <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
                     Total en Ventas

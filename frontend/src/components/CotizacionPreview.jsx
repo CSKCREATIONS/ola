@@ -9,6 +9,8 @@ import {
   buildSignature,
   getCompanyName
 } from '../utils/emailHelpers';
+import { formatDate } from '../utils/formatters';
+import { calcularTotales } from '../utils/calculations';
 
 export default function CotizacionPreview({ datos, onClose, onEmailSent, onRemisionCreated }) {
   const navigate = useNavigate();
@@ -34,24 +36,14 @@ export default function CotizacionPreview({ datos, onClose, onEmailSent, onRemis
     (typeof datos?.estado === 'string' && datos.estado.trim().toLowerCase() === 'remisionada')
   );
 
-  // Función para formatear fecha
-  const formatDate = (fecha) => {
-    if (!fecha) return 'No especificada';
-    const date = new Date(fecha);
-    return date.toLocaleDateString('es-ES', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
-
-  // Función para calcular total
+  // Calcular totales usando el helper compartido
   const calcularTotal = () => {
-    if (!datos?.productos) return 0;
-    return datos.productos.reduce((total, producto) => {
-      const subtotal = Number(producto.subtotal) || 0;
-      return total + subtotal;
-    }, 0);
+    try {
+      return calcularTotales(datos?.productos || []).total;
+    } catch (e) {
+      console.error('Error calculando totales en CotizacionPreview:', e);
+      return 0;
+    }
   };
 
   // Función para abrir modal con datos actualizados

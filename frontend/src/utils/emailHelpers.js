@@ -22,16 +22,26 @@ export function formatDateIso(value) {
   }
 }
 
+import { calcularTotales } from './calculations';
+
 export function calculateTotal(datos) {
   if (!datos) return 0;
-  if (!Array.isArray(datos.productos) || datos.productos.length === 0) {
+  // Si el objeto ya trae un total explícito, preferirlo
+  if (Number.isFinite(Number(datos.total)) && (!Array.isArray(datos.productos) || datos.productos.length === 0)) {
     return Number.parseFloat(datos.total) || 0;
   }
-  return datos.productos.reduce((acc, p) => {
-    const cantidad = Number.parseFloat(p.cantidad) || 0;
-    const precio = Number.parseFloat(p.precioUnitario) || 0;
-    return acc + (cantidad * precio);
-  }, 0);
+
+  // Si tiene productos, delegar al helper compartido para asegurar consistencia
+  if (Array.isArray(datos.productos) && datos.productos.length > 0) {
+    return Number(calcularTotales(datos.productos).total) || 0;
+  }
+
+  return Number.parseFloat(datos.total) || 0;
+}
+
+export function sumarTotalesLista(lista = []) {
+  if (!Array.isArray(lista) || lista.length === 0) return 0;
+  return lista.reduce((acc, item) => acc + (calculateTotal(item) || 0), 0);
 }
 
 export function buildSignature(usuario) {

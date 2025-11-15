@@ -1,5 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
+import { calcularSubtotalProducto } from '../utils/calculations';
+import { formatCurrency } from '../utils/formatters';
 
 export default function DetallesOrdenModal({ visible, orden, onClose, onPrint, onSendEmail }) {
   const modalRef = useRef(null);
@@ -170,7 +172,7 @@ export default function DetallesOrdenModal({ visible, orden, onClose, onPrint, o
                         <td style={{ padding: '12px' }}>{p.producto || p.nombre || 'Producto'}</td>
                         <td style={{ padding: '12px', textAlign: 'center' }}>{p.cantidad}</td>
                         <td style={{ padding: '12px', textAlign: 'right' }}>${(p.valorUnitario || p.precioUnitario || 0).toLocaleString()}</td>
-                        <td style={{ padding: '12px', textAlign: 'right' }}>${(p.valorTotal || ((p.cantidad || 0) * (p.valorUnitario || p.precioUnitario || 0) - (p.descuento || 0))).toLocaleString()}</td>
+                        <td style={{ padding: '12px', textAlign: 'right' }}>{formatCurrency(p.valorTotal || calcularSubtotalProducto(p))}</td>
                       </tr>
                     ))}
                   </tbody>

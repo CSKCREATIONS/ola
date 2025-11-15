@@ -1,6 +1,5 @@
 const Compra = require('../models/compras');
-const nodemailer = require('nodemailer');
-const { enviarConGmail } = require('../utils/gmailSender');
+const { sendMail } = require('../utils/emailSender');
 const PDFService = require('../services/pdfService');
 
 
@@ -221,9 +220,9 @@ const enviarCompraPorCorreo = async (req, res) => {
     const attachments = pdfAttachment ? [{ filename: pdfAttachment.filename, content: pdfAttachment.content, contentType: pdfAttachment.contentType }] : [];
 
     try {
-      await enviarConGmail(destinatario, asuntoFinal, compraHTML, attachments);
+      await sendMail(destinatario, asuntoFinal, compraHTML, attachments);
     } catch (err) {
-      console.error('❌ Error al enviar correo vía Gmail centralizado:', err?.message || err);
+      console.error('❌ Error al enviar correo vía emailSender:', err?.message || err);
       return res.status(500).json({ success: false, message: 'Error al enviar correo', error: err?.message || String(err) });
     }
 
