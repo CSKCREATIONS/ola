@@ -5,6 +5,7 @@ import '../App.css';
 import Fijo from '../components/Fijo';
 import NavCompras from '../components/NavCompras';
 import DetallesOrdenModal from '../components/DetallesOrdenModal';
+import OrderDetailsHeader from '../components/OrderDetailsHeader';
 import { roundMoney } from '../utils/formatters';
 import { randomString } from '../utils/secureRandom';
 import { calcularTotales as calcularTotalesShared, sumarProp } from '../utils/calculations';
@@ -2026,18 +2027,12 @@ export default function OrdenCompra() {
             <div className="modal-overlay">
               <div className="modal-realista modal-confirmacion" style={{ maxWidth: '500px', width: '90%', background: 'linear-gradient(135deg, #ffffff, #f8f9fa)' }}>
 
-                <div className="modal-header-realista" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'linear-gradient(135deg, #6a1b9a, #9b59b6)', color: 'white', padding: '1.25rem', borderTopLeftRadius: '10px', borderTopRightRadius: '10px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <i className="fa-solid fa-file-invoice-dollar" style={{ fontSize: '1.1rem' }}></i>
-                    </div>
-                    <div>
-                      <div style={{ fontSize: '1.05rem', fontWeight: 700 }}>Confirmar Orden</div>
-                      <div style={{ fontSize: '0.85rem', opacity: 0.95 }}>N° {ordenAConfirmar.numeroOrden}</div>
-                    </div>
-                  </div>
-                  <button className="modal-close-realista" onClick={cancelarConfirmacion} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white', fontSize: '1.25rem', cursor: 'pointer', borderRadius: '50%', width: '34px', height: '34px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>&times;</button>
-                </div>
+                <OrderDetailsHeader
+                  iconClass="fa-solid fa-file-invoice-dollar"
+                  title="Confirmar Orden"
+                  subtitle={`N° ${ordenAConfirmar.numeroOrden}`}
+                  onClose={cancelarConfirmacion}
+                />
 
                 <div className="modal-body" style={{ padding: '1.5rem' }}>
                   <h6 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}><i className="fa-solid fa-file-lines icon-gap"></i> Vista Previa de la Orden</h6>

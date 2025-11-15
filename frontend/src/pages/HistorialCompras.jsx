@@ -1437,45 +1437,12 @@ JLA Global Company</textarea>
           {modalNuevaCompraVisible && (
             <div className="modal-overlay">
               <div className="modal-realista modal-lg" style={{ maxWidth: '900px', width: '95%' }}>
-                <div className="modal-header-realista" style={{
-                  background: 'linear-gradient(135deg, #10b981, #059669)',
-                  color: 'white',
-                  padding: '1.5rem 2rem',
-                  borderTopLeftRadius: '12px',
-                  borderTopRightRadius: '12px'
-                }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                      <i className="fa-solid fa-plus-circle" style={{ fontSize: '1.8rem' }} aria-hidden={true}></i>
-                      <div>
-                        <h5 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 'bold' }}>
-                          NUEVA COMPRA
-                        </h5>
-                        <p style={{ margin: 0, opacity: 0.9, fontSize: '1rem' }}>
-                          Registrar compra sin orden de compra previa
-                        </p>
-                      </div>
-                    </div>
-                    <button 
-                      onClick={() => setModalNuevaCompraVisible(false)}
-                      style={{
-                        background: 'rgba(255,255,255,0.2)',
-                        border: 'none',
-                        color: 'white',
-                        fontSize: '1.8rem',
-                        cursor: 'pointer',
-                        borderRadius: '50%',
-                        width: '40px',
-                        height: '40px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                      }}
-                    >
-                      &times;
-                    </button>
-                  </div>
-                </div>
+                <OrderDetailsHeader
+                  iconClass="fa-solid fa-plus-circle"
+                  title="NUEVA COMPRA"
+                  subtitle="Registrar compra sin orden de compra previa"
+                  onClose={() => setModalNuevaCompraVisible(false)}
+                />
 
                 <div className="modal-body" style={{ padding: '2rem', maxHeight: '70vh', overflowY: 'auto' }}>
                   {/* Información General */}

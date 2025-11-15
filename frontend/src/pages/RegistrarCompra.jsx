@@ -5,6 +5,7 @@ import Swal from 'sweetalert2';
 import '../App.css';
 import Fijo from '../components/Fijo';
 import NavCompras from '../components/NavCompras';
+import OrderDetailsHeader from '../components/OrderDetailsHeader';
 import { randomString } from '../utils/secureRandom';
 import { calcularTotales as calcularTotalesShared } from '../utils/calculations';
 
@@ -299,14 +300,11 @@ export default function RegistrarCompra() {
           <br />
 
           <div className="modal-realista modal-lg" style={{ maxWidth: '900px', position: 'relative', margin: '0 auto', background: 'white', borderRadius: '10px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
-            <div className="modal-header-realista">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                <h5>
-                  <i className="fa-solid fa-shopping-cart icon-gap"></i>
-                  <span>Nueva Compra</span>
-                </h5>
-              </div>
-            </div>
+            <OrderDetailsHeader
+              iconClass="fa-solid fa-cart-plus"
+              title="Nueva Compra"
+              subtitle="Registrar compra sin orden de compra previa"
+            />
 
             <div className="modal-body" style={{ padding: '2rem', maxHeight: '70vh', overflowY: 'auto' }}>
               {/* Información Básica */}
