@@ -6,6 +6,7 @@ import '../App.css';
 import Fijo from '../components/Fijo';
 import NavCompras from '../components/NavCompras';
 import OrderDetailsHeader from '../components/OrderDetailsHeader';
+import DeleteButton from '../components/DeleteButton';
 import { randomString } from '../utils/secureRandom';
 import { calcularTotales as calcularTotalesShared } from '../utils/calculations';
 
@@ -513,13 +514,9 @@ export default function RegistrarCompra() {
                               <strong>${p.valorTotal.toLocaleString()}</strong>
                             </td>
                             <td>
-                              <button
-                                className="btn-profesional btn-danger-profesional"
-                                onClick={() => eliminarProducto(i)}
-                                style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
-                              >
+                              <DeleteButton onClick={() => eliminarProducto(i)} title="Eliminar producto" ariaLabel={`Eliminar producto ${i + 1}`} style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>
                                 <i className="fa-solid fa-trash"></i>
-                              </button>
+                              </DeleteButton>
                             </td>
                           </tr>
                         ))}

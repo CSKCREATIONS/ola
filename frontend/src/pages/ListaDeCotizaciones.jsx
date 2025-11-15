@@ -13,6 +13,7 @@ import { saveAs } from 'file-saver';
 import CotizacionPreview from '../components/CotizacionPreview';
 import { calcularSubtotalProducto, calcularTotales } from '../utils/calculations';
 import { formatCurrency } from '../utils/formatters';
+import DeleteButton from '../components/DeleteButton';
 
 export default function ListaDeCotizaciones() {
   const [cotizaciones, setCotizaciones] = useState([]);
@@ -1127,33 +1128,9 @@ export default function ListaDeCotizaciones() {
                       <td style={{ padding: '16px 12px', textAlign: 'center' }}>
                         <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
                           {isDeletable(cot) && (
-                            <button
-                              onClick={() => intentarEliminarCotizacion(cot._id)}
-                              title="Eliminar cotización"
-                              aria-label="Eliminar cotización"
-                              style={{
-                                background: 'linear-gradient(135deg, #fef2f2, #fee2e2)',
-                                color: '#dc2626',
-                                border: 'none',
-                                borderRadius: '8px',
-                                padding: '8px 10px',
-                                cursor: 'pointer',
-                                fontSize: '12px',
-                                fontWeight: '600',
-                                transition: 'all 0.2s ease',
-                                boxShadow: '0 2px 4px rgba(220, 38, 38, 0.2)'
-                              }}
-                              onMouseEnter={(e) => {
-                                e.target.style.transform = 'translateY(-2px)';
-                                e.target.style.boxShadow = '0 4px 8px rgba(220, 38, 38, 0.3)';
-                              }}
-                              onMouseLeave={(e) => {
-                                e.target.style.transform = 'translateY(0)';
-                                e.target.style.boxShadow = '0 2px 4px rgba(220, 38, 38, 0.2)';
-                              }}
-                            >
+                            <DeleteButton onClick={() => intentarEliminarCotizacion(cot._id)} title="Eliminar cotización" ariaLabel="Eliminar cotización">
                               <i aria-hidden={true} className="fa-solid fa-trash"></i>
-                            </button>
+                            </DeleteButton>
                           )}
 
                           {!isAgendada(cot) && !isRemisionada(cot) && (

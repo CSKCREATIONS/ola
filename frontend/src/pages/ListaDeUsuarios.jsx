@@ -3,6 +3,7 @@ import Fijo from '../components/Fijo'
 import AgregarUsuario from '../components/AgregarUsuario'
 import NavUsuarios from '../components/NavUsuarios'
 import SharedListHeaderCard from '../components/SharedListHeaderCard'
+import DeleteButton from '../components/DeleteButton'
 import { openModal } from '../funciones/animaciones'
 import EditarUsuario from '../components/EditarUsuario'
 import Swal from 'sweetalert2';
@@ -1094,32 +1095,9 @@ export default function ListaDeUsuarios() {
                             </button>
                           )}
                           {puedeEliminarUsuario && usuario.lastLogin === null && (
-                            <button
-                              onClick={() => eliminarUsuario(usuario)}
-                              title="Eliminar usuario"
-                              style={{
-                                background: 'linear-gradient(135deg, #fee2e2, #fecaca)',
-                                color: '#dc2626',
-                                border: 'none',
-                                borderRadius: '8px',
-                                padding: '8px 10px',
-                                cursor: 'pointer',
-                                fontSize: '12px',
-                                fontWeight: '600',
-                                transition: 'all 0.2s ease',
-                                boxShadow: '0 2px 4px rgba(220, 38, 38, 0.2)'
-                              }}
-                              onMouseEnter={(e) => {
-                                e.target.style.transform = 'translateY(-2px)';
-                                e.target.style.boxShadow = '0 4px 8px rgba(220, 38, 38, 0.3)';
-                              }}
-                              onMouseLeave={(e) => {
-                                e.target.style.transform = 'translateY(0)';
-                                e.target.style.boxShadow = '0 2px 4px rgba(220, 38, 38, 0.2)';
-                              }}
-                            >
+                            <DeleteButton onClick={() => eliminarUsuario(usuario)} title="Eliminar usuario" ariaLabel={`Eliminar usuario ${usuario.username || usuario._id}`}>
                               <i className="fa-solid fa-trash"></i>
-                            </button>
+                            </DeleteButton>
                           )}
                         </div>
                       </td>

@@ -1535,21 +1535,9 @@ JLA Global Company</textarea>
                       }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                           <strong style={{ color: '#2c3e50' }}>Producto #{index + 1}</strong>
-                          <button
-                            onClick={() => eliminarProductoNuevaCompra(index)}
-                            aria-label="Eliminar producto"
-                            style={{
-                              background: '#ef4444',
-                              color: 'white',
-                              border: 'none',
-                              padding: '0.25rem 0.5rem',
-                              borderRadius: '6px',
-                              fontSize: '12px',
-                              cursor: 'pointer'
-                            }}
-                          >
+                          <DeleteButton onClick={() => eliminarProductoNuevaCompra(index)} title="Eliminar producto" ariaLabel={`Eliminar producto ${index + 1}`} style={{ padding: '0.25rem 0.5rem', fontSize: '12px', background: '#ef4444', color: 'white' }}>
                             <i className="fa-solid fa-trash" aria-hidden={true}></i>
-                          </button>
+                          </DeleteButton>
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '1rem' }}>
                           <div>
