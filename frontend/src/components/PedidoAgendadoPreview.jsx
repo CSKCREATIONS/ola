@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import Swal from 'sweetalert2';
 import api from '../api/axiosConfig';
-import { getCompanyName } from '../utils/emailHelpers';
+import { makePedidoAgendadoTemplate } from '../utils/emailTemplates';
 import { formatDate } from '../utils/formatters';
 import { calcularTotales } from '../utils/calculations';
 
@@ -33,21 +33,9 @@ const PedidoAgendadoPreview = ({ datos, onClose, onEmailSent, onRemisionar }) =>
 
   // Función para abrir modal de envío
   const abrirModalEnvio = () => {
-    
-    setAsunto(`Pedido Agendado ${datos?.numeroPedido || datos?.codigo || ''} - ${datos?.cliente?.nombre || 'Cliente'} | ${getCompanyName()}`);
-    setMensaje(
-      `Estimado/a ${datos?.cliente?.nombre || 'cliente'},
-
-Le extendemos un cordial saludo desde el equipo de ventas de JLA GLOBAL COMPANY. Esperamos se encuentre muy bien.
-
-Adjunto encontrará el formato de pedido que ha agendado con nosotros. Por favor, revise los detalles para cerciornarse de que toda la información es correcta. Cualquier inquietud o inconsistencia, no dude en contactarnos.
-
-¡Gracias por confiar en nosotros!
-
-
-${getCompanyName()}
-🌐 Productos de calidad`
-    );
+    const { asunto, mensaje } = makePedidoAgendadoTemplate(datos);
+    setAsunto(asunto);
+    setMensaje(mensaje);
     setShowEnviarModal(true);
   };
 

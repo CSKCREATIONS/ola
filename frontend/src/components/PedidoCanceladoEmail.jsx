@@ -4,11 +4,9 @@ import Swal from 'sweetalert2';
 import api from '../api/axiosConfig';
 import {
   getStoredUser,
-  calculateTotal,
-  formatDateIso,
-  buildSignature,
-  getCompanyName
+  
 } from '../utils/emailHelpers';
+import { makePedidoCanceladoTemplate } from '../utils/emailTemplates';
 
 export default function PedidoCanceladoEmail({ datos, onClose, onEmailSent }) {
   // Obtener usuario logueado (usar helper seguro)
@@ -23,51 +21,10 @@ export default function PedidoCanceladoEmail({ datos, onClose, onEmailSent }) {
 
   // Función para abrir modal con datos actualizados
   const abrirModalEnvio = () => {
-    // Calcular total dinámicamente si no existe (utilitario)
-    const totalCalculado = calculateTotal(datos) || 0;
-    const totalFinal = datos?.total || totalCalculado;
-
-    // Fecha de pedido original: preferir createdAt, si no usar fecha, si ninguna está presente 'N/A'
-    const fechaPedidoOriginal = datos?.createdAt ? formatDateIso(datos.createdAt) : formatDateIso(datos?.fecha);
-    
-    // Actualizar datos autocompletados cada vez que se abre el modal
     setCorreo(datos?.cliente?.correo || '');
-    setAsunto(`Pedido Cancelado ${datos?.numeroPedido || ''} - ${datos?.cliente?.nombre || 'Cliente'} | ${getCompanyName()}`);
-    setMensaje(
-      `Estimado/a ${datos?.cliente?.nombre || 'cliente'},
-
-Lamentamos informarle que su pedido ha sido cancelado. A continuación los detalles:
-
-📦 DETALLES DEL PEDIDO CANCELADO:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Número de pedido: ${datos?.numeroPedido || 'N/A'}
-• Fecha de pedido original: ${fechaPedidoOriginal}
-• Fecha de cancelación: ${formatDateIso(new Date().toISOString())}
-• Cliente: ${datos?.cliente?.nombre || 'N/A'}
-• Correo: ${datos?.cliente?.correo || 'N/A'}
-• Teléfono: ${datos?.cliente?.telefono || 'N/A'}
-• Ciudad: ${datos?.cliente?.ciudad || 'N/A'}
-• Estado: Cancelado ❌
-• Total de productos: ${datos?.productos?.length || 0} artículos
-• VALOR TOTAL: $${totalFinal.toLocaleString('es-ES')}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Si la cancelación fue por nuestra parte, trabajaremos para resolver cualquier inconveniente. Si fue a su solicitud, confirmamos que se ha procesado correctamente.
-
-${datos?.observacion ? `📝 OBSERVACIONES ORIGINALES:
-${datos.observacion}
-
-` : ''}Esperamos tener la oportunidad de atenderle mejor en el futuro. Su satisfacción es nuestra prioridad.
-
-Para cualquier consulta sobre esta cancelación, no dude en contactarnos.
-
-Saludos cordiales,
-
-${buildSignature(usuario)}
-
-${getCompanyName()}
-🌐 Soluciones tecnológicas integrales`
-    );
+    const { asunto, mensaje } = makePedidoCanceladoTemplate(datos, usuario);
+    setAsunto(asunto);
+    setMensaje(mensaje);
     setShowEnviarModal(true);
   };
 

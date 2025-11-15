@@ -5,10 +5,9 @@ import Swal from 'sweetalert2';
 import api from '../api/axiosConfig';
 import {
   getStoredUser,
-  formatDateIso,
-  buildSignature,
   getCompanyName
 } from '../utils/emailHelpers';
+import { makeCotizacionTemplate } from '../utils/emailTemplates';
 import { formatDate } from '../utils/formatters';
 import { calcularTotales } from '../utils/calculations';
 
@@ -48,48 +47,10 @@ export default function CotizacionPreview({ datos, onClose, onEmailSent, onRemis
 
   // Función para abrir modal con datos actualizados
   const abrirModalEnvio = () => {
-    const totalFinal = datos?.total || calcularTotal();
-    // Fecha de emisión: usar datos.fecha si existe, si no mostrar 'N/A'
-    const fechaEmision = formatDateIso(datos?.fecha);
-
     setCorreo(datos?.cliente?.correo || '');
-    setAsunto(`Cotización ${datos?.codigo || ''} - ${datos?.cliente?.nombre || 'Cliente'} | ${getCompanyName()}`);
-    setMensaje(
-      `Estimado/a ${datos?.cliente?.nombre || 'cliente'},
-
-Esperamos se encuentre muy bien. Adjunto encontrará la cotización solicitada con la siguiente información:
-
-📋 DETALLES DE LA COTIZACIÓN:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Código: ${datos?.codigo || 'N/A'}
-• Fecha de emisión: ${fechaEmision}
-• Cliente: ${datos?.cliente?.nombre || 'N/A'}
-• Correo: ${datos?.cliente?.correo || 'N/A'}
-• Teléfono: ${datos?.cliente?.telefono || 'N/A'}
-• Ciudad: ${datos?.cliente?.ciudad || 'N/A'}
-• Estado actual: ${datos?.estado || 'Pendiente'}
-• Validez de la oferta: ${datos?.validez || '15 días'}
-• Total de productos: ${datos?.productos?.length || 0} artículos
-• TOTAL GENERAL: S/. ${totalFinal.toLocaleString('es-ES')}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-${datos?.descripcion ? `📝 DESCRIPCIÓN:
-${datos.descripcion}
-
-` : ''}${datos?.condicionesPago ? `💳 CONDICIONES DE PAGO:
-${datos.condicionesPago}
-
-` : ''}Quedamos atentos a sus comentarios y esperamos su pronta respuesta para proceder con la atención de su requerimiento.
-
-¡Gracias por confiar en nosotros!
-
-Saludos cordiales,
-
-${buildSignature(usuario)}
-
-${getCompanyName()}
-🌐 Productos de calidad`
-    );
+    const { asunto, mensaje } = makeCotizacionTemplate(datos, usuario);
+    setAsunto(asunto);
+    setMensaje(mensaje);
     setShowEnviarModal(true);
   };
 

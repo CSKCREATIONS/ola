@@ -4,11 +4,9 @@ import Swal from 'sweetalert2';
 import api from '../api/axiosConfig';
 import {
   getStoredUser,
-  calculateTotal,
-  formatDateIso,
-  buildSignature,
-  getCompanyName
+  
 } from '../utils/emailHelpers';
+import { makePedidoDevueltoTemplate } from '../utils/emailTemplates';
 
 export default function PedidoDevueltoEmail({ datos, onClose, onEmailSent }) {
   // Obtener usuario logueado (usar helper que maneja parse seguro)
@@ -23,51 +21,10 @@ export default function PedidoDevueltoEmail({ datos, onClose, onEmailSent }) {
 
   // Función para abrir modal con datos actualizados
   const abrirModalEnvio = () => {
-    // Calcular total dinámicamente si no existe (utilitario)
-    const totalCalculado = calculateTotal(datos) || 0;
-    const totalFinal = datos?.total || totalCalculado;
-
-    // Fecha de pedido original: preferir createdAt, si no usar fecha, si ninguna está presente 'N/A'
-    const fechaPedidoOriginal = datos?.createdAt ? formatDateIso(datos.createdAt) : formatDateIso(datos?.fecha);
-    
-    // Actualizar datos autocompletados cada vez que se abre el modal
     setCorreo(datos?.cliente?.correo || '');
-    setAsunto(`Pedido Devuelto ${datos?.numeroPedido || ''} - ${datos?.cliente?.nombre || 'Cliente'} | ${getCompanyName()}`);
-    setMensaje(
-      `Estimado/a ${datos?.cliente?.nombre || 'cliente'},
-
-Lamentamos informarle que su pedido ha sido devuelto. A continuación los detalles:
-
-📦 DETALLES DEL PEDIDO DEVUELTO:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Número de pedido: ${datos?.numeroPedido || 'N/A'}
-• Fecha de pedido original: ${fechaPedidoOriginal}
-• Fecha de devolución: ${formatDateIso(new Date().toISOString())}
-• Cliente: ${datos?.cliente?.nombre || 'N/A'}
-• Correo: ${datos?.cliente?.correo || 'N/A'}
-• Teléfono: ${datos?.cliente?.telefono || 'N/A'}
-• Ciudad: ${datos?.cliente?.ciudad || 'N/A'}
-• Estado: Devuelto ↩️
-• Total de productos: ${datos?.productos?.length || 0} artículos
-• VALOR TOTAL: $${totalFinal.toLocaleString('es-ES')}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Nos pondremos en contacto con usted para coordinar el proceso de devolución y resolver cualquier inconveniente.
-
-${datos?.observacion ? `📝 OBSERVACIONES ORIGINALES:
-${datos.observacion}
-
-` : ''}Lamentamos cualquier inconveniente causado y trabajaremos para resolver esta situación de la mejor manera posible.
-
-Para cualquier consulta sobre esta devolución, no dude en contactarnos.
-
-Saludos cordiales,
-
-${buildSignature(usuario)}
-
-${getCompanyName()}
-🌐 Soluciones tecnológicas integrales`
-    );
+    const { asunto, mensaje } = makePedidoDevueltoTemplate(datos, usuario);
+    setAsunto(asunto);
+    setMensaje(mensaje);
     setShowEnviarModal(true);
   };
 

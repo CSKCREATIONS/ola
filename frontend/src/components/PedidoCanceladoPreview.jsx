@@ -4,10 +4,9 @@ import Swal from 'sweetalert2';
 import api from '../api/axiosConfig';
 import {
   getStoredUser,
-  formatDateIso,
-  buildSignature,
-  getCompanyName
+  
 } from '../utils/emailHelpers';
+import { makePedidoCanceladoTemplate } from '../utils/emailTemplates';
 import { formatDate } from '../utils/formatters';
 import { calcularTotales } from '../utils/calculations';
 
@@ -38,44 +37,11 @@ export default function PedidoCanceladoPreview({ datos, onClose, onEmailSent }) 
 
   // Función para abrir modal de envío
   const abrirModalEnvio = () => {
-  const totalFinal = calcularTotal();
-  // Fecha de emisión: usar datos.fecha si existe, si no mostrar 'N/A'
-  const fechaEmision = formatDateIso(datos?.fecha);
-  setAsunto(`Pedido Cancelado ${datos?.numeroPedido || datos?.codigo || ''} - ${datos?.cliente?.nombre || 'Cliente'} | ${getCompanyName()}`);
-    setMensaje(
-      `Estimado/a ${datos?.cliente?.nombre || 'cliente'},
-
-Lamentamos informarle que el pedido con la siguiente información ha sido cancelado:
-
-📋 DETALLES DEL PEDIDO CANCELADO:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Número de pedido: ${datos?.numeroPedido || datos?.codigo || 'N/A'}
-• Fecha de emisión: ${fechaEmision}
-• Fecha de cancelación: ${formatDateIso(new Date().toISOString())}
-• Cliente: ${datos?.cliente?.nombre || 'N/A'}
-• Correo: ${datos?.cliente?.correo || 'N/A'}
-• Teléfono: ${datos?.cliente?.telefono || 'N/A'}
-• Ciudad: ${datos?.cliente?.ciudad || 'N/A'}
-• Estado: CANCELADO ❌
-• Total de productos: ${datos?.productos?.length || 0} artículos
-• TOTAL DEL PEDIDO: S/. ${totalFinal.toLocaleString('es-ES')}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-${datos?.motivoCancelacion ? `📝 MOTIVO DE CANCELACIÓN:
-${datos.motivoCancelacion}
-
-` : ''}Nos disculpamos por cualquier inconveniente que esto pueda causar. Si tiene alguna pregunta o desea realizar un nuevo pedido, no dude en contactarnos.
-
-Agradecemos su comprensión y esperamos poder atenderle en futuras oportunidades.
-
-Saludos cordiales,
-
-${buildSignature(usuario)}
-
-${getCompanyName()}
-🌐 Productos de calidad`
-    );
-    setShowEnviarModal(true);
+  setCorreo(datos?.cliente?.correo || '');
+  const { asunto, mensaje } = makePedidoCanceladoTemplate(datos, usuario);
+  setAsunto(asunto);
+  setMensaje(mensaje);
+  setShowEnviarModal(true);
   };
 
   // Función para enviar por correo
