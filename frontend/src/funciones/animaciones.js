@@ -21,7 +21,7 @@ export function toggleSubMenu(menuId){
 /***Los elementos son traidos con su id**/
 export function mostrarMenu(){
     const menuLateral = document.querySelector('#menu')
-    const companyName = document.querySelector('#empresa-nombre')
+    const companyName = document.querySelector('.empresa-nombre')
     const contenido = document.querySelector('.content')
     menuLateral.classList.toggle('mostrar-menu')
 
@@ -39,7 +39,7 @@ export function mostrarMenu(){
 
 export function cerrarMenu(){
     const menuLateral = document.querySelector('#menu')
-    const companyName = document.querySelector('#empresa-nombre')
+    const companyName = document.querySelector('.empresa-nombre')
     companyName.style.marginLeft = '0px'
     menuLateral.classList.toggle('mostrar-menu')
     const contenido = document.querySelector('.content')

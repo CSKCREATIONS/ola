@@ -21,6 +21,56 @@ h3 {
 }
 
 
+
+
+
+
+
+
+
+
+
+/* ===== VARIABLES Y ESTILOS GLOBALES ===== */
+:root {
+  --gradient-primary: linear-gradient(135deg, #05083c 0%, #340e80 50%, #e3dffa 100%);
+  --gradient-secondary: linear-gradient(135deg, #05083c 0%, #1a1d61 50%, #3d19ac 100%);
+  --gradient-accent: linear-gradient(135deg, #340e80 0%, #3d19ac 50%, #5e35b1 100%);
+  --text-white: #ffffff;
+  --text-light: #ecf0f1;
+  --text-lighter: #f8f9fa;
+  --hover-light: rgba(255, 255, 255, 0.1);
+  --hover-strong: rgba(255, 255, 255, 0.15);
+  --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.15);
+  --shadow-strong: 0 8px 30px rgba(0, 0, 0, 0.25);
+  --border-radius: 12px;
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  /*modal de agregar usuario*/
+  --primary-color: #2563eb;
+  --primary-hover: #1d4ed8;
+  --secondary-color: #f8fafc;
+  --border-color: #cbd5e1;
+  --text-color: #334155;
+  --muted-color: #64748b;
+  --danger-color: #ef4444;
+  --success-color: #10b981;
+  --modal-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  --transition: all 0.2s ease;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /**Orden de compra*/
 /* Estilos para modales más realistas */
 
@@ -87,7 +137,8 @@ h3 {
 
 .btn-success-profesional {
   background: linear-gradient(135deg, #27ae60, #219a52);
-  color: #0f172a; /* use a darker color for improved contrast against the green gradient */
+  color: #0f172a;
+  /* use a darker color for improved contrast against the green gradient */
 }
 
 .btn-success-profesional:hover {
@@ -286,6 +337,7 @@ h3 {
     transform: translateY(50px);
     opacity: 0;
   }
+
   to {
     transform: translateY(0);
     opacity: 1;
@@ -376,277 +428,7 @@ h3 {
 *************************************/
 
 /* Header */
-header {
-  background-color: #0f172a;
-  /* darker azul principal for improved contrast */
-  display: flex;
-  justify-content: space-between;
-  padding: 1% 1rem;
-  align-items: center;
-  color: #ffffff;
-  z-index: 1;
-}
 
-/* Contenedor izquierdo (logo + menu button) */
-.fijo .izquierda {
-  display: flex;
-  align-items: center;
-  gap: 2rem;
-}
-
-.fijo .izquierda #empresa-nombre {
-  font-size: 2em;
-  transition: .3s;
-  color: white;
-  cursor: pointer;
-}
-
-/* Loguito del menu */
-.fijo .izquierda #btn-menu {
-  display: flex;
-  flex-direction: column;
-  gap: .5em;
-  background-color: transparent;
-  cursor: pointer;
-  border: none;
-  padding: 0;
-}
-
-.fijo .izquierda #btn-menu .palito {
-  background-color: whitesmoke;
-  border-radius: 2px;
-  width: 2em;
-  height: 2px;
-}
-
-/* Estilos de los botones modernos (editar / logout en perfil) */
-.btn-modern {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 24px;
-  border: none;
-  border-radius: 12px;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-}
-
-.btn-edit {
-  background: linear-gradient(135deg, #FFD93D, #FFC300);
-  color: #222;
-}
-
-.btn-edit:hover {
-  background: linear-gradient(135deg, #FFC300, #FFB200);
-  transform: scale(1.05);
-  box-shadow: 0 6px 14px rgba(255, 193, 7, 0.4);
-}
-
-.btn-logout {
-  background: linear-gradient(135deg, #FF4C4C, #E63946);
-  color: #0f172a;
-}
-
-.btn-logout:hover {
-  background: linear-gradient(135deg, #E63946, #D62828);
-  transform: scale(1.05);
-  box-shadow: 0 6px 14px rgba(230, 57, 70, 0.4);
-}
-
-
-
-.logout-container {
-  margin-top: auto; /* lo manda al fondo */
-  padding: 20px; /* espacio alrededor */
-}
-
-/* consolidated logout button rules exist later; removed earlier duplicate */
-/***** Menu lateral (ajustado) *****/
-.menu {
-  z-index: 10;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  /* alineado arriba */
-  align-items: flex-start;
-  /* alineado a la izquierda */
-  text-align: left;
-  /* texto alineado a la izquierda */
-  background-color: #2c3e50;
-  /* azul principal */
-  position: fixed;
-  top: 0;
-  width: 250px;
-  height: 100vh;
-  left: -250px;
-  /* oculto por defecto */
-  transition: left .3s;
-  overflow-y: auto;
-  scrollbar-width: none;
-  /* firefox */
-  -ms-overflow-style: none;
-  /* IE 10+ */
-  padding-bottom: 2.5rem;
-}
-
-/* ocultar scrollbar en webkit (si quieres) */
-.menu::-webkit-scrollbar {
-  width: 0;
-  height: 0;
-}
-
-
-
-/* Por defecto, submenus ocultos */
-.dropdown {
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
-  opacity: 0;
-}
-
-/* Clase que hace visible el menu */
-.mostrar-menu {
-  left: 0px;
-}
-
-a,
-li {
-  text-decoration: none;
-  list-style: none;
-  color: inherit;
-}
-
-/* Preview del usuario (sin divisores) */
-.preview-usuario {
-  color: #ffffff;
-  /* add a subtle text-shadow to improve perceived contrast on varied backgrounds */
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.65);
-  gap: 10px;
-  padding: 5vh 15px 2vh;
-  display: flex;
-  align-items: center;
-  border-bottom: none;
-  /* quitar línea */
-}
-
-/* Hover para usuario y items del menu */
-.preview-usuario:hover,
-.menu li:hover {
-  background-color: #34495e;
-  /* tono más claro de azul para hover */
-  cursor: pointer;
-}
-
-/* Datos del usuario alineados a la izquierda */
-.datos-usuario {
-  text-align: left;
-}
-
-.modulos-menu {
-  padding-left: 10px;   /* desplaza todo el bloque a la derecha */
-  width: 100%;
-}
-
-.modulos-menu nav li {
-  list-style: none;
-  padding: 10px 0;
-  cursor: pointer;
-  transition: color 0.2s ease;
-}
-
-.modulos-menu nav li:hover {
-  color: #ffffff;
-}
-
-
-/* Contenedor modulos: quitar borders/divisores */
-.modulos-menu nav {
-  border-bottom: none;
-  /* quitar línea separadora */
-  width: 100%;
-}
-
-/* Items principales del menú */
-.menu .modulos-menu nav li {
-  padding: 12px 30px;
-  /* más espacio a la izquierda */
-  color: #ecf0f1;
-  width: 100%;
-  text-align: left;
-  box-sizing: border-box;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  /* espacio entre icono y texto */
-  font-size: 15px;
-  transition: background 0.3s;
-}
-
-/* Hover con mejor contraste */
-.menu .modulos-menu nav li:hover {
-  background-color: #3b4e63;
-}
-
-/* Íconos y texto del menú */
-.menu .modulos-menu nav li i {
-  font-size: 16px;
-  color: #bdc3c7;
-  /* gris clarito */
-}
-
-.menu .modulos-menu nav li span {
-  flex: 1;
-  color: #fff;
-  /* texto blanco */
-}
-
-
-
-
-/* Botón cerrar sesión (abajo) */
-.logout {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  padding: 1rem 0;
-  margin-top: auto;
-  /* lo manda al final */
-}
-
-.logout-btn {
-  width: 80%;
-  padding: 10px 0;
-  border: none;
-  border-radius: 8px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #ffffff;
-  background: linear-gradient(135deg, #2563eb, #1e40af);
-  /* azul degradado */
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-align: center;
-  letter-spacing: 0.5px;
-}
-
-.logout-btn:hover {
-  background: linear-gradient(135deg, #1e3a8a, #1d4ed8);
-  /* azul más intenso */
-  transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
-}
-
-
-/* Mostrar submenú cuando tenga la clase "visible" */
-.dropdown.visible {
-  max-height: 1000px;
-  opacity: 1;
-}
 
 .custom-footer {
   width: 100%;
@@ -677,63 +459,10 @@ li {
 }
 
 
-/* Usuario pequeño en header */
-.user {
-  display: flex;
-  align-items: center;
-  gap: .5rem;
-}
-
-.user img {
-  height: 40px;
-  object-fit: cover;
-  border-radius: 6px;
-}
-
-/* Texto de rol y elementos pequeños */
-.menu .modulos-menu ul li,
-.usuario-rol {
-  font-size: 14px;
-  font-weight: 200;
-  color: white;
-}
-
-/* Pequeños ajustes responsivos */
-@media (max-width: 768px) {
-  .menu {
-    width: 220px;
-  }
-
-  .close-menu {
-    display: block;
-    left: 13.5rem;
-  }
-
-  .fijo .izquierda #empresa-nombre {
-    font-size: 1.25rem;
-  }
-}
 
 
-.menu-title {
-  width: 100%;
-  padding: 14px 20px;
-  font-size: 13px;
-  font-weight: bold;
-  text-transform: uppercase;
-  color: #9cc5c3;
-  /* gris verdoso para diferenciarlo */
-  letter-spacing: 1px;
-  cursor: default;
-  background-color: #243342;
-  /* tono distinto al menú */
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-}
 
-.menu-title:hover {
-  background-color: #2c3e50;
-  /* no cambia al hover */
-}
+
 
 /*********Estilos para el Login **********/
 
@@ -883,7 +612,8 @@ li {
   width: 100%;
   padding: 0.8rem;
   background-color: #215f5b;
-  color: #fff; /* darker color to ensure sufficient contrast */
+  color: #fff;
+  /* darker color to ensure sufficient contrast */
   border: none;
   border-radius: 6px;
   font-size: 1rem;
@@ -929,7 +659,7 @@ li {
   background-color: #cfcfcf;
 }
 
-.max-width{
+.max-width {
   max-width: 1350px;
   margin: 0 auto;
 }
@@ -1020,7 +750,8 @@ td {
    and ensure cells truncate overflow with ellipsis. Keep .td-multiline
    able to expand vertically by using max-height and overflow:auto. */
 .table-container table tr {
-  height: 45px; /* fixed row height; adjust if you prefer a different value */
+  height: 45px;
+  /* fixed row height; adjust if you prefer a different value */
 }
 
 .table-container table td {
@@ -1694,10 +1425,7 @@ button:hover {
   box-sizing: border-box;
 }
 
-.icono {
-  color: rgb(0, 0, 0);
-  font-size: 16px;
-}
+
 
 .mensaje {
   color: rgb(10, 10, 10);
@@ -2014,20 +1742,7 @@ select:focus {
   text-decoration: underline;
 }
 
-/*modal de agregar usuario*/
-/* Variables */
-:root {
-  --primary-color: #2563eb;
-  --primary-hover: #1d4ed8;
-  --secondary-color: #f8fafc;
-  --border-color: #cbd5e1;
-  --text-color: #334155;
-  --muted-color: #64748b;
-  --danger-color: #ef4444;
-  --success-color: #10b981;
-  --modal-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-  --transition: all 0.2s ease;
-}
+
 
 /* Modal Overlay */
 .modal-overlay {
@@ -2587,177 +2302,186 @@ select:focus {
   .nav-modulo {
     font-size: .6rem;
   }
+
   .nav-dropdown-menu {
-  min-width: 150px;
-/**modal ver productos desde historial de compras*/
-/* Styles merged into the primary .modal-realista definition above to avoid duplicate selector conflicts */
+    min-width: 150px;
+    /**modal ver productos desde historial de compras*/
+    /* Styles merged into the primary .modal-realista definition above to avoid duplicate selector conflicts */
     animation: slideUp 0.4s ease;
-}
+  }
 
-@keyframes slideUp {
+  @keyframes slideUp {
     from {
-        transform: translateY(50px);
-        opacity: 0;
+      transform: translateY(50px);
+      opacity: 0;
     }
+
     to {
-        transform: translateY(0);
-        opacity: 1;
+      transform: translateY(0);
+      opacity: 1;
     }
-}
+  }
 
-/* earlier .table-profesional and .btn-profesional duplicate blocks removed; consolidated at lines 227-252 and 343-382 */
+  /* earlier .table-profesional and .btn-profesional duplicate blocks removed; consolidated at lines 227-252 and 343-382 */
 
 
-/****Modal de proveedores*/
-/* earlier .modal-overlay duplicate removed; primary definition at line 2040 */
+  /****Modal de proveedores*/
+  /* earlier .modal-overlay duplicate removed; primary definition at line 2040 */
 
-.modal-card {
-  background: #fff;
-  border-radius: 16px;
-  width: 600px;
-  max-width: 90%;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-  overflow: hidden;
-  animation: fadeIn 0.3s ease;
-}
+  .modal-card {
+    background: #fff;
+    border-radius: 16px;
+    width: 600px;
+    max-width: 90%;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    animation: fadeIn 0.3s ease;
+  }
 
-/* earlier .modal-header/.modal-title/.modal-close/.modal-body duplicates removed; consolidated at lines ~2076-2103 */
+  /* earlier .modal-header/.modal-title/.modal-close/.modal-body duplicates removed; consolidated at lines ~2076-2103 */
 
-.product-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
+  .product-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
 
-.product-item {
-  padding: 12px 16px;
-  border-bottom: 1px solid #eee;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
+  .product-item {
+    padding: 12px 16px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
 
-.product-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
+  .product-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
 
-.price {
-  font-weight: bold;
-  color: #28a745;
-}
+  .price {
+    font-weight: bold;
+    color: #28a745;
+  }
 
-.stock {
-  font-size: 0.9rem;
-  color: #555;
-}
+  .stock {
+    font-size: 0.9rem;
+    color: #555;
+  }
 
-.empty-text {
-  text-align: center;
-  color: #888;
-  font-style: italic;
-}
+  .empty-text {
+    text-align: center;
+    color: #888;
+    font-style: italic;
+  }
 
-/* earlier .modal-footer and .btn duplicates removed; primary definitions at lines 2218-2230 */
+  /* earlier .modal-footer and .btn duplicates removed; primary definitions at lines 2218-2230 */
 
-.btn-close {
-  background: #0056b3;
-  color: #ffffff;
-  transition: background 0.2s ease;
-}
+  .btn-close {
+    background: #0056b3;
+    color: #ffffff;
+    transition: background 0.2s ease;
+  }
 
-.btn-close:hover {
-  background: #004494;
-}
+  .btn-close:hover {
+    background: #004494;
+  }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
-}
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
 
-/* Estilos para modal de envío de correo */
-.btn-enviar-modal {
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
-  color: #ffffff;
-  border: none;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
 
-.btn-enviar-modal:hover {
-  background: linear-gradient(135deg, #1d4ed8, #1e40af);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-}
+  /* Estilos para modal de envío de correo */
+  .btn-enviar-modal {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: #ffffff;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
 
-.btn-cancelar-modal {
-  background: #6b7280;
-  color: white;
-  border: none;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
+  .btn-enviar-modal:hover {
+    background: linear-gradient(135deg, #1d4ed8, #1e40af);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+  }
 
-.btn-cancelar-modal:hover {
-  background: #4b5563;
-  transform: translateY(-2px);
-}
+  .btn-cancelar-modal {
+    background: #6b7280;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
 
-/* ESTILOS GLOBALES PARA ELIMINAR BORDES BLANCOS EN TABLAS MODERNAS - modifier .table-container--reset to avoid duplicating the primary .table-container at line 918 */
-.table-container--reset {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  padding: 0 !important;
-  margin: 0 !important;
-}
+  .btn-cancelar-modal:hover {
+    background: #4b5563;
+    transform: translateY(-2px);
+  }
 
-.contenido-modulo .table-container--reset {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  padding: 0 !important;
-}
+  /* ESTILOS GLOBALES PARA ELIMINAR BORDES BLANCOS EN TABLAS MODERNAS - modifier .table-container--reset to avoid duplicating the primary .table-container at line 918 */
+  .table-container--reset {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
 
-.contenido-modulo table {
-  border: none !important;
-  background: transparent !important;
-  box-shadow: none !important;
-}
+  .contenido-modulo .table-container--reset {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
 
-/* Asegurar que los contenedores modernos no tengan bordes blancos */
-.categoria-table-modern,
-.subcategoria-table-modern,
-.proveedor-table-modern,
-.pedidos-table-modern {
-  border: none !important;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important;
-}
+  .contenido-modulo table {
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
 
-.categoria-table-wrapper,
-.subcategoria-table-wrapper,
-.proveedor-table-wrapper,
-.pedidos-table-wrapper {
-  border: 1px solid #e5e7eb !important;
-  box-shadow: none !important;
-}
+  /* Asegurar que los contenedores modernos no tengan bordes blancos */
+  .categoria-table-modern,
+  .subcategoria-table-modern,
+  .proveedor-table-modern,
+  .pedidos-table-modern {
+    border: none !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1) !important;
+  }
 
-/* Eliminar cualquier borde blanco restante; target the reset modifier to avoid duplicating the primary .table-container */
-div[class*="-advanced-container"] .table-container--reset {
-  background: transparent !important;
-  border: none !important;
-}
+  .categoria-table-wrapper,
+  .subcategoria-table-wrapper,
+  .proveedor-table-wrapper,
+  .pedidos-table-wrapper {
+    border: 1px solid #e5e7eb !important;
+    box-shadow: none !important;
+  }
 
-div[class*="-advanced-container"] table {
-  border: none !important;
-  background: transparent !important;
-}
+  /* Eliminar cualquier borde blanco restante; target the reset modifier to avoid duplicating the primary .table-container */
+  div[class*="-advanced-container"] .table-container--reset {
+    background: transparent !important;
+    border: none !important;
+  }
+
+  div[class*="-advanced-container"] table {
+    border: none !important;
+    background: transparent !important;
+  }
 
 }
