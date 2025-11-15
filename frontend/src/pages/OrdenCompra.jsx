@@ -7,7 +7,7 @@ import NavCompras from '../components/NavCompras';
 import DetallesOrdenModal from '../components/DetallesOrdenModal';
 import { roundMoney } from '../utils/formatters';
 import { randomString } from '../utils/secureRandom';
-import { calcularTotales as calcularTotalesShared } from '../utils/calculations';
+import { calcularTotales as calcularTotalesShared, sumarProp } from '../utils/calculations';
 /* global globalThis */
 
 // Small helper utilities (local fallbacks used by this page)
@@ -1267,7 +1267,7 @@ export default function OrdenCompra() {
                 </div>
                 <div>
                   <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                    ${ordenes.reduce((sum, o) => sum + (o.total || 0), 0).toLocaleString()}
+                    ${sumarProp(ordenes, 'total').toLocaleString()}
                   </h3>
                   <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
                     Valor Total Órdenes

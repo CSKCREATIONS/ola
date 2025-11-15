@@ -6,6 +6,7 @@ import Swal from 'sweetalert2';
 import '../App.css';
 import Fijo from '../components/Fijo';
 import NavCompras from '../components/NavCompras';
+import { contarProductosEnProveedores } from '../utils/calculations';
 
 const API_URL = '/api/proveedores';
 
@@ -980,7 +981,7 @@ const GestionProveedores = () => {
                 </div>
                 <div>
                   <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                    {proveedores.reduce((sum, p) => sum + (p.productos?.length || 0), 0)}
+                    {contarProductosEnProveedores(proveedores)}
                   </h3>
                   <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
                     Total Productos

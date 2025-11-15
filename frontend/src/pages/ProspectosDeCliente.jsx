@@ -9,6 +9,7 @@ import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import api from '../api/axiosConfig';
 import CotizacionPreview from '../components/CotizacionPreview';
+import { contarLongitudesObjetoValues } from '../utils/calculations';
 
 // CSS inyectado para diseño avanzado
 const advancedStyles = `
@@ -499,7 +500,7 @@ export default function ListaDeClientes() {
                 </div>
                 <div>
                   <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                    {Object.values(cotizacionesMap).reduce((total, cotizaciones) => total + cotizaciones.length, 0)}
+                    {contarLongitudesObjetoValues(cotizacionesMap)}
                   </h3>
                   <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
                     Cotizaciones Asociadas

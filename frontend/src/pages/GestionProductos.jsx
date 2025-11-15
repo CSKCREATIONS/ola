@@ -5,6 +5,7 @@ import '../App.css';
 import Fijo from '../components/Fijo';
 import NavProductos from '../components/NavProductos';
 import api from '../api/axiosConfig';
+import { calcularInventario } from '../utils/calculations';
 
 // API endpoint constants used in this page
 const API_PRODUCTS = '/api/products';
@@ -1083,11 +1084,7 @@ const GestionProductos = () => {
                 </div>
                 <div>
                   <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                    ${productos.reduce((sum, p) => {
-                      const price = Number.parseFloat(p.price) || 0;
-                      const stock = Number.parseInt(p.stock) || 0;
-                      return sum + (price * stock);
-                    }, 0).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                    ${calcularInventario(productos).totalValue.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                   </h3>
                   <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
                     Valor Total del Inventario
@@ -1128,14 +1125,7 @@ const GestionProductos = () => {
                 </div>
                 <div>
                   <h3 style={{ margin: '0 0 5px 0', fontSize: '1.8rem', fontWeight: '700', color: '#1f2937' }}>
-                    ${productos.length > 0 ? 
-                      (productos.reduce((sum, p) => {
-                        const price = Number.parseFloat(p.price) || 0;
-                        const stock = Number.parseInt(p.stock) || 0;
-                        return sum + (price * stock);
-                      }, 0) / productos.length).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
-                      : '0'
-                    }
+                    ${productos.length > 0 ? calcularInventario(productos).avgValuePerProduct.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) : '0'}
                   </h3>
                   <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
                     Valor Promedio por Producto
@@ -1165,7 +1155,7 @@ const GestionProductos = () => {
                 </div>
                 <div>
                   <h3 style={{ margin: '0 0 5px 0', fontSize: '1.8rem', fontWeight: '700', color: '#1f2937' }}>
-                    {productos.reduce((sum, p) => sum + (Number.parseInt(p.stock) || 0), 0).toLocaleString()}
+                    {calcularInventario(productos).totalStock.toLocaleString()}
                   </h3>
                   <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
                     Unidades en Stock Total

@@ -7,7 +7,7 @@ import NavCompras from '../components/NavCompras';
 
 import api from '../api/axiosConfig';
 import { randomString } from '../utils/secureRandom';
-import { calcularTotales as calcularTotalesShared } from '../utils/calculations';
+import { calcularTotales as calcularTotalesShared, sumarProp } from '../utils/calculations';
 
 // Deterministic email validator to avoid catastrophic regex backtracking
 function isValidEmail(email) {
@@ -895,7 +895,7 @@ JLA Global Company</textarea>
                 </div>
                 <div>
                   <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                    ${compras.reduce((sum, c) => sum + (c.total || 0), 0).toLocaleString()}
+                    ${sumarProp(compras, 'total').toLocaleString()}
                   </h3>
                   <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
                     Valor Total Compras
@@ -924,7 +924,7 @@ JLA Global Company</textarea>
                 </div>
                 <div>
                   <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                    {compras.length > 0 ? (compras.reduce((sum, c) => sum + (c.total || 0), 0) / compras.length).toLocaleString() : 0}
+                    {compras.length > 0 ? (sumarProp(compras, 'total') / compras.length).toLocaleString() : 0}
                   </h3>
                   <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
                     Promedio por Compra

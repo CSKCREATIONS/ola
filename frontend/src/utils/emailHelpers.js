@@ -1,4 +1,6 @@
 // Shared helpers for email templates and small utils
+import { calcularTotales } from './calculations';
+
 export function getStoredUser() {
   try {
     const raw = localStorage.getItem('user');
@@ -21,8 +23,6 @@ export function formatDateIso(value) {
     return 'N/A';
   }
 }
-
-import { calcularTotales } from './calculations';
 
 export function calculateTotal(datos) {
   if (!datos) return 0;

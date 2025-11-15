@@ -1,18 +1,24 @@
+/* global globalThis */
 // Secure random helpers that work in browser (Web Crypto) and Node.js (crypto)
 const hasCrypto = typeof globalThis !== 'undefined' && (globalThis.crypto || globalThis.msCrypto);
 const nodeCrypto = (() => {
+  // Avoid bundlers statically resolving 'crypto' by using eval('require') at runtime.
+  // This block only attempts to run in Node-like environments where `require` is available.
   try {
-    // eslint-disable-next-line global-require
-    return require('node:crypto');
-  } catch {
-    try {
-      // Fallback to legacy name for older Node.js versions
-      // eslint-disable-next-line global-require
-      return require('node:crypto');
-    } catch {
-      return null;
+    if (globalThis?.window === undefined && typeof require === 'function') {
+      // eslint-disable-next-line no-eval
+      const req = eval('require');
+      return req('crypto');
+    }
+  } catch (e) {
+    // Not available in this environment or require failed; log for debugging and continue.
+    if (typeof console !== 'undefined' && typeof console.debug === 'function') {
+      console.debug('secureRandom: crypto require failed or unavailable', e);
+    } else if (typeof console !== 'undefined' && typeof console.warn === 'function') {
+      console.warn('secureRandom: crypto require failed or unavailable');
     }
   }
+  return null;
 })();
 
 function randomBytesUint8(len) {

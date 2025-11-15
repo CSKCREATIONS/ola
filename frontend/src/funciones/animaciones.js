@@ -77,8 +77,12 @@ export function closeModal(modalId) {
 // marca todos los checkbox
 export function toggleCheckboxes(setSelected) {
     setSelected((prev) => {
-      const allChecked = !Object.values(prev).every(Boolean);
-      return Object.keys(prev).reduce((acc, key) => ({ ...acc, [key]: allChecked }), {});
+            const allChecked = !Object.values(prev).every(Boolean);
+            const acc = {};
+            for (const key of Object.keys(prev)) {
+                acc[key] = allChecked;
+            }
+            return acc;
     });
   }
 

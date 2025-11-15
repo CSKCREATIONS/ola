@@ -99,3 +99,53 @@ export const sumarProp = (arr = [], prop = 'total') => {
   const sum = arr.reduce((acc, item) => acc + (Number(item?.[prop]) || 0), 0);
   return roundMoney(sum);
 };
+
+/**
+ * Cuenta el total de productos asociados a una lista de proveedores.
+ * @param {Array} proveedores - arreglo de proveedores cuyo campo `productos` es un arreglo
+ * @returns {number} suma de longitudes
+ */
+export const contarProductosEnProveedores = (proveedores = []) => {
+  if (!Array.isArray(proveedores) || proveedores.length === 0) return 0;
+  return proveedores.reduce((acc, p) => acc + (Array.isArray(p?.productos) ? p.productos.length : 0), 0);
+};
+
+/**
+ * Suma las longitudes de los arrays presentes como valores en un objeto.
+ * Útil para estructuras como un map de cotizaciones por email.
+ * @param {Object} map - objeto cuyas values son arreglos
+ * @returns {number} suma de longitudes
+ */
+export const contarLongitudesObjetoValues = (map = {}) => {
+  if (!map || typeof map !== 'object') return 0;
+  return Object.values(map).reduce((acc, v) => acc + (Array.isArray(v) ? v.length : 0), 0);
+};
+
+/**
+ * Calcula métricas del inventario: valor total, stock total y valor promedio por producto.
+ * @param {Array} productos - lista de productos con `price` y `stock`
+ * @returns {object} { totalValue, totalStock, avgValuePerProduct }
+ */
+export const calcularInventario = (productos = []) => {
+  if (!Array.isArray(productos) || productos.length === 0) {
+    return { totalValue: 0, totalStock: 0, avgValuePerProduct: 0 };
+  }
+
+  let totalValue = 0;
+  let totalStock = 0;
+
+  for (const p of productos) {
+    const price = Number.parseFloat(p?.price) || 0;
+    const stock = Number.parseInt(p?.stock) || 0;
+    totalValue += price * stock;
+    totalStock += stock;
+  }
+
+  const avg = productos.length > 0 ? totalValue / productos.length : 0;
+
+  return {
+    totalValue: roundMoney(totalValue),
+    totalStock: totalStock,
+    avgValuePerProduct: roundMoney(avg)
+  };
+};
