@@ -254,35 +254,15 @@ if (!document.getElementById('usuarios-advanced-styles')) {
 
 /****Funcion para exportar a pdf*** */
 
-const exportarPDF = () => {
-  const input = document.getElementById('tabla_lista_usuarios');
-
-  html2canvas(input).then((canvas) => {
-    const imgData = canvas.toDataURL('image/png');
-    const pdf = new jsPDF('p', 'mm', 'a4');
-
-    const imgWidth = 190;
-    const pageHeight = 297; // A4 height in mm
-    const imgHeight = (canvas.height * imgWidth) / canvas.width; // Calcula la altura de la imagen
-
-    let heightLeft = imgHeight;
-    let position = 10;
-
-    pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
-
-    heightLeft -= pageHeight;
-
-    // Mientras la imagen exceda la altura de la página, agregar nuevas páginas
-    while (heightLeft > 0) {
-      position = heightLeft - imgHeight;
-      pdf.addPage(); // Añadir nueva página
-      pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight; // Resta la altura de la página actual
+  const exportarPDF = async () => {
+    try {
+      const exportElementToPdf = (await import('../utils/exportToPdf')).default;
+      await exportElementToPdf('tabla_lista_usuarios', 'listaUsuarios.pdf');
+    } catch (err) {
+      console.error('Error exportando PDF:', err);
+      Swal.fire('Error', 'No se pudo generar el PDF', 'error');
     }
-
-    pdf.save('listaUsuarios.pdf');// nombre del pdf a descargar
-  });
-};
+  };
 
 
 // Funcion exportar a Excel

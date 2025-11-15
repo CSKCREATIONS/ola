@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Fijo from '../components/Fijo';
 import NavVentas from '../components/NavVentas';
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
+import exportElementToPdf from '../utils/exportToPdf';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 
@@ -12,54 +11,22 @@ export default function Ventas() {
   const [filtroCliente, setFiltroCliente] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('');
 
-  const exportarPDF = () => {
-  const input = document.getElementById('lista-ventas');
-  html2canvas(input).then((canvas) => {
-    const imgData = canvas.toDataURL('image/png');
-    const pdf = new jsPDF('p', 'mm', 'a4');
-    const imgWidth = 190;
-    const pageHeight = 297;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-    let heightLeft = imgHeight;
-    let position = 10;
-
-    pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
-    heightLeft -= pageHeight;
-
-    while (heightLeft > 0) {
-      position = heightLeft - imgHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
+  const exportarPDF = async () => {
+    try {
+      await exportElementToPdf('lista-ventas', 'listaVentas.pdf');
+    } catch (err) {
+      console.error('Error exportando PDF:', err);
     }
+  };
 
-    pdf.save('listaVentas.pdf');
-  });
-};
-
-
-const exportToExcel = () => {
-  const table = document.getElementById('lista-ventas');
-  if (!table) return;
-  const workbook = XLSX.utils.table_to_book(table);
-  const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-  const data = new Blob([excelBuffer], { type: 'application/octet-stream' });
-  saveAs(data, 'listaVentas.xlsx');
-}
-
-  useEffect(() => {
-    const cargarVentasInicial = async () => {
-      try {
-        const res = await api.get('/api/ventas');
-        console.log('✅ Ventas recibidas:', res.data);
-        setVentas(res.data);
-      } catch (err) {
-        console.error('Error al cargar ventas:', err);
-      }
-    };
-
-    cargarVentasInicial();
-  }, []);
+  const exportToExcel = () => {
+    const table = document.getElementById('lista-ventas');
+    if (!table) return;
+    const workbook = XLSX.utils.table_to_book(table);
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    const data = new Blob([excelBuffer], { type: 'application/octet-stream' });
+    saveAs(data, 'listaVentas.xlsx');
+  };
 
 
   const ventasFiltradas = ventas.filter(venta => {

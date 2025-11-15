@@ -179,10 +179,25 @@ if (!document.getElementById('prospectos-advanced-styles')) {
 }
 
 /**** Funcion para exportar a pdf ***/
-const exportarPDF = () => {
-  const input = document.getElementById('tabla_prospectos');
+const exportarPDF = async () => {
+  // Intentar primero usar el util compartido (bundle separado), si falla usar fallback con html2canvas/jsPDF
+  try {
+    const exportElementToPdf = (await import('../utils/exportToPdf')).default;
+    await exportElementToPdf('tabla_prospectos', 'prospectos.pdf');
+    return;
+  } catch (err) {
+    console.warn('Falling back to html2canvas/jsPDF export due to:', err);
+  }
 
-  html2canvas(input).then((canvas) => {
+  // Fallback: captura con html2canvas y genera PDF con jsPDF
+  const input = document.getElementById('tabla_prospectos');
+  if (!input) {
+    console.error('Elemento para exportar no encontrado: tabla_prospectos');
+    return;
+  }
+
+  try {
+    const canvas = await html2canvas(input);
     const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF('p', 'mm', 'a4');
 
@@ -204,30 +219,10 @@ const exportarPDF = () => {
     }
 
     pdf.save('listaProspectos.pdf');
-  });
-};
-
-const exportToExcel = () => {
-  const table = document.getElementById('tabla_prospectos');
-  if (!table) {
-    console.error("Tabla no encontrada");
-    return;
+  } catch (err2) {
+    console.error('Error exportando PDF (html2canvas fallback):', err2);
   }
-  const workbook = XLSX.utils.table_to_book(table);
-  const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-  const data = new Blob([excelBuffer], { type: 'application/octet-stream' });
-  saveAs(data, 'listaProspectos.xlsx');
 };
-
-export default function ListaDeClientes() {
-  const [prospectos, setProspectos] = useState([]);
-  const [cotizacionesMap, setCotizacionesMap] = useState({});
-  const [mostrarPreview, setMostrarPreview] = useState(false);
-  const [cotizacionSeleccionada, setCotizacionSeleccionada] = useState(null);
-  const [expandedEmails, setExpandedEmails] = useState({});
-  const [filtroTexto, setFiltroTexto] = useState("");
-  const [paginaActual, setPaginaActual] = useState(1);
-  const registrosPorPagina = 10;
 
   const location = useLocation();
 
@@ -807,4 +802,4 @@ export default function ListaDeClientes() {
       </div>
     </div>
   )
-}
+
