@@ -27,6 +27,9 @@ export default function RemisionPreview({ datos, onClose }) {
   // Helper: obtain a crypto object in a cross-environment safe way without using
   // restricted global identifiers (avoids ESLint `no-restricted-globals` on `self`).
   const getCrypto = () => {
+
+    if (typeof window !== 'undefined' && window.crypto) return window.crypto;
+    if (typeof global !== 'undefined' && global.crypto) return global.crypto;
     try {
       if (globalThis?.window?.crypto) return globalThis.window.crypto;
       if (globalThis?.crypto) return globalThis.crypto;
@@ -391,7 +394,38 @@ ${getCompanyName()}
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             {/* Botón de imprimir */}
                 <button
-              onClick={handlePrint}
+              onClick={() => {
+                const printContent = document.querySelector('.pdf-remision');
+                const newWindow = (typeof window !== 'undefined' && window.open) ? window.open('', '_blank') : null;
+                if (!newWindow) {
+                  console.warn('No window available for printing.');
+                  return;
+                }
+                newWindow.document.write(`
+                  <html>
+                    <head>
+                      <title>Remisión - ${numeroRemision}</title>
+                      <style>
+                        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+                        .header { text-align: center; margin-bottom: 30px; padding: 20px; background: linear-gradient(135deg, #059669, #065f46); color: white; border-radius: 10px; }
+                        .info-section { margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; }
+                        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+                        th { background: linear-gradient(135deg, #059669, #065f46); color: white; font-weight: bold; }
+                        .total-row { background: #d1fae5; font-weight: bold; }
+                        .status-badge { background: #059669; color: white; padding: 8px 16px; border-radius: 20px; display: inline-block; }
+                      </style>
+                    </head>
+                    <body>
+                      ${printContent?.innerHTML || ''}
+                    </body>
+                  </html>
+                `);
+                newWindow.document.close();
+                newWindow.focus();
+                newWindow.print();
+                newWindow.close();
+              }}
               style={{
                 background: 'rgba(255, 255, 255, 0.2)',
                 border: 'none',

@@ -5,6 +5,7 @@ import axios from 'axios';
 // Fallback: if running in browser, infer API host from window.location safely
 const getBaseURL = () => {
   if (process.env.REACT_APP_API_URL) return process.env.REACT_APP_API_URL;
+
   if (globalThis.window?.location) {
     const { protocol, hostname } = globalThis.window.location;
     return `${protocol}//${hostname}:5000`;

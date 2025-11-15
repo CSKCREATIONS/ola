@@ -29,6 +29,7 @@ export default function AgregarUsuario() {
   // Helper: obtain a crypto object in a cross-environment safe way without using
   // restricted global identifiers (avoids ESLint `no-restricted-globals` on `self`).
   const getCrypto = () => {
+
     // Prefer direct undefined comparison to avoid using `typeof` and prefer globalThis
     if (globalThis.window?.crypto) return globalThis.window.crypto;
     if (globalThis.global?.crypto) return globalThis.global.crypto;
@@ -42,6 +43,7 @@ export default function AgregarUsuario() {
   };
 
   // Función para abrir el modal (puede ser llamada desde el componente padre)
+
   if (globalThis?.window) {
     globalThis.window.openModalUsuario = () => {
       setIsVisible(true);
