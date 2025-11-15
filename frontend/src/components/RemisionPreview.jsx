@@ -27,9 +27,7 @@ export default function RemisionPreview({ datos, onClose }) {
   // Helper: obtain a crypto object in a cross-environment safe way without using
   // restricted global identifiers (avoids ESLint `no-restricted-globals` on `self`).
   const getCrypto = () => {
-
-    if (typeof window !== 'undefined' && window.crypto) return window.crypto;
-    if (typeof global !== 'undefined' && global.crypto) return global.crypto;
+    if (typeof globalThis !== 'undefined' && globalThis.window && globalThis.window.crypto) return globalThis.window.crypto;
     try {
       if (globalThis?.window?.crypto) return globalThis.window.crypto;
       if (globalThis?.crypto) return globalThis.crypto;
@@ -245,108 +243,10 @@ ${getCompanyName()}
   console.log('📅 Fecha remisión:', datos?.fechaRemision);
   console.log('🔄 Estado:', datos?.estado);
 
-  // Helper: try to set document using DOM APIs (preferred over document.write)
-  const trySetDocWithDOM = (doc, title, htmlContent, styleText) => {
-    doc.title = title;
-    const head = doc.head || doc.getElementsByTagName('head')[0];
-    const styleEl = doc.createElement('style');
-    // Prefer creating a text node when available; otherwise fall back to innerHTML.
-    if (doc && typeof doc.createTextNode === 'function') {
-      try {
-        styleEl.appendChild(doc.createTextNode(styleText));
-      } catch (error_) {
-        // In the unlikely case creating/appending the text node fails, fallback to innerHTML and log the error.
-        // Logging the error ensures the exception is handled (and helpful for debugging) instead of being ignored.
-        /* eslint-disable no-console */
-        console.debug('styleEl.appendChild/createTextNode failed, falling back to innerHTML', error_);
-        /* eslint-enable no-console */
-        styleEl.innerHTML = styleText;
-      }
-    } else {
-      // Environments without createTextNode (or when doc is not a typical Document)
-      styleEl.innerHTML = styleText;
-    }
-    if (head) head.appendChild(styleEl);
-    if (doc.body) {
-      doc.body.innerHTML = htmlContent;
-    } else {
-      const body = doc.createElement('body');
-      body.innerHTML = htmlContent;
-      doc.documentElement.appendChild(body);
-    }
-  };
+  // (removed) Unused helpers trySetDocWithDOM and trySetDocOuterHTML
 
-  const trySetDocOuterHTML = (doc, title, htmlContent, styleText) => {
-    const full = `<!doctype html><html><head><meta charset="utf-8"><title>${title}</title><style>${styleText}</style></head><body>${htmlContent}</body></html>`;
-    // Try assigning outerHTML as a safer alternative to document.write
-    doc.documentElement.outerHTML = full;
-  };
+  // (removed) Unused buildPrintStyle helper
 
-  const buildPrintStyle = () => `
-    body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
-    .header { text-align: center; margin-bottom: 30px; padding: 20px; background: linear-gradient(135deg, #059669, #065f46); color: white; border-radius: 10px; }
-    .info-section { margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; }
-    table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-    th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-    th { background: linear-gradient(135deg, #059669, #065f46); color: white; font-weight: bold; }
-    .total-row { background: #d1fae5; font-weight: bold; }
-    .status-badge { background: #059669; color: white; padding: 8px 16px; border-radius: 20px; display: inline-block; }
-  `;
-
-  const handlePrint = () => {
-    const printContent = document.querySelector('.pdf-remision');
-    const newWindow = globalThis?.window?.open?.('', '_blank') ?? null;
-    if (!newWindow) {
-      console.warn('No window available for printing.');
-      return;
-    }
-    const title = `Remisión - ${numeroRemision}`;
-    const style = buildPrintStyle();
-    try {
-      trySetDocWithDOM(newWindow.document, title, printContent?.innerHTML || '', style);
-    } catch (error_) {
-      try {
-        trySetDocOuterHTML(newWindow.document, title, printContent?.innerHTML || '', style);
-      } catch (error__) {
-        // final fallback: use blob URL
-        console.debug('trySetDocOuterHTML failed, trying blob URL fallback:', error__);
-        try {
-          const full = `<!doctype html><html><head><meta charset="utf-8"><title>${title}</title><style>${style}</style></head><body>${printContent?.innerHTML || ''}</body></html>`;
-          const blob = new Blob([full], { type: 'text/html' });
-          const url = URL.createObjectURL(blob);
-          newWindow.location.href = url;
-        } catch (error___) {
-          console.error('Failed to set print document:', error_, error__, error___);
-          try {
-            newWindow.close();
-          } catch (closeError) {
-            console.debug('Failed to close newWindow after print document error:', closeError);
-          }
-          return;
-        }
-      }
-    }
-    try {
-      newWindow.document.close?.();
-    } catch (error__) {
-      console.debug('print helper: document.close failed:', error__);
-    }
-    try {
-      newWindow.focus?.();
-    } catch (error__) {
-      console.debug('print helper: focus failed:', error__);
-    }
-    try {
-      newWindow.print?.();
-    } catch (error__) {
-      console.debug('print helper: print failed:', error__);
-    }
-    try {
-      newWindow.close?.();
-    } catch (error__) {
-      console.debug('print helper: close failed:', error__);
-    }
-  };
 
   return (
     <div className="modal-cotizacion-overlay" style={{
@@ -396,35 +296,39 @@ ${getCompanyName()}
                 <button
               onClick={() => {
                 const printContent = document.querySelector('.pdf-remision');
-                const newWindow = (typeof window !== 'undefined' && window.open) ? window.open('', '_blank') : null;
+                const newWindow = (typeof globalThis !== 'undefined' && globalThis.window && globalThis.window.open) ? globalThis.window.open('', '_blank') : null;
                 if (!newWindow) {
                   console.warn('No window available for printing.');
                   return;
                 }
-                newWindow.document.write(`
-                  <html>
-                    <head>
-                      <title>Remisión - ${numeroRemision}</title>
-                      <style>
-                        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
-                        .header { text-align: center; margin-bottom: 30px; padding: 20px; background: linear-gradient(135deg, #059669, #065f46); color: white; border-radius: 10px; }
-                        .info-section { margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; }
-                        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-                        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-                        th { background: linear-gradient(135deg, #059669, #065f46); color: white; font-weight: bold; }
-                        .total-row { background: #d1fae5; font-weight: bold; }
-                        .status-badge { background: #059669; color: white; padding: 8px 16px; border-radius: 20px; display: inline-block; }
-                      </style>
-                    </head>
-                    <body>
-                      ${printContent?.innerHTML || ''}
-                    </body>
-                  </html>
-                `);
-                newWindow.document.close();
-                newWindow.focus();
-                newWindow.print();
-                newWindow.close();
+                const doc = newWindow.document;
+                // Set title
+                doc.title = `Remisión - ${numeroRemision}`;
+                // Ensure head exists and inject styles
+                const headEl = doc.head || doc.getElementsByTagName('head')[0] || doc.createElement('head');
+                if (!doc.head) doc.documentElement.insertBefore(headEl, doc.body || null);
+                const styleEl = doc.createElement('style');
+                styleEl.textContent = `
+                  body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+                  .header { text-align: center; margin-bottom: 30px; padding: 20px; background: linear-gradient(135deg, #059669, #065f46); color: white; border-radius: 10px; }
+                  .info-section { margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; }
+                  table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                  th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+                  th { background: linear-gradient(135deg, #059669, #065f46); color: white; font-weight: bold; }
+                  .total-row { background: #d1fae5; font-weight: bold; }
+                  .status-badge { background: #059669; color: white; padding: 8px 16px; border-radius: 20px; display: inline-block; }
+                `;
+                headEl.appendChild(styleEl);
+                // Set body content
+                const bodyEl = doc.body || doc.createElement('body');
+                bodyEl.innerHTML = printContent?.innerHTML || '';
+                if (!doc.body) doc.documentElement.appendChild(bodyEl);
+                // Print after DOM is ready
+                setTimeout(() => {
+                  newWindow.focus();
+                  newWindow.print();
+                  newWindow.close();
+                }, 0);
               }}
               style={{
                 background: 'rgba(255, 255, 255, 0.2)',

@@ -1,6 +1,7 @@
 /* global globalThis */
 import React, { useEffect, useState } from 'react';
 import '../App.css';
+import '../styles/Fijo.css';
 import { Link, useNavigate } from 'react-router-dom';
 import { mostrarMenu, toggleSubMenu, cerrarMenu } from '../funciones/animaciones.js';
 import Swal from 'sweetalert2';
@@ -65,9 +66,9 @@ export async function resolveRoleForUser(usuario) {
 
     if (roleObj) {
       usuario.role = roleObj;
-      try { 
-        localStorage.setItem('user', JSON.stringify(usuario)); 
-      } catch (error_) { 
+      try {
+        localStorage.setItem('user', JSON.stringify(usuario));
+      } catch (error_) {
         console.error('Failed to save user to localStorage:', error_);
       }
     }
@@ -89,7 +90,7 @@ export default function Fijo() {
   const [puedeGenerarOrden, setPuedeGenerarOrden] = useState(false);
   const [puedeVerOrdenes, setPuedeVerOrdenes] = useState(false);
   const [puedeVerProveedores, setPuedeVerProveedores] = useState(false);
-  const [puedeVerHCompras] = useState(false);
+  const [puedeVerHCompras, setPuedeVerHCompras] = useState(false);
   const [puedeVerReportesCompras, setPuedeVerReportesCompras] = useState(false);
   const [puedeVerCategorias, setPuedeVerCategorias] = useState(false);
   const [puedeVerSubcategorias, setPuedeVerSubcategorias] = useState(false);
@@ -126,6 +127,7 @@ export default function Fijo() {
       setPuedeGenerarOrden(has('ordenes.generar'));
       setPuedeGenerarOrden(has('ordenes.generar'));
       setPuedeVerOrdenes(has('ordenesCompra.ver'));
+      setPuedeVerHCompras(has('hcompras.ver'));
       setPuedeVerProveedores(has('proveedores.ver'));
       setPuedeVerReportesCompras(has('reportesCompras.ver'));
       setPuedeVerCategorias(has('categorias.ver'));
@@ -154,8 +156,8 @@ export default function Fijo() {
 
     // 3. Manejar click fuera del menú (código original preservado)
     const handleClickOutside = (event) => {
-  const menu = document.getElementById('menu');
-  const btnMenu = document.getElementById('btn-menu');
+      const menu = document.getElementById('menu');
+      const btnMenu = document.getElementById('btn-menu');
 
       if (menu.classList.contains('mostrar-menu') &&
         !menu.contains(event.target) &&
@@ -204,206 +206,201 @@ export default function Fijo() {
             <div className="palito"></div>
             <div className="palito"></div>
           </button>
-          <Link as={Link} to='/Home'>
-            <span
-              id='empresa-nombre'
-              style={{ cursor: 'pointer', color: 'white', fontFamily: "'Poppins', sans-serif", fontStyle: 'italic' }}
-            >
-              JLA Global Company
-            </span>
+          <Link as={Link} to='/Home' className='empresa-nombre'>
+
+            JLA Global Company
           </Link>
         </div>
         <div className="user">
           {user && (
-            <Link as={Link} to="/Perfil">
-              <span style={{ color: 'white' }}>{user.firstName}</span>
+            <Link as={Link} to="/Perfil" className="user-link">
+              <span >{user.firstName}</span>
             </Link>
           )}
-          <Link as={Link} to="/Perfil"><img style={{ color: 'white' }} src="https://cdn-icons-png.freepik.com/256/17740/17740782.png?ga=GA1.1.755740385.1744083497&semt=ais_hybrid" alt="" className='icono' /></Link>
+          <Link as={Link} to="/Perfil" >
+            <img
+              src="https://cdn-icons-png.freepik.com/256/17740/17740782.png?ga=GA1.1.755740385.1744083497&semt=ais_hybrid"
+              alt="Perfil"
+              className='user-icon'
+            />
+          </Link>
         </div>
       </header>
 
       <div id='menu' className="menu">
-          <Link as={Link} to="/Perfil"><div className="preview-usuario">
-            <img src="https://cdn-icons-png.freepik.com/256/17740/17740782.png?ga=GA1.1.755740385.1744083497&semt=ais_hybrid" alt="" style={{ width: "80px" }} />
-            <div className="datos-usuario">
-              {user && (
-                <span className="usuario-nombre">{user.firstName} {user.surname}</span>
-              )}
-              <br />
-              {user && (
-                <span className="usuario-rol">
-                  {typeof user.role === 'object' ? user.role.name : user.role}
-                </span>
-              )}
-            </div>
-          </div>
-          </Link>
-          <div className="menu-title">MÓDULOS</div>
-          <div className="modulos-menu">
-            {(puedeVerUsuarios || puedeVerRoles) && (
-              <nav>
-                <li style={{ padding: "10px 0" }}>
-                  <button
-                    type="button"
-                    onClick={() => toggleSubMenu('submenuUsuarios')}
-                    className="menu-toggle-button"
-                    aria-controls="submenuUsuarios"
-                    // Use a boolean for aria-expanded. We derive it from the submenu element's visibility class.
-                    // Fallback to false if the element isn't present yet (initial render).
-                    aria-expanded={
-                      typeof document !== 'undefined' && document.getElementById('submenuUsuarios')
-                        ? document.getElementById('submenuUsuarios').classList.contains('visible')
-                        : false
-                    }
-                    style={{ background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-                  >
-                    <i className="fas fa-users" aria-hidden={true}></i>
-                    <span>Usuarios</span>
-                  </button>
-                </li>
-                <ul className="dropdown" id="submenuUsuarios">
-                  {puedeVerUsuarios && (
-                    <Link to="/ListaDeUsuarios"><li><i className="fas fa-list" aria-hidden={true}></i> <span>Lista de Usuarios</span></li></Link>
-                  )}
-                  {puedeVerRoles && (
-                    <Link to="/RolesYPermisos"><li><i className="fas fa-user-shield" aria-hidden={true}></i> <span>Roles y permisos</span></li></Link>
-                  )}
-                </ul>
-              </nav>
+        <Link as={Link} to="/Perfil" className="preview-usuario">
+          <img
+            src="https://cdn-icons-png.freepik.com/256/17740/17740782.png?ga=GA1.1.755740385.1744083497&semt=ais_hybrid"
+            alt="Perfil"
+            className="preview-usuario-img"
+          />
+          <div className="datos-usuario">
+            {user && (
+              <span className="usuario-nombre">{user.firstName} {user.surname}</span>
             )}
-
-            {(puedeGenerarOrden || puedeVerHCompras || puedeVerProveedores || puedeVerReportesCompras || puedeVerOrdenes) && (
-              <nav>
-                <li style={{ padding: "10px 0" }}>
-                  <button
-                    type="button"
-                    onClick={() => toggleSubMenu('submenuCompras')}
-                    className="menu-toggle-button"
-                    aria-controls="submenuCompras"
-                    aria-expanded={
-                      typeof document !== 'undefined' && document.getElementById('submenuCompras')
-                        ? document.getElementById('submenuCompras').classList.contains('visible')
-                        : false
-                    }
-                    style={{ background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-                  >
-                    <i className="fas fa-shopping-cart" aria-hidden={true}></i>
-                    <span>Compras</span>
-                  </button>
-                </li>
-                <ul id="submenuCompras" className="dropdown" >
-                  {puedeGenerarOrden && (
-                    <Link as={Link} to="/OrdenCompra"><li><i className="fas fa-history" aria-hidden={true}></i> <span>Ordenes de compra</span></li></Link>
-                  )}
-                  {puedeVerHCompras && (
-                    <Link as={Link} to="/HistorialCompras"><li><i className="fas fa-history" aria-hidden={true}></i> <span>Historial de compras</span></li></Link>
-                  )}
-                  {puedeVerProveedores && (
-                    <Link as={Link} to="/Proveedores"><li><i className="fas fa-truck" aria-hidden={true}></i> <span>Lista de proveedores</span></li></Link>
-                  )}
-                  {puedeVerReportesCompras && (
-                    <Link as={Link} to="/ReporteProveedores"><li> <i className="fas fa-chart-bar" aria-hidden={true}></i> <span>Reportes de compras</span></li></Link>
-                  )}
-                </ul>
-              </nav>
+            <br />
+            {user && (
+              <span className="usuario-rol">
+                {typeof user.role === 'object' ? user.role.name : user.role}
+              </span>
             )}
-
-            {(puedeVerCategorias || puedeVerSubcategorias || puedeVerProductos) && (
-              <nav>
-                <li style={{ padding: "10px 0" }}>
-                  <button
-                    type="button"
-                    onClick={() => toggleSubMenu('submenuProductos')}
-                    className="menu-toggle-button"
-                    aria-controls="submenuProductos"
-                    aria-expanded={
-                      typeof document !== 'undefined' && document.getElementById('submenuProductos')
-                        ? document.getElementById('submenuProductos').classList.contains('visible')
-                        : false
-                    }
-                    style={{ background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-                  >
-                    <i className="fas fa-boxes" aria-hidden={true}></i>
-                    <span>Productos</span>
-                  </button>
-                </li>
-                <ul id="submenuProductos" className="dropdown">
-                  {puedeVerCategorias && (
-                    <Link as={Link} to="/ListaDeCategorias"><li><i className="fas fa-tags" aria-hidden={true}></i> <span>Categorias</span></li></Link>
-                  )}
-                  {puedeVerSubcategorias && (
-                    <Link as={Link} to="/Subcategorias"><li><i className="fas fa-tag" aria-hidden={true}></i> <span>Subcategorias</span></li></Link>
-                  )}
-                  {puedeVerProductos && (
-                    <Link as={Link} to="/GestionProductos"><li><i className="fas fa-box" aria-hidden={true}></i> <span>Lista de productos</span></li></Link>
-                  )}
-                  {puedeVerReportesProductos && (
-                    <Link as={Link} to="/ReporteProductos"><li> <i className="fas fa-chart-bar" aria-hidden={true}></i> <span>Reportes de productos</span></li></Link>
-                  )}
-                </ul>
-              </nav>
-            )}
-
-
-
-            {(puedeRegistrarCotizacion || puedeVerCotizaciones || puedeVerListaDeClientes || puedeVerPedidosCancelados || puedeVerPedidosDevueltos || puedeVerPedidosEntregados || puedeVerProspectos || puedeVerReportesVentas || puedeVerVentasAgendadas) && (
-              <nav>
-                <li style={{ padding: "10px 0" }}>
-                  <button
-                    type="button"
-                    onClick={() => toggleSubMenu('submenuVentas')}
-                    className="menu-toggle-button"
-                    aria-controls="submenuVentas"
-                    aria-expanded={
-                      typeof document !== 'undefined' && document.getElementById('submenuVentas')
-                        ? document.getElementById('submenuVentas').classList.contains('visible')
-                        : false
-                    }
-                    style={{ background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-                  >
-                    <i className="fas fa-cash-register" aria-hidden={true}></i>
-                    <span>Ventas</span>
-                  </button>
-                </li>
-                <ul id="submenuVentas" className="dropdown">
-                  {puedeRegistrarCotizacion && (
-                    <Link as={Link} to="/RegistrarCotizacion"><li><i className="fas fa-file-invoice-dollar" aria-hidden={true}></i> <span>Registrar cotizacion</span></li></Link>
-                  )}
-                  {puedeVerCotizaciones && (
-                    <Link as={Link} to="/ListaDeCotizaciones"><li><i className="fas fa-list-alt" aria-hidden={true}></i> <span>Lista de cotizaciones</span></li></Link>
-                  )}
-                  {puedeVerVentasAgendadas && (
-                    <Link as={Link} to="/PedidosAgendados"><li><i className="fas fa-calendar-check" aria-hidden={true}></i> <span>Pedidos agendados</span></li></Link>
-                  )}
-                  {puedeVerPedidosEntregados && (
-                    <Link as={Link} to="/PedidosEntregados"><li><i className="fas fa-check-circle" aria-hidden={true}></i> <span>Pedidos entregados</span></li></Link>
-                  )}
-                  {puedeVerPedidosCancelados && (
-                    <Link as={Link} to="/PedidosCancelados"><li><i className="fas fa-times-circle" aria-hidden={true}></i> <span>Pedidos cancelados</span></li></Link>
-                  )}
-                  {puedeVerPedidosDevueltos && (
-                    <Link as={Link} to="/PedidosDevueltos"><li><i className="fas fa-undo-alt" aria-hidden={true}></i> <span>Pedidos devueltos</span></li></Link>
-                  )}
-                  {puedeVerListaDeClientes && (
-                    <Link as={Link} to="/ListaDeClientes"><li> <i className="fas fa-address-book" aria-hidden={true}></i> <span>Lista de clientes</span></li></Link>
-                  )}
-                  {puedeVerProspectos && (
-                    <Link as={Link} to="/ProspectosDeClientes"><li><i className="fas fa-user-plus" aria-hidden={true}></i> <span>Prospectos de cliente</span></li></Link>
-                  )}
-                  {puedeVerReportesVentas && (
-                    <Link as={Link} to="/ReporteVentas"><li><i className="fas fa-chart-bar" aria-hidden={true}></i> <span>Reportes</span></li></Link>
-                  )}
-                </ul>
-              </nav>
-            )}
-            <button className="logout-btn" onClick={handleClick}>
-              Cerrar sesión
-            </button>
           </div>
 
+        </Link>
+        <div className="menu-title">MÓDULOS</div>
+        <div className="modulos-menu">
+          {(puedeVerUsuarios || puedeVerRoles) && (
+            <nav>
+              <button
+                type="button"
+                onClick={() => toggleSubMenu('submenuUsuarios')}
+                className="menu-toggle-button"
+                aria-controls="submenuUsuarios"
+                // Use a boolean for aria-expanded. We derive it from the submenu element's visibility class.
+                // Fallback to false if the element isn't present yet (initial render).
+                aria-expanded={
+                  typeof document !== 'undefined' && document.getElementById('submenuUsuarios')
+                    ? document.getElementById('submenuUsuarios').classList.contains('visible')
+                    : false
+                }
+              >
+                <i className="fas fa-users" aria-hidden={true}></i>
+                <span>Usuarios</span>
+              </button>
 
-        
+              <ul className="dropdown" id="submenuUsuarios">
+                {puedeVerUsuarios && (
+                  <Link to="/ListaDeUsuarios" className="dropdown-link"><li><i className="fas fa-list" aria-hidden={true}></i> <span>Lista de Usuarios</span></li></Link>
+                )}
+                {puedeVerRoles && (
+                  <Link to="/RolesYPermisos" className="dropdown-link"><li><i className="fas fa-user-shield" aria-hidden={true}></i> <span>Roles y permisos</span></li></Link>
+                )}
+              </ul>
+            </nav>
+          )}
+
+          {(puedeGenerarOrden || puedeVerHCompras || puedeVerProveedores || puedeVerReportesCompras || puedeVerOrdenes) && (
+            <nav>
+              <button
+                type="button"
+                onClick={() => toggleSubMenu('submenuCompras')}
+                className="menu-toggle-button"
+                aria-controls="submenuCompras"
+                aria-expanded={
+                  typeof document !== 'undefined' && document.getElementById('submenuCompras')
+                    ? document.getElementById('submenuCompras').classList.contains('visible')
+                    : false
+                }
+              >
+                <i className="fas fa-shopping-cart" aria-hidden={true}></i>
+                <span>Compras</span>
+              </button>
+              <ul id="submenuCompras" className="dropdown" >
+                {puedeGenerarOrden && (
+                  <Link as={Link} to="/OrdenCompra" className="dropdown-link"><li><i className="fas fa-history" aria-hidden={true}></i> <span>Ordenes de compra</span></li></Link>
+                )}
+                {puedeVerHCompras && (
+                  <Link as={Link} to="/HistorialCompras" className="dropdown-link"><li><i className="fas fa-history" aria-hidden={true}></i> <span>Historial de compras</span></li></Link>
+                )}
+                {puedeVerProveedores && (
+                  <Link as={Link} to="/Proveedores" className="dropdown-link"><li><i className="fas fa-truck" aria-hidden={true}></i> <span>Lista de proveedores</span></li></Link>
+                )}
+                {puedeVerReportesCompras && (
+                  <Link as={Link} to="/ReporteProveedores" className="dropdown-link"><li> <i className="fas fa-chart-bar" aria-hidden={true}></i> <span>Reportes de compras</span></li></Link>
+                )}
+              </ul>
+            </nav>
+          )}
+
+          {(puedeVerCategorias || puedeVerSubcategorias || puedeVerProductos) && (
+            <nav>
+              <button
+                type="button"
+                onClick={() => toggleSubMenu('submenuProductos')}
+                className="menu-toggle-button"
+                aria-controls="submenuProductos"
+                aria-expanded={
+                  typeof document !== 'undefined' && document.getElementById('submenuProductos')
+                    ? document.getElementById('submenuProductos').classList.contains('visible')
+                    : false
+                }
+              >
+                <i className="fas fa-boxes" aria-hidden={true}></i>
+                <span>Productos</span>
+              </button>
+              <ul id="submenuProductos" className="dropdown">
+                {puedeVerCategorias && (
+                  <Link as={Link} to="/ListaDeCategorias" className="dropdown-link"><li><i className="fas fa-tags" aria-hidden={true}></i> <span>Categorias</span></li></Link>
+                )}
+                {puedeVerSubcategorias && (
+                  <Link as={Link} to="/Subcategorias" className="dropdown-link"><li><i className="fas fa-tag" aria-hidden={true}></i> <span>Subcategorias</span></li></Link>
+                )}
+                {puedeVerProductos && (
+                  <Link as={Link} to="/GestionProductos" className="dropdown-link"><li><i className="fas fa-box" aria-hidden={true}></i> <span>Lista de productos</span></li></Link>
+                )}
+                {puedeVerReportesProductos && (
+                  <Link as={Link} to="/ReporteProductos" className="dropdown-link"><li> <i className="fas fa-chart-bar" aria-hidden={true}></i> <span>Reportes de productos</span></li></Link>
+                )}
+              </ul>
+            </nav>
+          )}
+
+
+
+          {(puedeRegistrarCotizacion || puedeVerCotizaciones || puedeVerListaDeClientes || puedeVerPedidosCancelados || puedeVerPedidosDevueltos || puedeVerPedidosEntregados || puedeVerProspectos || puedeVerReportesVentas || puedeVerVentasAgendadas) && (
+            <nav>
+              <button
+                type="button"
+                onClick={() => toggleSubMenu('submenuVentas')}
+                className="menu-toggle-button"
+                aria-controls="submenuVentas"
+                aria-expanded={
+                  typeof document !== 'undefined' && document.getElementById('submenuVentas')
+                    ? document.getElementById('submenuVentas').classList.contains('visible')
+                    : false
+                }
+              >
+                <i className="fas fa-cash-register" aria-hidden={true}></i>
+                <span>Ventas</span>
+              </button>
+              <ul id="submenuVentas" className="dropdown">
+                {puedeRegistrarCotizacion && (
+                  <Link as={Link} to="/RegistrarCotizacion" className="dropdown-link"><li><i className="fas fa-file-invoice-dollar" aria-hidden={true}></i> <span>Registrar cotizacion</span></li></Link>
+                )}
+                {puedeVerCotizaciones && (
+                  <Link as={Link} to="/ListaDeCotizaciones" className="dropdown-link"><li><i className="fas fa-list-alt" aria-hidden={true}></i> <span>Lista de cotizaciones</span></li></Link>
+                )}
+                {puedeVerVentasAgendadas && (
+                  <Link as={Link} to="/PedidosAgendados" className="dropdown-link"><li><i className="fas fa-calendar-check" aria-hidden={true}></i> <span>Pedidos agendados</span></li></Link>
+                )}
+                {puedeVerPedidosEntregados && (
+                  <Link as={Link} to="/PedidosEntregados" className="dropdown-link"><li><i className="fas fa-check-circle" aria-hidden={true}></i> <span>Pedidos entregados</span></li></Link>
+                )}
+                {puedeVerPedidosCancelados && (
+                  <Link as={Link} to="/PedidosCancelados" className="dropdown-link"><li><i className="fas fa-times-circle" aria-hidden={true}></i> <span>Pedidos cancelados</span></li></Link>
+                )}
+                {puedeVerPedidosDevueltos && (
+                  <Link as={Link} to="/PedidosDevueltos" className="dropdown-link"><li><i className="fas fa-undo-alt" aria-hidden={true}></i> <span>Pedidos devueltos</span></li></Link>
+                )}
+                {puedeVerListaDeClientes && (
+                  <Link as={Link} to="/ListaDeClientes" className="dropdown-link"><li> <i className="fas fa-address-book" aria-hidden={true}></i> <span>Lista de clientes</span></li></Link>
+                )}
+                {puedeVerProspectos && (
+                  <Link as={Link} to="/ProspectosDeClientes" className="dropdown-link"><li><i className="fas fa-user-plus" aria-hidden={true}></i> <span>Prospectos de cliente</span></li></Link>
+                )}
+                {puedeVerReportesVentas && (
+                  <Link as={Link} to="/ReporteVentas" className="dropdown-link"><li><i className="fas fa-chart-bar" aria-hidden={true}></i> <span>Reportes</span></li></Link>
+                )}
+              </ul>
+            </nav>
+          )}
+          <button className="logout-btn" onClick={handleClick}>
+            Cerrar sesión
+          </button>
+        </div>
+
+
+
       </div>
     </div>
   )
