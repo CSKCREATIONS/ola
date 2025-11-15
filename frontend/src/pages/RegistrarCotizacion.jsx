@@ -115,12 +115,12 @@ export default function RegistrarCotizacion() {
         const dedupMap = new Map();
         for (const c of todos) {
           const key = (c.correo || '').toLowerCase().trim() || c._id;
-          if (!dedupMap.has(key)) {
-            dedupMap.set(key, c);
-          } else {
+          if (dedupMap.has(key)) {
             const existente = dedupMap.get(key);
             // Si el existente es prospecto y el nuevo es cliente, reemplazar
-            if (!existente.esCliente && c.esCliente) dedupMap.set(key, c);
+            if (c.esCliente && existente.esCliente === false) dedupMap.set(key, c);
+          } else {
+            dedupMap.set(key, c);
           }
         }
         const resultado = Array.from(dedupMap.values()).sort((a,b) => (a.nombre || '').localeCompare(b.nombre || ''));
@@ -229,10 +229,10 @@ export default function RegistrarCotizacion() {
     }).then((result) => {
       if (result.isConfirmed) {
         const inputIds = ['cliente', 'ciudad', 'direccion', 'telefono', 'email', 'fecha'];
-        inputIds.forEach(id => {
+        for (const id of inputIds) {
           const input = document.getElementById(id);
           if (input) input.value = '';
-        });
+        }
 
         setProductosSeleccionados([]);
 
@@ -358,7 +358,9 @@ export default function RegistrarCotizacion() {
       const allInputs = document.querySelectorAll('.cuadroTexto');
       // use optional chaining: querySelectorAll never returns null, but this is concise and
       // avoids a verbose length check while remaining safe if APIs change.
-      allInputs?.forEach(input => { if (input) input.value = ''; });
+      for (const input of allInputs) {
+        if (input) input.value = '';
+      }
       setProductosSeleccionados([]);
       if (descripcionRef.current) descripcionRef.current.setContent('');
       if (condicionesPagoRef.current) condicionesPagoRef.current.setContent('');

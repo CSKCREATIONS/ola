@@ -5,9 +5,9 @@ function parseNumber(value, fallback = 0) {
 }
 
 function normalizeProducto(prod = {}) {
-  const cantidad = parseNumber(prod.cantidad || prod.cantidad, 0);
-  const valorUnitario = parseNumber(prod.valorUnitario ?? prod.precioUnitario ?? prod.price ?? prod.valorUnitario, 0);
-  const descuento = parseNumber(prod.descuento || prod.discount || 0, 0);
+  const cantidad = parseNumber(prod.cantidad ?? prod.quantity ?? prod.cant ?? 0, 0);
+  const valorUnitario = parseNumber(prod.valorUnitario ?? prod.precioUnitario ?? prod.price ?? prod.unitPrice ?? 0, 0);
+  const descuento = parseNumber(prod.descuento ?? prod.discount ?? 0, 0);
   const subtotal = cantidad * valorUnitario * (1 - descuento / 100);
   const valorTotal = parseNumber(prod.valorTotal ?? subtotal, subtotal);
 

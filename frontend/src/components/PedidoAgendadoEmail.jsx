@@ -4,9 +4,6 @@ import Swal from 'sweetalert2';
 import api from '../api/axiosConfig';
 import {
   getStoredUser,
-  calculateTotal,
-  formatDateIso,
-  
 } from '../utils/emailHelpers';
 import { makePedidoAgendadoTemplate } from '../utils/emailTemplates';
 
@@ -20,30 +17,20 @@ export default function PedidoAgendadoEmail({ datos, onClose, onEmailSent }) {
   const [asunto, setAsunto] = useState('');
   const [mensaje, setMensaje] = useState('');
 
-  // Función para abrir modal con datos actualizados
-  const abrirModalEnvio = () => {
-    // Calcular total dinámicamente si no existe
-      const totalCalculado = calculateTotal(datos) || 0;
+// Función para abrir modal con datos actualizados
+const abrirModalEnvio = () => {
+  // Calcular total dinámicamente si no existe
 
-    // Fecha de pedido: preferir createdAt, si no existe usar fecha, si ninguna está presente mostrar 'N/A'
-    const fechaPedido = datos?.createdAt ? formatDateIso(datos.createdAt) : formatDateIso(datos?.fecha);
+  // Fecha de pedido: preferir createdAt, si no existe usar fecha, si ninguna está presente mostrar 'N/A'
 
-    // Observaciones: extraer el bloque para mejorar legibilidad
-    const observacionesBlock = datos?.observacion
-      ? `📝 OBSERVACIONES:
-${datos.observacion}
-
-`
-      : '';
-
-    // Actualizar datos autocompletados cada vez que se abre el modal
-    setCorreo(datos?.cliente?.correo || '');
-    // Use shared template helper to build subject and message
-    const { asunto: tplAsunto, mensaje: tplMensaje } = makePedidoAgendadoTemplate(datos, usuario);
-    setAsunto(tplAsunto);
-    setMensaje(tplMensaje);
-    setShowEnviarModal(true);
-  };
+  // Actualizar datos autocompletados cada vez que se abre el modal
+  setCorreo(datos?.cliente?.correo || '');
+  // Use shared template helper to build subject and message
+  const { asunto: tplAsunto, mensaje: tplMensaje } = makePedidoAgendadoTemplate(datos, usuario);
+  setAsunto(tplAsunto);
+  setMensaje(tplMensaje);
+  setShowEnviarModal(true);
+};
 
   // Función para enviar por correo
   const enviarPorCorreo = async () => {

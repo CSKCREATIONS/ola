@@ -6,8 +6,7 @@ import './FormatoCotizacion.css';
 import api from '../api/axiosConfig';
 import {
   getStoredUser,
-  formatDateIso,
-  getCompanyName
+  formatDateIso
 } from '../utils/emailHelpers';
 import { makeCotizacionTemplate } from '../utils/emailTemplates';
 import { calcularSubtotalProducto, calcularTotales } from '../utils/calculations';

@@ -497,7 +497,6 @@ export default function ListaDeCotizaciones() {
   };
 
   // Cálculo de subtotales usando helper compartido
-  const subtotal = calcularTotales(cotizacionSeleccionada?.productos || []).subtotal;
 
   // enviarCorreo, imprimir y abrirFormato eliminados (no usados)
 

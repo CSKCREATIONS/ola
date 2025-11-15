@@ -31,7 +31,7 @@ async function sendMail(destinatario, asunto, htmlContent, attachments = []) {
 
   // Last resort: log and return a resolved promise to avoid crashing the caller.
   console.warn('emailSender: no hay transporter configurado — correo no enviado a:', destinatario);
-  return Promise.resolve({ accepted: [], rejected: [destinatario], info: 'no-transporter' });
+  return { accepted: [], rejected: [destinatario], info: 'no-transporter' };
 }
 
 module.exports = { sendMail };
