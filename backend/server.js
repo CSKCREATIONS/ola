@@ -1,29 +1,29 @@
-import 'dotenv/config';
-import express from 'express';
-import mongoose from 'mongoose';
-import { MongoClient } from 'mongodb';
-import cors from 'cors';
-import morgan from 'morgan';
-import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
-import mongoSanitize from 'express-mongo-sanitize';
-import crypto from 'node:crypto';
-import dbConfig from './config/db.js';
+require('dotenv').config();
+const express = require('express');
+const mongoose = require('mongoose');
+const { MongoClient } = require('mongodb');
+const cors = require('cors');
+const morgan = require('morgan');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const mongoSanitize = require('express-mongo-sanitize');
+const crypto = require('crypto');
+const dbConfig = require('./config/db');
 // 📦 Importar rutas
-import authRoutes from './routes/authRoutes.js';
-import userRoutes from './routes/userRoutes.js';
-import categoryRoutes from './routes/categoryRoutes.js';
-import subcategoryRoutes from './routes/subcategoryRoutes.js';
-import productRoutes from './routes/productRoutes.js';
-import roleRoutes from './routes/roleRoutes.js';
-import clientesRoutes from './routes/clientesRoutes.js';
-import proveedorRoutes from './routes/proveedorRoutes.js';
-import comprasRoutes from './routes/comprasRoutes.js';
-import cotizacionRoutes from './routes/cotizacionRoutes.js';
-import pedidosRoutes from './routes/pedidosRoutes.js';
-import reportesRoutes from './routes/reportesRoutes.js';
-import ordenCompraRoutes from './routes/ordenCompraRoutes.js';
-import remisionRoutes from './routes/remisionRoutes.js';
+const authRoutes = require('./routes/authRoutes');
+const userRoutes = require('./routes/userRoutes');
+const categoryRoutes = require('./routes/categoryRoutes');
+const subcategoryRoutes = require('./routes/subcategoryRoutes');
+const productRoutes = require('./routes/productRoutes');
+const roleRoutes = require('./routes/roleRoutes');
+const clientesRoutes = require('./routes/clientesRoutes');
+const proveedorRoutes = require('./routes/proveedorRoutes');
+const comprasRoutes = require('./routes/comprasRoutes');
+const cotizacionRoutes = require('./routes/cotizacionRoutes');
+const pedidosRoutes = require('./routes/pedidosRoutes');
+const reportesRoutes = require('./routes/reportesRoutes');
+const ordenCompraRoutes = require('./routes/ordenCompraRoutes');
+const remisionRoutes = require('./routes/remisionRoutes');
 
 // Crear aplicación Express
 const app = express();
@@ -102,13 +102,11 @@ async function init() {
     });
 }
 
-// Start the app and handle startup errors using top-level await.
-try {
-    await init();
-} catch (error_) {
+// Start the app and handle startup errors.
+init().catch(error_ => {
     console.error('Fatal error iniciando la app:', error_);
     process.exit(1);
-}
+});
 
 /* -------------------------------------------------------------
    🦠 Seguridad, CORS, Sanitización y Logging

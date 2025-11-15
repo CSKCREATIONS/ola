@@ -4,6 +4,7 @@ import { closeModal } from '../funciones/animaciones';
 import Swal from 'sweetalert2';
 import api from '../api/axiosConfig';
 import PropTypes from 'prop-types';
+import { labelStyle, inputStyle, createFocusHandler, handleBlur, btnSecondaryStyle, btnPrimaryStyle, mouseEnterSecondary, mouseLeaveSecondary, mouseEnterPrimary, mouseLeavePrimary } from './sharedStyles';
 
 export default function EditarUsuario({ usuario, fetchUsuarios }) {
   const [rolesDisponibles, setRolesDisponibles] = useState([]);
@@ -63,19 +64,6 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
 
   }, [usuario]);
 
-  // Attach Escape key handler at document level to avoid adding keyboard
-  // listeners directly to non-interactive elements (satisfies a11y lint rules)
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape' || e.key === 'Esc') {
-        closeModal('editUserModal');
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, []);
-
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -86,85 +74,24 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
 
   const guardarCambios = async (e) => {
     e.preventDefault();
-    
     try {
-      if (passwords.new && passwords.new !== passwords.confirm) {
-        return Swal.fire('Error', 'Las contraseñas no coinciden.', 'error');
-      }
-
-      const res = await api.patch(`/api/users/${usuario._id}`, form);
-      const resData = res.data || res;
-      if (!(res.status >= 200 && res.status < 300)) {
-        throw new Error(resData.message || 'Error al actualizar el usuario');
-      }
-
-      let nuevaContrasena = null;
-
-      // Cambiar contraseña si aplica
-      if (passwords.new && passwords.confirm && passwords.new === passwords.confirm) {
-        const resPassword = await api.patch(`/api/users/${usuario._id}/change-password`, { 
-          newPassword: passwords.new 
-        });
-        const data = resPassword.data || resPassword;
-        if (!(resPassword.status >= 200 && resPassword.status < 300)) {
-          throw new Error(data.message || 'Error al cambiar la contraseña');
-        }
-        nuevaContrasena = passwords.new;
-      }
-
-      await fetchUsuarios();
-      closeModal('editUserModal');
-      setPasswords({ new: '', confirm: '' });
-      setMostrarCambiarPassword(false);
-
-      // Actualizar localStorage si el usuario editado es el mismo que está logueado
-      const userLogged = JSON.parse(localStorage.getItem('user'));
-      if (userLogged && userLogged._id === usuario._id) {
-        const rolActualizado = rolesDisponibles.find(r => r._id === form.role);
-        localStorage.setItem('user', JSON.stringify({
-          ...userLogged,
-          ...form,
-          role: {
-            _id: form.role,
-            name: rolActualizado ? rolActualizado.name : userLogged.role?.name || ''
-          }
-        }));
-        globalThis.dispatchEvent(new Event('storage'));
-      }
-
+      const payload = { ...form };
+      if (passwords.new) payload.password = passwords.new;
+      const id = usuario?._id || usuario?.id;
+      const res = await api.put(`/api/users/${id}`, payload);
+      const data = res.data || res;
       Swal.fire({
-        icon: 'success',
         title: 'Usuario actualizado',
-        html: nuevaContrasena ? `<p>Contraseña actualizada:<br><b>${nuevaContrasena}</b></p>` : '',
-        timer: 2500,
-        showConfirmButton: false
+        text: data.message || 'Los cambios fueron guardados correctamente',
+        icon: 'success',
+        confirmButtonText: 'Aceptar'
       });
-
-    } catch (error) {
-      Swal.fire('Error', error.message, 'error');
+      closeModal('editUserModal');
+      if (typeof fetchUsuarios === 'function') fetchUsuarios();
+    } catch (err) {
+      console.error('Error actualizando usuario:', err);
+      Swal.fire({ text: err?.response?.data?.message || 'Error al actualizar usuario', icon: 'error' });
     }
-  };
-
-  const inputStyle = {
-    width: '100%',
-    padding: '0.875rem 1rem',
-    border: '2px solid #e5e7eb',
-    borderRadius: '10px',
-    fontSize: '0.95rem',
-    transition: 'all 0.3s ease',
-    backgroundColor: '#ffffff',
-    fontFamily: 'inherit',
-    boxSizing: 'border-box'
-  };
-
-  const labelStyle = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-    marginBottom: '0.5rem',
-    fontWeight: '600',
-    color: '#374151',
-    fontSize: '0.95rem'
   };
 
   return (
@@ -299,30 +226,25 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
                   value={form.firstName} 
                   onChange={handleChange}
                   style={inputStyle}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = '#3b82f6';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = '#e5e7eb';
-                    e.target.style.boxShadow = 'none';
-                  }}
+                  onFocus={createFocusHandler('#3b82f6')}
+                  onBlur={handleBlur}
                 />
               </div>
 
               <div>
-                <label htmlFor="secondName-edit" style={labelStyle}><i className="fa-solid fa-user" style={{ color: '#3b82f6', fontSize: '0.875rem' }} aria-hidden={true}></i><span>Segundo nombre</span></label><input id="secondName-edit" type="text" name="secondName" 
+                <label htmlFor="secondName-edit" style={labelStyle}>
+                  <i className="fa-solid fa-user" style={{ color: '#3b82f6', fontSize: '0.875rem' }} aria-hidden={true}></i>
+                  <span>Segundo nombre</span>
+                </label>
+                <input 
+                  id="secondName-edit"
+                  type="text" 
+                  name="secondName" 
                   value={form.secondName} 
                   onChange={handleChange}
                   style={inputStyle}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = '#3b82f6';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = '#e5e7eb';
-                    e.target.style.boxShadow = 'none';
-                  }}
+                  onFocus={createFocusHandler('#3b82f6')}
+                  onBlur={handleBlur}
                 />
               </div>
 
@@ -338,14 +260,8 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
                   value={form.surname} 
                   onChange={handleChange}
                   style={inputStyle}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = '#3b82f6';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = '#e5e7eb';
-                    e.target.style.boxShadow = 'none';
-                  }}
+                  onFocus={createFocusHandler('#3b82f6')}
+                  onBlur={handleBlur}
                 />
               </div>
 
@@ -361,14 +277,8 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
                   value={form.secondSurname} 
                   onChange={handleChange}
                   style={inputStyle}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = '#3b82f6';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = '#e5e7eb';
-                    e.target.style.boxShadow = 'none';
-                  }}
+                  onFocus={createFocusHandler('#3b82f6')}
+                  onBlur={handleBlur}
                 />
               </div>
             </div>
@@ -413,14 +323,8 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
                   value={form.email} 
                   onChange={handleChange}
                   style={inputStyle}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = '#10b981';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)';
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = '#e5e7eb';
-                    e.target.style.boxShadow = 'none';
-                  }}
+                  onFocus={createFocusHandler('#10b981')}
+                  onBlur={handleBlur}
                 />
               </div>
 
@@ -436,14 +340,8 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
                   value={form.username} 
                   onChange={handleChange}
                   style={inputStyle}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = '#10b981';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)';
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = '#e5e7eb';
-                    e.target.style.boxShadow = 'none';
-                  }}
+                  onFocus={createFocusHandler('#10b981')}
+                  onBlur={handleBlur}
                 />
               </div>
 
@@ -471,14 +369,8 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
                     onChange={handleChange} 
                     required
                     style={inputStyle}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = '#10b981';
-                      e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)';
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = '#e5e7eb';
-                      e.target.style.boxShadow = 'none';
-                    }}
+                    onFocus={createFocusHandler('#10b981')}
+                    onBlur={handleBlur}
                   >
                     <option value="" disabled>Seleccione un rol</option>
                     {Array.isArray(rolesDisponibles) && rolesDisponibles.map(r => (
@@ -548,14 +440,8 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
                     onChange={handlePasswordChange}
                     placeholder="Dejar vacío para no cambiar"
                     style={inputStyle}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = '#f59e0b';
-                      e.target.style.boxShadow = '0 0 0 3px rgba(245, 158, 11, 0.1)';
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = '#e5e7eb';
-                      e.target.style.boxShadow = 'none';
-                    }}
+                    onFocus={createFocusHandler('#f59e0b')}
+                    onBlur={handleBlur}
                   />
                 </div>
                 <div>
@@ -571,14 +457,8 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
                     onChange={handlePasswordChange}
                     placeholder="Repite la contraseña"
                     style={inputStyle}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = '#f59e0b';
-                      e.target.style.boxShadow = '0 0 0 3px rgba(245, 158, 11, 0.1)';
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = '#e5e7eb';
-                      e.target.style.boxShadow = 'none';
-                    }}
+                    onFocus={createFocusHandler('#f59e0b')}
+                    onBlur={handleBlur}
                   />
                 </div>
               </div>
@@ -597,61 +477,22 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
           borderRadius: '0 0 20px 20px',
           flexShrink: 0
         }}>
-          <button 
-            type="button" 
+          <button
+            type="button"
             onClick={() => closeModal('editUserModal')}
-            style={{
-              padding: '0.875rem 1.5rem',
-              border: '2px solid #e5e7eb',
-              borderRadius: '10px',
-              backgroundColor: 'white',
-              color: '#374151',
-              cursor: 'pointer',
-              fontWeight: '600',
-              fontSize: '0.95rem',
-              transition: 'all 0.3s ease',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem'
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.backgroundColor = '#f3f4f6';
-              e.target.style.borderColor = '#d1d5db';
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.backgroundColor = 'white';
-              e.target.style.borderColor = '#e5e7eb';
-            }}
+            style={btnSecondaryStyle}
+            onMouseEnter={mouseEnterSecondary}
+            onMouseLeave={mouseLeaveSecondary}
           >
             <i className="fa-solid fa-times" aria-hidden={true}></i>
             <span>Cancelar</span>
           </button>
-          
-          <button 
+
+          <button
             type="submit"
-            style={{
-              padding: '0.875rem 1.5rem',
-              border: 'none',
-              borderRadius: '10px',
-              background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
-              color: 'white',
-              cursor: 'pointer',
-              fontWeight: '600',
-              fontSize: '0.95rem',
-              transition: 'all 0.3s ease',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              boxShadow: '0 4px 6px -1px rgba(59, 130, 246, 0.3)'
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.transform = 'translateY(-1px)';
-              e.target.style.boxShadow = '0 6px 12px -1px rgba(59, 130, 246, 0.4)';
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.transform = 'translateY(0)';
-              e.target.style.boxShadow = '0 4px 6px -1px rgba(59, 130, 246, 0.3)';
-            }}
+            style={btnPrimaryStyle}
+            onMouseEnter={mouseEnterPrimary}
+            onMouseLeave={mouseLeavePrimary}
           >
             <i className="fa-solid fa-save" aria-hidden={true}></i>
             <span>Guardar Cambios</span>

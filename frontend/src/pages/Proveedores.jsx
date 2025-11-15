@@ -1022,15 +1022,7 @@ const GestionProveedores = () => {
                       </td>
                       <td style={{ fontWeight: '600', color: '#1f2937' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <div style={{
-                            background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                            borderRadius: '8px',
-                            padding: '8px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            minWidth: '35px'
-                          }}>
+                          <div className="table-item-icon table-item-icon--primary">
                             <i className="fa-solid fa-truck" style={{ color: 'white', fontSize: '12px' }}></i>
                           </div>
                           {prov.nombre}

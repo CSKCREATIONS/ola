@@ -1016,47 +1016,7 @@ export default function OrdenCompra() {
     setOrdenSeleccionada(null);
   };
 
-  // Función para hacer el modal movible
-  const hacerModalMovible = () => {
-    const modal = document.getElementById('modalMovible');
-    if (!modal) return;
-
-    let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-
-    const dragMouseDown = (e) => {
-      e.preventDefault();
-      pos3 = e.clientX;
-      pos4 = e.clientY;
-      document.onmouseup = closeDragElement;
-      document.onmousemove = elementDrag;
-    };
-
-    const elementDrag = (e) => {
-      e.preventDefault();
-      pos1 = pos3 - e.clientX;
-      pos2 = pos4 - e.clientY;
-      pos3 = e.clientX;
-      pos4 = e.clientY;
-      modal.style.top = (modal.offsetTop - pos2) + "px";
-      modal.style.left = (modal.offsetLeft - pos1) + "px";
-    };
-
-    const closeDragElement = () => {
-      document.onmouseup = null;
-      document.onmousemove = null;
-    };
-
-    const header = modal.querySelector('.modal-header-realista');
-    if (header) {
-      header.onmousedown = dragMouseDown;
-    }
-  };
-
-  useEffect(() => {
-    if (modalDetallesVisible) {
-      setTimeout(hacerModalMovible, 100);
-    }
-  }, [modalDetallesVisible]);
+  // modal drag behavior centralized in `useDraggable` hook; DetallesOrdenModal handles its own draggable setup
 
   const abrirModalConfirmacion = (orden) => {
     setOrdenAConfirmar(orden);
@@ -1650,34 +1610,12 @@ export default function OrdenCompra() {
 
             {/* Paginación */}
             {totalPages > 1 && (
-              <div style={{ padding: '12px 20px', display: 'flex', justifyContent: 'flex-end', gap: '8px', alignItems: 'center' }}>
+              <div className="pagination" style={{ padding: '12px 20px', display: 'flex', justifyContent: 'flex-end', gap: '8px', alignItems: 'center' }}>
                 {Array.from({ length: totalPages }).map((_, i) => (
                   <button
                     key={i + 1}
                     onClick={() => setCurrentPage(i + 1)}
-                    style={{
-                      padding: '8px 16px',
-                      border: currentPage === i + 1 ? '2px solid #6366f1' : '2px solid #e5e7eb',
-                      borderRadius: '8px',
-                      background: currentPage === i + 1 ? '#6366f1' : 'white',
-                      color: currentPage === i + 1 ? 'white' : '#4b5563',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease'
-                    }}
-                    onMouseEnter={(e) => {
-                      if (currentPage !== i + 1) {
-                        e.currentTarget.style.borderColor = '#6366f1';
-                        e.currentTarget.style.color = '#6366f1';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (currentPage !== i + 1) {
-                        e.currentTarget.style.borderColor = '#e5e7eb';
-                        e.currentTarget.style.color = '#4b5563';
-                      }
-                    }}
+                    className={currentPage === i + 1 ? 'active-page' : ''}
                   >
                     {i + 1}
                   </button>

@@ -565,15 +565,7 @@ export default function PedidosAgendados() {
                       </td>
                       <td style={{ fontWeight: '600', color: '#1f2937' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <div style={{
-                            background: 'linear-gradient(135deg, #f59e0b, #ea580c)',
-                            borderRadius: '8px',
-                            padding: '8px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            minWidth: '35px'
-                          }}>
+                          <div className="table-item-icon table-item-icon--warning">
                             <i className="fa-solid fa-file-invoice" style={{ color: 'white', fontSize: '12px' }}></i>
                           </div>
                           {pedido.numeroPedido ? (

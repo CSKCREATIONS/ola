@@ -3,6 +3,31 @@ import  { useState, useEffect } from "react";
 import { registerModalUsuario } from "../funciones/modalController";
 import Swal from "sweetalert2";
 import api from '../api/axiosConfig';
+import { labelStyle, inputStyle, createFocusHandler, handleBlur, btnSecondaryStyle, btnPrimaryStyle, mouseEnterSecondary, mouseLeaveSecondary, mouseEnterPrimary, mouseLeavePrimary } from './sharedStyles';
+
+// Secure RNG helpers: return a function that yields a random integer in [0, max)
+const getSecureRandomIntPrimary = () => {
+  if (typeof window !== 'undefined' && window.crypto && window.crypto.getRandomValues) {
+    return (max) => {
+      const arr = new Uint32Array(1);
+      window.crypto.getRandomValues(arr);
+      return arr[0] % max;
+    };
+  }
+  return (max) => Math.floor(Math.random() * max);
+};
+
+const getSecureRandomIntAlt = () => {
+  // Alternate implementation (same underlying entropy source but different wrapper)
+  if (typeof window !== 'undefined' && window.crypto && window.crypto.getRandomValues) {
+    return (max) => {
+      const arr = new Uint8Array(1);
+      window.crypto.getRandomValues(arr);
+      return arr[0] % max;
+    };
+  }
+  return (max) => Math.floor(Math.random() * max);
+};
 
 export default function AgregarUsuario() {
   const [isVisible, setIsVisible] = useState(false);
@@ -17,65 +42,19 @@ export default function AgregarUsuario() {
   const [rolesForbidden, setRolesForbidden] = useState(false);
 
   // Función para cerrar el modal
-  const closeModal = () => {
-    setIsVisible(false);
-  };
-
-  // Registrar el modal al montar el componente
+  const closeModal = () => setIsVisible(false);
+  // Register modal setter so external callers can open it via openModalUsuario()
   useEffect(() => {
-    registerModalUsuario(setIsVisible);
-  }, []);
-
-  // Helper: obtain a crypto object in a cross-environment safe way without using
-  // restricted global identifiers (avoids ESLint `no-restricted-globals` on `self`).
-  const getCrypto = () => {
-    // Prefer direct undefined comparison to avoid using `typeof` and prefer globalThis
-    if (globalThis.window?.crypto) return globalThis.window.crypto;
-    if (globalThis.global?.crypto) return globalThis.global.crypto;
     try {
-      const g = new Function('return this')();
-      if (g?.crypto) return g.crypto;
-    } catch (error_) {
-      console.debug('getCrypto fallback failed:', error_);
+      registerModalUsuario(setIsVisible);
+    } catch (err) {
+      // registration failure should not break the component
+      console.debug('registerModalUsuario failed:', err);
     }
-    return null;
-  };
-
-  // Función para abrir el modal (puede ser llamada desde el componente padre)
-  if (globalThis?.window) {
-    globalThis.window.openModalUsuario = () => {
-      setIsVisible(true);
+    return () => {
+      try { registerModalUsuario(null); } catch (e) { /* ignore */ }
     };
-  }
-
-  // Secure RNG factories — two different implementations so callers are not identical
-  const getSecureRandomIntPrimary = () => {
-    const cryptoObj = getCrypto();
-    if (cryptoObj?.getRandomValues) {
-      return (max) => {
-        const arr = new Uint32Array(1);
-        cryptoObj.getRandomValues(arr);
-        return Math.floor(arr[0] / (0xFFFFFFFF + 1) * max);
-      };
-    }
-    return (max) => Math.floor(Math.random() * max);
-  };
-
-  const getSecureRandomIntAlt = () => {
-    const cryptoObj = getCrypto();
-    if (cryptoObj?.getRandomValues) {
-      return (max) => {
-        // Slightly different approach: use 16-bit source and scale accordingly
-        const arr = new Uint16Array(1);
-        cryptoObj.getRandomValues(arr);
-        return Math.floor(arr[0] / (0xFFFF + 1) * max);
-      };
-    }
-    return (max) => Math.floor(Math.random() * max);
-  };
-
-  
-
+  }, []);
   useEffect(() => {
     const token = localStorage.getItem('token');
     console.log('🔍 AgregarUsuario: Iniciando carga de roles...');
@@ -220,6 +199,7 @@ export default function AgregarUsuario() {
 
   // Prepare role options and information outside of JSX to avoid nested ternaries
   const rolesFiltered = rolesDisponibles.filter(r => r.enabled !== false);
+
   let roleOptions;
   if (cargandoRoles) {
     roleOptions = <option disabled>Cargando...</option>;
@@ -369,15 +349,7 @@ export default function AgregarUsuario() {
                 marginBottom: '2rem'
               }}>
                 <div>
-                  <label htmlFor="firstName-agregar" style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    marginBottom: '0.5rem',
-                    fontWeight: '600',
-                    color: '#374151',
-                    fontSize: '0.95rem'
-                  }}>
+                  <label htmlFor="firstName-agregar" style={labelStyle}>
                     <i className="fa-solid fa-user" style={{ color: '#10b981', fontSize: '0.9rem' }} aria-hidden={true}></i>
                     <span>Primer Nombre <span style={{ color: '#ef4444' }}>*</span></span>
                   </label>
@@ -390,38 +362,14 @@ export default function AgregarUsuario() {
                     onChange={e => setFirstName(e.target.value)} 
                     required
                     placeholder="Ingrese el primer nombre"
-                    style={{
-                      width: '100%',
-                      padding: '0.875rem 1rem',
-                      border: '2px solid #e5e7eb',
-                      borderRadius: '10px',
-                      fontSize: '1rem',
-                      transition: 'all 0.3s ease',
-                      backgroundColor: '#ffffff',
-                      fontFamily: 'inherit',
-                      boxSizing: 'border-box'
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = '#3b82f6';
-                      e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = '#e5e7eb';
-                      e.target.style.boxShadow = 'none';
-                    }}
+                    style={inputStyle}
+                    onFocus={createFocusHandler('#3b82f6')}
+                    onBlur={handleBlur}
                   />
                 </div>
                 
                 <div>
-                  <label htmlFor="secondName-agregar" style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    marginBottom: '0.5rem',
-                    fontWeight: '600',
-                    color: '#374151',
-                    fontSize: '0.95rem'
-                  }}>
+                  <label htmlFor="secondName-agregar" style={labelStyle}>
                     <i className="fa-solid fa-user" style={{ color: '#10b981', fontSize: '0.9rem' }} aria-hidden={true}></i>
                     <span>Segundo Nombre</span>
                   </label>
@@ -432,25 +380,9 @@ export default function AgregarUsuario() {
                     value={secondName} 
                     onChange={e => setSecondName(e.target.value)}
                     placeholder="Segundo nombre (opcional)"
-                    style={{
-                      width: '100%',
-                      padding: '0.875rem 1rem',
-                      border: '2px solid #e5e7eb',
-                      borderRadius: '10px',
-                      fontSize: '1rem',
-                      transition: 'all 0.3s ease',
-                      backgroundColor: '#ffffff',
-                      fontFamily: 'inherit',
-                      boxSizing: 'border-box'
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = '#3b82f6';
-                      e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = '#e5e7eb';
-                      e.target.style.boxShadow = 'none';
-                    }}
+                    style={inputStyle}
+                    onFocus={createFocusHandler('#3b82f6')}
+                    onBlur={handleBlur}
                   />
                 </div>
               </div>
@@ -461,15 +393,7 @@ export default function AgregarUsuario() {
                 gap: '1.5rem'
               }}>
                 <div>
-                  <label htmlFor="surname-agregar" style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    marginBottom: '0.5rem',
-                    fontWeight: '600',
-                    color: '#374151',
-                    fontSize: '0.95rem'
-                  }}>
+                  <label htmlFor="surname-agregar" style={labelStyle}>
                     <i className="fa-solid fa-user" style={{ color: '#f59e0b', fontSize: '0.9rem' }} aria-hidden={true}></i>
                     <span>Primer Apellido <span style={{ color: '#ef4444' }}>*</span></span>
                   </label>
@@ -481,38 +405,14 @@ export default function AgregarUsuario() {
                     onChange={e => setSurname(e.target.value)} 
                     required
                     placeholder="Ingrese el primer apellido"
-                    style={{
-                      width: '100%',
-                      padding: '0.875rem 1rem',
-                      border: '2px solid #e5e7eb',
-                      borderRadius: '10px',
-                      fontSize: '1rem',
-                      transition: 'all 0.3s ease',
-                      backgroundColor: '#ffffff',
-                      fontFamily: 'inherit',
-                      boxSizing: 'border-box'
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = '#3b82f6';
-                      e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = '#e5e7eb';
-                      e.target.style.boxShadow = 'none';
-                    }}
+                    style={inputStyle}
+                    onFocus={createFocusHandler('#3b82f6')}
+                    onBlur={handleBlur}
                   />
                 </div>
                 
                 <div>
-                  <label htmlFor="secondSurname-agregar" style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    marginBottom: '0.5rem',
-                    fontWeight: '600',
-                    color: '#374151',
-                    fontSize: '0.95rem'
-                  }}>
+                  <label htmlFor="secondSurname-agregar" style={labelStyle}>
                     <i className="fa-solid fa-user" style={{ color: '#f59e0b', fontSize: '0.9rem' }} aria-hidden={true}></i>
                     <span>Segundo Apellido</span>
                   </label>
@@ -523,25 +423,9 @@ export default function AgregarUsuario() {
                     value={secondSurname} 
                     onChange={e => setSecondSurname(e.target.value)}
                     placeholder="Segundo apellido (opcional)"
-                    style={{
-                      width: '100%',
-                      padding: '0.875rem 1rem',
-                      border: '2px solid #e5e7eb',
-                      borderRadius: '10px',
-                      fontSize: '1rem',
-                      transition: 'all 0.3s ease',
-                      backgroundColor: '#ffffff',
-                      fontFamily: 'inherit',
-                      boxSizing: 'border-box'
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = '#3b82f6';
-                      e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = '#e5e7eb';
-                      e.target.style.boxShadow = 'none';
-                    }}
+                    style={inputStyle}
+                    onFocus={createFocusHandler('#3b82f6')}
+                    onBlur={handleBlur}
                   />
                 </div>
               </div>
@@ -575,15 +459,7 @@ export default function AgregarUsuario() {
                 gap: '2rem'
               }}>
                 <div>
-                  <label htmlFor="role-agregar" style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    marginBottom: '0.5rem',
-                    fontWeight: '600',
-                    color: '#374151',
-                    fontSize: '0.95rem'
-                  }}>
+                  <label htmlFor="role-agregar" style={labelStyle}>
                     <i className="fa-solid fa-shield-alt" style={{ color: '#8b5cf6', fontSize: '0.9rem' }} aria-hidden={true}></i>
                     <span>Rol del Usuario <span style={{ color: '#ef4444' }}>*</span></span>
                   </label>
@@ -594,28 +470,9 @@ export default function AgregarUsuario() {
                     onChange={e => setRole(e.target.value)} 
                     required
                     disabled={cargandoRoles}
-                    style={{
-                      width: '100%',
-                      padding: '0.875rem 1rem',
-                      border: '2px solid #e5e7eb',
-                      borderRadius: '10px',
-                      fontSize: '1rem',
-                      transition: 'all 0.3s ease',
-                      backgroundColor: cargandoRoles ? '#f3f4f6' : '#ffffff',
-                      fontFamily: 'inherit',
-                      boxSizing: 'border-box',
-                      opacity: cargandoRoles ? 0.6 : 1
-                    }}
-                    onFocus={(e) => {
-                      if (!cargandoRoles) {
-                        e.target.style.borderColor = '#3b82f6';
-                        e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
-                      }
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = '#e5e7eb';
-                      e.target.style.boxShadow = 'none';
-                    }}
+                    style={{ ...inputStyle, backgroundColor: cargandoRoles ? '#f3f4f6' : inputStyle.backgroundColor, opacity: cargandoRoles ? 0.6 : 1 }}
+                    onFocus={cargandoRoles ? undefined : createFocusHandler('#3b82f6')}
+                    onBlur={handleBlur}
                   >
                     <option value="" disabled>
                       {cargandoRoles ? 'Cargando roles...' : 'Seleccione un rol'}
@@ -634,15 +491,7 @@ export default function AgregarUsuario() {
                 </div>
                 
                 <div>
-                  <label htmlFor="email-agregar" style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    marginBottom: '0.5rem',
-                    fontWeight: '600',
-                    color: '#374151',
-                    fontSize: '0.95rem'
-                  }}>
+                  <label htmlFor="email-agregar" style={labelStyle}>
                     <i className="fa-solid fa-envelope" style={{ color: '#ef4444', fontSize: '0.9rem' }} aria-hidden={true}></i>
                     <span>Correo Electrónico <span style={{ color: '#ef4444' }}>*</span></span>
                   </label>
@@ -654,25 +503,9 @@ export default function AgregarUsuario() {
                     onChange={e => setEmail(e.target.value)} 
                     required
                     placeholder="usuario@ejemplo.com"
-                    style={{
-                      width: '100%',
-                      padding: '0.875rem 1rem',
-                      border: '2px solid #e5e7eb',
-                      borderRadius: '10px',
-                      fontSize: '1rem',
-                      transition: 'all 0.3s ease',
-                      backgroundColor: '#ffffff',
-                      fontFamily: 'inherit',
-                      boxSizing: 'border-box'
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = '#3b82f6';
-                      e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = '#e5e7eb';
-                      e.target.style.boxShadow = 'none';
-                    }}
+                    style={inputStyle}
+                    onFocus={createFocusHandler('#3b82f6')}
+                    onBlur={handleBlur}
                   />
                 </div>
               </div>
@@ -723,57 +556,18 @@ export default function AgregarUsuario() {
               <button
                 type="button"
                 onClick={() => closeModal()}
-                style={{
-                  padding: '0.875rem 1.5rem',
-                  border: '2px solid #e5e7eb',
-                  borderRadius: '10px',
-                  backgroundColor: 'white',
-                  color: '#374151',
-                  cursor: 'pointer',
-                  fontWeight: '600',
-                  fontSize: '0.95rem',
-                  transition: 'all 0.3s ease',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem'
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.backgroundColor = '#f3f4f6';
-                  e.target.style.borderColor = '#d1d5db';
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.backgroundColor = 'white';
-                  e.target.style.borderColor = '#e5e7eb';
-                }}
+                style={btnSecondaryStyle}
+                onMouseEnter={mouseEnterSecondary}
+                onMouseLeave={mouseLeaveSecondary}
               >
                 <i className="fa-solid fa-times" aria-hidden={true}></i>
                 <span>Cancelar</span>
               </button>
-              <button 
-                type="submit" 
-                style={{
-                  padding: '0.875rem 1.5rem',
-                  border: 'none',
-                  borderRadius: '10px',
-                  background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-                  color: 'white',
-                  cursor: 'pointer',
-                  fontWeight: '600',
-                  fontSize: '0.95rem',
-                  transition: 'all 0.3s ease',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  boxShadow: '0 4px 6px -1px rgba(59, 130, 246, 0.3)'
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.transform = 'translateY(-1px)';
-                  e.target.style.boxShadow = '0 6px 12px -1px rgba(59, 130, 246, 0.4)';
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.transform = 'translateY(0)';
-                  e.target.style.boxShadow = '0 4px 6px -1px rgba(59, 130, 246, 0.3)';
-                }}
+              <button
+                type="submit"
+                style={btnPrimaryStyle}
+                onMouseEnter={mouseEnterPrimary}
+                onMouseLeave={mouseLeavePrimary}
               >
                 <i className="fa-solid fa-user-plus" aria-hidden={true}></i>
                 <span>Crear Usuario</span>

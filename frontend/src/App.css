@@ -1748,6 +1748,22 @@ button:hover {
   box-shadow: 0 0 6px rgba(37, 99, 235, 0.2);
 }
 
+/* Reusable small icon container used across tables */
+.table-item-icon {
+  border-radius: 8px;
+  padding: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 35px;
+}
+
+.table-item-icon--primary { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
+.table-item-icon--warning { background: linear-gradient(135deg, #f59e0b, #ea580c); }
+.table-item-icon--info    { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+.table-item-icon--success { background: linear-gradient(135deg, #10b981, #059669); }
+.table-item-icon--danger  { background: linear-gradient(135deg, #ef4444, #dc2626); }
+
 
 /**botones de las tablas**/
 .btnTransparente {

@@ -5,7 +5,7 @@ module.exports = {
 
     //2. configuracion de base de datos
     DB :{
-        URL: process.env.MONGODB_URI || 'mongodb://localhost:27017/pangea',
+        URL: process.env.MONGODB_URI || 'mongodb://localhost:27017/pangea1',
         OPTIONS :{
             useNewUrlParser:true,
             useUnifiedTopolgy: true

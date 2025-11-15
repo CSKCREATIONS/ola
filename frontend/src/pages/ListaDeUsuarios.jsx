@@ -1234,40 +1234,12 @@ export default function ListaDeUsuarios() {
             
             {/* Paginación mejorada */}
             {totalPages > 1 && (
-              <div style={{
-                padding: '20px 25px',
-                borderTop: '1px solid #e5e7eb',
-                display: 'flex',
-                justifyContent: 'center',
-                gap: '8px'
-              }}>
+              <div className="pagination" style={{ padding: '20px 25px', borderTop: '1px solid #e5e7eb' }}>
                 {Array.from({ length: totalPages }, (_, i) => (
                   <button
                     key={i + 1}
                     onClick={() => paginate(i + 1)}
-                    style={{
-                      padding: '8px 16px',
-                      border: currentPage === i + 1 ? '2px solid #6366f1' : '2px solid #e5e7eb',
-                      borderRadius: '8px',
-                      background: currentPage === i + 1 ? '#6366f1' : 'white',
-                      color: currentPage === i + 1 ? 'white' : '#4b5563',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease'
-                    }}
-                    onMouseEnter={(e) => {
-                      if (currentPage !== i + 1) {
-                        e.target.style.borderColor = '#6366f1';
-                        e.target.style.color = '#6366f1';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (currentPage !== i + 1) {
-                        e.target.style.borderColor = '#e5e7eb';
-                        e.target.style.color = '#4b5563';
-                      }
-                    }}
+                    className={currentPage === i + 1 ? 'active-page' : ''}
                   >
                     {i + 1}
                   </button>

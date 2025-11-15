@@ -6,6 +6,7 @@ import Fijo from '../components/Fijo';
 import NavCompras from '../components/NavCompras';
 
 import api from '../api/axiosConfig';
+import { inputStyle, labelStyle, btnPrimaryStyle, btnSecondaryStyle, mouseEnterPrimary, mouseLeavePrimary, mouseEnterSecondary, mouseLeaveSecondary } from '../components/sharedStyles';
 
 // Deterministic email validator to avoid catastrophic regex backtracking
 function isValidEmail(email) {
@@ -138,6 +139,19 @@ if (!document.getElementById('historial-compras-advanced-styles')) {
 }
 
 export default function HistorialCompras() {
+  const metricCardStyle = {
+    background: 'linear-gradient(135deg, #ffffff, #f8fafc)',
+    borderRadius: '16px',
+    padding: '25px',
+    border: '1px solid #e5e7eb',
+    boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+  };
+  const infoCardStyle = {
+    background: 'linear-gradient(135deg, #f8f9fa, #e9ecef)',
+    padding: '1.5rem',
+    borderRadius: '10px',
+    border: '1px solid #e0e0e0'
+  };
   const [compras, setCompras] = useState([]);
   const [modalDetallesVisible, setModalDetallesVisible] = useState(false);
   const [modalNuevaCompraVisible, setModalNuevaCompraVisible] = useState(false);
@@ -809,29 +823,9 @@ JLA Global Company</textarea>
                 </div>
                 <button
                   onClick={abrirModalNuevaCompra}
-                  style={{
-                    background: 'linear-gradient(135deg, #10b981, #059669)',
-                    color: 'white',
-                    border: 'none',
-                    padding: '12px 24px',
-                    borderRadius: '12px',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s ease',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.target.style.transform = 'translateY(-2px)';
-                    e.target.style.boxShadow = '0 6px 20px rgba(16, 185, 129, 0.4)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.transform = 'translateY(0)';
-                    e.target.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.3)';
-                  }}
+                  style={{ ...btnPrimaryStyle, background: 'linear-gradient(135deg, #10b981, #059669)', padding: '12px 24px', borderRadius: '12px', fontSize: '14px', gap: '8px', boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)' }}
+                  onMouseEnter={mouseEnterPrimary}
+                  onMouseLeave={mouseLeavePrimary}
                 >
                   <i className="fa-solid fa-plus" aria-hidden={true}></i>
                   <span>Nueva Compra</span>
@@ -847,13 +841,7 @@ JLA Global Company</textarea>
             gap: '20px',
             marginBottom: '30px'
           }}>
-            <div style={{
-              background: 'linear-gradient(135deg, #ffffff, #f8fafc)',
-              borderRadius: '16px',
-              padding: '25px',
-              border: '1px solid #e5e7eb',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-            }}>
+                <div style={metricCardStyle}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                 <div style={{
                   background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
@@ -876,13 +864,7 @@ JLA Global Company</textarea>
               </div>
             </div>
 
-            <div style={{
-              background: 'linear-gradient(135deg, #ffffff, #f8fafc)',
-              borderRadius: '16px',
-              padding: '25px',
-              border: '1px solid #e5e7eb',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-            }}>
+            <div style={metricCardStyle}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                 <div style={{
                   background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
@@ -905,13 +887,7 @@ JLA Global Company</textarea>
               </div>
             </div>
 
-            <div style={{
-              background: 'linear-gradient(135deg, #ffffff, #f8fafc)',
-              borderRadius: '16px',
-              padding: '25px',
-              border: '1px solid #e5e7eb',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-            }}>
+            <div style={metricCardStyle}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                 <div style={{
                   background: 'linear-gradient(135deg, #10b981, #059669)',
@@ -1132,29 +1108,9 @@ JLA Global Company</textarea>
                 <button
                   key={i + 1}
                   onClick={() => paginate(i + 1)}
-                  style={{
-                    padding: '8px 16px',
-                    border: currentPage === i + 1 ? '2px solid #6366f1' : '2px solid #e5e7eb',
-                    borderRadius: '8px',
-                    background: currentPage === i + 1 ? '#6366f1' : 'white',
-                    color: currentPage === i + 1 ? 'white' : '#4b5563',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (currentPage !== i + 1) {
-                      e.target.style.borderColor = '#6366f1';
-                      e.target.style.color = '#6366f1';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (currentPage !== i + 1) {
-                      e.target.style.borderColor = '#e5e7eb';
-                      e.target.style.color = '#4b5563';
-                    }
-                  }}
+                  style={{ ...btnSecondaryStyle, border: currentPage === i + 1 ? '2px solid #6366f1' : btnSecondaryStyle.border, background: currentPage === i + 1 ? '#6366f1' : btnSecondaryStyle.background, color: currentPage === i + 1 ? 'white' : btnSecondaryStyle.color, fontSize: '14px' }}
+                  onMouseEnter={(e) => { if (currentPage !== i + 1) mouseEnterSecondary(e); }}
+                  onMouseLeave={(e) => { if (currentPage !== i + 1) mouseLeaveSecondary(e); }}
                 >
                   {i + 1}
                 </button>
@@ -1239,12 +1195,7 @@ JLA Global Company</textarea>
                     marginBottom: '2rem'
                 }}>
                     {/* Card Proveedor */}
-                    <div style={{
-                        background: 'linear-gradient(135deg, #f8f9fa, #e9ecef)',
-                        padding: '1.5rem',
-                        borderRadius: '10px',
-                        border: '1px solid #e0e0e0'
-                    }}>
+                    <div style={infoCardStyle}>
                         <h6 style={{ 
                             color: '#2c3e50', 
                             marginBottom: '1rem',
@@ -1261,12 +1212,7 @@ JLA Global Company</textarea>
                     </div>
 
                     {/* Card Fecha y Responsable */}
-                    <div style={{
-                        background: 'linear-gradient(135deg, #f8f9fa, #e9ecef)',
-                        padding: '1.5rem',
-                        borderRadius: '10px',
-                        border: '1px solid #e0e0e0'
-                    }}>
+                    <div style={infoCardStyle}>
                         <h6 style={{ 
                             color: '#2c3e50', 
                             marginBottom: '1rem',
@@ -1558,13 +1504,7 @@ JLA Global Company</textarea>
                           id="nuevaCompra-proveedor"
                           value={nuevaCompra.proveedor}
                           onChange={(e) => setNuevaCompra({ ...nuevaCompra, proveedor: e.target.value, productos: [] })}
-                          style={{
-                            width: '100%',
-                            padding: '0.75rem',
-                            border: '2px solid #e5e7eb',
-                            borderRadius: '8px',
-                            fontSize: '14px'
-                          }}
+                                  style={{ ...inputStyle, padding: '0.75rem', border: '2px solid #e5e7eb', borderRadius: '8px', fontSize: '14px' }}
                         >
                           <option value="">Seleccione un proveedor</option>
                           {proveedores.filter(p => p.activo).map(p => (
@@ -1581,15 +1521,7 @@ JLA Global Company</textarea>
                           type="text"
                           value={nuevaCompra.solicitadoPor}
                           disabled
-                          style={{
-                            width: '100%',
-                            padding: '0.75rem',
-                            border: '2px solid #e5e7eb',
-                            borderRadius: '8px',
-                            fontSize: '14px',
-                            backgroundColor: '#f3f4f6',
-                            cursor: 'not-allowed'
-                          }}
+                          style={{ ...inputStyle, backgroundColor: '#f3f4f6', cursor: 'not-allowed' }}
                         />
                       </div>
                     </div>
@@ -1604,19 +1536,9 @@ JLA Global Company</textarea>
                       </h6>
                       <button
                         onClick={agregarProductoNuevaCompra}
-                        style={{
-                          background: 'linear-gradient(135deg, #10b981, #059669)',
-                          color: 'white',
-                          border: 'none',
-                          padding: '0.5rem 1rem',
-                          borderRadius: '8px',
-                          fontSize: '12px',
-                          fontWeight: '600',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.5rem'
-                        }}
+                        style={{ ...btnPrimaryStyle, background: 'linear-gradient(135deg, #10b981, #059669)', padding: '0.5rem 1rem', borderRadius: '8px', fontSize: '12px', gap: '0.5rem' }}
+                        onMouseEnter={mouseEnterPrimary}
+                        onMouseLeave={mouseLeavePrimary}
                       >
                         <i className="fa-solid fa-plus" aria-hidden={true}></i>
                         <span>Agregar Producto</span>
@@ -1658,13 +1580,7 @@ JLA Global Company</textarea>
                               id={`nuevaCompra-producto-${index}`}
                               value={prod.producto}
                               onChange={(e) => actualizarProductoNuevaCompra(index, 'producto', e.target.value)}
-                              style={{
-                                width: '100%',
-                                padding: '0.5rem',
-                                border: '1px solid #d1d5db',
-                                borderRadius: '6px',
-                                fontSize: '13px'
-                              }}
+                              style={{ ...inputStyle, padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '13px' }}
                             >
                               <option value="">Seleccione</option>
                               {productosFiltrados.map(p => (
@@ -1682,13 +1598,7 @@ JLA Global Company</textarea>
                               value={prod.cantidad}
                               onChange={(e) => actualizarProductoNuevaCompra(index, 'cantidad', Number.parseInt(e.target.value) || 0)}
                               min="1"
-                              style={{
-                                width: '100%',
-                                padding: '0.5rem',
-                                border: '1px solid #d1d5db',
-                                borderRadius: '6px',
-                                fontSize: '13px'
-                              }}
+                              style={{ ...inputStyle, padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '13px' }}
                             />
                           </div>
                           <div>
@@ -1702,13 +1612,7 @@ JLA Global Company</textarea>
                               onChange={(e) => actualizarProductoNuevaCompra(index, 'precioUnitario', Number.parseFloat(e.target.value) || 0)}
                               min="0"
                               step="0.01"
-                              style={{
-                                width: '100%',
-                                padding: '0.5rem',
-                                border: '1px solid #d1d5db',
-                                borderRadius: '6px',
-                                fontSize: '13px'
-                              }}
+                              style={{ ...inputStyle, padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '13px' }}
                             />
                           </div>
                         </div>
@@ -1790,32 +1694,17 @@ JLA Global Company</textarea>
                 }}>
                   <button
                     onClick={() => setModalNuevaCompraVisible(false)}
-                    style={{
-                      background: '#95a5a6',
-                      color: 'white',
-                      border: 'none',
-                      padding: '0.75rem 1.5rem',
-                      borderRadius: '8px',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      cursor: 'pointer'
-                    }}
+                    style={{ ...btnSecondaryStyle, background: '#95a5a6', color: 'white', padding: '0.75rem 1.5rem' }}
+                    onMouseEnter={mouseEnterSecondary}
+                    onMouseLeave={mouseLeaveSecondary}
                   >
                     <i className="fa-solid fa-times"></i> Cancelar
                   </button>
                   <button
                     onClick={guardarNuevaCompra}
-                    style={{
-                      background: 'linear-gradient(135deg, #10b981, #059669)',
-                      color: 'white',
-                      border: 'none',
-                      padding: '0.75rem 1.5rem',
-                      borderRadius: '8px',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      cursor: 'pointer',
-                      boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)'
-                    }}
+                    style={{ ...btnPrimaryStyle, background: 'linear-gradient(135deg, #10b981, #059669)', padding: '0.75rem 1.5rem', boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)' }}
+                    onMouseEnter={mouseEnterPrimary}
+                    onMouseLeave={mouseLeavePrimary}
                   >
                     <i className="fa-solid fa-save"></i> Guardar Compra
                   </button>

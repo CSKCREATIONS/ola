@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Fijo from '../components/Fijo';
 import NavVentas from '../components/NavVentas';
@@ -7,6 +7,7 @@ import jsPDF from "jspdf";
 import api from '../api/axiosConfig';
 import Swal from 'sweetalert2';
 import '../App.css';
+import '../cotizaciones-modal.css';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import CotizacionPreview from '../components/CotizacionPreview';
@@ -235,8 +236,7 @@ export default function ListaDeCotizaciones() {
         const productId = (p?.producto?.id && (p.producto.id._id || p.producto.id)) || p?.producto;
         if (!productId) return null;
         const cantidadNum = Number(p?.cantidad);
-        const precioRaw = p?.valorUnitario ?? p?.producto?.price;
-        const precioNum = Number(precioRaw);
+        const precioNum = p?.valorUnitario != null ? Number(p.valorUnitario) : Number(p?.producto?.price);
         return {
           product: productId,
           cantidad: Number.isFinite(cantidadNum) && cantidadNum > 0 ? cantidadNum : 1,
@@ -735,7 +735,7 @@ export default function ListaDeCotizaciones() {
               }}>
                 <i aria-hidden={true} className="fa-solid fa-info-circle" style={{ color: '#3b82f6', fontSize: '14px' }}></i>
                 <span style={{ fontSize: '14px', color: '#475569', fontWeight: '500' }}>
-                  {cotizacionesFiltradas.length} cotización{cotizacionesFiltradas.length === 1 ? '' : 'es'} encontrada{cotizacionesFiltradas.length === 1 ? '' : 's'}
+                  {cotizacionesFiltradas.length} cotización{cotizacionesFiltradas.length !== 1 ? 'es' : ''} encontrada{cotizacionesFiltradas.length !== 1 ? 's' : ''}
                 </span>
               </div>
             </div>
@@ -884,7 +884,7 @@ export default function ListaDeCotizaciones() {
                     Cotizaciones Registradas
                   </h4>
                   <p style={{ margin: 0, color: '#6b7280', fontSize: '14px' }}>
-                    Total: {cotizacionesFiltradas.length} cotización{cotizacionesFiltradas.length === 1 ? '' : 'es'}
+                    Total: {cotizacionesFiltradas.length} cotización{cotizacionesFiltradas.length !== 1 ? 'es' : ''}
                   </p>
                 </div>
               </div>
@@ -1280,40 +1280,12 @@ export default function ListaDeCotizaciones() {
 
             {/* Paginación mejorada */}
             {totalPages > 1 && (
-              <div style={{
-                padding: '20px 25px',
-                borderTop: '1px solid #e5e7eb',
-                display: 'flex',
-                justifyContent: 'center',
-                gap: '8px'
-              }}>
+              <div className="pagination" style={{ padding: '20px 25px', borderTop: '1px solid #e5e7eb' }}>
                 {Array.from({ length: totalPages }, (_, i) => (
                   <button
                     key={i + 1}
                     onClick={() => paginate(i + 1)}
-                    style={{
-                      padding: '8px 16px',
-                      border: currentPage === i + 1 ? '2px solid #6366f1' : '2px solid #e5e7eb',
-                      borderRadius: '8px',
-                      background: currentPage === i + 1 ? '#6366f1' : 'white',
-                      color: currentPage === i + 1 ? 'white' : '#4b5563',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease'
-                    }}
-                    onMouseEnter={(e) => {
-                      if (currentPage !== i + 1) {
-                        e.target.style.borderColor = '#6366f1';
-                        e.target.style.color = '#6366f1';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (currentPage !== i + 1) {
-                        e.target.style.borderColor = '#e5e7eb';
-                        e.target.style.color = '#4b5563';
-                      }
-                    }}
+                    className={currentPage === i + 1 ? 'active-page' : ''}
                   >
                     {i + 1}
                   </button>
@@ -1339,36 +1311,33 @@ export default function ListaDeCotizaciones() {
         <div className="cotizacion-modal-container">
           <div
             className="modal-overlay"
-            aria-label="Cerrar modal"
-          >
-            <button
-              type="button"
-              className="overlay-button"
-              aria-label="Cerrar modal"
-              style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', border: 'none', background: 'transparent', padding: 0 }}
-              onClick={(e) => {
-                // click on the overlay-button closes the modal
-                if (e.target === e.currentTarget) {
-                  closeModal();
-                }
-              }}
-              onTouchStart={(e) => {
+            role="button"
+            tabIndex={0}
+            aria-label="Cerrar modal (clic fuera o presione Enter/Escape)"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                closeModal();
+              }
+            }}
+            onKeyDown={(e) => {
+              // Support keyboard activation for the overlay (Enter / Space)
+              if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
                 if (e.target === e.currentTarget) closeModal();
-              }}
-              onKeyDown={(e) => {
-                // support keyboard users: close when Enter or Space is pressed while overlay-button is focused
-                if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
-                  e.preventDefault(); // prevent scrolling on Space
-                  if (e.target === e.currentTarget) closeModal();
-                }
-              }}
-            />
+              }
+            }}
+            onTouchStart={(e) => {
+              if (e.target === e.currentTarget) closeModal();
+            }}
+          >
             <dialog
               className="modal-content-large"
+              role="dialog"
               aria-label="Editar Cotización"
               aria-modal="true"
               open
               tabIndex={-1}
+              onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.stopPropagation()}
             >
               <div className="modal-header">
                 <div className="header-info">
@@ -1514,7 +1483,7 @@ export default function ListaDeCotizaciones() {
                       <i aria-hidden={true} className="fa-solid fa-shopping-cart"></i>
                       <h4>Productos y Servicios</h4>
                       <span className="productos-count">
-                        {cotizacionSeleccionada.productos?.length || 0} elemento{(cotizacionSeleccionada.productos?.length || 0) === 1 ? '' : 's'}
+                        {cotizacionSeleccionada.productos?.length || 0} elemento{(cotizacionSeleccionada.productos?.length || 0) !== 1 ? 's' : ''}
                       </span>
                     </div>
                     <button className="btn-add" onClick={agregarProducto}>

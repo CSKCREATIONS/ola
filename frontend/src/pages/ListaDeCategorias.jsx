@@ -6,6 +6,7 @@ import NavProductos from '../components/NavProductos'
 
 import api from '../api/axiosConfig';
 import PropTypes from 'prop-types';
+import { inputStyle, createFocusHandler, handleBlur, btnPrimaryStyle, btnSecondaryStyle, mouseEnterPrimary, mouseLeavePrimary, mouseEnterSecondary, mouseLeaveSecondary } from '../components/sharedStyles';
 
 // Base endpoint used in this page
 const API_URL = '/api/categories';
@@ -339,25 +340,9 @@ const CategoriaModal = ({ categoria, onClose, onSave }) => {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Ej: Electrónicos, Ropa, Hogar..."
-              style={{
-                width: '100%',
-                padding: '0.875rem 1rem',
-                border: '2px solid #e5e7eb',
-                borderRadius: '10px',
-                fontSize: '1rem',
-                transition: 'all 0.3s ease',
-                backgroundColor: '#ffffff',
-                fontFamily: 'inherit',
-                boxSizing: 'border-box'
-              }}
-              onFocus={(e) => {
-                e.target.style.borderColor = '#f59e0b';
-                e.target.style.boxShadow = '0 0 0 3px rgba(245, 158, 11, 0.1)';
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = '#e5e7eb';
-                e.target.style.boxShadow = 'none';
-              }}
+              style={{ ...inputStyle, border: '2px solid #e5e7eb', borderRadius: '10px' }}
+              onFocus={createFocusHandler('#f59e0b')}
+              onBlur={handleBlur}
               required
             />
           </div>
@@ -389,27 +374,9 @@ const CategoriaModal = ({ categoria, onClose, onSave }) => {
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Describe brevemente esta categoría y qué tipo de productos incluye..."
               rows="4"
-              style={{
-                width: '100%',
-                padding: '0.875rem 1rem',
-                border: '2px solid #e5e7eb',
-                borderRadius: '10px',
-                fontSize: '1rem',
-                transition: 'all 0.3s ease',
-                backgroundColor: '#ffffff',
-                fontFamily: 'inherit',
-                boxSizing: 'border-box',
-                resize: 'vertical',
-                minHeight: '120px'
-              }}
-              onFocus={(e) => {
-                e.target.style.borderColor = '#10b981';
-                e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)';
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = '#e5e7eb';
-                e.target.style.boxShadow = 'none';
-              }}
+              style={{ ...inputStyle, resize: 'vertical', minHeight: '120px', border: '2px solid #e5e7eb', borderRadius: '10px' }}
+              onFocus={createFocusHandler('#10b981')}
+              onBlur={handleBlur}
               required
             />
           </div>
@@ -429,28 +396,9 @@ const CategoriaModal = ({ categoria, onClose, onSave }) => {
           <button
             type="button"
             onClick={onClose}
-            style={{
-              padding: '0.875rem 1.5rem',
-              border: '2px solid #e5e7eb',
-              borderRadius: '10px',
-              backgroundColor: 'white',
-              color: '#374151',
-              cursor: 'pointer',
-              fontWeight: '600',
-              fontSize: '0.95rem',
-              transition: 'all 0.3s ease',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem'
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.backgroundColor = '#f3f4f6';
-              e.target.style.borderColor = '#d1d5db';
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.backgroundColor = 'white';
-              e.target.style.borderColor = '#e5e7eb';
-            }}
+            style={{ ...btnSecondaryStyle }}
+            onMouseEnter={mouseEnterSecondary}
+            onMouseLeave={mouseLeaveSecondary}
           >
             <i className="fa-solid fa-times" aria-hidden={true}></i>
             <span>Cancelar</span>
@@ -458,29 +406,9 @@ const CategoriaModal = ({ categoria, onClose, onSave }) => {
 
           <button
             type="submit"
-            style={{
-              padding: '0.875rem 1.5rem',
-              border: 'none',
-              borderRadius: '10px',
-              background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-              color: 'white',
-              cursor: 'pointer',
-              fontWeight: '600',
-              fontSize: '0.95rem',
-              transition: 'all 0.3s ease',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              boxShadow: '0 4px 6px -1px rgba(245, 158, 11, 0.3)'
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.transform = 'translateY(-1px)';
-              e.target.style.boxShadow = '0 6px 12px -1px rgba(245, 158, 11, 0.4)';
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.transform = 'translateY(0)';
-              e.target.style.boxShadow = '0 4px 6px -1px rgba(245, 158, 11, 0.3)';
-            }}
+            style={{ ...btnPrimaryStyle, background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}
+            onMouseEnter={mouseEnterPrimary}
+            onMouseLeave={mouseLeavePrimary}
           >
             <i className="fa-solid fa-tags"></i>
             {categoria ? 'Actualizar' : 'Crear'}
@@ -752,15 +680,7 @@ const ListaDeCategorias = () => {
                         </td>
                         <td style={{ fontWeight: '600', color: '#1f2937' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <div style={{
-                              background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                              borderRadius: '8px',
-                              padding: '8px',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              minWidth: '35px'
-                            }}>
+                            <div className="table-item-icon table-item-icon--primary">
                               <i className="fa-solid fa-tag" style={{ color: 'white', fontSize: '12px' }} aria-hidden={true}></i>
                             </div>
                             {cat.name}

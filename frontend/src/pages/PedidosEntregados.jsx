@@ -452,15 +452,7 @@ export default function PedidosEntregados() {
                       </td>
                       <td style={{ fontWeight: '600', color: '#1f2937' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <div style={{
-                            background: 'linear-gradient(135deg, #10b981, #059669)',
-                            borderRadius: '8px',
-                            padding: '8px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            minWidth: '35px'
-                          }}>
+                          <div className="table-item-icon table-item-icon--success">
                             <i className="fa-solid fa-file-invoice" style={{ color: 'white', fontSize: '12px' }}></i>
                           </div>
                           <button

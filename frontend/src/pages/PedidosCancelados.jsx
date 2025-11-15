@@ -44,6 +44,52 @@ const pedidosCanceladosStyles = `
       background: linear-gradient(90deg, #ef4444, #dc2626, #b91c1c);
     }
 
+    /* Reusable stat icon + label/value styles to avoid inline duplication */
+    .stat-row {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .stat-icon {
+      border-radius: 12px;
+      padding: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 35px;
+    }
+
+    .stat-icon--danger { background: linear-gradient(135deg, #ef4444, #dc2626); }
+    .stat-icon--warning { background: linear-gradient(135deg, #f59e0b, #ea580c); }
+    .stat-icon--info    { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
+
+    .stat-value {
+      margin: 0 0 5px 0;
+      font-size: 2rem;
+      font-weight: 700;
+      color: #1f2937;
+    }
+
+    .stat-label {
+      margin: 0;
+      color: #6b7280;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    /* Table row icon helper */
+    .table-item-icon {
+      border-radius: 8px;
+      padding: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 35px;
+    }
+
+    .table-item-icon--danger { background: linear-gradient(135deg, #ef4444, #dc2626); }
+
     .cancelados-professional-header {
       background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
       border-radius: 20px;
@@ -330,76 +376,43 @@ export default function PedidosCancelados() {
             marginBottom: '30px'
           }}>
             <div className="cancelados-stats-card">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <div style={{
-                  background: 'linear-gradient(135deg, #ef4444, #dc2626)',
-                  borderRadius: '12px',
-                  padding: '15px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
+              <div className="stat-row">
+                <div className="stat-icon stat-icon--danger">
                   <i className="fa-solid fa-times-circle" style={{ color: 'white', fontSize: '1.5rem' }}></i>
                 </div>
                 <div>
-                  <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                    {pedidosCancelados.length}
-                  </h3>
-                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
-                    Pedidos Cancelados
-                  </p>
+                  <h3 className="stat-value">{pedidosCancelados.length}</h3>
+                  <p className="stat-label">Pedidos Cancelados</p>
                 </div>
               </div>
             </div>
 
             <div className="cancelados-stats-card">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <div style={{
-                  background: 'linear-gradient(135deg, #f59e0b, #ea580c)',
-                  borderRadius: '12px',
-                  padding: '15px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
+              <div className="stat-row">
+                <div className="stat-icon stat-icon--warning">
                   <i className="fa-solid fa-dollar-sign" style={{ color: 'white', fontSize: '1.5rem' }}></i>
                 </div>
                 <div>
-                  <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                    ${pedidosCancelados.reduce((sum, p) => sum + calculateTotal(p), 0).toLocaleString('es-CO')}
-                  </h3>
-                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
-                    Valor Perdido
-                  </p>
+                  <h3 className="stat-value">${pedidosCancelados.reduce((sum, p) => sum + calculateTotal(p), 0).toLocaleString('es-CO')}</h3>
+                  <p className="stat-label">Valor Perdido</p>
                 </div>
               </div>
             </div>
 
             <div className="cancelados-stats-card">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <div style={{
-                  background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                  borderRadius: '12px',
-                  padding: '15px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
+              <div className="stat-row">
+                <div className="stat-icon stat-icon--info">
                   <i className="fa-solid fa-calendar-alt" style={{ color: 'white', fontSize: '1.5rem' }}></i>
                 </div>
                 <div>
-                  <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                    {pedidosCancelados.filter(p => {
-                      const fechaCancelacion = new Date(p.updatedAt);
-                      const hoy = new Date();
-                      const diferencia = hoy.getTime() - fechaCancelacion.getTime();
-                      const diasDiferencia = Math.ceil(diferencia / (1000 * 3600 * 24));
-                      return diasDiferencia <= 30;
-                    }).length}
-                  </h3>
-                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
-                    Este Mes
-                  </p>
+                  <h3 className="stat-value">{pedidosCancelados.filter(p => {
+                    const fechaCancelacion = new Date(p.updatedAt);
+                    const hoy = new Date();
+                    const diferencia = hoy.getTime() - fechaCancelacion.getTime();
+                    const diasDiferencia = Math.ceil(diferencia / (1000 * 3600 * 24));
+                    return diasDiferencia <= 30;
+                  }).length}</h3>
+                  <p className="stat-label">Este Mes</p>
                 </div>
               </div>
             </div>
@@ -447,15 +460,7 @@ export default function PedidosCancelados() {
                       </td>
                       <td style={{ fontWeight: '600', color: '#1f2937' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <div style={{
-                            background: 'linear-gradient(135deg, #ef4444, #dc2626)',
-                            borderRadius: '8px',
-                            padding: '8px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            minWidth: '35px'
-                          }}>
+                          <div className="table-item-icon table-item-icon--danger">
                             <i className="fa-solid fa-file-invoice" style={{ color: 'white', fontSize: '12px' }}></i>
                           </div>
                           <span>{pedido.numeroPedido || '---'}</span>

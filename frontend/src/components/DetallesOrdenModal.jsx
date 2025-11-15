@@ -1,48 +1,12 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useRef } from 'react';
 import PropTypes from 'prop-types';
+import useDraggable from '../hooks/useDraggable';
 
 export default function DetallesOrdenModal({ visible, orden, onClose, onPrint, onSendEmail }) {
   const modalRef = useRef(null);
 
-  useEffect(() => {
-    if (!visible) return;
-    const modal = modalRef.current;
-    if (!modal) return;
-
-    let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-
-    const dragMouseDown = (e) => {
-      e.preventDefault();
-      pos3 = e.clientX;
-      pos4 = e.clientY;
-      document.onmouseup = closeDragElement;
-      document.onmousemove = elementDrag;
-    };
-
-    const elementDrag = (e) => {
-      e.preventDefault();
-      pos1 = pos3 - e.clientX;
-      pos2 = pos4 - e.clientY;
-      pos3 = e.clientX;
-      pos4 = e.clientY;
-      modal.style.top = (modal.offsetTop - pos2) + 'px';
-      modal.style.left = (modal.offsetLeft - pos1) + 'px';
-    };
-
-    const closeDragElement = () => {
-      document.onmouseup = null;
-      document.onmousemove = null;
-    };
-
-    const header = modal.querySelector('.pdf-orden-compra .header') || modal.querySelector('.modal-header-realista');
-    if (header) header.onmousedown = dragMouseDown;
-
-    return () => {
-      if (header) header.onmousedown = null;
-      document.onmouseup = null;
-      document.onmousemove = null;
-    };
-  }, [visible]);
+  // make modal draggable by its header (if present) or by the element itself
+  useDraggable(modalRef, { handleSelector: '.pdf-orden-compra .header, .modal-header-realista' });
 
   if (!visible || !orden) return null;
 

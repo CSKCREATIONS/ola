@@ -5,6 +5,7 @@ import '../App.css';
 import Fijo from '../components/Fijo';
 import NavProductos from '../components/NavProductos';
 import api from '../api/axiosConfig';
+import { labelStyle, inputStyle, createFocusHandler, handleBlur } from '../components/sharedStyles';
 
 // API endpoint constants used in this page
 const API_PRODUCTS = '/api/products';
@@ -220,7 +221,9 @@ const ProductoModal = ({
               borderRadius: '12px',
               marginBottom: '1.5rem',
               border: '1px solid #e2e8f0',
-              borderLeft: '4px solid #f59e0b'
+              borderLeft: '4px solid #f59e0b',
+              marginTop: '0.5rem',
+              overflow: 'hidden'
             }}>
               <h4 style={{
                 margin: '0 0 1.5rem 0',
@@ -242,15 +245,7 @@ const ProductoModal = ({
                 marginBottom: '1.5rem'
               }}>
                 <div>
-                  <label htmlFor="input-producto-nombre" style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    marginBottom: '0.5rem',
-                    fontWeight: '600',
-                    color: '#374151',
-                    fontSize: '0.95rem'
-                  }}>
+                  <label htmlFor="input-producto-nombre" style={labelStyle}>
                     <i className="fa-solid fa-tag" style={{ color: '#3b82f6', fontSize: '0.9rem' }} aria-hidden={true}></i>
                     <span>Nombre del Producto</span>
                     <span style={{ color: '#ef4444' }}>*</span>
@@ -262,38 +257,14 @@ const ProductoModal = ({
                     onChange={handleChange}
                     placeholder="Ingrese el nombre del producto"
                     required
-                    style={{
-                      width: '100%',
-                      padding: '0.875rem 1rem',
-                      border: '2px solid #e5e7eb',
-                      borderRadius: '10px',
-                      fontSize: '1rem',
-                      transition: 'all 0.3s ease',
-                      backgroundColor: '#ffffff',
-                      fontFamily: 'inherit',
-                      boxSizing: 'border-box'
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = '#f59e0b';
-                      e.target.style.boxShadow = '0 0 0 3px rgba(245, 158, 11, 0.1)';
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = '#e5e7eb';
-                      e.target.style.boxShadow = 'none';
-                    }}
+                    style={inputStyle}
+                    onFocus={createFocusHandler('#f59e0b')}
+                    onBlur={handleBlur}
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="input-producto-precio" style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    marginBottom: '0.5rem',
-                    fontWeight: '600',
-                    color: '#374151',
-                    fontSize: '0.95rem'
-                  }}>
+                  <label htmlFor="input-producto-precio" style={labelStyle}>
                     <i className="fa-solid fa-dollar-sign" style={{ color: '#10b981', fontSize: '0.9rem' }} aria-hidden={true}></i>
                     <span>Precio</span>
                     <span style={{ color: '#ef4444' }}>*</span>
@@ -307,25 +278,9 @@ const ProductoModal = ({
                     onChange={handleChange}
                     placeholder="0.00"
                     required
-                    style={{
-                      width: '100%',
-                      padding: '0.875rem 1rem',
-                      border: '2px solid #e5e7eb',
-                      borderRadius: '10px',
-                      fontSize: '1rem',
-                      transition: 'all 0.3s ease',
-                      backgroundColor: '#ffffff',
-                      fontFamily: 'inherit',
-                      boxSizing: 'border-box'
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = '#f59e0b';
-                      e.target.style.boxShadow = '0 0 0 3px rgba(245, 158, 11, 0.1)';
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = '#e5e7eb';
-                      e.target.style.boxShadow = 'none';
-                    }}
+                    style={inputStyle}
+                    onFocus={createFocusHandler('#f59e0b')}
+                    onBlur={handleBlur}
                   />
                 </div>
               </div>
@@ -336,15 +291,7 @@ const ProductoModal = ({
                 gap: '1.5rem'
               }}>
                 <div>
-                  <label htmlFor="input-producto-descripcion" style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    marginBottom: '0.5rem',
-                    fontWeight: '600',
-                    color: '#374151',
-                    fontSize: '0.95rem'
-                  }}>
+                  <label htmlFor="input-producto-descripcion" style={labelStyle}>
                     <i className="fa-solid fa-align-left" style={{ color: '#8b5cf6', fontSize: '0.9rem' }} aria-hidden={true}></i>
                     <span>Descripción</span>
                     <span style={{ color: '#ef4444' }}>*</span>
@@ -356,38 +303,14 @@ const ProductoModal = ({
                     onChange={handleChange}
                     placeholder="Descripción detallada del producto"
                     required
-                    style={{
-                      width: '100%',
-                      padding: '0.875rem 1rem',
-                      border: '2px solid #e5e7eb',
-                      borderRadius: '10px',
-                      fontSize: '1rem',
-                      transition: 'all 0.3s ease',
-                      backgroundColor: '#ffffff',
-                      fontFamily: 'inherit',
-                      boxSizing: 'border-box'
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = '#f59e0b';
-                      e.target.style.boxShadow = '0 0 0 3px rgba(245, 158, 11, 0.1)';
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = '#e5e7eb';
-                      e.target.style.boxShadow = 'none';
-                    }}
+                    style={inputStyle}
+                    onFocus={createFocusHandler('#f59e0b')}
+                    onBlur={handleBlur}
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="input-producto-stock" style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    marginBottom: '0.5rem',
-                    fontWeight: '600',
-                    color: '#374151',
-                    fontSize: '0.95rem'
-                  }}>
+                  <label htmlFor="input-producto-stock" style={labelStyle}>
                     <i className="fa-solid fa-warehouse" style={{ color: '#ef4444', fontSize: '0.9rem' }} aria-hidden={true}></i>
                     <span>Stock</span>
                     <span style={{ color: '#ef4444' }}>*</span>
@@ -400,25 +323,9 @@ const ProductoModal = ({
                     onChange={handleChange}
                     placeholder="0"
                     required
-                    style={{
-                      width: '100%',
-                      padding: '0.875rem 1rem',
-                      border: '2px solid #e5e7eb',
-                      borderRadius: '10px',
-                      fontSize: '1rem',
-                      transition: 'all 0.3s ease',
-                      backgroundColor: '#ffffff',
-                      fontFamily: 'inherit',
-                      boxSizing: 'border-box'
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = '#f59e0b';
-                      e.target.style.boxShadow = '0 0 0 3px rgba(245, 158, 11, 0.1)';
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = '#e5e7eb';
-                      e.target.style.boxShadow = 'none';
-                    }}
+                    style={inputStyle}
+                    onFocus={createFocusHandler('#f59e0b')}
+                    onBlur={handleBlur}
                   />
                 </div>
               </div>
@@ -431,7 +338,9 @@ const ProductoModal = ({
               borderRadius: '12px',
               marginBottom: '1.5rem',
               border: '1px solid #e2e8f0',
-              borderLeft: '4px solid #10b981'
+              borderLeft: '4px solid #10b981',
+              marginTop: '0.5rem',
+              overflow: 'hidden'
             }}>
               <h4 style={{
                 margin: '0 0 1.5rem 0',
@@ -452,15 +361,7 @@ const ProductoModal = ({
                 gap: '1.5rem'
               }}>
                 <div>
-                  <label htmlFor="input-producto-categoria" style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    marginBottom: '0.5rem',
-                    fontWeight: '600',
-                    color: '#374151',
-                    fontSize: '0.95rem'
-                  }}>
+                  <label htmlFor="input-producto-categoria" style={labelStyle}>
                     <i className="fa-solid fa-folder" style={{ color: '#3b82f6', fontSize: '0.9rem' }} aria-hidden={true}></i>
                     <span>Categoría</span>
                     <span style={{ color: '#ef4444' }}>*</span>
@@ -471,25 +372,9 @@ const ProductoModal = ({
                     value={form.category}
                     onChange={handleChange}
                     required
-                    style={{
-                      width: '100%',
-                      padding: '0.875rem 1rem',
-                      border: '2px solid #e5e7eb',
-                      borderRadius: '10px',
-                      fontSize: '1rem',
-                      transition: 'all 0.3s ease',
-                      backgroundColor: '#ffffff',
-                      fontFamily: 'inherit',
-                      boxSizing: 'border-box'
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = '#f59e0b';
-                      e.target.style.boxShadow = '0 0 0 3px rgba(245, 158, 11, 0.1)';
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = '#e5e7eb';
-                      e.target.style.boxShadow = 'none';
-                    }}
+                    style={inputStyle}
+                    onFocus={createFocusHandler('#f59e0b')}
+                    onBlur={handleBlur}
                   >
                     <option value="">Seleccione Categoría</option>
                     {categorias.map(cat => (
@@ -499,15 +384,7 @@ const ProductoModal = ({
                 </div>
 
                 <div>
-                  <label htmlFor="input-producto-subcategoria" style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    marginBottom: '0.5rem',
-                    fontWeight: '600',
-                    color: '#374151',
-                    fontSize: '0.95rem'
-                  }}>
+                  <label htmlFor="input-producto-subcategoria" style={labelStyle}>
                     <i className="fa-solid fa-folder-open" style={{ color: '#8b5cf6', fontSize: '0.9rem' }} aria-hidden={true}></i>
                     <span>Subcategoría</span>
                     <span style={{ color: '#ef4444' }}>*</span>
@@ -518,25 +395,9 @@ const ProductoModal = ({
                     value={form.subcategory}
                     onChange={handleChange}
                     required
-                    style={{
-                      width: '100%',
-                      padding: '0.875rem 1rem',
-                      border: '2px solid #e5e7eb',
-                      borderRadius: '10px',
-                      fontSize: '1rem',
-                      transition: 'all 0.3s ease',
-                      backgroundColor: '#ffffff',
-                      fontFamily: 'inherit',
-                      boxSizing: 'border-box'
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = '#f59e0b';
-                      e.target.style.boxShadow = '0 0 0 3px rgba(245, 158, 11, 0.1)';
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = '#e5e7eb';
-                      e.target.style.boxShadow = 'none';
-                    }}
+                    style={inputStyle}
+                    onFocus={createFocusHandler('#f59e0b')}
+                    onBlur={handleBlur}
                   >
                     <option value="">Seleccione Subcategoría</option>
                     {subcategorias.map(sub => (
@@ -548,15 +409,7 @@ const ProductoModal = ({
                 </div>
 
                 <div>
-                  <label htmlFor="input-producto-proveedor" style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    marginBottom: '0.5rem',
-                    fontWeight: '600',
-                    color: '#374151',
-                    fontSize: '0.95rem'
-                  }}>
+                  <label htmlFor="input-producto-proveedor" style={labelStyle}>
                     <i className="fa-solid fa-truck" style={{ color: '#f59e0b', fontSize: '0.9rem' }} aria-hidden={true}></i>
                     <span>Proveedor</span>
                     <span style={{ color: '#ef4444' }}>*</span>
@@ -567,25 +420,9 @@ const ProductoModal = ({
                     value={form.proveedor}
                     onChange={handleChange}
                     required
-                    style={{
-                      width: '100%',
-                      padding: '0.875rem 1rem',
-                      border: '2px solid #e5e7eb',
-                      borderRadius: '10px',
-                      fontSize: '1rem',
-                      transition: 'all 0.3s ease',
-                      backgroundColor: '#ffffff',
-                      fontFamily: 'inherit',
-                      boxSizing: 'border-box'
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = '#f59e0b';
-                      e.target.style.boxShadow = '0 0 0 3px rgba(245, 158, 11, 0.1)';
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = '#e5e7eb';
-                      e.target.style.boxShadow = 'none';
-                    }}
+                    style={inputStyle}
+                    onFocus={createFocusHandler('#f59e0b')}
+                    onBlur={handleBlur}
                   >
                     <option value="">Seleccione Proveedor</option>
                     {Array.isArray(proveedores) && proveedores.map(prov => (
@@ -1245,24 +1082,9 @@ const GestionProductos = () => {
               <select id="input-gestion-prod-1"
                 value={filtroEstado}
                 onChange={(e) => setFiltroEstado(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '12px 16px',
-                  border: '2px solid #e5e7eb',
-                  borderRadius: '10px',
-                  fontSize: '14px',
-                  transition: 'all 0.3s ease',
-                  background: 'white',
-                  cursor: 'pointer'
-                }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = '#6366f1';
-                  e.target.style.boxShadow = '0 0 0 3px rgba(99, 102, 241, 0.1)';
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = '#e5e7eb';
-                  e.target.style.boxShadow = 'none';
-                }}
+                style={inputStyle}
+                onFocus={createFocusHandler('#6366f1')}
+                onBlur={handleBlur}
               >
                 <option value="todos">Todos los estados</option>
                 <option value="activos">Productos Activos</option>
