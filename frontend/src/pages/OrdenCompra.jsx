@@ -8,6 +8,7 @@ import DetallesOrdenModal from '../components/DetallesOrdenModal';
 import { roundMoney } from '../utils/formatters';
 import { randomString } from '../utils/secureRandom';
 import { calcularTotales as calcularTotalesShared, sumarProp } from '../utils/calculations';
+import { isValidEmail } from '../utils/emailHelpers';
 /* global globalThis */
 
 // Small helper utilities (local fallbacks used by this page)
@@ -31,11 +32,7 @@ const calcularTotalesProductos = (productos = [], ivaPercent = 0) => {
   }
 };
 
-function isValidEmail(email) {
-  if (!email || typeof email !== 'string') return false;
-  // simple, safe validators used elsewhere in the app
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
+// `isValidEmail` moved to `frontend/src/utils/emailHelpers.js` to avoid duplication
 
 // Use shared secure random helper from utils
 
