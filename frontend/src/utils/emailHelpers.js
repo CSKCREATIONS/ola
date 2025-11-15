@@ -55,3 +55,29 @@ export function buildSignature(usuario) {
 export function getCompanyName() {
   return process.env.REACT_APP_COMPANY_NAME || process.env.COMPANY_NAME || 'JLA Global Company';
 }
+
+export function isValidEmail(email) {
+  // Avoid complex regexes that may lead to catastrophic backtracking.
+  // Use a simple deterministic validation: type, length limits, single '@', and basic domain checks.
+  if (typeof email !== 'string') return false;
+  // RFC limits: local part up to 64, whole address up to 320 - enforce a safe cap
+  if (email.length === 0 || email.length > 320) return false;
+  // No whitespace allowed
+  if (/\s/.test(email)) return false;
+  const parts = email.split('@');
+  if (parts.length !== 2) return false; // must contain exactly one @
+  const [local, domain] = parts;
+  if (!local || local.length > 64) return false;
+  // Domain must include at least one dot and not start or end with a dot
+  if (!domain || domain.length > 255) return false;
+  if (domain.startsWith('.') || domain.endsWith('.')) return false;
+  // Use includes for clarity when checking presence of a dot in domain
+  if (!domain.includes('.')) return false;
+  // Basic allowed chars checks (conservative): letters, digits, - and . in domain
+  if (!/^[A-Za-z0-9.-]+$/.test(domain)) return false;
+  // Local part: avoid dangerous patterns; allow most common chars but keep it simple
+  // Accept: letters, digits and these punctuation: !#$%&'*+/=?^_`{|}~.-
+  // Note: escape the forward slash inside the class and place '-' last so it does not need escaping
+  if (!/^[A-Za-z0-9!#$%&'*+/=?^_`{|}~.-]+$/.test(local)) return false;
+  return true;
+}
