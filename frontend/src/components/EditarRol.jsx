@@ -377,20 +377,9 @@ export default function EditarRol({ rol }) {
                               setMostrarUsuarios(isChecked);
                               if (!isChecked) {
                                  setPermisos(prev =>
-                                    prev.filter(p =>
-                                       !p.startsWith('usuarios.') && !p.startsWith('roles.')
-                                    )
+                                    prev.filter(p => !p.startsWith('usuarios.') && !p.startsWith('roles.'))
                                  );
                               }
-
-                                 EditarRol.propTypes = {
-                                    rol: PropTypes.shape({
-                                       _id: PropTypes.string,
-                                       name: PropTypes.string,
-                                       permissions: PropTypes.arrayOf(PropTypes.string)
-                                    })
-                                 };
-
                            }}
                            style={checkboxStyle}
                         />
@@ -989,3 +978,11 @@ export default function EditarRol({ rol }) {
       </div>
    );
 }
+
+EditarRol.propTypes = {
+   rol: PropTypes.shape({
+      _id: PropTypes.string,
+      name: PropTypes.string,
+      permissions: PropTypes.arrayOf(PropTypes.string)
+   })
+};
