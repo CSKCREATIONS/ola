@@ -235,7 +235,7 @@ export default function PedidosEntregados() {
   const verRemisionPreview = async (remision) => {
     try {
       // Si la remisión tiene un _id, intentar obtener la versión completa desde el servidor
-      if (remision && remision._id) {
+      if (remision?._id) {
         try {
           const res = await api.get(`/api/remisiones/${remision._id}`);
           const data = res.data || res;

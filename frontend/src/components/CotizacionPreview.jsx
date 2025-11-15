@@ -3,11 +3,17 @@ import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import api from '../api/axiosConfig';
+import {
+  getStoredUser,
+  formatDateIso,
+  buildSignature,
+  getCompanyName
+} from '../utils/emailHelpers';
 
 export default function CotizacionPreview({ datos, onClose, onEmailSent, onRemisionCreated }) {
   const navigate = useNavigate();
   // Obtener usuario logueado
-  const usuario = JSON.parse(localStorage.getItem('user') || '{}');
+  const usuario = getStoredUser();
   const [showEnviarModal, setShowEnviarModal] = useState(false);
 
   // Estados para el formulario de envío de correo
@@ -16,7 +22,7 @@ export default function CotizacionPreview({ datos, onClose, onEmailSent, onRemis
   const [mensaje, setMensaje] = useState('');
 
   // Company information (exposed to frontend via env - prefer REACT_APP_ prefix)
-  const COMPANY_NAME = process.env.REACT_APP_COMPANY_NAME || process.env.COMPANY_NAME || 'JLA Global Company';
+  const COMPANY_NAME = getCompanyName();
   const COMPANY_PHONE = process.env.REACT_APP_COMPANY_PHONE || process.env.COMPANY_PHONE || '(555) 123-4567';
 
   // Detectar si la cotización ya fue remisionada (varios nombres posibles según el objeto)
@@ -52,10 +58,10 @@ export default function CotizacionPreview({ datos, onClose, onEmailSent, onRemis
   const abrirModalEnvio = () => {
     const totalFinal = datos?.total || calcularTotal();
     // Fecha de emisión: usar datos.fecha si existe, si no mostrar 'N/A'
-    const fechaEmision = datos?.fecha ? new Date(datos.fecha).toLocaleDateString('es-ES') : 'N/A';
+    const fechaEmision = formatDateIso(datos?.fecha);
 
     setCorreo(datos?.cliente?.correo || '');
-    setAsunto(`Cotización ${datos?.codigo || ''} - ${datos?.cliente?.nombre || 'Cliente'} | ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}`);
+    setAsunto(`Cotización ${datos?.codigo || ''} - ${datos?.cliente?.nombre || 'Cliente'} | ${getCompanyName()}`);
     setMensaje(
       `Estimado/a ${datos?.cliente?.nombre || 'cliente'},
 
@@ -87,11 +93,9 @@ ${datos.condicionesPago}
 
 Saludos cordiales,
 
-${usuario?.firstName || usuario?.nombre || 'Equipo de ventas'} ${usuario?.surname || ''}${usuario?.email ? `
-📧 Correo: ${usuario.email}` : ''}${usuario?.telefono ? `
-📞 Teléfono: ${usuario.telefono}` : ''}
+${buildSignature(usuario)}
 
-${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
+${getCompanyName()}
 🌐 Productos de calidad`
     );
     setShowEnviarModal(true);
@@ -448,7 +452,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
           </div>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             {/* Botón de editar */}
-            {datos.tipo !== 'pedido' && (
+            {datos.tipo !== 'pedido' && !isRemisionada && (
               <button
                 onClick={() => { onClose(); navigate('/RegistrarCotizacion', { state: { datos } }); }}
                 style={{
@@ -544,7 +548,14 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                       fallback.document.documentElement.innerHTML = html;
                       fallback.document.close();
                       fallback.focus();
-                      setTimeout(() => { try { fallback.print(); fallback.close(); } catch (_) {} }, 500);
+                      setTimeout(() => { 
+                        try { 
+                          fallback.print(); 
+                          fallback.close(); 
+                        } catch (error_) {
+                          console.error('Error printing/closing fallback window:', error_);
+                        }
+                      }, 500);
                     } else {
                       Swal.fire('Error', 'No se pudo abrir la ventana para imprimir', 'error');
                     }
@@ -554,19 +565,31 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                   // Wait for the new window to load the blob content, then print
                   const interval = setInterval(() => {
                     try {
-                      if (win.document && win.document.readyState === 'complete') {
+                      if (win?.document?.readyState === 'complete') {
                         clearInterval(interval);
-                        try { win.focus(); win.print(); } catch (_) {}
+                        try { 
+                          win.focus(); 
+                          win.print(); 
+                        } catch (error_) {
+                          console.error('Error focusing/printing window:', error_);
+                        }
                         // Revoke the object URL after a short delay to ensure print has started
                         setTimeout(() => URL.revokeObjectURL(url), 1000);
-                        setTimeout(() => { try { win.close(); } catch (_) {} }, 1500);
+                        setTimeout(() => { 
+                          try { 
+                            win.close(); 
+                          } catch (error_) {
+                            console.error('Error closing print window:', error_);
+                          }
+                        }, 1500);
                       }
-                    } catch (err) {
-                      // Accessing win.document may throw if the window is closed; ignore until closed
+                    } catch (error_) {
+                      // Accessing win.document may throw if the window is closed or cross-origin
+                      console.debug('Window document access error (expected if closed):', error_.message);
                     }
                   }, 200);
-                } catch (err) {
-                  console.error('Error creating print window:', err);
+                } catch (error_) {
+                  console.error('Error creating print window:', error_);
                   Swal.fire('Error', 'Ocurrió un error al preparar la impresión', 'error');
                 }
               }}

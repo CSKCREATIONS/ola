@@ -3,7 +3,6 @@ import { Link, useLocation } from 'react-router-dom';
 
 export default function NavUsuarios() {
   const [puedeVerOrdenes, setPuedeVerOrdenes] = useState(false);
-  const [puedeRegistrarCompras, setPuedeRegistrarCompras] = useState(false);
   const [puedeVerProveedores, setPuedeVerProveedores] = useState(false);
   const [puedeVerHCompras, setPuedeVerHCompras] = useState(false);
   const [puedeVerReportesCompras, setPuedeVerReportesCompras] = useState(false);
@@ -16,7 +15,6 @@ export default function NavUsuarios() {
       const usuario = JSON.parse(storedUser);
       if (usuario.permissions) {
         setPuedeVerOrdenes(usuario.permissions.includes('ordenesCompra.ver'));
-        setPuedeRegistrarCompras(usuario.permissions.includes('compras.crear'));
         setPuedeVerHCompras(usuario.permissions.includes('hcompras.ver'));
         setPuedeVerProveedores(usuario.permissions.includes('proveedores.ver'));
         setPuedeVerReportesCompras(usuario.permissions.includes('reportesCompras.ver'));

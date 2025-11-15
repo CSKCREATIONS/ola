@@ -1,6 +1,12 @@
+/* global globalThis */
  // Generar PDF
     async function generarPDF() {
-      const { jsPDF } = window.jspdf;
+      const jspdfLib = globalThis?.jspdf ?? globalThis?.window?.jspdf;
+      const jsPDF = jspdfLib?.jsPDF ?? jspdfLib;
+      if (!jsPDF) {
+        console.error('jsPDF is not available on globalThis or window.');
+        return;
+      }
 
       // Obtener valores del formulario
       const fecha = document.getElementById('fecha').value;
@@ -27,14 +33,19 @@
 
       // Tabla de productos
       const productos = [];
-      document.querySelectorAll('#tablaProductos tbody tr').forEach(fila => {
-        const producto = fila.querySelector('input[name="producto[]"]').value;
-        const cantidad = fila.querySelector('.cantidad').value;
-        const precio = fila.querySelector('.precio').value;
-        const total = fila.querySelector('.total').value;
+      const filas = document.querySelectorAll('#tablaProductos tbody tr');
+      for (const fila of filas) {
+        const productoEl = fila.querySelector('input[name="producto[]"]');
+        const producto = productoEl ? productoEl.value : '';
+        const cantidadEl = fila.querySelector('.cantidad');
+        const cantidad = cantidadEl ? cantidadEl.value : '';
+        const precioEl = fila.querySelector('.precio');
+        const precio = precioEl ? precioEl.value : '';
+        const totalEl = fila.querySelector('.total');
+        const total = totalEl ? totalEl.value : '';
 
         productos.push([producto, cantidad, `$${precio}`, `$${total}`]);
-      });
+      }
 
       // Insertar tabla en el PDF
 

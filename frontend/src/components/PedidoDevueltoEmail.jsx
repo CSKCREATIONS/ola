@@ -2,10 +2,17 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import Swal from 'sweetalert2';
 import api from '../api/axiosConfig';
+import {
+  getStoredUser,
+  calculateTotal,
+  formatDateIso,
+  buildSignature,
+  getCompanyName
+} from '../utils/emailHelpers';
 
 export default function PedidoDevueltoEmail({ datos, onClose, onEmailSent }) {
-  // Obtener usuario logueado
-  const usuario = JSON.parse(localStorage.getItem('user') || '{}');
+  // Obtener usuario logueado (usar helper que maneja parse seguro)
+  const usuario = getStoredUser();
   const [showEnviarModal, setShowEnviarModal] = useState(false);
   
   // Estados para el formulario de envío de correo
@@ -16,24 +23,16 @@ export default function PedidoDevueltoEmail({ datos, onClose, onEmailSent }) {
 
   // Función para abrir modal con datos actualizados
   const abrirModalEnvio = () => {
-    // Calcular total dinámicamente si no existe
-    const totalCalculado = datos?.productos?.reduce((total, producto) => {
-      const cantidad = Number(producto.cantidad) || 0;
-      const precio = Number(producto.precioUnitario) || 0;
-      return total + (cantidad * precio);
-    }, 0) || 0;
-    
+    // Calcular total dinámicamente si no existe (utilitario)
+    const totalCalculado = calculateTotal(datos) || 0;
     const totalFinal = datos?.total || totalCalculado;
-    
+
     // Fecha de pedido original: preferir createdAt, si no usar fecha, si ninguna está presente 'N/A'
-    const fechaFallback = datos?.fecha ? new Date(datos.fecha).toLocaleDateString('es-ES') : 'N/A';
-    const fechaPedidoOriginal = datos?.createdAt
-      ? new Date(datos.createdAt).toLocaleDateString('es-ES')
-      : fechaFallback;
+    const fechaPedidoOriginal = datos?.createdAt ? formatDateIso(datos.createdAt) : formatDateIso(datos?.fecha);
     
     // Actualizar datos autocompletados cada vez que se abre el modal
     setCorreo(datos?.cliente?.correo || '');
-    setAsunto(`Pedido Devuelto ${datos?.numeroPedido || ''} - ${datos?.cliente?.nombre || 'Cliente'} | ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}`);
+    setAsunto(`Pedido Devuelto ${datos?.numeroPedido || ''} - ${datos?.cliente?.nombre || 'Cliente'} | ${getCompanyName()}`);
     setMensaje(
       `Estimado/a ${datos?.cliente?.nombre || 'cliente'},
 
@@ -43,7 +42,7 @@ Lamentamos informarle que su pedido ha sido devuelto. A continuación los detall
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 • Número de pedido: ${datos?.numeroPedido || 'N/A'}
 • Fecha de pedido original: ${fechaPedidoOriginal}
-• Fecha de devolución: ${new Date().toLocaleDateString('es-ES')}
+• Fecha de devolución: ${formatDateIso(new Date().toISOString())}
 • Cliente: ${datos?.cliente?.nombre || 'N/A'}
 • Correo: ${datos?.cliente?.correo || 'N/A'}
 • Teléfono: ${datos?.cliente?.telefono || 'N/A'}
@@ -64,11 +63,9 @@ Para cualquier consulta sobre esta devolución, no dude en contactarnos.
 
 Saludos cordiales,
 
-${usuario?.firstName || usuario?.nombre || 'Equipo de atención al cliente'} ${usuario?.surname || ''}${usuario?.email ? `
-📧 Correo: ${usuario.email}` : ''}${usuario?.telefono ? `
-📞 Teléfono: ${usuario.telefono}` : ''}
+${buildSignature(usuario)}
 
-${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
+${getCompanyName()}
 🌐 Soluciones tecnológicas integrales`
     );
     setShowEnviarModal(true);
@@ -91,6 +88,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
           text: 'La notificación de pedido devuelto ha sido enviada exitosamente'
         });
         setShowEnviarModal(false);
+        if (onClose) onClose();
         
         // Llamar al callback para actualizar el componente padre
         if (onEmailSent) {
@@ -99,8 +97,9 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
       } else {
         throw new Error('Error al enviar correo');
       }
-    } catch (error) {
-      console.error('Error:', error);
+    } catch (error_) {
+      // eslint-disable-next-line no-console
+      console.error('PedidoDevueltoEmail enviarPorCorreo error:', error_);
       Swal.fire({
         icon: 'error',
         title: 'Error',

@@ -1,4 +1,5 @@
 import  { useState, useEffect } from "react";
+/* global globalThis */
 import { registerModalUsuario } from "../funciones/modalController";
 import Swal from "sweetalert2";
 import api from '../api/axiosConfig';
@@ -28,8 +29,10 @@ export default function AgregarUsuario() {
   // Helper: obtain a crypto object in a cross-environment safe way without using
   // restricted global identifiers (avoids ESLint `no-restricted-globals` on `self`).
   const getCrypto = () => {
-    if (typeof window !== 'undefined' && window.crypto) return window.crypto;
-    if (typeof global !== 'undefined' && global.crypto) return global.crypto;
+
+    // Prefer direct undefined comparison to avoid using `typeof` and prefer globalThis
+    if (globalThis.window?.crypto) return globalThis.window.crypto;
+    if (globalThis.global?.crypto) return globalThis.global.crypto;
     try {
       const g = new Function('return this')();
       if (g?.crypto) return g.crypto;
@@ -40,8 +43,9 @@ export default function AgregarUsuario() {
   };
 
   // Función para abrir el modal (puede ser llamada desde el componente padre)
-  if (typeof window !== 'undefined') {
-    window.openModalUsuario = () => {
+
+  if (globalThis?.window) {
+    globalThis.window.openModalUsuario = () => {
       setIsVisible(true);
     };
   }

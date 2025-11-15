@@ -2,10 +2,16 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import './FormatoCotizacion.css';
 import api from '../api/axiosConfig';
+import {
+  getStoredUser,
+  formatDateIso,
+  getCompanyName
+} from '../utils/emailHelpers';
+/* global globalThis */
 
 export default function RemisionPreview({ datos, onClose }) {
   // Obtener usuario logueado con fallback
-  const usuarioStorage = JSON.parse(localStorage.getItem('user') || '{}');
+  const usuarioStorage = getStoredUser();
   const usuario = {
     firstName: usuarioStorage.firstName || 'Equipo',
     surname: usuarioStorage.surname || 'Pangea',
@@ -14,22 +20,25 @@ export default function RemisionPreview({ datos, onClose }) {
     ...usuarioStorage
   };
   // Empresa desde variables de entorno con fallback
-  const COMPANY_NAME = process.env.REACT_APP_COMPANY_NAME || process.env.COMPANY_NAME || 'JLA GLOBAL COMPANY';
+  const COMPANY_NAME = getCompanyName();
   const COMPANY_PHONE = process.env.REACT_APP_COMPANY_PHONE || process.env.COMPANY_PHONE || '(555) 123-4567';
   const [showEnviarModal, setShowEnviarModal] = useState(false);
   const [clienteResolved, setClienteResolved] = useState(null);
   // Helper: obtain a crypto object in a cross-environment safe way without using
   // restricted global identifiers (avoids ESLint `no-restricted-globals` on `self`).
   const getCrypto = () => {
+
     if (typeof window !== 'undefined' && window.crypto) return window.crypto;
     if (typeof global !== 'undefined' && global.crypto) return global.crypto;
     try {
+      if (globalThis?.window?.crypto) return globalThis.window.crypto;
+      if (globalThis?.crypto) return globalThis.crypto;
       const g = new Function('return this')();
-      if (g?.crypto) return g.crypto;
+      return g?.crypto || null;
     } catch (error_) {
       console.debug('getCrypto fallback failed:', error_);
+      return null;
     }
-    return null;
   };
   // Helper: secure random alphanumeric string using Web Crypto when available
   const secureRandomString = (length) => {
@@ -130,8 +139,8 @@ ${usuarioNombreLinea}${usuarioEmailLinea}${usuarioTelefonoLinea}`
           setClienteResolved(clienteFromCot);
           return;
         }
-      } catch (err) {
-        console.warn('No se pudo poblar cliente desde la cotización para remisión:', err?.message || err);
+      } catch (error_) {
+        console.warn('No se pudo poblar cliente desde la cotización para remisión:', error_?.message || error_);
       }
     };
     fetchFromCotizacion();
@@ -150,7 +159,7 @@ ${usuarioNombreLinea}${usuarioEmailLinea}${usuarioTelefonoLinea}`
 
     // Actualizar datos autocompletados cada vez que se abre el modal
     setCorreo(datos?.cliente?.correo || '');
-    setAsunto(`Remisión ${datos?.numeroRemision || ''} - ${datos?.cliente?.nombre || 'Cliente'} | ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}`);
+    setAsunto(`Remisión ${datos?.numeroRemision || ''} - ${datos?.cliente?.nombre || 'Cliente'} | ${getCompanyName()}`);
   const remitenteLinea = `${usuario?.firstName || usuario?.nombre || 'Equipo de entrega'} ${usuario?.surname || ''}`;
   const remitenteEmailLinea = usuario?.email ? `\n📧 Correo: ${usuario.email}` : '';
   const remitenteTelefonoLinea = usuario?.telefono ? `\n📞 Teléfono: ${usuario.telefono}` : '';
@@ -163,8 +172,8 @@ Esperamos se encuentre muy bien. Adjunto encontrará la remisión de entrega con
 📦 DETALLES DE LA REMISIÓN:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 • Número de remisión: ${datos?.numeroRemision || 'N/A'}
-• Fecha de remisión: ${datos?.fechaRemision ? new Date(datos.fechaRemision).toLocaleDateString('es-ES') : 'N/A'}
-• Fecha de entrega: ${datos?.fechaEntrega ? new Date(datos.fechaEntrega).toLocaleDateString('es-ES') : 'N/A'}
+• Fecha de remisión: ${formatDateIso(datos?.fechaRemision)}
+• Fecha de entrega: ${formatDateIso(datos?.fechaEntrega)}
 • Cliente: ${datos?.cliente?.nombre || 'N/A'}
 • Correo: ${datos?.cliente?.correo || 'N/A'}
 • Teléfono: ${datos?.cliente?.telefono || 'N/A'}
@@ -186,7 +195,7 @@ Saludos cordiales,
 
 ${remitenteLinea}${remitenteEmailLinea}${remitenteTelefonoLinea}
 
-${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
+${getCompanyName()}
 🌐 Productos de calidad`
   );
     setShowEnviarModal(true);
@@ -213,8 +222,8 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
       } else {
         throw new Error('Error al enviar remisión');
       }
-    } catch (error) {
-      console.error('Error:', error);
+    } catch (error_) {
+      console.error('Error:', error_);
       const Swal = (await import('sweetalert2')).default;
       Swal.fire({
         icon: 'error',
@@ -235,6 +244,109 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
   console.log('💰 Total:', datos?.total);
   console.log('📅 Fecha remisión:', datos?.fechaRemision);
   console.log('🔄 Estado:', datos?.estado);
+
+  // Helper: try to set document using DOM APIs (preferred over document.write)
+  const trySetDocWithDOM = (doc, title, htmlContent, styleText) => {
+    doc.title = title;
+    const head = doc.head || doc.getElementsByTagName('head')[0];
+    const styleEl = doc.createElement('style');
+    // Prefer creating a text node when available; otherwise fall back to innerHTML.
+    if (doc && typeof doc.createTextNode === 'function') {
+      try {
+        styleEl.appendChild(doc.createTextNode(styleText));
+      } catch (error_) {
+        // In the unlikely case creating/appending the text node fails, fallback to innerHTML and log the error.
+        // Logging the error ensures the exception is handled (and helpful for debugging) instead of being ignored.
+        /* eslint-disable no-console */
+        console.debug('styleEl.appendChild/createTextNode failed, falling back to innerHTML', error_);
+        /* eslint-enable no-console */
+        styleEl.innerHTML = styleText;
+      }
+    } else {
+      // Environments without createTextNode (or when doc is not a typical Document)
+      styleEl.innerHTML = styleText;
+    }
+    if (head) head.appendChild(styleEl);
+    if (doc.body) {
+      doc.body.innerHTML = htmlContent;
+    } else {
+      const body = doc.createElement('body');
+      body.innerHTML = htmlContent;
+      doc.documentElement.appendChild(body);
+    }
+  };
+
+  const trySetDocOuterHTML = (doc, title, htmlContent, styleText) => {
+    const full = `<!doctype html><html><head><meta charset="utf-8"><title>${title}</title><style>${styleText}</style></head><body>${htmlContent}</body></html>`;
+    // Try assigning outerHTML as a safer alternative to document.write
+    doc.documentElement.outerHTML = full;
+  };
+
+  const buildPrintStyle = () => `
+    body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+    .header { text-align: center; margin-bottom: 30px; padding: 20px; background: linear-gradient(135deg, #059669, #065f46); color: white; border-radius: 10px; }
+    .info-section { margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; }
+    table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+    th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+    th { background: linear-gradient(135deg, #059669, #065f46); color: white; font-weight: bold; }
+    .total-row { background: #d1fae5; font-weight: bold; }
+    .status-badge { background: #059669; color: white; padding: 8px 16px; border-radius: 20px; display: inline-block; }
+  `;
+
+  const handlePrint = () => {
+    const printContent = document.querySelector('.pdf-remision');
+    const newWindow = globalThis?.window?.open?.('', '_blank') ?? null;
+    if (!newWindow) {
+      console.warn('No window available for printing.');
+      return;
+    }
+    const title = `Remisión - ${numeroRemision}`;
+    const style = buildPrintStyle();
+    try {
+      trySetDocWithDOM(newWindow.document, title, printContent?.innerHTML || '', style);
+    } catch (error_) {
+      try {
+        trySetDocOuterHTML(newWindow.document, title, printContent?.innerHTML || '', style);
+      } catch (error__) {
+        // final fallback: use blob URL
+        console.debug('trySetDocOuterHTML failed, trying blob URL fallback:', error__);
+        try {
+          const full = `<!doctype html><html><head><meta charset="utf-8"><title>${title}</title><style>${style}</style></head><body>${printContent?.innerHTML || ''}</body></html>`;
+          const blob = new Blob([full], { type: 'text/html' });
+          const url = URL.createObjectURL(blob);
+          newWindow.location.href = url;
+        } catch (error___) {
+          console.error('Failed to set print document:', error_, error__, error___);
+          try {
+            newWindow.close();
+          } catch (closeError) {
+            console.debug('Failed to close newWindow after print document error:', closeError);
+          }
+          return;
+        }
+      }
+    }
+    try {
+      newWindow.document.close?.();
+    } catch (error__) {
+      console.debug('print helper: document.close failed:', error__);
+    }
+    try {
+      newWindow.focus?.();
+    } catch (error__) {
+      console.debug('print helper: focus failed:', error__);
+    }
+    try {
+      newWindow.print?.();
+    } catch (error__) {
+      console.debug('print helper: print failed:', error__);
+    }
+    try {
+      newWindow.close?.();
+    } catch (error__) {
+      console.debug('print helper: close failed:', error__);
+    }
+  };
 
   return (
     <div className="modal-cotizacion-overlay" style={{

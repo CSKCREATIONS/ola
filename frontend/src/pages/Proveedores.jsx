@@ -1060,15 +1060,15 @@ const GestionProveedores = () => {
                         {prov.empresa || 'N/A'}
                       </td>
                       <td>
-                        <span className={`proveedor-status-badge ${prov.activo !== false ? 'proveedor-status-active' : ''}`}
+                        <span className={`proveedor-status-badge ${prov.activo === false ? '' : 'proveedor-status-active'}`}
                           style={{
-                            background: prov.activo !== false ? 
-                              'linear-gradient(135deg, #dcfce7, #bbf7d0)' : 
-                              'linear-gradient(135deg, #fef2f2, #fecaca)',
-                            color: prov.activo !== false ? '#059669' : '#dc2626'
+                            background: prov.activo === false ? 
+                              'linear-gradient(135deg, #fef2f2, #fecaca)' : 
+                              'linear-gradient(135deg, #dcfce7, #bbf7d0)',
+                            color: prov.activo === false ? '#dc2626' : '#059669'
                           }}
                         >
-                          {prov.activo !== false ? 'Activo' : 'Inactivo'}
+                          {prov.activo === false ? 'Inactivo' : 'Activo'}
                         </span>
                       </td>
                       <td>

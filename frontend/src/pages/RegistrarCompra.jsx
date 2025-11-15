@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+/* global globalThis */
 import api from '../api/axiosConfig';
 import Swal from 'sweetalert2';
 import '../App.css';
@@ -221,15 +222,16 @@ export default function RegistrarCompra() {
   const secureRandomString = (length) => {
     const alphabet = 'abcdefghijklmnopqrstuvwxyz0123456789';
     // Prefer Web Crypto API for secure randomness
-    if (typeof window !== 'undefined' && window.crypto?.getRandomValues) {
-      const array = new Uint8Array(length);
-      window.crypto.getRandomValues(array);
-      let out = '';
-      for (let i = 0; i < length; i++) {
-        out += alphabet[array[i] % alphabet.length];
+
+      if (globalThis?.window?.crypto?.getRandomValues) {
+        const array = new Uint8Array(length);
+        globalThis.window.crypto.getRandomValues(array);
+        let out = '';
+        for (let i = 0; i < length; i++) {
+          out += alphabet[array[i] % alphabet.length];
+        }
+        return out;
       }
-      return out;
-    }
 
     // Fallback: non-crypto PRNG only if Web Crypto unavailable (very unlikely in modern browsers)
     let out = '';

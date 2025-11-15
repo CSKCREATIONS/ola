@@ -5,6 +5,7 @@ import '../App.css';
 import Fijo from '../components/Fijo';
 import NavCompras from '../components/NavCompras';
 import DetallesOrdenModal from '../components/DetallesOrdenModal';
+/* global globalThis */
 
 // Small helper utilities (local fallbacks used by this page)
 const advancedStyles = `
@@ -209,6 +210,98 @@ if (!document.getElementById('orden-compra-advanced-styles')) {
   document.head.appendChild(styleEl);
 }
  
+// Top-level helpers for printing to keep `imprimirOrdenHelper` simple
+const buildProductRowsOrden = (items) => {
+  if (!items || items.length === 0) return '<tr><td colspan="5" style="text-align:center;padding:20px;">No hay productos</td></tr>';
+  return items.map((p, idx) => `
+    <tr>
+      <td style="text-align:center;padding:8px;border-bottom:1px solid #e0e0e0;">${idx + 1}</td>
+      <td style="padding:8px;border-bottom:1px solid #e0e0e0;">${p.producto || ''}</td>
+      <td style="text-align:center;padding:8px;border-bottom:1px solid #e0e0e0;">${p.cantidad}</td>
+      <td style="text-align:right;padding:8px;border-bottom:1px solid #e0e0e0;">$${(p.valorUnitario || 0).toLocaleString()}</td>
+      <td style="text-align:right;padding:8px;border-bottom:1px solid #e0e0e0;">$${(p.valorTotal || 0).toLocaleString()}</td>
+    </tr>
+  `).join('');
+};
+
+const prepareHtmlOrden = (o, rows, totals) => `
+  <!doctype html>
+  <html lang="es">
+    <head>
+      <meta charset="utf-8" />
+      <title>Orden de Compra - ${o.numeroOrden || 'N/A'}</title>
+      <style>
+        body { font-family: Arial, sans-serif; color: #222; padding: 24px; }
+        .header { text-align:center; background: linear-gradient(135deg,#6a1b9a,#9b59b6); color: #fff; padding: 18px; border-radius: 8px; }
+        .section { margin-top: 18px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+        th, td { padding: 8px; }
+        th { background: #f3f4f6; text-align: left; }
+        .totales { margin-top: 18px; display:flex; justify-content:flex-end; gap: 16px; }
+      </style>
+    </head>
+    <body>
+      <div class="header"><h2>ORDEN DE COMPRA</h2><div>N° ${o.numeroOrden || '—'}</div></div>
+      <div class="section">
+        <strong>Proveedor:</strong> ${o.proveedor || '-'}<br />
+        <strong>Solicitado por:</strong> ${o.solicitadoPor || '-'}<br />
+        <strong>Fecha:</strong> ${new Date(o.fechaOrden || Date.now()).toLocaleDateString('es-ES')}
+      </div>
+      <div class="section">
+        <table>
+          <thead>
+            <tr><th style="width:40px;">#</th><th>Producto</th><th style="width:100px;text-align:center;">Cantidad</th><th style="width:140px;text-align:right;">Precio Unit.</th><th style="width:140px;text-align:right;">Subtotal</th></tr>
+          </thead>
+          <tbody>
+            ${rows}
+          </tbody>
+        </table>
+      </div>
+      <div class="totales">
+        <div><div>Subtotal: $${totals.subtotal.toLocaleString()}</div><div style="font-weight:700;margin-top:6px;">Total: $${totals.total.toLocaleString()}</div></div>
+      </div>
+    </body>
+  </html>
+`;
+
+const writeDocPrimaryOrden = (win, html) => {
+  const parser = new DOMParser();
+  const newDoc = parser.parseFromString(html, 'text/html');
+  if (win?.document?.documentElement && newDoc?.documentElement) {
+    try {
+      win.document.replaceChild(win.document.adoptNode(newDoc.documentElement), win.document.documentElement);
+      return true;
+    } catch (error_) {
+      console.debug('adoptNode/replaceChild failed:', error_);
+    }
+  }
+
+  // Prefer assigning `innerHTML` when available; if it fails we continue to the safer fallbacks.
+  if (win?.document?.documentElement && 'innerHTML' in win.document.documentElement) {
+    try {
+      win.document.open();
+      win.document.documentElement.innerHTML = html;
+      win.document.close();
+      return true;
+    } catch (error_) {
+      console.debug('primary innerHTML assignment failed, will try other fallbacks:', error_);
+    }
+  }
+};
+
+const writeDocBlobFallbackOrden = (win, html) => {
+  const blob = new Blob([html], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  win.location.href = url;
+};
+
+// Safely call window actions (focus/print/close) with logging; keeps main flow simple
+const safeWindowActions = (win) => {
+  try { win.focus(); } catch (error_) { console.debug('focus failed:', error_); }
+  try { win.print(); } catch (error_) { console.debug('print failed:', error_); }
+  try { win.close(); } catch (error_) { console.debug('close failed:', error_); }
+};
+
 // Helper: imprimir orden en nueva ventana (limpio y simple)
 function imprimirOrdenHelper(orden) {
   if (!orden) {
@@ -219,62 +312,41 @@ function imprimirOrdenHelper(orden) {
   const productos = orden.productos || [];
   const totales = calcularTotalesProductos(productos);
 
-  const productosHTML = productos.map((p, idx) => `
-    <tr>
-      <td style="text-align:center;padding:8px;border-bottom:1px solid #e0e0e0;">${idx + 1}</td>
-      <td style="padding:8px;border-bottom:1px solid #e0e0e0;">${p.producto || ''}</td>
-      <td style="text-align:center;padding:8px;border-bottom:1px solid #e0e0e0;">${p.cantidad}</td>
-      <td style="text-align:right;padding:8px;border-bottom:1px solid #e0e0e0;">$${(p.valorUnitario || 0).toLocaleString()}</td>
-      <td style="text-align:right;padding:8px;border-bottom:1px solid #e0e0e0;">$${(p.valorTotal || 0).toLocaleString()}</td>
-    </tr>
-  `).join('') || '<tr><td colspan="5" style="text-align:center;padding:20px;">No hay productos</td></tr>';
+  const rows = buildProductRowsOrden(productos);
+  const html = prepareHtmlOrden(orden, rows, totales);
 
-  const html = `
-    <!doctype html>
-    <html lang="es">
-      <head>
-        <meta charset="utf-8" />
-        <title>Orden de Compra - ${orden.numeroOrden || 'N/A'}</title>
-        <style>
-          body { font-family: Arial, sans-serif; color: #222; padding: 24px; }
-          .header { text-align:center; background: linear-gradient(135deg,#6a1b9a,#9b59b6); color: #fff; padding: 18px; border-radius: 8px; }
-          .section { margin-top: 18px; }
-          table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-          th, td { padding: 8px; }
-          th { background: #f3f4f6; text-align: left; }
-          .totales { margin-top: 18px; display:flex; justify-content:flex-end; gap: 16px; }
-        </style>
-      </head>
-      <body>
-        <div class="header"><h2>ORDEN DE COMPRA</h2><div>N° ${orden.numeroOrden || '—'}</div></div>
-        <div class="section">
-          <strong>Proveedor:</strong> ${orden.proveedor || '-'}<br />
-          <strong>Solicitado por:</strong> ${orden.solicitadoPor || '-'}<br />
-          <strong>Fecha:</strong> ${new Date(orden.fechaOrden || Date.now()).toLocaleDateString('es-ES')}
-        </div>
-        <div class="section">
-          <table>
-            <thead>
-              <tr><th style="width:40px;">#</th><th>Producto</th><th style="width:100px;text-align:center;">Cantidad</th><th style="width:140px;text-align:right;">Precio Unit.</th><th style="width:140px;text-align:right;">Subtotal</th></tr>
-            </thead>
-            <tbody>
-              ${productosHTML}
-            </tbody>
-          </table>
-        </div>
-        <div class="totales">
-          <div><div>Subtotal: $${totales.subtotal.toLocaleString()}</div><div style="font-weight:700;margin-top:6px;">Total: $${totales.total.toLocaleString()}</div></div>
-        </div>
-      </body>
-    </html>
-  `;
+  const win = globalThis?.window?.open?.('', '_blank', 'width=900,height=700') ?? null;
+  if (!win) {
+    Swal.fire('Error', 'No se pudo abrir la ventana de impresión', 'error');
+    return;
+  }
 
-  const win = window.open('', '_blank', 'width=900,height=700');
-  win.document.write(html);
-  win.document.close();
-  win.focus();
-  win.print();
-  win.close();
+  // 1) Primary: try DOM/adopt or innerHTML via helper
+  try {
+    writeDocPrimaryOrden(win, html);
+    safeWindowActions(win);
+    return;
+  } catch (error__) {
+    console.debug('Primary write failed, attempting blob fallback:', error__);
+  }
+
+  // 2) Blob fallback
+  try {
+    writeDocBlobFallbackOrden(win, html);
+    // blob navigation should be enough for printing in most browsers
+    return;
+  } catch (error__) {
+    console.debug('Blob fallback failed, attempting data URL fallback:', error__);
+  }
+
+  // 3) Data URL fallback
+  try {
+    win.location.href = 'data:text/html;charset=utf-8,' + encodeURIComponent(html);
+    return;
+  } catch (error__) {
+    console.error('Data URL navigation failed:', error__);
+    Swal.fire('Error', 'No se pudo preparar la impresión', 'error');
+  }
 }
 
 // Helper: enviar orden por correo (separado para reducir complejidad del componente)
@@ -390,7 +462,6 @@ export default function OrdenCompra() {
   const itemsPerPage = 10;
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  function paginate(pageNumber) { setCurrentPage(pageNumber); }
 
   // Delegador: obtener órdenes de compra (usa el helper top-level)
   const fetchOrdenes = async () => {
@@ -468,42 +539,6 @@ export default function OrdenCompra() {
   };
 
   // Función para agregar producto en edición (EDITAR)
-  function agregarProductoEdicion() {
-    if (!productoTemp.productoId) {
-      Swal.fire('Error', 'Por favor selecciona un producto de la lista', 'error');
-      return;
-    }
-    const productoSeleccionado = findProductoById(productosProveedor, productoTemp.productoId);
-    if (!productoSeleccionado) {
-      Swal.fire('Error', 'Producto no encontrado', 'error');
-      return;
-    }
-
-    const nuevoProducto = crearProductoFromSelection(productoSeleccionado, productoTemp);
-
-    setOrdenEditando({
-      ...ordenEditando,
-      productos: [...ordenEditando.productos, nuevoProducto]
-    });
-
-    // Resetear el formulario temporal
-    setProductoTemp({
-      producto: '',
-      descripcion: '',
-      cantidad: 1,
-      valorUnitario: 0,
-      descuento: 0,
-      productoId: ''
-    });
-
-    Swal.fire({
-      icon: 'success',
-      title: 'Producto agregado',
-      text: `${productoSeleccionado.name || productoSeleccionado.nombre} se ha agregado a la orden`,
-      timer: 1500,
-      showConfirmButton: false
-    });
-  }
 
   // Cuando se selecciona un proveedor (AGREGAR)
   const handleProveedorChange = async (e) => {
@@ -521,9 +556,6 @@ export default function OrdenCompra() {
   };
 
   // Cuando se selecciona un producto de la lista desplegable (EDITAR)
-  function handleProductoChangeEditar(e) {
-    handleProductoChangeEditarHelper(e, productosProveedor, setProductoTemp);
-  }
 
   // Obtener órdenes pendientes para mostrar en la tabla
   const ordenesPendientes = ordenes.filter(orden => orden.estado === 'Pendiente');
@@ -622,7 +654,7 @@ export default function OrdenCompra() {
       if (data.success) {
         Swal.fire({
           icon: 'success',
-          title: !estadoActual ? 'Orden marcada como enviada' : 'Orden marcada como no enviada',
+          title: estadoActual ? 'Orden marcada como no enviada' : 'Orden marcada como enviada',
           showConfirmButton: false,
           timer: 1500
         });
@@ -666,11 +698,6 @@ export default function OrdenCompra() {
     setErrores({});
   };
 
-  function calcularValorTotalProducto(p) {
-    const subtotal = p.cantidad * p.valorUnitario;
-    const descuento = p.descuento || 0;
-    return subtotal - descuento;
-  }
 
   // agregarProducto eliminado por no utilizarse (se usa agregarProductoDesdeLista/agregarProductoEdicion)
 
@@ -861,16 +888,6 @@ export default function OrdenCompra() {
     }
   };
 
-  function validarOrdenEdicion(orden) {
-    const nuevosErrores = {};
-
-    if (!orden.proveedor) nuevosErrores.proveedor = 'Seleccione un proveedor';
-    if (!orden.solicitadoPor || !orden.solicitadoPor.trim()) nuevosErrores.solicitadoPor = 'Ingrese el solicitante';
-    if ((orden.productos || []).length === 0) nuevosErrores.productos = 'Agregue al menos un producto';
-
-    setErrores(nuevosErrores);
-    return Object.keys(nuevosErrores).length === 0;
-  }
 
   const actualizarOrden = async () => {
     // Validación básica
@@ -1636,7 +1653,7 @@ export default function OrdenCompra() {
               <div style={{ padding: '12px 20px', display: 'flex', justifyContent: 'flex-end', gap: '8px', alignItems: 'center' }}>
                 {Array.from({ length: totalPages }).map((_, i) => (
                   <button
-                    key={i}
+                    key={i + 1}
                     onClick={() => setCurrentPage(i + 1)}
                     style={{
                       padding: '8px 16px',

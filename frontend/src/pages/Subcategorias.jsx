@@ -551,6 +551,7 @@ const GestionSubcategorias = () => {
       const data = result.subcategories || result.data || result || [];
       setSubcategorias(Array.isArray(data) ? data : []);
     } catch (err) {
+      console.error('Error loading subcategories:', err);
       Swal.fire('Error', 'No se pudieron cargar las subcategorías', 'error');
     }
   };
@@ -562,7 +563,7 @@ const GestionSubcategorias = () => {
       const data = result.categories || result.data || result || [];
       const activas = Array.isArray(data) ? data.filter(cat => cat.activo) : [];
       setCategorias(activas);
-    } catch (err) {
+    } catch {
       Swal.fire('Error', 'No se pudieron cargar las categorías', 'error');
     }
   };

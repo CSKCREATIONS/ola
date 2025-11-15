@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import Fijo from '../components/Fijo';
 import NavVentas from '../components/NavVentas';
-import EncabezadoModulo from '../components/EncabezadoModulo';
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
-import Swal from 'sweetalert2';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 

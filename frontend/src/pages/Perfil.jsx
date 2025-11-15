@@ -5,6 +5,8 @@ import { openModal } from '../funciones/animaciones';
 import EditarPerfil from '../components/EditarPerfil';
 import Swal from 'sweetalert2';
 
+/* global globalThis */
+
 export default function Perfil() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
@@ -18,8 +20,8 @@ export default function Perfil() {
     };
 
     loadUser();
-    window.addEventListener('storage', loadUser);
-    return () => window.removeEventListener('storage', loadUser);
+    globalThis.addEventListener('storage', loadUser);
+    return () => globalThis.removeEventListener('storage', loadUser);
   }, []);
 
   const handleClick = async () => {

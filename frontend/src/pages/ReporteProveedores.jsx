@@ -5,7 +5,6 @@ import {
   CheckCircleOutlined,
   StopOutlined,
   ShoppingOutlined,
-  UserAddOutlined,
 } from "@ant-design/icons";
 import api from '../api/axiosConfig';
 import {

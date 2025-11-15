@@ -31,101 +31,11 @@ exports.reporteCategorias = async (req, res) => {
 
     res.status(200).json({ success: true, data: categorias });
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-};
+      res.status(500).json({ success: false, error: error.message });
+    }
+  };
 
-// Reporte de subcategorías con productos
-exports.reporteSubcategorias = async (req, res) => {
-  try {
-    const subcategorias = await Subcategory.aggregate([
-      {
-        $lookup: {
-          from: 'products',
-          localField: '_id',
-          foreignField: 'subcategory',
-          as: 'productos'
-        }
-      },
-            {
-              $project: {
-                name: 1,
-                description: 1,
-                activo: 1,
-                category: 1,
-                totalProductos: { $size: '$productos' },
-                productosBajoStock: {
-                  $size: {
-                    $filter: {
-                      input: '$productos',
-                      as: 'prod',
-                      cond: { $lt: ['$$prod.stock', 10] }
-                    }
-                  }
-                }
-              }
-            }
-          ]);
-      
-          res.status(200).json({ success: true, data: subcategorias });
-        } catch (error) {
-          res.status(500).json({ success: false, error: error.message });
-        }
-      };
-      
-      // Reporte de productos avanzado
-      exports.reporteProductos = async (req, res) => {
-        try {
-          const { minStock, maxPrice, categoria } = req.query;
-          const filters = {};
-      
-          if (minStock) {
-            const minStockNum = Number.parseInt(minStock, 10);
-            if (!Number.isNaN(minStockNum) && minStockNum >= 0) {
-              filters.stock = { $gte: minStockNum };
-            }
-          }
-      
-          if (maxPrice) {
-            const maxPriceNum = Number.parseFloat(maxPrice);
-            if (!Number.isNaN(maxPriceNum) && maxPriceNum >= 0) {
-              filters.price = { $lte: maxPriceNum };
-            }
-          }
-      
-          if (categoria) {
-            const categoriaSanitizada = typeof categoria === 'string' ? categoria.trim() : '';
-            if (/^[0-9a-fA-F]{24}$/.exec(categoriaSanitizada)) {
-              filters.category = categoriaSanitizada;
-            }
-          }
-      
-          const productos = await Product.find(filters)
-            .populate('category', 'name')
-            .populate('subcategory', 'name')
-            .populate('proveedor', 'nombre empresa');
-      
-          res.status(200).json({ success: true, count: productos.length, data: productos });
-        } catch (error) {
-          console.error('reportesController error:', error);
-          res.status(500).json({ success: false, error: error.message });
-        }
-      };
-      
-      exports.reporteConsolidado = async (req, res) => {
-        try {
-          // Removed unused local declarations (totalProductos, productosBajoStock,
-          // productosPorEstado, productosPorCategoria). If you need these
-          // metrics here, reintroduce them and use them in the response.
-
-              res.status(200).json({ success: true, data: categorias });
-            } catch (error) {
-              console.error('reportesController error:', error);
-              res.status(500).json({ success: false, error: error.message });
-            }
-          };
-
-          // Reporte de subcategorías con productos
+  // Reporte de subcategorías con productos
           exports.reporteSubcategorias = async (req, res) => {
             try {
               const subcategorias = await Subcategory.aggregate([
@@ -777,24 +687,23 @@ exports.reporteSubcategorias = async (req, res) => {
                 {
                   $project: {
                     mes: {
-                      $switch: {
-                        // eslint-disable-next-line quote-props
-                        branches: [
-                          { case: { $eq: ["$_id", 1] }, then: "Enero" },
-                          { case: { $eq: ["$_id", 2] }, then: "Febrero" },
-                          { case: { $eq: ["$_id", 3] }, then: "Marzo" },
-                          { case: { $eq: ["$_id", 4] }, then: "Abril" },
-                          { case: { $eq: ["$_id", 5] }, then: "Mayo" },
-                          { case: { $eq: ["$_id", 6] }, then: "Junio" },
-                          { case: { $eq: ["$_id", 7] }, then: "Julio" },
-                          { case: { $eq: ["$_id", 8] }, then: "Agosto" },
-                          { case: { $eq: ["$_id", 9] }, then: "Septiembre" },
-                          { case: { $eq: ["$_id", 10] }, then: "Octubre" },
-                          { case: { $eq: ["$_id", 11] }, then: "Noviembre" },
-                          { case: { $eq: ["$_id", 12] }, then: "Diciembre" }
+                      $arrayElemAt: [
+                        [
+                          "Enero",
+                          "Febrero",
+                          "Marzo",
+                          "Abril",
+                          "Mayo",
+                          "Junio",
+                          "Julio",
+                          "Agosto",
+                          "Septiembre",
+                          "Octubre",
+                          "Noviembre",
+                          "Diciembre"
                         ],
-                        default: "Desconocido"
-                      }
+                        { $subtract: ["$_id", 1] }
+                      ]
                     },
                     ventas: 1,
                     ingresos: 1
@@ -913,7 +822,7 @@ exports.reporteSubcategorias = async (req, res) => {
                 },
                 {
                   $project: {
-                    name: { $cond: { if: "$_id", then: "Activos", else: "Inactivos" } },
+                    name: { $cond: [ { $eq: ['$_id', true] }, 'Activos', 'Inactivos' ] },
                     value: 1,
                     _id: 0
                   }
@@ -990,7 +899,13 @@ exports.reporteSubcategorias = async (req, res) => {
                 },
                 {
                   $project: {
-                    estado: { $cond: { if: "$__id", then: "Activos", else: "Inactivos" } },
+                    estado: {
+                      $cond: [
+                        { $eq: ['$_id', true] },
+                        'Activos',
+                        'Inactivos'
+                      ]
+                    },
                     cantidad: 1,
                     _id: 0
                   }

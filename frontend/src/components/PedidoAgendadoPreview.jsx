@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import Swal from 'sweetalert2';
 import api from '../api/axiosConfig';
+import { getCompanyName } from '../utils/emailHelpers';
 
 const PedidoAgendadoPreview = ({ datos, onClose, onEmailSent, onRemisionar }) => {
   const [showEnviarModal, setShowEnviarModal] = useState(false);
@@ -40,7 +41,7 @@ const PedidoAgendadoPreview = ({ datos, onClose, onEmailSent, onRemisionar }) =>
   // Función para abrir modal de envío
   const abrirModalEnvio = () => {
     
-    setAsunto(`Pedido Agendado ${datos?.numeroPedido || datos?.codigo || ''} - ${datos?.cliente?.nombre || 'Cliente'} | ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}`);
+    setAsunto(`Pedido Agendado ${datos?.numeroPedido || datos?.codigo || ''} - ${datos?.cliente?.nombre || 'Cliente'} | ${getCompanyName()}`);
     setMensaje(
       `Estimado/a ${datos?.cliente?.nombre || 'cliente'},
 
@@ -51,7 +52,7 @@ Adjunto encontrará el formato de pedido que ha agendado con nosotros. Por favor
 ¡Gracias por confiar en nosotros!
 
 
-${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
+${getCompanyName()}
 🌐 Productos de calidad`
     );
     setShowEnviarModal(true);
@@ -88,8 +89,8 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
       } else {
         throw new Error('Error al enviar correo');
       }
-    } catch (error) {
-      console.error('Error:', error);
+    } catch (error_) {
+      console.error('Error:', error_);
       Swal.fire({
         icon: 'error',
         title: 'Error',
@@ -99,30 +100,111 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
     }
   };
 
+  // Helpers to build/print the pedido content in a new window.
+  const buildStyle = () => {
+    return `
+      body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+      .header { text-align: center; margin-bottom: 30px; padding: 20px; background: linear-gradient(135deg, #fd7e14, #e85d04); color: white; border-radius: 10px; }
+      .info-section { margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; }
+      table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+      th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+      th { background: linear-gradient(135deg, #fd7e14, #e85d04); color: white; font-weight: bold; }
+      .total-row { background: #fef3c7; font-weight: bold; }
+      .status-badge { background: #fd7e14; color: white; padding: 8px 16px; border-radius: 20px; display: inline-block; }
+    `;
+  };
+
+  const trySetDocWithDOM = (doc, title, htmlContent, style) => {
+    // Preferred: manipulate DOM to set head and body safely
+    doc.open();
+    try {
+      doc.title = title;
+
+      const styleEl = doc.createElement('style');
+      styleEl.appendChild(doc.createTextNode(style));
+
+      if (!doc.head) {
+        const head = doc.createElement('head');
+        doc.documentElement.appendChild(head);
+      }
+      doc.head.appendChild(styleEl);
+
+      if (!doc.body) {
+        const body = doc.createElement('body');
+        doc.documentElement.appendChild(body);
+      }
+      doc.body.innerHTML = htmlContent;
+      return true;
+    } finally {
+      doc.close();
+    }
+  };
+
+  const trySetDocOuterHTML = (doc, title, htmlContent, style) => {
+    // Fallback: set outerHTML of documentElement
+    const html = `
+      <html>
+        <head>
+          <title>${title}</title>
+          <style>${style}</style>
+        </head>
+        <body>
+          ${htmlContent}
+        </body>
+      </html>
+    `;
+    doc.open();
+    try {
+      doc.documentElement.outerHTML = html;
+      return true;
+    } finally {
+      doc.close();
+    }
+  };
+
+  const handlePrint = () => {
+    const printContent = document.querySelector('.pdf-pedido-agendado');
+    const newWindow = window.open('', '_blank');
+    if (newWindow?.document) {
+      const doc = newWindow.document;
+      const title = `Pedido Agendado - ${datos?.numeroPedido}`;
+      const htmlContent = printContent?.innerHTML || '';
+      const style = buildStyle();
+
+      // Try DOM manipulation first
+      if (!trySetDocWithDOM(doc, title, htmlContent, style)) {
+        // Fallback to outerHTML
+        trySetDocOuterHTML(doc, title, htmlContent, style);
+      }
+
+      newWindow.focus();
+      newWindow.print();
+      newWindow.close();
+    }
+  };
+
   return (
-    <div className="modal-cotizacion-overlay" style={{
+    <div style={{
       position: 'fixed',
       top: 0,
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor: 'rgba(0, 0, 0, 0.8)',
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      zIndex: 1000,
-      padding: '1rem'
+      zIndex: 999
     }}>
       <div style={{
         backgroundColor: 'white',
-        borderRadius: '15px',
-        padding: '0',
-        maxWidth: '95vw',
-        maxHeight: '95vh',
-        width: '1000px',
+        width: '95%',
+        maxWidth: '1200px',
+        height: '90vh',
+        borderRadius: '12px',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
         display: 'flex',
         flexDirection: 'column',
-        boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
         overflow: 'hidden'
       }}>
         {/* Header del modal */}
@@ -147,35 +229,8 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
           </div>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             {/* Botón de imprimir */}
-            <button
-              onClick={() => {
-                const printContent = document.querySelector('.pdf-pedido-agendado');
-                const newWindow = window.open('', '_blank');
-                newWindow.document.write(`
-                  <html>
-                    <head>
-                      <title>Pedido Agendado - ${datos?.numeroPedido}</title>
-                      <style>
-                        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
-                        .header { text-align: center; margin-bottom: 30px; padding: 20px; background: linear-gradient(135deg, #fd7e14, #e85d04); color: white; border-radius: 10px; }
-                        .info-section { margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; }
-                        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-                        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-                        th { background: linear-gradient(135deg, #fd7e14, #e85d04); color: white; font-weight: bold; }
-                        .total-row { background: #fef3c7; font-weight: bold; }
-                        .status-badge { background: #fd7e14; color: white; padding: 8px 16px; border-radius: 20px; display: inline-block; }
-                      </style>
-                    </head>
-                    <body>
-                      ${printContent.innerHTML}
-                    </body>
-                  </html>
-                `);
-                newWindow.document.close();
-                newWindow.focus();
-                newWindow.print();
-                newWindow.close();
-              }}
+              <button
+              onClick={handlePrint}
               style={{
                 background: 'rgba(255, 255, 255, 0.2)',
                 border: 'none',

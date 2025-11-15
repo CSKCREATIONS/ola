@@ -2,10 +2,17 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import Swal from 'sweetalert2';
 import api from '../api/axiosConfig';
+import {
+  getStoredUser,
+  calculateTotal,
+  formatDateIso,
+  buildSignature,
+  getCompanyName
+} from '../utils/emailHelpers';
 
 export default function PedidoAgendadoEmail({ datos, onClose, onEmailSent }) {
   // Obtener usuario logueado
-  const usuario = JSON.parse(localStorage.getItem('user') || '{}');
+  const usuario = getStoredUser();
   const [showEnviarModal, setShowEnviarModal] = useState(false);
   
   // Estados para el formulario de envío de correo
@@ -16,19 +23,11 @@ export default function PedidoAgendadoEmail({ datos, onClose, onEmailSent }) {
   // Función para abrir modal con datos actualizados
   const abrirModalEnvio = () => {
     // Calcular total dinámicamente si no existe
-    const totalCalculado = datos?.productos?.reduce((total, producto) => {
-      const cantidad = Number(producto.cantidad) || 0;
-      const precio = Number(producto.precioUnitario) || 0;
-      return total + (cantidad * precio);
-    }, 0) || 0;
-    
+    const totalCalculado = calculateTotal(datos) || 0;
     const totalFinal = datos?.total || totalCalculado;
-    
+
     // Fecha de pedido: preferir createdAt, si no existe usar fecha, si ninguna está presente mostrar 'N/A'
-    const fechaFallback = datos?.fecha ? new Date(datos.fecha).toLocaleDateString('es-ES') : 'N/A';
-    const fechaPedido = datos?.createdAt
-      ? new Date(datos.createdAt).toLocaleDateString('es-ES')
-      : fechaFallback;
+    const fechaPedido = datos?.createdAt ? formatDateIso(datos.createdAt) : formatDateIso(datos?.fecha);
 
     // Observaciones: extraer el bloque para mejorar legibilidad
     const observacionesBlock = datos?.observacion
@@ -40,7 +39,7 @@ ${datos.observacion}
 
     // Actualizar datos autocompletados cada vez que se abre el modal
     setCorreo(datos?.cliente?.correo || '');
-    setAsunto(`Pedido Agendado ${datos?.numeroPedido || ''} - ${datos?.cliente?.nombre || 'Cliente'} | ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}`);
+    setAsunto(`Pedido Agendado ${datos?.numeroPedido || ''} - ${datos?.cliente?.nombre || 'Cliente'} | ${getCompanyName()}`);
     setMensaje(
       `Estimado/a ${datos?.cliente?.nombre || 'cliente'},
 
@@ -50,7 +49,7 @@ Esperamos se encuentre muy bien. Su pedido ha sido agendado exitosamente con la 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 • Número de pedido: ${datos?.numeroPedido || 'N/A'}
 • Fecha de pedido: ${fechaPedido}
-• Fecha de entrega programada: ${datos?.fechaEntrega ? new Date(datos.fechaEntrega).toLocaleDateString('es-ES') : 'Por definir'}
+• Fecha de entrega programada: ${datos?.fechaEntrega ? formatDateIso(datos.fechaEntrega) : 'Por definir'}
 • Cliente: ${datos?.cliente?.nombre || 'N/A'}
 • Correo: ${datos?.cliente?.correo || 'N/A'}
 • Teléfono: ${datos?.cliente?.telefono || 'N/A'}
@@ -68,11 +67,9 @@ Si tiene alguna pregunta sobre su pedido, no dude en contactarnos.
 
 Saludos cordiales,
 
-${usuario?.firstName || usuario?.nombre || 'Equipo de ventas'} ${usuario?.surname || ''}${usuario?.email ? `
-📧 Correo: ${usuario.email}` : ''}${usuario?.telefono ? `
-📞 Teléfono: ${usuario.telefono}` : ''}
+${buildSignature(usuario)}
 
-${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
+${getCompanyName()}
 🌐 Soluciones tecnológicas integrales`
     );
     setShowEnviarModal(true);

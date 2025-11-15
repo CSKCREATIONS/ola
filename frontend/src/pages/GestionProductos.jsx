@@ -105,13 +105,7 @@ const advancedStyles = `
   }
 `;
 
-// Inyectar estilos
-if (!document.getElementById('productos-advanced-styles')) {
-  const styleSheet = document.createElement('style');
-  styleSheet.id = 'productos-advanced-styles';
-  styleSheet.textContent = advancedStyles;
-  document.head.appendChild(styleSheet);
-}
+// Styles will be injected when the component mounts
 
 const ProductoModal = ({
   producto,
@@ -139,7 +133,7 @@ const ProductoModal = ({
 
   const handleSubmit = e => {
     e.preventDefault();
-    if (Object.values(form).some(field => field === '')) {
+    if (Object.values(form).includes('')) {
       Swal.fire('Error', 'Todos los campos son obligatorios', 'warning');
       return;
     }
@@ -747,6 +741,26 @@ const GestionProductos = () => {
     loadProductos();
     loadCategorias();
     loadSubcategorias();
+    
+    // Inject styles at mount time (avoids module-level DOM access)
+    if (typeof document !== 'undefined') {
+      const existing = document.getElementById('productos-advanced-styles');
+      if (!existing) {
+        const styleSheet = document.createElement('style');
+        styleSheet.id = 'productos-advanced-styles';
+        styleSheet.textContent = advancedStyles;
+        document.head.appendChild(styleSheet);
+      }
+    }
+
+    return () => {
+      try {
+        const el = document.getElementById('productos-advanced-styles');
+        if (el) el.remove();
+      } catch (e) {
+        console.warn('Failed to remove productos-advanced-styles element:', e);
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -772,7 +786,9 @@ const GestionProductos = () => {
       const productosOrdenados = (Array.isArray(lista) ? lista : []).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       setProductos(productosOrdenados);
     } catch (err) {
-      Swal.fire('Error', 'No se pudieron cargar los productos', 'error');
+      console.error('Error loading products', err);
+      Swal.fire('Error', `No se pudieron cargar los productos: ${err?.message || err}`, 'error');
+      setProductos([]);
     }
   };
 

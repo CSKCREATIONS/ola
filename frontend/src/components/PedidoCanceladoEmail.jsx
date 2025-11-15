@@ -2,10 +2,17 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import Swal from 'sweetalert2';
 import api from '../api/axiosConfig';
+import {
+  getStoredUser,
+  calculateTotal,
+  formatDateIso,
+  buildSignature,
+  getCompanyName
+} from '../utils/emailHelpers';
 
 export default function PedidoCanceladoEmail({ datos, onClose, onEmailSent }) {
-  // Obtener usuario logueado
-  const usuario = JSON.parse(localStorage.getItem('user') || '{}');
+  // Obtener usuario logueado (usar helper seguro)
+  const usuario = getStoredUser();
   const [showEnviarModal, setShowEnviarModal] = useState(false);
   
   // Estados para el formulario de envío de correo
@@ -16,23 +23,16 @@ export default function PedidoCanceladoEmail({ datos, onClose, onEmailSent }) {
 
   // Función para abrir modal con datos actualizados
   const abrirModalEnvio = () => {
-    // Calcular total dinámicamente si no existe
-    const totalCalculado = datos?.productos?.reduce((total, producto) => {
-      const cantidad = Number(producto.cantidad) || 0;
-      const precio = Number(producto.precioUnitario) || 0;
-      return total + (cantidad * precio);
-    }, 0) || 0;
-    
+    // Calcular total dinámicamente si no existe (utilitario)
+    const totalCalculado = calculateTotal(datos) || 0;
     const totalFinal = datos?.total || totalCalculado;
+
     // Fecha de pedido original: preferir createdAt, si no usar fecha, si ninguna está presente 'N/A'
-    const fechaFallback = datos?.fecha ? new Date(datos.fecha).toLocaleDateString('es-ES') : 'N/A';
-    const fechaPedidoOriginal = datos?.createdAt
-      ? new Date(datos.createdAt).toLocaleDateString('es-ES')
-      : fechaFallback;
+    const fechaPedidoOriginal = datos?.createdAt ? formatDateIso(datos.createdAt) : formatDateIso(datos?.fecha);
     
     // Actualizar datos autocompletados cada vez que se abre el modal
     setCorreo(datos?.cliente?.correo || '');
-    setAsunto(`Pedido Cancelado ${datos?.numeroPedido || ''} - ${datos?.cliente?.nombre || 'Cliente'} | ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}`);
+    setAsunto(`Pedido Cancelado ${datos?.numeroPedido || ''} - ${datos?.cliente?.nombre || 'Cliente'} | ${getCompanyName()}`);
     setMensaje(
       `Estimado/a ${datos?.cliente?.nombre || 'cliente'},
 
@@ -42,7 +42,7 @@ Lamentamos informarle que su pedido ha sido cancelado. A continuación los detal
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 • Número de pedido: ${datos?.numeroPedido || 'N/A'}
 • Fecha de pedido original: ${fechaPedidoOriginal}
-• Fecha de cancelación: ${new Date().toLocaleDateString('es-ES')}
+• Fecha de cancelación: ${formatDateIso(new Date().toISOString())}
 • Cliente: ${datos?.cliente?.nombre || 'N/A'}
 • Correo: ${datos?.cliente?.correo || 'N/A'}
 • Teléfono: ${datos?.cliente?.telefono || 'N/A'}
@@ -63,11 +63,9 @@ Para cualquier consulta sobre esta cancelación, no dude en contactarnos.
 
 Saludos cordiales,
 
-${usuario?.firstName || usuario?.nombre || 'Equipo de atención al cliente'} ${usuario?.surname || ''}${usuario?.email ? `
-📧 Correo: ${usuario.email}` : ''}${usuario?.telefono ? `
-📞 Teléfono: ${usuario.telefono}` : ''}
+${buildSignature(usuario)}
 
-${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
+${getCompanyName()}
 🌐 Soluciones tecnológicas integrales`
     );
     setShowEnviarModal(true);
@@ -90,6 +88,7 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
           text: 'La notificación de pedido cancelado ha sido enviada exitosamente'
         });
         setShowEnviarModal(false);
+        if (onClose) onClose();
         
         // Llamar al callback para actualizar el componente padre
         if (onEmailSent) {
@@ -98,8 +97,9 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
       } else {
         throw new Error('Error al enviar correo');
       }
-    } catch (error) {
-      console.error('Error:', error);
+    } catch (error_) {
+      // eslint-disable-next-line no-console
+      console.error('PedidoCanceladoEmail enviarPorCorreo error:', error_);
       Swal.fire({
         icon: 'error',
         title: 'Error',
@@ -128,7 +128,10 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
                 <span>Enviar Notificación de Pedido Cancelado</span>
               </h3>
               <button
-                onClick={() => setShowEnviarModal(false)}
+                onClick={() => {
+                  setShowEnviarModal(false);
+                  if (onClose) onClose();
+                }}
                 className="text-gray-400 hover:text-gray-600 text-2xl font-bold"
                 aria-label="Cerrar"
               >
@@ -195,7 +198,10 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
             
             <div className="flex justify-end gap-3 p-6 border-t border-gray-200">
               <button
-                onClick={() => setShowEnviarModal(false)}
+                onClick={() => {
+                  setShowEnviarModal(false);
+                  if (onClose) onClose();
+                }}
                 className="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
               >
                 Cancelar

@@ -4,8 +4,7 @@ import Swal from 'sweetalert2';
 import '../App.css';
 import Fijo from '../components/Fijo';
 import NavCompras from '../components/NavCompras';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
+
 import api from '../api/axiosConfig';
 
 // Deterministic email validator to avoid catastrophic regex backtracking
@@ -176,6 +175,7 @@ export default function HistorialCompras() {
         Swal.fire('Error', data.message || 'No se pudieron cargar las compras', 'error');
       }
     } catch (error) {
+      console.error('Error al cargar compras:', error);
       Swal.fire('Error', 'No se pudo conectar con el servidor', 'error');
     }
   };
@@ -242,12 +242,8 @@ export default function HistorialCompras() {
     if (campo === 'producto') {
       productosActualizados[index][campo] = valor;
 
-      if (!valor) {
-        // valor vacío: limpiar campos relacionados
-        productosActualizados[index].precioUnitario = 0;
-        productosActualizados[index].descripcion = '';
-      } else {
-        // buscar el producto en la lista global de productos
+      if (valor) {
+        // valor presente: buscar el producto en la lista global de productos e insertar precio y descripción
         const encontrado = productos.find(p => {
           const id = p._id || p.id || p.productoId;
           return String(id) === String(valor);
@@ -259,9 +255,14 @@ export default function HistorialCompras() {
           productosActualizados[index].precioUnitario = Number(precio) || 0;
           productosActualizados[index].descripcion = descripcion;
         } else {
+          // no encontrado: limpiar campos relacionados
           productosActualizados[index].precioUnitario = 0;
           productosActualizados[index].descripcion = '';
         }
+      } else {
+        // valor vacío: limpiar campos relacionados
+        productosActualizados[index].precioUnitario = 0;
+        productosActualizados[index].descripcion = '';
       }
 
       setNuevaCompra({ ...nuevaCompra, productos: productosActualizados });
@@ -393,7 +394,7 @@ export default function HistorialCompras() {
     }).join('') || '<tr><td colspan="5" style="text-align: center; padding: 20px;">No hay productos</td></tr>';
 
     const win = window.open('', '', 'width=900,height=700');
-    win.document.write(`
+    const html = `
       <!DOCTYPE html>
       <html lang="es">
         <head>
@@ -620,11 +621,24 @@ export default function HistorialCompras() {
           </div>
         </body>
       </html>
-    `);
-    win.document.close();
-    win.focus();
-    win.print();
-    win.close();
+    `;
+
+    // Inject HTML into the opened window without using document.write (deprecated)
+        const parsed = new DOMParser().parseFromString(html, 'text/html');
+        // create doctype and import the parsed <html> element
+        const doctype = win.document.implementation.createDocumentType('html', '', '');
+        const importedHtml = win.document.importNode(parsed.documentElement, true);
+        // clear any existing children and append doctype + html
+        while (win.document.firstChild) {
+          // Prefer calling remove() on the child node instead of parent.removeChild(child)
+          win.document.firstChild.remove();
+        }
+        win.document.appendChild(doctype);
+        win.document.appendChild(importedHtml);
+        win.document.close();
+        win.focus();
+        win.print();
+        win.close();
   };
 
   const enviarCompraPorCorreo = async () => {

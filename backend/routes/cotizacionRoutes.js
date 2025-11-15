@@ -7,6 +7,41 @@ const Product = require('../models/Products'); // Ensure Product model is loaded
 const { checkPermission } = require('../middlewares/role');
 const { validateObjectIdParam, isValidObjectId } = require('../utils/objectIdValidator');
 
+/**
+ * normalizeCotizacion
+ * Safely normalize a Cotizacion document (or plain object) so that
+ * each item in `productos` has `name`, `price`, `description` filled
+ * from a populated `producto.id` when available.
+ */
+function normalizeCotizacion(cotizacionDoc) {
+  if (!cotizacionDoc) return cotizacionDoc;
+  const cotObj = (typeof cotizacionDoc.toObject === 'function')
+    ? cotizacionDoc.toObject()
+    : structuredClone(cotizacionDoc);
+
+  if (!Array.isArray(cotObj.productos)) return cotObj;
+
+  cotObj.productos = cotObj.productos.map((p) => {
+    try {
+      const prodRef = p.producto?.id;
+      if (prodRef && typeof prodRef === 'object' && (prodRef.name || prodRef.price || prodRef.description)) {
+        p.producto = {
+          ...p.producto,
+          name: prodRef.name ?? p.producto.name,
+          price: prodRef.price ?? p.producto.price,
+          description: prodRef.description ?? p.producto.description
+        };
+      }
+    } catch (e) {
+      // Don't fail the whole response for a single malformed item
+      console.debug('normalizeCotizacion item error', e);
+    }
+    return p;
+  });
+
+  return cotObj;
+}
+
 // ✅ Crear cotización
 router.post('/',
   verifyToken,
@@ -43,24 +78,9 @@ router.get('/cliente/:id',
         return res.status(404).json({ message: 'No se encontró cotización para este cliente' });
       }
 
-      // Process the cotization to ensure product data is properly structured
-      const cotObj = cotizacion.toObject();
-      if (Array.isArray(cotObj.productos)) {
-        cotObj.productos = cotObj.productos.map(p => {
-          if (p.producto?.id) {
-            // Handle both populated and non-populated product data
-            if (typeof p.producto.id === 'object' && p.producto.id.name) {
-              // Populated data
-              p.producto.name = p.producto.id.name || p.producto.name;
-              p.producto.price = p.producto.id.price || p.producto.price;
-              p.producto.description = p.producto.id.description || p.producto.description;
-            }
-          }
-          return p;
-        });
-      }
-
-      res.json(cotObj);
+      // Normalize shape and return
+      const result = normalizeCotizacion(cotizacion);
+      return res.json(result);
     } catch (err) {
       console.error('Error al obtener cotización:', err);
       
@@ -110,28 +130,9 @@ router.get('/',
           .sort({ createdAt: -1 });
       }
 
-      // Process each cotization to ensure product data is properly structured
-      const processedCotizaciones = cotizaciones.map(cotizacion => {
-        const cotObj = cotizacion.toObject();
-        if (Array.isArray(cotObj.productos)) {
-          cotObj.productos = cotObj.productos.map(p => {
-            if (p.producto?.id) {
-              // Handle both populated and non-populated product data
-              if (typeof p.producto.id === 'object' && p.producto.id.name) {
-                // Populated data
-                p.producto.name = p.producto.id.name || p.producto.name;
-                p.producto.price = p.producto.id.price || p.producto.price;
-                p.producto.description = p.producto.id.description || p.producto.description;
-              }
-              // If not populated or missing, keep original name
-            }
-            return p;
-          });
-        }
-        return cotObj;
-      });
-
-      res.json(processedCotizaciones);
+      // Normalize each cotizacion and return
+      const processedCotizaciones = cotizaciones.map(normalizeCotizacion);
+      return res.json(processedCotizaciones);
     } catch (err) {
       console.error('[ERROR getCotizaciones]', err);
       
@@ -174,25 +175,9 @@ router.get('/:id',
         return res.status(404).json({ message: 'Cotización no encontrada' });
       }
 
-      // Process the cotization to ensure product data is properly structured
-      const cotObj = cotizacion.toObject();
-      if (Array.isArray(cotObj.productos)) {
-        cotObj.productos = cotObj.productos.map(p => {
-          if (p.producto?.id) {
-            // Handle both populated and non-populated product data
-            if (typeof p.producto.id === 'object' && p.producto.id.name) {
-              // Populated data
-              p.producto.name = p.producto.id.name || p.producto.name;
-              p.producto.price = p.producto.id.price || p.producto.price;
-              p.producto.description = p.producto.id.description || p.producto.description;
-            }
-            // If not populated or missing, keep original name
-          }
-          return p;
-        });
-      }
-
-      res.json(cotObj);
+      // Normalize and respond
+      const result = normalizeCotizacion(cotizacion);
+      return res.json(result);
     } catch (err) {
       console.error('Error al buscar cotización:', err);
       

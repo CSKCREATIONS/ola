@@ -2,10 +2,16 @@ import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import Swal from 'sweetalert2';
 import api from '../api/axiosConfig';
+import {
+  getStoredUser,
+  formatDateIso,
+  buildSignature,
+  getCompanyName
+} from '../utils/emailHelpers';
 
 export default function PedidoCanceladoPreview({ datos, onClose, onEmailSent }) {
   // Obtener usuario del localStorage
-  const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+  const usuario = getStoredUser();
   const [showEnviarModal, setShowEnviarModal] = useState(false);
   const [correo, setCorreo] = useState('');
   const [asunto, setAsunto] = useState('');
@@ -41,8 +47,8 @@ export default function PedidoCanceladoPreview({ datos, onClose, onEmailSent }) 
   const abrirModalEnvio = () => {
   const totalFinal = calcularTotal();
   // Fecha de emisión: usar datos.fecha si existe, si no mostrar 'N/A'
-  const fechaEmision = datos?.fecha ? new Date(datos.fecha).toLocaleDateString('es-ES') : 'N/A';
-  setAsunto(`Pedido Cancelado ${datos?.numeroPedido || datos?.codigo || ''} - ${datos?.cliente?.nombre || 'Cliente'} | ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}`);
+  const fechaEmision = formatDateIso(datos?.fecha);
+  setAsunto(`Pedido Cancelado ${datos?.numeroPedido || datos?.codigo || ''} - ${datos?.cliente?.nombre || 'Cliente'} | ${getCompanyName()}`);
     setMensaje(
       `Estimado/a ${datos?.cliente?.nombre || 'cliente'},
 
@@ -52,7 +58,7 @@ Lamentamos informarle que el pedido con la siguiente información ha sido cancel
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 • Número de pedido: ${datos?.numeroPedido || datos?.codigo || 'N/A'}
 • Fecha de emisión: ${fechaEmision}
-• Fecha de cancelación: ${new Date().toLocaleDateString('es-ES')}
+• Fecha de cancelación: ${formatDateIso(new Date().toISOString())}
 • Cliente: ${datos?.cliente?.nombre || 'N/A'}
 • Correo: ${datos?.cliente?.correo || 'N/A'}
 • Teléfono: ${datos?.cliente?.telefono || 'N/A'}
@@ -71,11 +77,9 @@ Agradecemos su comprensión y esperamos poder atenderle en futuras oportunidades
 
 Saludos cordiales,
 
-${usuario?.firstName || usuario?.nombre || 'Equipo de atención'} ${usuario?.surname || ''}${usuario?.email ? `
-📧 Correo: ${usuario.email}` : ''}${usuario?.telefono ? `
-📞 Teléfono: ${usuario.telefono}` : ''}
+${buildSignature(usuario)}
 
-${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
+${getCompanyName()}
 🌐 Productos de calidad`
     );
     setShowEnviarModal(true);
@@ -175,28 +179,58 @@ ${process.env.REACT_APP_COMPANY_NAME || 'JLA Global Company'}
               onClick={() => {
                 const printContent = document.querySelector('.pdf-pedido-cancelado');
                 const newWindow = window.open('', '_blank');
-                newWindow.document.write(`
-                  <button
-                    onClick={enviarPorCorreo}
-                    aria-label="Enviar notificación de cancelación"
-                    style={{
-                      padding: '0.75rem 1.5rem',
-                      border: 'none',
-                      borderRadius: '6px',
-                      backgroundColor: '#dc2626',
-                      color: 'white',
-                      cursor: 'pointer',
-                      fontWeight: 'bold'
-                    }}
-                  >
-                    <i className="fa-solid fa-envelope icon-gap" style={{}} aria-hidden={true}></i>
-                    <span>Enviar Notificación</span>
-                  </button>
-                      ${printContent.innerHTML}
+                if (!newWindow) return;
+
+                const contentHtml = printContent ? printContent.innerHTML : '';
+
+                const html = `
+                  <!doctype html>
+                  <html>
+                    <head>
+                      <meta charset="utf-8">
+                      <title>Pedido Cancelado</title>
+                      <style>
+                        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial; padding: 20px; color: #333; }
+                        .print-button { padding: 0.75rem 1.5rem; border: none; border-radius: 6px; background-color: #dc2626; color: white; cursor: pointer; font-weight: bold; margin-bottom: 1rem; }
+                      </style>
+                      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+                    </head>
+                    <body>
+                      <div>
+                        <button class="print-button" aria-label="Enviar notificación de cancelación">
+                          <i class="fa-solid fa-envelope icon-gap" aria-hidden="true"></i>
+                          <span>Enviar Notificación</span>
+                        </button>
+                      </div>
+                      ${contentHtml}
                     </body>
                   </html>
-                `);
-                newWindow.document.close();
+                `;
+
+                try {
+                  // Preferred: replace the documentElement's HTML without using document.write
+                  newWindow.document.documentElement.innerHTML = html;
+                } catch (err) {
+                  // Log the original error and fallback to safer DOM methods
+                  console.warn('Failed to set newWindow.document.documentElement.innerHTML, falling back to safe DOM population.', err);
+                  try {
+                    newWindow.document.open();
+                    newWindow.document.close();
+                    if (newWindow.document.body) {
+                      newWindow.document.body.innerHTML = contentHtml;
+                    } else {
+                      const body = newWindow.document.createElement('body');
+                      body.innerHTML = contentHtml;
+                      newWindow.document.documentElement.appendChild(body);
+                    }
+                  } catch (e) {
+                    // If even fallback fails, close the window to avoid leaving a blank popup
+                    console.error('Error while preparing print window', e);
+                    newWindow.close();
+                    return;
+                  }
+                }
+
                 newWindow.focus();
                 newWindow.print();
                 newWindow.close();

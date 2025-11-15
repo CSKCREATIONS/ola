@@ -1,11 +1,13 @@
+/* global globalThis */
 import axios from 'axios';
 
 // Prefer environment variable set at build time (REACT_APP_API_URL)
 // Fallback: if running in browser, infer API host from window.location safely
 const getBaseURL = () => {
   if (process.env.REACT_APP_API_URL) return process.env.REACT_APP_API_URL;
-  if (typeof window !== 'undefined' && window.location) {
-    const { protocol, hostname } = window.location;
+
+  if (globalThis.window?.location) {
+    const { protocol, hostname } = globalThis.window.location;
     return `${protocol}//${hostname}:5000`;
   }
   return 'http://localhost:5000';

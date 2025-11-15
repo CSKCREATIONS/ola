@@ -143,9 +143,7 @@ useEffect(() => {
           </div>
           <br />
 
-          {!cliente ? (
-            <p>Cargando cliente...</p>
-          ) : (
+          {cliente ? (
             <>
               <table>
               <thead>
@@ -203,7 +201,8 @@ useEffect(() => {
               <br />
               <button className="btn btn-success" onClick={handleAgendar}>Agendar pedido</button>
             </>
-            
+          ) : (
+            <p>Cargando cliente...</p>
           )}
           
         </div>
