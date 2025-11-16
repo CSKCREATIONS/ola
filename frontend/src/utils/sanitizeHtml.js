@@ -21,11 +21,8 @@ function sanitizeAttributes(node) {
     const value = attr.value || '';
     if (name.startsWith('on')) {
       node.removeAttribute(attr.name);
-      continue;
-    }
-    if ((name === 'href' || name === 'src') && isJsOrDataUrl(value)) {
+    } else if ((name === 'href' || name === 'src') && isJsOrDataUrl(value)) {
       node.removeAttribute(attr.name);
-      continue;
     }
   }
 }

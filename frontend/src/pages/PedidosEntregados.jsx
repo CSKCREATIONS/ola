@@ -315,10 +315,6 @@ export default function PedidosEntregados() {
     return diasDiferencia <= days;
   };
 
-  const countThisMonth = () => {
-    return pedidosEntregados.filter(p => isWithinLastNDays(p.updatedAt)).length;
-  };
-
   // helper para actualizar número de remisión en estado local
   const updatePedidoNumeroRemision = (pedidoId, numeroRemision) => {
     setPedidosEntregados(prev => prev.map(p => p._id === pedidoId ? { ...p, numeroRemision } : p));
@@ -462,13 +458,7 @@ export default function PedidosEntregados() {
                 </div>
                 <div>
                   <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                    {pedidosEntregados.filter(p => {
-                      const fechaEntrega = new Date(p.updatedAt);
-                      const hoy = new Date();
-                      const diferencia = hoy.getTime() - fechaEntrega.getTime();
-                      const diasDiferencia = Math.ceil(diferencia / (1000 * 3600 * 24));
-                      return diasDiferencia <= 30;
-                    }).length}
+                    {pedidosEntregados.filter(p => isWithinLastNDays(p.updatedAt, 30)).length}
                   </h3>
                   <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
                     Este Mes
@@ -541,48 +531,8 @@ export default function PedidosEntregados() {
                               border: 'none',
                               padding: 0,
                               font: 'inherit'
-                            }} 
-                            onClick={async () => {
-                              try {
-                                // Primero intentar obtener remisión existente desde el pedido
-                                // Estrategia: buscar remisión llamando endpoint crear-desde-pedido (que retorna existente si ya hay)
-                                const res = await api.post(`/api/remisiones/crear-desde-pedido/${pedido._id}`);
-                                const data = res.data || res;
-                                if (data.remision) {
-                                  // actualizar estado local para mostrar numeroRemision en la tabla
-                                  setPedidosEntregados(prev => prev.map(p => p._id === pedido._id ? { ...p, numeroRemision: data.remision.numeroRemision } : p));
-                                  setRemisionPreview(data.remision);
-                                } else {
-                                  // Si no viene remision detallada, intentar fallback obtener pedido completo y mapear estructura mínima
-                                  const pedidoRes = await api.get(`/api/pedidos/${pedido._id}?populate=true`);
-                                  const pedidoData = (pedidoRes.data || pedidoRes).data || (pedidoRes.data || pedidoRes);
-                                  const remisionLike = {
-                                    numeroRemision: 'REM-PED-' + (pedidoData.numeroPedido || pedidoData._id?.slice(-6)),
-                                    codigoPedido: pedidoData.numeroPedido,
-                                    fechaRemision: pedidoData.updatedAt || pedidoData.createdAt,
-                                    fechaEntrega: pedidoData.fechaEntrega,
-                                    estado: 'activa',
-                                    cliente: pedidoData.cliente || {},
-                                    productos: (pedidoData.productos || []).map(p => ({
-                                      nombre: p.product?.name || p.product?.nombre || p.nombre || 'Producto',
-                                      cantidad: p.cantidad,
-                                      precioUnitario: p.precioUnitario,
-                                      total: p.cantidad * (p.precioUnitario || 0),
-                                      descripcion: p.product?.description || p.product?.descripcion || '',
-                                      codigo: p.product?.code || p.product?.codigo || ''
-                                    })),
-                                    total: (pedidoData.productos || []).reduce((sum, pr) => sum + pr.cantidad * (pr.precioUnitario || 0), 0),
-                                    observaciones: pedidoData.observacion || '',
-                                  };
-                                  // actualizar estado local con número de remisión estimado
-                                  setPedidosEntregados(prev => prev.map(p => p._id === pedido._id ? { ...p, numeroRemision: remisionLike.numeroRemision } : p));
-                                  setRemisionPreview(remisionLike);
-                                }
-                              } catch (error) {
-                                console.error('Error cargando remisión/pedido para vista previa:', error);
-                                Swal.fire('Error', 'No se pudo cargar la remisión del pedido', 'error');
-                              }
                             }}
+                            onClick={() => handleRemisionClick(pedido)}
                           >
                             {pedido.numeroRemision || '---'}
                           </button>

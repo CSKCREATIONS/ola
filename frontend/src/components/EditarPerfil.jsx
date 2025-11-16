@@ -4,6 +4,7 @@ import Swal from 'sweetalert2';
 import { closeModal } from '../funciones/animaciones';
 import api from '../api/axiosConfig';
 import { useNavigate } from 'react-router-dom';
+import PropTypes from 'prop-types';
 
 const styles = {
   overlay: {
@@ -109,7 +110,6 @@ const styles = {
     boxShadow: '0 4px 6px -1px rgba(99, 102, 241, 0.3)'
   }
 };
-
 function TextInput({
   id,
   name,
@@ -132,10 +132,13 @@ function TextInput({
   }, [focusColor, focusBox]);
 
   const handleBlur = useCallback((e) => {
-    try {
+    if (e?.target?.style) {
       e.target.style.borderColor = '#e5e7eb';
       e.target.style.boxShadow = 'none';
-    } catch (_) {}
+    } else {
+      // If style is not available, optionally log for debugging:
+      // console.warn('handleBlur: event target has no style property', e);
+    }
   }, []);
 
   return (
@@ -155,6 +158,33 @@ function TextInput({
     />
   );
 }
+
+TextInput.propTypes = {
+  id: PropTypes.string,
+  name: PropTypes.string,
+  type: PropTypes.string,
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  onChange: PropTypes.func,
+  placeholder: PropTypes.string,
+  disabled: PropTypes.bool,
+  focusColor: PropTypes.string,
+  focusBox: PropTypes.string,
+  style: PropTypes.object
+};
+
+TextInput.defaultProps = {
+  id: undefined,
+  name: undefined,
+  type: 'text',
+  value: '',
+  onChange: () => {},
+  placeholder: undefined,
+  disabled: false,
+  focusColor: undefined,
+  focusBox: undefined,
+  style: {}
+};
+
 
 function Section({ titleIcon, title, accent = '#6366f1', children, collapsible = false, open = true, onToggle }) {
   return (
@@ -182,6 +212,26 @@ function Section({ titleIcon, title, accent = '#6366f1', children, collapsible =
     </div>
   );
 }
+
+Section.propTypes = {
+  titleIcon: PropTypes.string,
+  title: PropTypes.string,
+  accent: PropTypes.string,
+  children: PropTypes.node,
+  collapsible: PropTypes.bool,
+  open: PropTypes.bool,
+  onToggle: PropTypes.func
+};
+
+Section.defaultProps = {
+  titleIcon: undefined,
+  title: undefined,
+  accent: '#6366f1',
+  children: null,
+  collapsible: false,
+  open: true,
+  onToggle: () => {}
+};
 
 export default function EditarPerfil() {
   const [form, setForm] = useState({});

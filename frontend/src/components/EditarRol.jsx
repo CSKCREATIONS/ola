@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { closeModal } from "../funciones/animaciones";
 import Swal from "sweetalert2";
 import api from '../api/axiosConfig';
@@ -121,6 +121,17 @@ function InputCheck({ type = 'checkbox', checked, onChange, label, name, accentC
    );
 }
 
+InputCheck.propTypes = {
+   type: PropTypes.string,
+   checked: PropTypes.bool,
+   onChange: PropTypes.func,
+   label: PropTypes.oneOfType([PropTypes.string, PropTypes.node]),
+   name: PropTypes.string,
+   accentColor: PropTypes.string,
+   styleOverrides: PropTypes.object,
+   icon: PropTypes.string
+};
+
 function PermissionsGrid({ items = [], permisos, togglePermiso, groupButton }) {
    return (
       <div style={{
@@ -140,6 +151,16 @@ function PermissionsGrid({ items = [], permisos, togglePermiso, groupButton }) {
       </div>
    );
 }
+
+PermissionsGrid.propTypes = {
+   items: PropTypes.arrayOf(PropTypes.shape({
+      key: PropTypes.string.isRequired,
+      label: PropTypes.oneOfType([PropTypes.string, PropTypes.node]).isRequired
+   })),
+   permisos: PropTypes.arrayOf(PropTypes.string),
+   togglePermiso: PropTypes.func,
+   groupButton: PropTypes.node
+};
 
 /* --------------------- Componente principal --------------------- */
 export default function EditarRol({ rol }) {
@@ -238,6 +259,11 @@ export default function EditarRol({ rol }) {
          <span>Todos los permisos</span>
       </label>
    );
+
+   GroupRadio.propTypes = {
+      permsList: PropTypes.arrayOf(PropTypes.string).isRequired,
+      color: PropTypes.string
+   };
 
    /* Listas legibles para mapear en UI */
    const comprasList = MODULE_PERMISSIONS.compras.map(k => ({ key: k, label: k.replace(/\./g, ' ').replace(/^\w/, c => c.toUpperCase()) }));

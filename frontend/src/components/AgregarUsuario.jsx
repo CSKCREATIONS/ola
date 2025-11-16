@@ -246,8 +246,8 @@ export default function AgregarUsuario() {
   const rolesFiltered = useMemo(() => rolesDisponibles.filter(r => r.enabled !== false), [rolesDisponibles]);
 
   const roleOptions = useMemo(() => {
-    if (cargandoRoles) return <option disabled>Cargando...</option>;
-    if (rolesDisponibles.length === 0) return <option disabled>No hay roles disponibles</option>;
+    if (cargandoRoles) return [<option key="loading" disabled>Cargando...</option>];
+    if (rolesDisponibles.length === 0) return [<option key="none" disabled>No hay roles disponibles</option>];
     return rolesFiltered.map(r => <option key={r._id} value={r.name}>{r.name}</option>);
   }, [cargandoRoles, rolesDisponibles, rolesFiltered]);
 
