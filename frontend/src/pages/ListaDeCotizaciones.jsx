@@ -10,6 +10,7 @@ import '../cotizaciones-modal.css';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import CotizacionPreview from '../components/CotizacionPreview';
+import Modal from '../components/Modal';
 import { calcularSubtotalProducto, calcularTotales } from '../utils/calculations';
 import { formatCurrency } from '../utils/formatters';
 import DeleteButton from '../components/DeleteButton';
@@ -1280,55 +1281,18 @@ export default function ListaDeCotizaciones() {
 
       {/* Modal de Edición */}
       {modoEdicion && cotizacionSeleccionada && (
-        <div className="cotizacion-modal-container">
-          <div
-            className="modal-overlay"
-            aria-label="Cerrar modal"
-          >
-            <button
-              type="button"
-              className="overlay-button"
-              aria-label="Cerrar modal"
-              style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', border: 'none', background: 'transparent', padding: 0 }}
-              onClick={(e) => {
-                // click on the overlay-button closes the modal
-                if (e.target === e.currentTarget) {
-                  closeModal();
-                }
-              }}
-              onTouchStart={(e) => {
-                if (e.target === e.currentTarget) closeModal();
-              }}
-              onKeyDown={(e) => {
-                // support keyboard users: close when Enter or Space is pressed while overlay-button is focused
-                if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
-                  e.preventDefault(); // prevent scrolling on Space
-                  if (e.target === e.currentTarget) closeModal();
-                }
-              }}
-            />
-            <dialog
-              className="modal-content-large"
-              aria-label="Editar Cotización"
-              aria-modal="true"
-              open
-              tabIndex={-1}
-            >
-              <div className="modal-header">
-                <div className="header-info">
-                  <h3>Editar Cotización</h3>
-                  <span className="cotizacion-codigo">#{cotizacionSeleccionada.codigo}</span>
-                  <span className="fecha-cotizacion">
-                    <i aria-hidden={true} className="fa-solid fa-calendar"></i>
-                    <span>{new Date(cotizacionSeleccionada.fecha).toLocaleDateString()}</span>
-                  </span>
-                </div>
-                <button className="close-button" aria-label="Cerrar modal" onClick={closeModal}>
-                  <i aria-hidden={true} className="fa-solid fa-times"></i>
-                </button>
-              </div>
+        <Modal isOpen={modoEdicion} onClose={closeModal} title={`Editar Cotización`} className="modal-content-large cotizacion-modal-container">
+          <div style={{ marginBottom: '8px' }}>
+            <div className="header-info">
+              <span className="cotizacion-codigo">#{cotizacionSeleccionada.codigo}</span>
+              <span className="fecha-cotizacion" style={{ marginLeft: '12px' }}>
+                <i aria-hidden={true} className="fa-solid fa-calendar"></i>
+                <span style={{ marginLeft: '6px' }}>{new Date(cotizacionSeleccionada.fecha).toLocaleDateString()}</span>
+              </span>
+            </div>
+          </div>
 
-              <div className="modal-body">
+          <div className="modal-body">
                 <div className="form-section">
                   <div className="section-title">
                     <i aria-hidden={true} className="fa-solid fa-user-circle"></i>
@@ -1695,27 +1659,16 @@ export default function ListaDeCotizaciones() {
                   </button>
                 </div>
               </div>
-            </dialog>
-          </div>
-
-          {mostrarPreview && cotizacionSeleccionada && (
-            <CotizacionPreview
-              datos={cotizacionSeleccionada}
-              onClose={closePreviewAndBlink}
-              onEmailSent={handleEmailSent}
-              onRemisionCreated={handleRemisionCreated}
-            />
-          )
-          }
-          <div className="custom-footer">
-            <p className="custom-footer-text">
-              © 2025 <span className="custom-highlight">PANGEA</span>. Todos los derechos reservados.
-            </p>
-          </div>
-        </div>
+        </Modal>
       )}
 
-    </div >
+      <div className="custom-footer">
+        <p className="custom-footer-text">
+          © 2025 <span className="custom-highlight">PANGEA</span>. Todos los derechos reservados.
+        </p>
+      </div>
+
+    </div>
   )
 }
 

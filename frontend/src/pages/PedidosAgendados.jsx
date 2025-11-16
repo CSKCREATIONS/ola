@@ -10,6 +10,7 @@ import EditarPedido from '../components/EditarPedido';
 import PedidoAgendadoPreview from '../components/PedidoAgendadoPreview';
 import { sumarProp } from '../utils/calculations';
 import AdvancedStats from '../components/AdvancedStats';
+import Modal from '../components/Modal';
 
 /* Estilos CSS avanzados para Pedidos Agendados */
 const pedidosAgendadosStyles = `
@@ -635,32 +636,19 @@ export default function PedidosAgendados() {
           <EditarPedido />
 
           {/** Modal: Agendar Pedido **/}
-          {mostrarModalAgendar && (
-            <div className="modal-overlay">
-              <div className="modal-compact modal-lg">
-                <div className="modal-header">
-                  <h5 className="modal-title">Agendar Pedido</h5>
-                  <button 
-                    className="modal-close" 
-                    onClick={() => setMostrarModalAgendar(false)}
-                  >
-                    &times;
-                  </button>
-                </div>
-                <div className="modal-body">
-                  <p style={{ 
-                    textAlign: 'center', 
-                    color: '#6b7280',
-                    fontSize: '16px',
-                    padding: '20px',
-                    fontStyle: 'italic'
-                  }}>
-                    Esta funcionalidad estará disponible próximamente.
-                  </p>
-                </div>
-              </div>
+          <Modal isOpen={mostrarModalAgendar} onClose={() => setMostrarModalAgendar(false)} title="Agendar Pedido" className="modal-compact modal-lg">
+            <div className="modal-body">
+              <p style={{ 
+                textAlign: 'center', 
+                color: '#6b7280',
+                fontSize: '16px',
+                padding: '20px',
+                fontStyle: 'italic'
+              }}>
+                Esta funcionalidad estará disponible próximamente.
+              </p>
             </div>
-          )}
+          </Modal>
         </div>
       </div>
       <div className="custom-footer">

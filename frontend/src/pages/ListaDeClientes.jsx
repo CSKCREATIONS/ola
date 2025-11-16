@@ -7,6 +7,7 @@ import Swal from 'sweetalert2';
 import '../App.css';
 import Fijo from '../components/Fijo';
 import NavVentas from '../components/NavVentas';
+import Modal from '../components/Modal';
 
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
@@ -80,38 +81,8 @@ const ModalEditarCliente = ({ cliente, onClose, onSave }) => {
     return () => document.removeEventListener('keydown', handleEsc);
   }, [onClose]);
 
-  const handleOverlayClick = (e) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  };
-
   return (
-      <div role="dialog" tabIndex={-1}
-      onClick={handleOverlayClick}
-      onKeyDown={(e) => {
-        if (e.key === 'Escape') {
-          onClose();
-        }
-      }}
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1000,
-        padding: '1rem',
-        border: 'none',
-        WebkitOverflowScrolling: 'touch'
-      }}
-      aria-modal="true"
-      aria-label="Editar cliente"
-    >
+    <Modal isOpen={true} onClose={onClose} hideHeader className="clientes-edit-modal">
       <div
         style={{
           backgroundColor: 'white',
@@ -125,7 +96,7 @@ const ModalEditarCliente = ({ cliente, onClose, onSave }) => {
           overflow: 'hidden'
         }}
       >
-        {/* Header del modal */}
+        {/* Header del modal (custom styled) */}
         <div
           style={{
             background: 'linear-gradient(135deg, #2563eb, #1d4ed8)',
@@ -181,7 +152,7 @@ const ModalEditarCliente = ({ cliente, onClose, onSave }) => {
             flexDirection: 'column'
           }}
         >
-            <div style={{
+          <div style={{
             background: 'white',
             padding: '1.5rem',
             borderRadius: '12px',
@@ -231,77 +202,76 @@ const ModalEditarCliente = ({ cliente, onClose, onSave }) => {
               required
             />
           </div>
-        </form>
 
-        {/* Footer con botones */}
-        <div
-          style={{
-            padding: '1.5rem 2rem',
-            borderTop: '1px solid #e2e8f0',
-            display: 'flex',
-            gap: '1rem',
-            justifyContent: 'flex-end',
-            flexShrink: 0,
-            backgroundColor: 'white'
-          }}
-        >
-          <button
-            type="button"
-            onClick={onClose}
+          {/* Footer con botones (dentro del formulario para que el submit funcione correctamente) */}
+          <div
             style={{
-              padding: '0.75rem 1.5rem',
-              border: '2px solid #e5e7eb',
-              borderRadius: '8px',
-              backgroundColor: 'white',
-              color: '#374151',
-              cursor: 'pointer',
-              fontWeight: '600',
-              fontSize: '1rem',
-              transition: 'all 0.3s ease'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = '#9ca3af';
-              e.currentTarget.style.backgroundColor = '#f9fafb';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = '#e5e7eb';
-              e.currentTarget.style.backgroundColor = 'white';
-            }}
-          >
-            Cancelar
-          </button>
-          <button
-            type="submit"
-            onClick={handleSubmit}
-            style={{
-              padding: '0.75rem 1.5rem',
-              border: 'none',
-              borderRadius: '8px',
-              background: 'linear-gradient(135deg, #2563eb, #1d4ed8)',
-              color: 'white',
-              cursor: 'pointer',
-              fontWeight: '600',
-              fontSize: '1rem',
-              transition: 'all 0.3s ease',
+              padding: '1.5rem 2rem',
+              borderTop: '1px solid #e2e8f0',
               display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = '0 4px 12px rgba(37, 99, 235, 0.4)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.08)';
+              gap: '1rem',
+              justifyContent: 'flex-end',
+              flexShrink: 0,
+              backgroundColor: 'white'
             }}
           >
-            <i className="fa-solid fa-save" aria-hidden="true"></i>
-            <span>Guardar</span>
-          </button>
-        </div>
+            <button
+              type="button"
+              onClick={onClose}
+              style={{
+                padding: '0.75rem 1.5rem',
+                border: '2px solid #e5e7eb',
+                borderRadius: '8px',
+                backgroundColor: 'white',
+                color: '#374151',
+                cursor: 'pointer',
+                fontWeight: '600',
+                fontSize: '1rem',
+                transition: 'all 0.3s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = '#9ca3af';
+                e.currentTarget.style.backgroundColor = '#f9fafb';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = '#e5e7eb';
+                e.currentTarget.style.backgroundColor = 'white';
+              }}
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              style={{
+                padding: '0.75rem 1.5rem',
+                border: 'none',
+                borderRadius: '8px',
+                background: 'linear-gradient(135deg, #2563eb, #1d4ed8)',
+                color: 'white',
+                cursor: 'pointer',
+                fontWeight: '600',
+                fontSize: '1rem',
+                transition: 'all 0.3s ease',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(37, 99, 235, 0.4)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.08)';
+              }}
+            >
+              <i className="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+              <span>Guardar</span>
+            </button>
+          </div>
+        </form>
       </div>
-    </div>
+    </Modal>
   );
 };
 

@@ -28,14 +28,14 @@ async function enviarCorreoConAttachment(destinatario, asunto, htmlContent, pdfA
     console.log('📧 Intentando enviar con Gmail...');
     await enviarCorreoGmail(destinatario, asunto, htmlContent, attachments);
     console.log('✅ Correo enviado exitosamente con Gmail');
-  } catch (errorGmail) {
-    console.warn('⚠️ Gmail falló, intentando con SendGrid...', errorGmail.message);
+  } catch (error) {
+    console.warn('⚠️ Gmail falló, intentando con SendGrid...', error.message);
     try {
       await enviarCorreoSendGrid(destinatario, asunto, htmlContent, attachments);
       console.log('✅ Correo enviado exitosamente con SendGrid (fallback)');
-    } catch (errorSendGrid) {
+    } catch (error_) {
       console.error('❌ Ambos servicios de email fallaron');
-      throw new Error(`Gmail: ${errorGmail.message}. SendGrid: ${errorSendGrid.message}`);
+      throw new Error(`Gmail: ${error.message}. SendGrid: ${error_.message}`);
     }
   }
 }

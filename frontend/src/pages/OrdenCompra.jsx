@@ -9,6 +9,7 @@ import OrderDetailsHeader from '../components/OrderDetailsHeader';
 import DeleteButton from '../components/DeleteButton';
 import SharedListHeaderCard from '../components/SharedListHeaderCard';
 import PrimaryButton from '../components/PrimaryButton';
+import AdvancedStats from '../components/AdvancedStats';
 import { roundMoney } from '../utils/formatters';
 import { randomString } from '../utils/secureRandom';
 import { calcularTotales as calcularTotalesShared, sumarProp } from '../utils/calculations';
@@ -555,6 +556,13 @@ export default function OrdenCompra() {
   const currentOrdenes = ordenesPendientes.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(ordenesPendientes.length / itemsPerPage);
 
+  const statsCards = [
+    { id: 'total', iconClass: 'fa-solid fa-file-invoice-dollar', value: ordenes.length, label: 'Total Órdenes' },
+    { id: 'pendientes', iconClass: 'fa-solid fa-clock', value: ordenesPendientes.length, label: 'Órdenes Pendientes' },
+    { id: 'completadas', iconClass: 'fa-solid fa-check-circle', value: ordenes.filter(o => o.estado === 'Completada').length, label: 'Órdenes Completadas' },
+    { id: 'valor', iconClass: 'fa-solid fa-dollar-sign', value: `$${sumarProp(ordenes, 'total').toLocaleString()}`, label: 'Valor Total Órdenes' }
+  ];
+
   const verDetallesOrden = (orden) => {
     setOrdenSeleccionada(orden);
     setModalDetallesVisible(true);
@@ -1051,129 +1059,7 @@ export default function OrdenCompra() {
             </PrimaryButton>
           </SharedListHeaderCard>
 
-          {/* Estadísticas avanzadas */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-            gap: '20px',
-            marginBottom: '30px'
-          }}>
-            <div style={{
-              background: 'linear-gradient(135deg, #ffffff, #f8fafc)',
-              borderRadius: '16px',
-              padding: '25px',
-              border: '1px solid #e5e7eb',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <div style={{
-                  background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-                  borderRadius: '12px',
-                  padding: '15px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <i className="fa-solid fa-file-invoice-dollar" style={{ color: 'white', fontSize: '1.5rem' }}></i>
-                </div>
-                <div>
-                  <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                    {ordenes.length}
-                  </h3>
-                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
-                    Total Órdenes
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div style={{
-              background: 'linear-gradient(135deg, #ffffff, #f8fafc)',
-              borderRadius: '16px',
-              padding: '25px',
-              border: '1px solid #e5e7eb',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <div style={{
-                  background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-                  borderRadius: '12px',
-                  padding: '15px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <i className="fa-solid fa-clock" style={{ color: 'white', fontSize: '1.5rem' }}></i>
-                </div>
-                <div>
-                  <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                    {ordenesPendientes.length}
-                  </h3>
-                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
-                    Órdenes Pendientes
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div style={{
-              background: 'linear-gradient(135deg, #ffffff, #f8fafc)',
-              borderRadius: '16px',
-              padding: '25px',
-              border: '1px solid #e5e7eb',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <div style={{
-                  background: 'linear-gradient(135deg, #10b981, #059669)',
-                  borderRadius: '12px',
-                  padding: '15px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <i className="fa-solid fa-check-circle" style={{ color: 'white', fontSize: '1.5rem' }}></i>
-                </div>
-                <div>
-                  <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                    {ordenes.filter(o => o.estado === 'Completada').length}
-                  </h3>
-                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
-                    Órdenes Completadas
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div style={{
-              background: 'linear-gradient(135deg, #ffffff, #f8fafc)',
-              borderRadius: '16px',
-              padding: '25px',
-              border: '1px solid #e5e7eb',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <div style={{
-                  background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
-                  borderRadius: '12px',
-                  padding: '15px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <i className="fa-solid fa-dollar-sign" style={{ color: 'white', fontSize: '1.5rem' }}></i>
-                </div>
-                <div>
-                  <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                    ${sumarProp(ordenes, 'total').toLocaleString()}
-                  </h3>
-                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
-                    Valor Total Órdenes
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+          <AdvancedStats cards={statsCards} />
 
           {/* Tabla de órdenes mejorada */}
           <div style={{
