@@ -5,6 +5,7 @@ import NavUsuarios from '../components/NavUsuarios'
 import SharedListHeaderCard from '../components/SharedListHeaderCard'
 import PrimaryButton from '../components/PrimaryButton'
 import AgregarRol from '../components/AgregarRol';
+import AdvancedStats from '../components/AdvancedStats';
 import { openModal } from '../funciones/animaciones';
 import Swal from 'sweetalert2';
 import api from '../api/axiosConfig';
@@ -271,99 +272,11 @@ export default function RolesYPermisos() {
           </SharedListHeaderCard>
 
           {/* Estadísticas avanzadas */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-            gap: '20px',
-            marginBottom: '30px'
-          }}>
-            <div style={{
-              background: 'linear-gradient(135deg, #ffffff, #f8fafc)',
-              borderRadius: '16px',
-              padding: '25px',
-              border: '1px solid #e5e7eb',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <div style={{
-                  background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-                  borderRadius: '12px',
-                  padding: '15px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <i className="fa-solid fa-shield-alt" style={{ color: 'white', fontSize: '1.5rem' }}></i>
-                </div>
-                <div>
-                  <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                    {roles.length}
-                  </h3>
-                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
-                    Total Roles
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div style={{
-              background: 'linear-gradient(135deg, #ffffff, #f8fafc)',
-              borderRadius: '16px',
-              padding: '25px',
-              border: '1px solid #e5e7eb',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <div style={{
-                  background: 'linear-gradient(135deg, #10b981, #059669)',
-                  borderRadius: '12px',
-                  padding: '15px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <i className="fa-solid fa-check-circle" style={{ color: 'white', fontSize: '1.5rem' }}></i>
-                </div>
-                <div>
-                  <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                    {roles.filter(r => r.enabled).length}
-                  </h3>
-                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
-                    Roles Activos
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div style={{
-              background: 'linear-gradient(135deg, #ffffff, #f8fafc)',
-              borderRadius: '16px',
-              padding: '25px',
-              border: '1px solid #e5e7eb',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <div style={{
-                  background: 'linear-gradient(135deg, #ef4444, #dc2626)',
-                  borderRadius: '12px',
-                  padding: '15px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <i className="fa-solid fa-ban" style={{ color: 'white', fontSize: '1.5rem' }}></i>
-                </div>
-                <div>
-                  <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                    {roles.filter(r => !r.enabled).length}
-                  </h3>
-                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
-                    Roles Inactivos
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+          <AdvancedStats cards={[
+            { iconClass: 'fa-solid fa-shield-alt', gradient: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', value: roles.length, label: 'Total Roles' },
+            { iconClass: 'fa-solid fa-check-circle', gradient: 'linear-gradient(135deg, #10b981, #059669)', value: roles.filter(r => r.enabled).length, label: 'Roles Activos' },
+            { iconClass: 'fa-solid fa-ban', gradient: 'linear-gradient(135deg, #ef4444, #dc2626)', value: roles.filter(r => !r.enabled).length, label: 'Roles Inactivos' }
+          ]} />
           {/* Tabla de roles mejorada */}
           <div style={{
             background: 'white',

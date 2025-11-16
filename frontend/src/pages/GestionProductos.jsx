@@ -7,6 +7,7 @@ import NavProductos from '../components/NavProductos';
 import SharedListHeaderCard from '../components/SharedListHeaderCard';
 import api from '../api/axiosConfig';
 import { calcularInventario } from '../utils/calculations';
+import AdvancedStats from '../components/AdvancedStats';
 
 // API endpoint constants used in this page
 const API_PRODUCTS = '/api/products';
@@ -928,131 +929,12 @@ const GestionProductos = () => {
             </button>
           </SharedListHeaderCard>
           {/* Estadísticas avanzadas */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-            gap: '20px',
-            marginBottom: '30px'
-          }}>
-            <div style={{
-              background: 'linear-gradient(135deg, #ffffff, #f8fafc)',
-              borderRadius: '16px',
-              padding: '25px',
-              border: '1px solid #e5e7eb',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <div style={{
-                  background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-                  borderRadius: '12px',
-                  padding: '15px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <i className="fa-solid fa-boxes-stacked" style={{ color: 'white', fontSize: '1.5rem' }}></i>
-                </div>
-                <div>
-                  <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                    {productos.length}
-                  </h3>
-                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
-                    Total Productos
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div style={{
-              background: 'linear-gradient(135deg, #ffffff, #f8fafc)',
-              borderRadius: '16px',
-              padding: '25px',
-              border: '1px solid #e5e7eb',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <div style={{
-                  background: 'linear-gradient(135deg, #10b981, #059669)',
-                  borderRadius: '12px',
-                  padding: '15px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <i className="fa-solid fa-check-circle" style={{ color: 'white', fontSize: '1.5rem' }}></i>
-                </div>
-                <div>
-                  <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                    {productos.filter(p => p.activo).length}
-                  </h3>
-                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
-                    Productos Activos
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div style={{
-              background: 'linear-gradient(135deg, #ffffff, #f8fafc)',
-              borderRadius: '16px',
-              padding: '25px',
-              border: '1px solid #e5e7eb',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <div style={{
-                  background: 'linear-gradient(135deg, #ef4444, #dc2626)',
-                  borderRadius: '12px',
-                  padding: '15px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <i className="fa-solid fa-exclamation-triangle" style={{ color: 'white', fontSize: '1.5rem' }}></i>
-                </div>
-                <div>
-                  <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                    {productos.filter(p => p.stock < 10).length}
-                  </h3>
-                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
-                    Stock Bajo
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div style={{
-              background: 'linear-gradient(135deg, #ffffff, #f8fafc)',
-              borderRadius: '16px',
-              padding: '25px',
-              border: '1px solid #e5e7eb',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <div style={{
-                  background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
-                  borderRadius: '12px',
-                  padding: '15px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <i className="fa-solid fa-dollar-sign" style={{ color: 'white', fontSize: '1.5rem' }}></i>
-                </div>
-                <div>
-                  <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                    ${calcularInventario(productos).totalValue.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-                  </h3>
-                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
-                    Valor Total del Inventario
-                  </p>
-                  <p style={{ margin: '5px 0 0 0', color: '#9ca3af', fontSize: '12px' }}>
-                    {productos.length} productos en inventario
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+          <AdvancedStats cards={[
+            { iconClass: 'fa-solid fa-boxes-stacked', gradient: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', value: productos.length, label: 'Total Productos' },
+            { iconClass: 'fa-solid fa-check-circle', gradient: 'linear-gradient(135deg, #10b981, #059669)', value: productos.filter(p => p.activo).length, label: 'Productos Activos' },
+            { iconClass: 'fa-solid fa-exclamation-triangle', gradient: 'linear-gradient(135deg, #ef4444, #dc2626)', value: productos.filter(p => p.stock < 10).length, label: 'Stock Bajo' },
+            { iconClass: 'fa-solid fa-dollar-sign', gradient: 'linear-gradient(135deg, #8b5cf6, #7c3aed)', value: `$${calcularInventario(productos).totalValue.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`, label: 'Valor Total del Inventario' }
+          ]} />
 
           {/* Estadísticas adicionales del inventario */}
           <div style={{

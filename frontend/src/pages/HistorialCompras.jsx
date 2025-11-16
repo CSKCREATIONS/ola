@@ -6,6 +6,7 @@ import Fijo from '../components/Fijo';
 import NavCompras from '../components/NavCompras';
 
 import api from '../api/axiosConfig';
+import AdvancedStats from '../components/AdvancedStats';
 import { randomString } from '../utils/secureRandom';
 import { calcularTotales as calcularTotalesShared, sumarProp } from '../utils/calculations';
 import { isValidEmail } from '../utils/emailHelpers';
@@ -793,99 +794,11 @@ JLA Global Company</textarea>
           </SharedListHeaderCard>
 
           {/* Estadísticas avanzadas */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-            gap: '20px',
-            marginBottom: '30px'
-          }}>
-            <div style={{
-              background: 'linear-gradient(135deg, #ffffff, #f8fafc)',
-              borderRadius: '16px',
-              padding: '25px',
-              border: '1px solid #e5e7eb',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <div style={{
-                  background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-                  borderRadius: '12px',
-                  padding: '15px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <i className="fa-solid fa-shopping-cart" style={{ color: 'white', fontSize: '1.5rem' }} aria-hidden={true}></i>
-                </div>
-                <div>
-                  <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                    {compras.length}
-                  </h3>
-                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
-                    Total Compras
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div style={{
-              background: 'linear-gradient(135deg, #ffffff, #f8fafc)',
-              borderRadius: '16px',
-              padding: '25px',
-              border: '1px solid #e5e7eb',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <div style={{
-                  background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
-                  borderRadius: '12px',
-                  padding: '15px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <i className="fa-solid fa-dollar-sign" style={{ color: 'white', fontSize: '1.5rem' }} aria-hidden={true}></i>
-                </div>
-                <div>
-                  <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                    ${sumarProp(compras, 'total').toLocaleString()}
-                  </h3>
-                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
-                    Valor Total Compras
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div style={{
-              background: 'linear-gradient(135deg, #ffffff, #f8fafc)',
-              borderRadius: '16px',
-              padding: '25px',
-              border: '1px solid #e5e7eb',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <div style={{
-                  background: 'linear-gradient(135deg, #10b981, #059669)',
-                  borderRadius: '12px',
-                  padding: '15px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <i className="fa-solid fa-chart-bar" style={{ color: 'white', fontSize: '1.5rem' }} aria-hidden={true}></i>
-                </div>
-                <div>
-                  <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                    {compras.length > 0 ? (sumarProp(compras, 'total') / compras.length).toLocaleString() : 0}
-                  </h3>
-                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
-                    Promedio por Compra
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+          <AdvancedStats cards={[
+            { iconClass: 'fa-solid fa-shopping-cart', gradient: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', value: compras.length, label: 'Total Compras' },
+            { iconClass: 'fa-solid fa-dollar-sign', gradient: 'linear-gradient(135deg, #8b5cf6, #7c3aed)', value: `$${sumarProp(compras, 'total').toLocaleString()}`, label: 'Valor Total Compras' },
+            { iconClass: 'fa-solid fa-chart-bar', gradient: 'linear-gradient(135deg, #10b981, #059669)', value: compras.length > 0 ? (sumarProp(compras, 'total') / compras.length).toLocaleString() : 0, label: 'Promedio por Compra' }
+          ]} />
           {/* Tabla principal con diseño moderno */}
           <div style={{
             background: 'linear-gradient(135deg, #ffffff, #f8fafc)',
