@@ -78,7 +78,7 @@ const trySetDocWithDOM = (doc, title, htmlContent, style) => {
     console.error('trySetDocWithDOM failed', err);
     return false;
   } finally {
-    try { doc.close(); } catch (e) {}
+    try { doc.close(); } catch (e) { console.warn('trySetDocWithDOM: doc.close() failed', e); }
   }
 };
 
@@ -102,7 +102,7 @@ const trySetDocOuterHTML = (doc, title, htmlContent, style) => {
     console.error('trySetDocOuterHTML failed', err);
     return false;
   } finally {
-    try { doc.close(); } catch (e) {}
+    try { doc.close(); } catch (e) { console.warn('trySetDocOuterHTML: doc.close() failed', e); }
   }
 };
 

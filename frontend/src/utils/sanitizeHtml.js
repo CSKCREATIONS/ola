@@ -19,9 +19,7 @@ function sanitizeAttributes(node) {
   for (const attr of attrs) {
     const name = attr.name.toLowerCase();
     const value = attr.value || '';
-    if (name.startsWith('on')) {
-      node.removeAttribute(attr.name);
-    } else if ((name === 'href' || name === 'src') && isJsOrDataUrl(value)) {
+    if (name.startsWith('on') || ((name === 'href' || name === 'src') && isJsOrDataUrl(value))) {
       node.removeAttribute(attr.name);
     }
   }

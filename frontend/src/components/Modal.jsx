@@ -10,7 +10,7 @@ export default function Modal({ isOpen, onClose, title, children, className, hid
       };
 
       // determine the global event target safely (browser -> window, Node -> global)
-      const target = (typeof window !== 'undefined') ? window : (typeof global !== 'undefined' ? global : null);
+      const target = (typeof globalThis.window !== 'undefined') ? globalThis.window : (typeof global !== 'undefined' ? globalThis.window : null);
       if (target && typeof target.addEventListener === 'function') {
         target.addEventListener('keydown', handleKey);
         return () => target.removeEventListener('keydown', handleKey);

@@ -162,6 +162,35 @@ PermissionsGrid.propTypes = {
    groupButton: PropTypes.node
 };
 
+/* Botones de grupo (radio visual) moved out of EditarRol so it receives data via props */
+function GroupRadio({ permsList, color = '#8b5cf6', permisos = [], toggleGrupoPermisos }) {
+   return (
+      <label style={{
+         ...checkboxLabelStyle,
+         backgroundColor: '#fff',
+         border: `2px solid ${color}`,
+         fontWeight: 600
+      }}>
+         <input
+            type="radio"
+            name={`group-${color}`}
+            onClick={() => toggleGrupoPermisos(permsList)}
+            checked={allIncluded(permisos, permsList)}
+            style={{ ...checkboxStyle, accentColor: color }}
+            readOnly
+         />
+         <span>Todos los permisos</span>
+      </label>
+   );
+}
+
+GroupRadio.propTypes = {
+   permsList: PropTypes.arrayOf(PropTypes.string).isRequired,
+   color: PropTypes.string,
+   permisos: PropTypes.arrayOf(PropTypes.string),
+   toggleGrupoPermisos: PropTypes.func
+};
+
 /* --------------------- Componente principal --------------------- */
 export default function EditarRol({ rol }) {
    const [nombreRol, setNombreRol] = useState('');
@@ -211,30 +240,7 @@ export default function EditarRol({ rol }) {
    /* Toggle grupo de permisos */
    const toggleGrupoPermisos = (grupoPermisos) => {
       const todosMarcados = allIncluded(permisos, grupoPermisos);
-      if (todosMarcados) {
-         setPermisos(prev => prev.filter(p => !grupoPermisos.includes(p)));
-      } else {
-         setPermisos(prev => [...new Set([...prev, ...grupoPermisos])]);
-      }
-   };
-
-   /* Submit */
-   const handleSubmit = async (e) => {
-      e.preventDefault();
-      if (!nombreRol.trim()) return Swal.fire('Error', 'El nombre del rol es obligatorio', 'error');
-      if (permisos.length === 0) return Swal.fire('Error', 'Selecciona al menos un permiso', 'error');
-
-      try {
-         const res = await api.patch(`/api/roles/${rol._id}`, { name: nombreRol, permissions: permisos });
-         const data = res.data || res;
-
-         if (res.status >= 200 && res.status < 300 && data.success) {
-            Swal.fire('Éxito', 'Rol actualizado correctamente', 'success');
-            closeModal('edit-role-modal');
-         } else {
-            Swal.fire('Error', data.message || 'No se pudo actualizar el rol', 'error');
-         }
-      } catch (error) {
+   /* Botones de grupo (radio visual) - moved to top-level GroupRadio component */
          console.error('[EditarRol]', error);
          Swal.fire('Error', 'Error del servidor al actualizar el rol', 'error');
       }
@@ -484,7 +490,7 @@ export default function EditarRol({ rol }) {
                                  { key: 'ordenesCompra.ver', label: 'Ver órdenes de compra' },
                                  { key: 'ordenes.generar', label: 'Generar órdenes' },
                                  { key: 'ordenes.editar', label: 'Editar órdenes' },
-                                 { key: 'ordenes.eliminar', label: 'Eliminar órdenes' },
+                              groupButton={GroupRadio, permsList={MODULE_PERMISSIONS,compras} ,color="#10b981" ,permisos={permisos} ,toggleGrupoPermisos={toggleGrupoPermisos} },
                                  { key: 'ordenes.aprobar', label: 'Aprobar órdenes' },
                                  { key: 'reportesCompras.ver', label: 'Ver reportes' }
                               ]}
@@ -535,7 +541,7 @@ export default function EditarRol({ rol }) {
                            <i className="fa-solid fa-chart-line" aria-hidden={true}></i>
                            <span>Permisos Módulo Ventas</span>
                         </h4>
-
+                              groupButton={<GroupRadio permsList={MODULE_PERMISSIONS.ventas} color="#ec4899" permisos={permisos} toggleGrupoPermisos={toggleGrupoPermisos} />}
                         <div style={{ backgroundColor: 'white', padding: '1.25rem', borderRadius: '10px', border: '1px solid #fce7f3' }}>
                            <PermissionsGrid
                               items={ventasList}
@@ -575,7 +581,7 @@ export default function EditarRol({ rol }) {
          </dialog>
       </div>
    );
-}
+
 
 EditarRol.propTypes = {
    rol: PropTypes.shape({
