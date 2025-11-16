@@ -12,12 +12,8 @@ export default function Modal({ isOpen, onClose, title, children, className, hid
 
       // determine the event target safely, prefer `globalThis.window` for Sonar/consistency
       let target = null;
-      if (typeof globalThis !== 'undefined' && globalThis && globalThis.window) {
-        target = globalThis.window;
-      } else if (typeof globalThis.window !== 'undefined') {
-        target = globalThis.window;
-      } else if (typeof globalThis !== 'undefined') {
-        target = global;
+      if (typeof globalThis !== 'undefined') {
+        target = globalThis?.window ?? globalThis;
       }
 
       if (target && typeof target.addEventListener === 'function') {
@@ -49,7 +45,9 @@ export default function Modal({ isOpen, onClose, title, children, className, hid
     overflow: 'hidden',
     boxShadow: '0 25px 50px -12px rgba(0,0,0,0.35)',
     display: 'flex',
-    flexDirection: 'column'
+    flexDirection: 'column',
+    position: 'relative',
+    zIndex: 1
   };
 
   const bodyStyle = {
@@ -61,21 +59,27 @@ export default function Modal({ isOpen, onClose, title, children, className, hid
   return (
     <div
       style={overlayStyle}
-      role="button"
-      tabIndex={0}
-      aria-label="Close modal"
-      onClick={(e) => {
-        // click on backdrop closes modal when clicking outside dialog
-        if (e.target === e.currentTarget) onClose?.();
-      }}
-      onKeyDown={(e) => {
-        // allow keyboard activation (Enter or Space) to close when the backdrop has focus
-        if ((e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') && e.target === e.currentTarget) {
-          e.preventDefault();
-          onClose?.();
-        }
-      }}
     >
+      <button
+        type="button"
+        aria-label="Close modal"
+        onClick={() => {
+          // clicking the full-screen backdrop button closes the modal
+          onClose?.();
+        }}
+        style={{
+          position: 'absolute',
+          inset: 0,
+          width: '100%',
+          height: '100%',
+          background: 'transparent',
+          border: 'none',
+          padding: 0,
+          margin: 0,
+          cursor: 'default',
+          zIndex: 0
+        }}
+      />
       <dialog style={dialogStyle} className={className || ''} open aria-label={title || 'Modal'}>
         {!hideHeader && (
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1rem', borderBottom: '1px solid #ececec' }}>
