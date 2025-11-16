@@ -161,6 +161,7 @@ const ProductoModal = ({
         width: '90%',
         maxWidth: '900px',
         maxHeight: '90vh',
+        height: '90vh',
         display: 'flex',
         flexDirection: 'column',
         boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)'
@@ -168,7 +169,8 @@ const ProductoModal = ({
         <form onSubmit={handleSubmit} style={{
           display: 'flex',
           flexDirection: 'column',
-          height: '100%'
+          flex: 1,
+          minHeight: 0
         }}>
           {/* Encabezado del modal */}
           <div style={{
@@ -212,6 +214,7 @@ const ProductoModal = ({
           {/* Contenido scrolleable */}
           <div style={{
             flex: 1,
+            minHeight: 0,
             overflowY: 'auto',
             padding: '2rem 2.5rem'
           }}>

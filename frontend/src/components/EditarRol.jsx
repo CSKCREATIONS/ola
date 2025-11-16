@@ -233,15 +233,19 @@ export default function EditarRol({ rol }) {
          }}
         
       >
-         <dialog
+            <dialog
             aria-modal="true"
             aria-labelledby="edit-role-title"
             style={{
                backgroundColor: 'white',
                borderRadius: '20px',
-               maxWidth: '1200px',
-               width: '95%',
-               maxHeight: '95vh',
+                  maxWidth: '1200px',
+                  width: 'min(1200px, calc(100% - 2rem))',
+                 maxHeight: '95vh',
+                 height: '95vh',
+                  margin: 0,
+                  left: '50%',
+                  transform: 'translateX(-50%)',
                overflow: 'hidden',
                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
                display: 'flex',
@@ -251,7 +255,7 @@ export default function EditarRol({ rol }) {
             }}
             open
          >
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column' }}>
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
             {/* Header */}
             <div style={{
                background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
@@ -292,6 +296,7 @@ export default function EditarRol({ rol }) {
             {/* Contenido scrolleable */}
             <div style={{ 
                flex: 1,
+               minHeight: 0,
                overflowY: 'auto',
                padding: '2rem',
                backgroundColor: '#f8fafc'

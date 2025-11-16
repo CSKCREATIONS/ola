@@ -68,37 +68,366 @@ const ModalEditarCliente = ({ cliente, onClose, onSave }) => {
     onSave(form);
   };
 
+  // Cerrar al presionar ESC
+  useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    document.addEventListener('keydown', handleEsc);
+    return () => document.removeEventListener('keydown', handleEsc);
+  }, [onClose]);
+
+  const handleOverlayClick = (e) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
   return (
-    <div className="modal-overlay">
-      <div className="modal-compact">
-        <div className="modal-header">
-          <h5 className="modal-title">Editar Cliente</h5>
-          <button className="modal-close" onClick={onClose}>&times;</button>
-        </div>
-        <form onSubmit={handleSubmit}>
-          <div className="modal-body">
-            <div className="form-group">
-              <label htmlFor="input-cliente-1" className="form-label required">Nombre</label>
-              <input id="input-cliente-1" name="nombre" value={form.nombre} onChange={handleChange} className="form-input" required />
-            </div>
-            <div className="form-group">
-              <label htmlFor="input-cliente-2" className="form-label required">Ciudad</label>
-              <input id="input-cliente-2" name="ciudad" value={form.ciudad} onChange={handleChange} className="form-input" required />
-            </div>
-            <div className="form-group">
-              <label htmlFor="input-cliente-3" className="form-label required">Teléfono</label>
-              <input id="input-cliente-3" name="telefono" value={form.telefono} onChange={handleChange} className="form-input" required />
-            </div>
-            <div className="form-group">
-              <label htmlFor="input-cliente-4" className="form-label required">Correo</label>
-              <input id="input-cliente-4" name="correo" value={form.correo} onChange={handleChange} className="form-input" required />
-            </div>
+      <div
+      onClick={handleOverlayClick}
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1000,
+        padding: '1rem'
+      }}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Editar cliente"
+    >
+      <div
+        style={{
+          backgroundColor: 'white',
+          borderRadius: '15px',
+          width: '90%',
+          maxWidth: '600px',
+          maxHeight: '95vh',
+          display: 'flex',
+          flexDirection: 'column',
+          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+          overflow: 'hidden'
+        }}
+      >
+        {/* Header del modal */}
+        <div
+          style={{
+            background: 'linear-gradient(135deg, #2563eb, #1d4ed8)',
+            color: 'white',
+            padding: '1.5rem 2rem',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexShrink: 0
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <i className="fa-solid fa-user-pen" style={{ fontSize: '1.5rem' }} aria-hidden="true"></i>
+            <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 'bold' }}>
+              Editar Cliente
+            </h2>
           </div>
-          <div className="modal-footer">
-            <button type="button" className="btn btn-cancel" onClick={onClose}>Cancelar</button>
-            <button type="submit" className="btn btn-save">Guardar</button>
+          <button
+            type="button"
+            onClick={onClose}
+            style={{
+              background: 'rgba(255, 255, 255, 0.2)',
+              border: 'none',
+              borderRadius: '8px',
+              padding: '0.5rem',
+              color: 'white',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '1.5rem',
+              width: '40px',
+              height: '40px',
+              transition: 'all 0.3s ease'
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)')}
+            onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)')}
+            aria-label="Cerrar modal"
+          >
+            <i className="fa-solid fa-times" aria-hidden="true"></i>
+          </button>
+        </div>
+
+        {/* Contenido scrolleable - formulario */}
+        <form
+          onSubmit={handleSubmit}
+          style={{
+            flex: 1,
+            overflowY: 'auto',
+            padding: '2rem',
+            backgroundColor: '#f8f9fa',
+            display: 'flex',
+            flexDirection: 'column'
+          }}
+        >
+          <div style={{
+            background: 'white',
+            padding: '1.5rem',
+            borderRadius: '12px',
+            border: '1px solid #e2e8f0',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '1.25rem'
+          }}>
+            <div>
+              <label
+                htmlFor="input-cliente-nombre"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  marginBottom: '0.5rem',
+                  fontWeight: '600',
+                  color: '#374151',
+                  fontSize: '0.95rem'
+                }}
+              >
+                <i className="fa-solid fa-user" style={{ color: '#2563eb' }} aria-hidden="true"></i>
+                <span>Nombre</span>
+                <span style={{ color: '#ef4444' }}>*</span>
+              </label>
+              <input
+                id="input-cliente-nombre"
+                type="text"
+                name="nombre"
+                value={form.nombre || ''}
+                onChange={handleChange}
+                required
+                style={{
+                  width: '100%',
+                  padding: '0.75rem 1rem',
+                  border: '2px solid #e5e7eb',
+                  borderRadius: '8px',
+                  fontSize: '1rem',
+                  transition: 'all 0.3s ease',
+                  backgroundColor: '#f9fafb'
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#2563eb';
+                  e.target.style.backgroundColor = 'white';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = '#e5e7eb';
+                  e.target.style.backgroundColor = '#f9fafb';
+                }}
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="input-cliente-ciudad"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  marginBottom: '0.5rem',
+                  fontWeight: '600',
+                  color: '#374151',
+                  fontSize: '0.95rem'
+                }}
+              >
+                <i className="fa-solid fa-city" style={{ color: '#2563eb' }} aria-hidden="true"></i>
+                <span>Ciudad</span>
+                <span style={{ color: '#ef4444' }}>*</span>
+              </label>
+              <input
+                id="input-cliente-ciudad"
+                type="text"
+                name="ciudad"
+                value={form.ciudad || ''}
+                onChange={handleChange}
+                required
+                style={{
+                  width: '100%',
+                  padding: '0.75rem 1rem',
+                  border: '2px solid #e5e7eb',
+                  borderRadius: '8px',
+                  fontSize: '1rem',
+                  transition: 'all 0.3s ease',
+                  backgroundColor: '#f9fafb'
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#2563eb';
+                  e.target.style.backgroundColor = 'white';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = '#e5e7eb';
+                  e.target.style.backgroundColor = '#f9fafb';
+                }}
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="input-cliente-telefono"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  marginBottom: '0.5rem',
+                  fontWeight: '600',
+                  color: '#374151',
+                  fontSize: '0.95rem'
+                }}
+              >
+                <i className="fa-solid fa-phone" style={{ color: '#2563eb' }} aria-hidden="true"></i>
+                <span>Teléfono</span>
+                <span style={{ color: '#ef4444' }}>*</span>
+              </label>
+              <input
+                id="input-cliente-telefono"
+                type="text"
+                name="telefono"
+                value={form.telefono || ''}
+                onChange={handleChange}
+                required
+                style={{
+                  width: '100%',
+                  padding: '0.75rem 1rem',
+                  border: '2px solid #e5e7eb',
+                  borderRadius: '8px',
+                  fontSize: '1rem',
+                  transition: 'all 0.3s ease',
+                  backgroundColor: '#f9fafb'
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#2563eb';
+                  e.target.style.backgroundColor = 'white';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = '#e5e7eb';
+                  e.target.style.backgroundColor = '#f9fafb';
+                }}
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="input-cliente-correo"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  marginBottom: '0.5rem',
+                  fontWeight: '600',
+                  color: '#374151',
+                  fontSize: '0.95rem'
+                }}
+              >
+                <i className="fa-solid fa-envelope" style={{ color: '#2563eb' }} aria-hidden="true"></i>
+                <span>Correo</span>
+                <span style={{ color: '#ef4444' }}>*</span>
+              </label>
+              <input
+                id="input-cliente-correo"
+                type="email"
+                name="correo"
+                value={form.correo || ''}
+                onChange={handleChange}
+                required
+                style={{
+                  width: '100%',
+                  padding: '0.75rem 1rem',
+                  border: '2px solid #e5e7eb',
+                  borderRadius: '8px',
+                  fontSize: '1rem',
+                  transition: 'all 0.3s ease',
+                  backgroundColor: '#f9fafb'
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#2563eb';
+                  e.target.style.backgroundColor = 'white';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = '#e5e7eb';
+                  e.target.style.backgroundColor = '#f9fafb';
+                }}
+              />
+            </div>
           </div>
         </form>
+
+        {/* Footer con botones */}
+        <div
+          style={{
+            padding: '1.5rem 2rem',
+            borderTop: '1px solid #e2e8f0',
+            display: 'flex',
+            gap: '1rem',
+            justifyContent: 'flex-end',
+            flexShrink: 0,
+            backgroundColor: 'white'
+          }}
+        >
+          <button
+            type="button"
+            onClick={onClose}
+            style={{
+              padding: '0.75rem 1.5rem',
+              border: '2px solid #e5e7eb',
+              borderRadius: '8px',
+              backgroundColor: 'white',
+              color: '#374151',
+              cursor: 'pointer',
+              fontWeight: '600',
+              fontSize: '1rem',
+              transition: 'all 0.3s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = '#9ca3af';
+              e.currentTarget.style.backgroundColor = '#f9fafb';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = '#e5e7eb';
+              e.currentTarget.style.backgroundColor = 'white';
+            }}
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            onClick={handleSubmit}
+            style={{
+              padding: '0.75rem 1.5rem',
+              border: 'none',
+              borderRadius: '8px',
+              background: 'linear-gradient(135deg, #2563eb, #1d4ed8)',
+              color: 'white',
+              cursor: 'pointer',
+              fontWeight: '600',
+              fontSize: '1rem',
+              transition: 'all 0.3s ease',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(37, 99, 235, 0.4)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = 'none';
+            }}
+          >
+            <i className="fa-solid fa-save" aria-hidden="true"></i>
+            <span>Guardar</span>
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -2,12 +2,12 @@ import Fijo from '../components/Fijo'
 import NavVentas from '../components/NavVentas'
 import SharedListHeaderCard from '../components/SharedListHeaderCard'
 import { useLocation } from 'react-router-dom';
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
+import exportElementToPdf from '../utils/exportToPdf';
+
+import Swal from 'sweetalert2';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import React, { useState, useEffect } from 'react';
-import Swal from 'sweetalert2';
 import api from '../api/axiosConfig';
 import CotizacionPreview from '../components/CotizacionPreview';
 import { contarLongitudesObjetoValues } from '../utils/calculations';
@@ -177,19 +177,10 @@ if (!document.getElementById('prospectos-advanced-styles')) {
   styleSheet.textContent = advancedStyles;
   document.head.appendChild(styleSheet);
 }
-
-/**** Funcion para exportar a pdf ***/
+ 
+export default function ProspectosDeCliente() {
+/*** Funcion para exportar a pdf ***/
 const exportarPDF = async () => {
-  // Intentar primero usar el util compartido (bundle separado), si falla usar fallback con html2canvas/jsPDF
-  try {
-    const exportElementToPdf = (await import('../utils/exportToPdf')).default;
-    await exportElementToPdf('tabla_prospectos', 'prospectos.pdf');
-    return;
-  } catch (err) {
-    console.warn('Falling back to html2canvas/jsPDF export due to:', err);
-  }
-
-  // Fallback: captura con html2canvas y genera PDF con jsPDF
   const input = document.getElementById('tabla_prospectos');
   if (!input) {
     console.error('Elemento para exportar no encontrado: tabla_prospectos');
@@ -197,34 +188,39 @@ const exportarPDF = async () => {
   }
 
   try {
-    const canvas = await html2canvas(input);
-    const imgData = canvas.toDataURL('image/png');
-    const pdf = new jsPDF('p', 'mm', 'a4');
-
-    const imgWidth = 190;
-    const pageHeight = 297;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-    let heightLeft = imgHeight;
-    let position = 10;
-
-    pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
-    heightLeft -= pageHeight;
-
-    while (heightLeft > 0) {
-      position = heightLeft - imgHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-    }
-
-    pdf.save('listaProspectos.pdf');
-  } catch (err2) {
-    console.error('Error exportando PDF (html2canvas fallback):', err2);
+    await exportElementToPdf(input, 'prospectos.pdf');
+  } catch (err) {
+    console.error('Error exportando PDF:', err);
   }
 };
 
   const location = useLocation();
+
+  // Estado local
+  const [prospectos, setProspectos] = useState([]);
+  const [cotizacionesMap, setCotizacionesMap] = useState({});
+  const [cotizacionSeleccionada, setCotizacionSeleccionada] = useState(null);
+  const [mostrarPreview, setMostrarPreview] = useState(false);
+  const [expandedEmails, setExpandedEmails] = useState({});
+  const [filtroTexto, setFiltroTexto] = useState('');
+  const [paginaActual, setPaginaActual] = useState(1);
+  const registrosPorPagina = 10;
+
+  // Exportar tabla a Excel
+  const exportToExcel = () => {
+    try {
+      const table = document.getElementById('tabla_prospectos');
+      if (!table) {
+        console.error('Tabla de prospectos no encontrada para exportar');
+        return;
+      }
+      const wb = XLSX.utils.table_to_book(table, { raw: true });
+      const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+      saveAs(new Blob([wbout], { type: 'application/octet-stream' }), 'prospectos.xlsx');
+    } catch (err) {
+      console.error('Error exportando Excel:', err);
+    }
+  };
 
   const fetchProspectos = async () => {
     try {
@@ -802,4 +798,5 @@ const exportarPDF = async () => {
       </div>
     </div>
   )
+}
 

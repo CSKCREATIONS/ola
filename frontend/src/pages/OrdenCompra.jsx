@@ -1009,47 +1009,7 @@ export default function OrdenCompra() {
     setOrdenSeleccionada(null);
   };
 
-  // Función para hacer el modal movible
-  const hacerModalMovible = () => {
-    const modal = document.getElementById('modalMovible');
-    if (!modal) return;
-
-    let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-
-    const dragMouseDown = (e) => {
-      e.preventDefault();
-      pos3 = e.clientX;
-      pos4 = e.clientY;
-      document.onmouseup = closeDragElement;
-      document.onmousemove = elementDrag;
-    };
-
-    const elementDrag = (e) => {
-      e.preventDefault();
-      pos1 = pos3 - e.clientX;
-      pos2 = pos4 - e.clientY;
-      pos3 = e.clientX;
-      pos4 = e.clientY;
-      modal.style.top = (modal.offsetTop - pos2) + "px";
-      modal.style.left = (modal.offsetLeft - pos1) + "px";
-    };
-
-    const closeDragElement = () => {
-      document.onmouseup = null;
-      document.onmousemove = null;
-    };
-
-    const header = modal.querySelector('.modal-header-realista');
-    if (header) {
-      header.onmousedown = dragMouseDown;
-    }
-  };
-
-  useEffect(() => {
-    if (modalDetallesVisible) {
-      setTimeout(hacerModalMovible, 100);
-    }
-  }, [modalDetallesVisible]);
+  // Modal dragging handled inside `DetallesOrdenModal` component; duplicate helper removed
 
   const abrirModalConfirmacion = (orden) => {
     setOrdenAConfirmar(orden);

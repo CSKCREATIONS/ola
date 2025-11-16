@@ -55,6 +55,16 @@ export function openModal(modalId) {
     // Para modales antiguos que aún usan display
     const targetModal = document.getElementById(modalId);
     if (targetModal) {
+        // Si es un <dialog>, usar su API si está disponible
+        try {
+            if (targetModal.tagName === 'DIALOG' && typeof targetModal.showModal === 'function') {
+                targetModal.showModal();
+                return;
+            }
+        } catch (e) {
+            // fallthrough a estilo display
+        }
+
         targetModal.style.display = 'flex';
         return;
     }
@@ -70,7 +80,20 @@ export function openModal(modalId) {
 }
 export function closeModal(modalId) {
     const targetModal = document.getElementById(modalId);
-    targetModal.style.display = 'none'
+    if (!targetModal) return;
+
+    try {
+        // Si es un <dialog> y soporta close(), usarlo
+        if (targetModal.tagName === 'DIALOG' && typeof targetModal.close === 'function') {
+            targetModal.close();
+            return;
+        }
+    } catch (e) {
+        // ignore and fallback to style changes
+    }
+
+    // Fallback: ocultar por CSS si existe style
+    if (targetModal.style) targetModal.style.display = 'none';
 }
 
 

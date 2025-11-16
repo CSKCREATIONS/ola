@@ -201,6 +201,7 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
           maxWidth: '800px',
           width: '95%',
           maxHeight: '95vh',
+          height: '95vh',
           overflow: 'hidden',
           boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
           animation: 'modalSlideIn 0.3s ease-out',
@@ -213,7 +214,7 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
         }}
         open
       >
-        <form onSubmit={guardarCambios} style={{ display: 'flex', flexDirection: 'column' }}>
+        <form onSubmit={guardarCambios} style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
         {/* Header del modal */}
         <div style={{
           background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
@@ -256,6 +257,7 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
         {/* Contenido scrolleable */}
         <div style={{ 
           flex: 1,
+          minHeight: 0,
           overflowY: 'auto',
           padding: '2rem',
           backgroundColor: '#f8fafc'

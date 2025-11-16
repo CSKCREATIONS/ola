@@ -2,8 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Fijo from '../components/Fijo';
 import NavVentas from '../components/NavVentas';
 import PedidoCanceladoPreview from '../components/PedidoCanceladoPreview';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
+import exportElementToPdf from '../utils/exportToPdf';
 import * as XLSX from 'xlsx';
 import Swal from 'sweetalert2';
 import api from '../api/axiosConfig';
@@ -241,33 +240,23 @@ export default function PedidosCancelados() {
     }
   };
 
-  const exportarPDF = () => {
+  const exportarPDF = async () => {
     const elementosNoExport = document.querySelectorAll('.no-export');
     for (const el of elementosNoExport) { el.style.display = 'none'; }
 
     const input = document.getElementById('tabla_cancelados');
-    html2canvas(input).then((canvas) => {
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const imgWidth = 190;
-      const pageHeight = 295;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight;
-      let position = 10;
-
-      pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-      }
-
-      pdf.save('pedidos_cancelados.pdf');
+    if (!input) {
       for (const el of elementosNoExport) { el.style.display = ''; }
-    });
+      return;
+    }
+
+    try {
+      await exportElementToPdf(input, 'pedidos_cancelados.pdf');
+    } catch (err) {
+      console.error('Error exporting PDF:', err);
+    } finally {
+      for (const el of elementosNoExport) { el.style.display = ''; }
+    }
   };
 
   const exportarExcel = () => {
