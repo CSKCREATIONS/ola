@@ -7,187 +7,9 @@ import * as XLSX from 'xlsx';
 import Swal from 'sweetalert2';
 import api from '../api/axiosConfig';
 import { formatDateIso, calculateTotal, sumarTotalesLista } from '../utils/emailHelpers';
+import AdvancedStats from '../components/AdvancedStats';
 
-/* Estilos CSS avanzados para Pedidos Cancelados */
-const pedidosCanceladosStyles = `
-  <style>
-    .pedidos-cancelados-container {
-      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-      min-height: 100vh;
-      padding: 20px;
-    }
-
-    .cancelados-stats-card {
-      background: linear-gradient(135deg, #ffffff, #f8fafc);
-      border-radius: 16px;
-      padding: 25px;
-      border: 1px solid #e5e7eb;
-      transition: all 0.3s ease;
-      cursor: pointer;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .cancelados-stats-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-    }
-
-    .cancelados-stats-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 4px;
-      background: linear-gradient(90deg, #ef4444, #dc2626, #b91c1c);
-    }
-
-    .cancelados-professional-header {
-      background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
-      border-radius: 20px;
-      padding: 30px;
-      margin-bottom: 30px;
-      color: white;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .cancelados-header-decoration {
-      position: absolute;
-      top: -50%;
-      right: -10%;
-      width: 300px;
-      height: 300px;
-      background: rgba(255,255,255,0.1);
-      border-radius: 50%;
-      z-index: 1;
-    }
-
-    .cancelados-icon-container {
-      background: rgba(255,255,255,0.2);
-      border-radius: 16px;
-      padding: 20px;
-      backdrop-filter: blur(10px);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .cancelados-table-modern {
-      background: linear-gradient(135deg, #ffffff, #f8fafc);
-      border-radius: 20px;
-      padding: 30px;
-      border: 1px solid #e5e7eb;
-      backdrop-filter: blur(10px);
-    }
-
-    .cancelados-table-wrapper {
-      overflow-x: auto;
-      border-radius: 12px;
-      border: 1px solid #e5e7eb;
-    }
-
-    .cancelados-table {
-      width: 100%;
-      border-collapse: collapse;
-      background: white;
-      border-radius: 12px;
-      overflow: hidden;
-    }
-
-    .cancelados-table thead tr {
-      background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
-      color: white;
-    }
-
-    .cancelados-table th {
-      padding: 20px 15px;
-      text-align: left;
-      font-size: 14px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .cancelados-table tbody tr {
-      border-bottom: 1px solid #f3f4f6;
-      transition: all 0.3s ease;
-      cursor: pointer;
-    }
-
-    .cancelados-table tbody tr:hover {
-      background: linear-gradient(135deg, #fee2e2, #fecaca);
-      transform: scale(1.01);
-    }
-
-    .cancelados-table td {
-      padding: 20px 15px;
-      font-size: 14px;
-      color: #374151;
-    }
-
-    .cancelados-action-btn {
-      background: linear-gradient(135deg, #ef4444, #dc2626);
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 8px;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      margin: 0 2px;
-    }
-
-    .cancelados-action-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(239, 68, 68, 0.4);
-    }
-
-    .cancelados-action-btn.info {
-      background: linear-gradient(135deg, #3b82f6, #2563eb);
-    }
-
-    .cancelados-action-btn.info:hover {
-      box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4);
-    }
-
-    .cancelados-export-btn {
-      background: linear-gradient(135deg, #6366f1, #8b5cf6);
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 10px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      margin: 0 5px;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .cancelados-export-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
-    }
-
-    .cancelados-badge {
-      background: linear-gradient(135deg, #fee2e2, #fecaca);
-      color: #ef4444;
-      padding: 6px 12px;
-      border-radius: 8px;
-      font-size: 12px;
-      font-weight: 600;
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-    }
-  </style>
-`;
-
-// Styles are injected when the component mounts to avoid module-level side-effects
+// Styles are handled in central CSS files; avoid injecting HTML/CSS from JS.
 
 export default function PedidosCancelados() {
   const [pedidosCancelados, setPedidosCancelados] = useState([]);
@@ -196,6 +18,18 @@ export default function PedidosCancelados() {
   const [datosCancelado, setDatosCancelado] = useState(null);
   const itemsPerPage = 10;
 
+  const statsCards = [
+    { iconClass: 'fa-solid fa-times-circle', gradient: 'linear-gradient(135deg, #ef4444, #dc2626)', value: pedidosCancelados.length, label: 'Pedidos Cancelados' },
+    { iconClass: 'fa-solid fa-dollar-sign', gradient: 'linear-gradient(135deg, #f59e0b, #ea580c)', value: `$${sumarTotalesLista(pedidosCancelados).toLocaleString('es-CO')}`, label: 'Valor Perdido' },
+    { iconClass: 'fa-solid fa-calendar-alt', gradient: 'linear-gradient(135deg, #6366f1, #8b5cf6)', value: pedidosCancelados.filter(p => {
+      const fechaCancelacion = new Date(p.updatedAt || p.createdAt || 0);
+      const hoy = new Date();
+      const diferencia = hoy.getTime() - fechaCancelacion.getTime();
+      const diasDiferencia = Math.ceil(diferencia / (1000 * 3600 * 24));
+      return diasDiferencia <= 30;
+    }).length, label: 'Este Mes' }
+  ];
+
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = pedidosCancelados.slice(indexOfFirstItem, indexOfLastItem);
@@ -203,25 +37,8 @@ export default function PedidosCancelados() {
 
   useEffect(() => {
     cargarPedidosCancelados();
-    // Inject styles for this page at mount time (avoids module-level DOM access)
-    if (typeof document !== 'undefined') {
-      const existing = document.getElementById('pedidos-cancelados-styles');
-      if (!existing) {
-        const styleElement = document.createElement('div');
-        styleElement.id = 'pedidos-cancelados-styles';
-        styleElement.innerHTML = pedidosCanceladosStyles;
-        document.head.appendChild(styleElement);
-      }
-    }
-
-    return () => {
-      try {
-        const el = document.getElementById('pedidos-cancelados-styles');
-        if (el) el.remove();
-      } catch (e) {
-        console.warn('Failed to remove pedidos-cancelados-styles element:', e);
-      }
-    };
+    // no DOM style injection — rely on global CSS
+    return () => {};
   }, []);
 
   const cargarPedidosCancelados = async () => {
@@ -312,87 +129,8 @@ export default function PedidosCancelados() {
           </div>
 
           {/* Estadísticas avanzadas */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-            gap: '20px',
-            marginBottom: '30px'
-          }}>
-            <div className="cancelados-stats-card">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <div style={{
-                  background: 'linear-gradient(135deg, #ef4444, #dc2626)',
-                  borderRadius: '12px',
-                  padding: '15px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <i className="fa-solid fa-times-circle" style={{ color: 'white', fontSize: '1.5rem' }}></i>
-                </div>
-                <div>
-                  <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                    {pedidosCancelados.length}
-                  </h3>
-                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
-                    Pedidos Cancelados
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="cancelados-stats-card">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <div style={{
-                  background: 'linear-gradient(135deg, #f59e0b, #ea580c)',
-                  borderRadius: '12px',
-                  padding: '15px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <i className="fa-solid fa-dollar-sign" style={{ color: 'white', fontSize: '1.5rem' }}></i>
-                </div>
-                <div>
-                  <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                    ${sumarTotalesLista(pedidosCancelados).toLocaleString('es-CO')}
-                  </h3>
-                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
-                    Valor Perdido
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="cancelados-stats-card">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <div style={{
-                  background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                  borderRadius: '12px',
-                  padding: '15px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <i className="fa-solid fa-calendar-alt" style={{ color: 'white', fontSize: '1.5rem' }}></i>
-                </div>
-                <div>
-                  <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                    {pedidosCancelados.filter(p => {
-                      const fechaCancelacion = new Date(p.updatedAt);
-                      const hoy = new Date();
-                      const diferencia = hoy.getTime() - fechaCancelacion.getTime();
-                      const diasDiferencia = Math.ceil(diferencia / (1000 * 3600 * 24));
-                      return diasDiferencia <= 30;
-                    }).length}
-                  </h3>
-                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
-                    Este Mes
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* Estadísticas avanzadas */}
+          <AdvancedStats cards={statsCards} />
 
           {/* Controles de exportación */}
           <div style={{

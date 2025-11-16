@@ -3,200 +3,14 @@ import PropTypes from 'prop-types';
 import Swal from 'sweetalert2';
 import api from '../api/axiosConfig';
 import '../App.css';
+import AdvancedStats from '../components/AdvancedStats';
 import Fijo from '../components/Fijo';
 import NavProductos from '../components/NavProductos';
 
 const API_URL = '/api/subcategories';
 const CATEGORY_API_URL = '/api/categories';
 
-/* Estilos CSS avanzados para Subcategorías */
-const subcategoriasStyles = `
-  <style>
-    .subcategoria-advanced-container {
-      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-      min-height: 100vh;
-      padding: 20px;
-    }
-
-    .subcategoria-stats-card {
-      background: linear-gradient(135deg, #ffffff, #f8fafc);
-      border-radius: 16px;
-      padding: 25px;
-      border: 1px solid #e5e7eb;
-      transition: all 0.3s ease;
-      cursor: pointer;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .subcategoria-stats-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-    }
-
-    .subcategoria-stats-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 4px;
-      background: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899);
-    }
-
-    .subcategoria-professional-header {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      border-radius: 20px;
-      padding: 30px;
-      margin-bottom: 30px;
-      color: white;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .subcategoria-header-decoration {
-      position: absolute;
-      top: -50%;
-      right: -10%;
-      width: 300px;
-      height: 300px;
-      background: rgba(255,255,255,0.1);
-      border-radius: 50%;
-      z-index: 1;
-    }
-
-    .subcategoria-icon-container {
-      background: rgba(255,255,255,0.2);
-      border-radius: 16px;
-      padding: 20px;
-      backdrop-filter: blur(10px);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .subcategoria-table-modern {
-      background: linear-gradient(135deg, #ffffff, #f8fafc);
-      border-radius: 20px;
-      padding: 30px;
-      border: 1px solid #e5e7eb;
-      backdrop-filter: blur(10px);
-    }
-
-    .subcategoria-table-wrapper {
-      overflow-x: auto;
-      border-radius: 12px;
-      border: 1px solid #e5e7eb;
-    }
-
-    .subcategoria-table {
-      width: 100%;
-      border-collapse: collapse;
-      background: white;
-      border-radius: 12px;
-      overflow: hidden;
-    }
-
-    .subcategoria-table thead tr {
-      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-      color: white;
-    }
-
-    .subcategoria-table th {
-      padding: 20px 15px;
-      text-align: left;
-      font-size: 14px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .subcategoria-table tbody tr {
-      border-bottom: 1px solid #f3f4f6;
-      transition: all 0.3s ease;
-      cursor: pointer;
-    }
-
-    .subcategoria-table tbody tr:hover {
-      background: linear-gradient(135deg, #f8fafc, #f1f5f9);
-      transform: scale(1.01);
-    }
-
-    .subcategoria-table td {
-      padding: 20px 15px;
-      font-size: 14px;
-      color: #374151;
-    }
-
-    .subcategoria-action-btn {
-      background: linear-gradient(135deg, #6366f1, #8b5cf6);
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 8px;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      margin: 0 2px;
-    }
-
-    .subcategoria-action-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(99, 102, 241, 0.4);
-    }
-
-    .subcategoria-action-btn.danger {
-      background: linear-gradient(135deg, #ef4444, #dc2626);
-    }
-
-    .subcategoria-action-btn.danger:hover {
-      box-shadow: 0 5px 15px rgba(239, 68, 68, 0.4);
-    }
-
-    .subcategoria-add-btn {
-      background: linear-gradient(135deg, #10b981, #059669);
-      color: white;
-      border: none;
-      padding: 12px 24px;
-      border-radius: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      margin-bottom: 20px;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .subcategoria-add-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
-    }
-
-    .subcategoria-category-badge {
-      background: linear-gradient(135deg, #fef3c7, #fde68a);
-      color: #d97706;
-      padding: 6px 12px;
-      border-radius: 8px;
-      font-size: 12px;
-      font-weight: 600;
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-    }
-  </style>
-`;
-
-if (typeof document !== 'undefined') {
-  const existingStyles = document.getElementById('subcategoria-advanced-styles');
-  if (!existingStyles) {
-    const styleElement = document.createElement('div');
-    styleElement.id = 'subcategoria-advanced-styles';
-    styleElement.innerHTML = subcategoriasStyles;
-    document.head.appendChild(styleElement);
-  }
-}
+// Styles are handled in central CSS files; avoid injecting HTML/CSS from JS.
 
 const SubcategoriaModal = ({ subcategoria, categorias, onClose, onSave }) => {
   const [name, setName] = useState(subcategoria?.name || '');
@@ -535,6 +349,12 @@ const GestionSubcategorias = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [subcategoriaEditando, setSubcategoriaEditando] = useState(null);
 
+  const statsCards = [
+    { iconClass: 'fa-solid fa-sitemap', gradient: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', value: subcategorias.length, label: 'Total Subcategorías' },
+    { iconClass: 'fa-solid fa-check-circle', gradient: 'linear-gradient(135deg, #10b981, #059669)', value: subcategorias.filter(s => s.activo !== false).length, label: 'Subcategorías Activas' },
+    { iconClass: 'fa-solid fa-tags', gradient: 'linear-gradient(135deg, #8b5cf6, #7c3aed)', value: categorias.length, label: 'Categorías Disponibles' }
+  ];
+
   // 🔹 Estado para paginación
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(5); // Cambia este valor para mostrar más/menos filas
@@ -693,81 +513,8 @@ const GestionSubcategorias = () => {
           </div>
 
           {/* Estadísticas avanzadas */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-            gap: '20px',
-            marginBottom: '30px'
-          }}>
-            <div className="subcategoria-stats-card">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <div style={{
-                  background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-                  borderRadius: '12px',
-                  padding: '15px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <i className="fa-solid fa-sitemap" style={{ color: 'white', fontSize: '1.5rem' }}></i>
-                </div>
-                <div>
-                  <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                    {subcategorias.length}
-                  </h3>
-                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
-                    Total Subcategorías
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="subcategoria-stats-card">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <div style={{
-                  background: 'linear-gradient(135deg, #10b981, #059669)',
-                  borderRadius: '12px',
-                  padding: '15px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <i className="fa-solid fa-check-circle" style={{ color: 'white', fontSize: '1.5rem' }}></i>
-                </div>
-                <div>
-                  <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                    {subcategorias.filter(s => s.activo !== false).length}
-                  </h3>
-                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
-                    Subcategorías Activas
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="subcategoria-stats-card">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <div style={{
-                  background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
-                  borderRadius: '12px',
-                  padding: '15px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <i className="fa-solid fa-tags" style={{ color: 'white', fontSize: '1.5rem' }}></i>
-                </div>
-                <div>
-                  <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                    {categorias.length}
-                  </h3>
-                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
-                    Categorías Disponibles
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* Estadísticas avanzadas */}
+          <AdvancedStats cards={statsCards} />
 
           {/* Botón agregar */}
           <button 
