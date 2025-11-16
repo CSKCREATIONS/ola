@@ -554,21 +554,8 @@ exports.enviarPedidoAgendadoPorCorreo = async (req, res) => {
     const destinatario = correoDestino || pedido.cliente?.correo;
     const asuntoFinal = asunto || `Pedido Agendado ${pedido.numeroPedido} - ${process.env.COMPANY_NAME || 'JLA Global Company'}`;
 
-    // Generar PDF del pedido
-    let pdfAttachment = null;
-    try {
-      console.log('📄 Generando PDF del pedido agendado...');
-      const pdfService = new PDFService();
-      const pdfData = await pdfService.generarPDFPedido(pedido, 'agendado');
-      pdfAttachment = {
-        filename: pdfData.filename,
-        content: pdfData.buffer,
-        contentType: pdfData.contentType
-      };
-      console.log('✅ PDF generado exitosamente:', pdfData.filename);
-    } catch (pdfError) {
-      console.error('⚠️ Error generando PDF:', pdfError.message);
-    }
+    // Generar PDF del pedido (helper centralizado)
+    let pdfAttachment = await generatePdfAttachmentForPedido(pedido, 'agendado');
 
     console.log('📄 VERIFICACIÓN: Vamos a generar HTML de PEDIDO AGENDADO');
     console.log('📋 Datos del pedido:', {
@@ -626,21 +613,8 @@ exports.enviarPedidoDevueltoPorCorreo = async (req, res) => {
     const destinatario = correoDestino || pedido.cliente?.correo;
     const asuntoFinal = asunto || `Pedido Devuelto ${pedido.numeroPedido} - ${process.env.COMPANY_NAME || 'JLA Global Company'}`;
 
-    // Generar PDF del pedido
-    let pdfAttachment = null;
-    try {
-      console.log('📄 Generando PDF del pedido devuelto...');
-      const pdfService = new PDFService();
-      const pdfData = await pdfService.generarPDFPedido(pedido, 'devuelto');
-      pdfAttachment = {
-        filename: pdfData.filename,
-        content: pdfData.buffer,
-        contentType: pdfData.contentType
-      };
-      console.log('✅ PDF generado exitosamente:', pdfData.filename);
-    } catch (pdfError) {
-      console.error('⚠️ Error generando PDF:', pdfError.message);
-    }
+    // Generar PDF del pedido (helper centralizado)
+    let pdfAttachment = await generatePdfAttachmentForPedido(pedido, 'devuelto');
 
     const htmlContent = generarHTMLPedidoDevuelto(pedido, mensaje, motivoDevolucion);
 
@@ -683,21 +657,8 @@ exports.enviarPedidoCanceladoPorCorreo = async (req, res) => {
     const destinatario = correoDestino || pedido.cliente?.correo;
     const asuntoFinal = asunto || `Pedido Cancelado ${pedido.numeroPedido} - ${process.env.COMPANY_NAME || 'JLA Global Company'}`;
 
-    // Generar PDF del pedido
-    let pdfAttachment = null;
-    try {
-      console.log('📄 Generando PDF del pedido cancelado...');
-      const pdfService = new PDFService();
-      const pdfData = await pdfService.generarPDFPedido(pedido, 'cancelado');
-      pdfAttachment = {
-        filename: pdfData.filename,
-        content: pdfData.buffer,
-        contentType: pdfData.contentType
-      };
-      console.log('✅ PDF generado exitosamente:', pdfData.filename);
-    } catch (pdfError) {
-      console.error('⚠️ Error generando PDF:', pdfError.message);
-    }
+    // Generar PDF del pedido (helper centralizado)
+    let pdfAttachment = await generatePdfAttachmentForPedido(pedido, 'cancelado');
 
     const htmlContent = generarHTMLPedidoCancelado(pedido, mensaje, motivoCancelacion);
 
@@ -775,6 +736,59 @@ async function enviarCorreoConAttachment(destinatario, asunto, htmlContent, pdfA
 
   console.log('⚠️ No se pudo enviar el correo (servicios no configurados)');
   throw new Error('Servicios de correo no configurados correctamente');
+}
+
+// Helper: generar un attachment PDF para un pedido según tipo ('agendado','devuelto','cancelado',...)
+async function generatePdfAttachmentForPedido(pedido, tipo) {
+  try {
+    console.log(`📄 Intentando generar PDF (tipo=${tipo}) para pedido ${pedido?.numeroPedido || pedido?._id || 'N/A'}`);
+    const pdfService = new PDFService();
+    const pdfData = await pdfService.generarPDFPedido(pedido, tipo);
+    if (pdfData) {
+      console.log('✅ PDF generado en helper:', pdfData.filename || '(sin nombre)');
+      return {
+        filename: pdfData.filename,
+        content: pdfData.buffer,
+        contentType: pdfData.contentType
+      };
+    }
+  } catch (err) {
+    console.error('⚠️ Error generando PDF en helper generatePdfAttachmentForPedido:', err?.message || err);
+  }
+  return null;
+}
+
+// Helper: construir objeto de datos de remisión usado para generación de PDFs
+function buildRemisionPdfData(pedido, numeroRemision, options = {}) {
+  const { observaciones = null } = options;
+
+  const productos = (pedido.productos || []).map(p => ({
+    nombre: p.product?.name || p.product?.nombre || 'Producto',
+    cantidad: p.cantidad,
+    precioUnitario: p.product?.price || p.precioUnitario || 0,
+    total: (p.cantidad || 0) * (p.product?.price || p.precioUnitario || 0),
+    codigo: p.product?.codigo || 'N/A'
+  }));
+
+  const total = productos.reduce((sum, pr) => sum + (Number(pr.total) || 0), 0);
+
+  return {
+    numeroRemision: numeroRemision,
+    pedidoReferencia: pedido._id,
+    codigoPedido: pedido.numeroPedido,
+    cliente: {
+      nombre: pedido.cliente?.nombre || pedido.cliente?.nombreCompleto || 'Cliente',
+      correo: pedido.cliente?.correo || pedido.cliente?.email || null,
+      telefono: pedido.cliente?.telefono || pedido.cliente?.telefonoMovil || null,
+      ciudad: pedido.cliente?.ciudad || null
+    },
+    productos,
+    fechaRemision: new Date(),
+    responsable: null,
+    estado: 'activa',
+    observaciones: observaciones || undefined,
+    total
+  };
 }
 
 // Note: `generarHTMLPedidoAgendado` implementation intentionally moved later in the file to
@@ -1407,21 +1421,8 @@ exports.enviarPedidoPorCorreo = async (req, res) => {
     // Generar HTML
     const htmlContent = generarHTMLPedidoAgendado(pedido, mensajeFinal);
 
-    // Intentar generar PDF (no fatal)
-    let pdfAttachment = null;
-    try {
-      const pdfService = new PDFService();
-      const pdfData = await pdfService.generarPDFPedido(pedido, 'agendado');
-      if (pdfData) {
-        pdfAttachment = {
-          filename: pdfData.filename,
-          content: pdfData.buffer,
-          contentType: pdfData.contentType
-        };
-      }
-    } catch (e) {
-      console.error('⚠️ Error generando PDF (continuando sin adjunto):', e?.message || e);
-    }
+    // Intentar generar PDF (no fatal) - delegado a helper
+    let pdfAttachment = await generatePdfAttachmentForPedido(pedido, 'agendado');
 
     // Delegar envío al helper centralizado (maneja Gmail/SendGrid/errores)
     await enviarCorreoConAttachment(destinatario, asuntoFinal, htmlContent, pdfAttachment);
@@ -1484,31 +1485,8 @@ exports.enviarRemisionPorCorreo = async (req, res) => {
       console.log('📄 Generando PDF de la remisión...');
       const pdfService = new PDFService();
       
-      // Crear objeto remisión para el PDF
-      const remisionData = {
-        numeroRemision: numeroRemision,
-        pedidoReferencia: pedido._id,
-        codigoPedido: pedido.numeroPedido,
-        cliente: {
-          nombre: pedido.cliente.nombre,
-          correo: pedido.cliente.correo,
-          telefono: pedido.cliente.telefono,
-          ciudad: pedido.cliente.ciudad
-        },
-        productos: pedido.productos.map(p => ({
-          nombre: p.product?.name || 'Producto',
-          cantidad: p.cantidad,
-          precioUnitario: p.product?.price || 0,
-          total: (p.cantidad || 0) * (p.product?.price || 0),
-          codigo: p.product?.codigo || 'N/A'
-        })),
-        fechaRemision: new Date(),
-        responsable: null,
-        estado: 'activa',
-        total: pedido.productos.reduce((total, p) => {
-          return total + ((p.cantidad || 0) * (p.product?.price || 0));
-        }, 0)
-      };
+      // Crear objeto remisión para el PDF (centralizado)
+      const remisionData = buildRemisionPdfData(pedido, numeroRemision);
       
       const pdfData = await pdfService.generarPDFRemision(remisionData);
       pdfAttachment = {
@@ -1569,32 +1547,8 @@ exports.enviarRemisionFormalPorCorreo = async (req, res) => {
       console.log('📄 Generando PDF de la remisión formal...');
       const pdfService = new PDFService();
       
-      // Crear objeto remisión formal para el PDF
-      const remisionFormalData = {
-        numeroRemision: numeroRemisionFinal,
-        pedidoReferencia: pedido._id,
-        codigoPedido: pedido.numeroPedido,
-        cliente: {
-          nombre: pedido.cliente.nombre,
-          correo: pedido.cliente.correo,
-          telefono: pedido.cliente.telefono,
-          ciudad: pedido.cliente.ciudad
-        },
-        productos: pedido.productos.map(p => ({
-          nombre: p.product?.name || 'Producto',
-          cantidad: p.cantidad,
-          precioUnitario: p.product?.price || 0,
-          total: (p.cantidad || 0) * (p.product?.price || 0),
-          codigo: p.product?.codigo || 'N/A'
-        })),
-        fechaRemision: new Date(),
-        responsable: null,
-        estado: 'activa',
-        observaciones: mensaje,
-        total: pedido.productos.reduce((total, p) => {
-          return total + ((p.cantidad || 0) * (p.product?.price || 0));
-        }, 0)
-      };
+      // Crear objeto remisión formal para el PDF (centralizado)
+      const remisionFormalData = buildRemisionPdfData(pedido, numeroRemisionFinal, { observaciones: mensaje });
       
       const pdfData = await pdfService.generarPDFRemision(remisionFormalData);
       pdfAttachment = {
