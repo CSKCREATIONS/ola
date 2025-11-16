@@ -4,7 +4,9 @@
 // a dedicated library like DOMPurify, but provides basic protection.
 
 function removeDangerousElements(doc) {
-  doc.querySelectorAll('script, style, iframe, object, embed').forEach(el => el.remove());
+  for (const el of doc.querySelectorAll('script, style, iframe, object, embed')) {
+    el.remove();
+  }
 }
 
 function isJsOrDataUrl(value) {

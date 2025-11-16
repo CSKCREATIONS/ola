@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import PropTypes from 'prop-types';
 /* global globalThis */
 import { registerModalUsuario } from "../funciones/modalController";
 import Swal from "sweetalert2";
@@ -39,7 +40,6 @@ const STYLES = {
     borderRadius: '0 0 20px 20px', flexShrink: 0
   }
 };
-
 function FieldLabel({ htmlFor, children, iconColor, iconClass = 'fa-solid fa-user' }) {
   return (
     <label htmlFor={htmlFor} style={{
@@ -51,6 +51,19 @@ function FieldLabel({ htmlFor, children, iconColor, iconClass = 'fa-solid fa-use
     </label>
   );
 }
+
+FieldLabel.propTypes = {
+  htmlFor: PropTypes.string,
+  children: PropTypes.node,
+  iconColor: PropTypes.string,
+  iconClass: PropTypes.string
+};
+
+FieldLabel.defaultProps = {
+  iconClass: 'fa-solid fa-user',
+  iconColor: undefined
+};
+
 
 function TextInput({ id, type = 'text', value, onChange, placeholder, required, autoFocus }) {
   return (
@@ -75,6 +88,26 @@ function TextInput({ id, type = 'text', value, onChange, placeholder, required, 
     />
   );
 }
+
+TextInput.propTypes = {
+  id: PropTypes.string,
+  type: PropTypes.string,
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  onChange: PropTypes.func,
+  placeholder: PropTypes.string,
+  required: PropTypes.bool,
+  autoFocus: PropTypes.bool
+};
+
+TextInput.defaultProps = {
+  id: undefined,
+  type: 'text',
+  value: '',
+  onChange: () => {},
+  placeholder: '',
+  required: false,
+  autoFocus: false
+};
 
 function SelectInput({ id, value, onChange, disabled, children, placeholderText }) {
   return (
@@ -102,6 +135,24 @@ function SelectInput({ id, value, onChange, disabled, children, placeholderText 
     </select>
   );
 }
+
+SelectInput.propTypes = {
+  id: PropTypes.string,
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  onChange: PropTypes.func,
+  disabled: PropTypes.bool,
+  children: PropTypes.node,
+  placeholderText: PropTypes.string
+};
+
+SelectInput.defaultProps = {
+  id: undefined,
+  value: '',
+  onChange: () => {},
+  disabled: false,
+  children: null,
+  placeholderText: ''
+};
 
 export default function AgregarUsuario() {
   const [isVisible, setIsVisible] = useState(false);

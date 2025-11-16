@@ -470,7 +470,12 @@ exports.remisionarPedido = async (req, res) => {
     await nuevaRemision.save();
 
     // Optionally link remision to pedido
-    try { await Pedido.findByIdAndUpdate(pedido._id, { remisionReferencia: nuevaRemision._id, estado: 'remisionada' }); } catch (e) { /* non-fatal */ }
+    try {
+      await Pedido.findByIdAndUpdate(pedido._id, { remisionReferencia: nuevaRemision._id, estado: 'remisionada' });
+    } catch (e) {
+      // Log the error as a non-fatal warning so it's handled and visible in logs
+      console.warn('⚠️ No se pudo vincular la remisión al pedido (no bloqueante):', e?.message || e);
+    }
 
     return res.status(201).json({ message: 'Remisión creada', remision: nuevaRemision });
   } catch (err) {

@@ -88,12 +88,33 @@ const PermissionCheckbox = ({ checked, onChange, label }) => (
    </label>
 );
 
+PermissionCheckbox.propTypes = {
+   checked: PropTypes.bool,
+   onChange: PropTypes.func,
+   label: PropTypes.node.isRequired
+};
+
+PermissionCheckbox.defaultProps = {
+   checked: false,
+   onChange: () => {}
+};
+
 const PermissionRadioAll = ({ onClick, checked }) => (
    <label className="form-option form-option--no-margin" style={{ display: 'block', marginTop: 8 }}>
       <input type="radio" name="allPermissions" onClick={onClick} checked={checked} readOnly />
       <span style={{ marginLeft: 8 }}>Todos los permisos</span>
    </label>
 );
+
+PermissionRadioAll.propTypes = {
+   onClick: PropTypes.func,
+   checked: PropTypes.bool
+};
+
+PermissionRadioAll.defaultProps = {
+   onClick: () => {},
+   checked: false
+};
 
 /* ---------- Permission sets ---------- */
 const permisosUsuarios = [
@@ -152,9 +173,17 @@ export default function AgregarRol() {
       return () => {
          try {
             if (typeof globalThis !== 'undefined' && globalThis.openModalRol) {
-               try { delete globalThis.openModalRol; } catch (e) { /* ignore */ }
+               try {
+                  delete globalThis.openModalRol;
+               } catch (err) {
+                  // Log the error when attempting to delete the global to aid debugging
+                  console.debug('Failed to delete global.openModalRol during cleanup:', err);
+               }
             }
-         } catch (e) { /* ignore */ }
+         } catch (err) {
+            // Log any unexpected errors during cleanup
+            console.debug('Unexpected error during modal cleanup:', err);
+         }
       };
    }, []);
 

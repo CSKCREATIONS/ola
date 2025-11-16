@@ -303,10 +303,7 @@ export default function PedidosEntregados() {
     for (const el of elementosNoExport) { el.style.display = ''; }
   };
   
-  // helper: suma total
-  const computeTotal = () => {
-    return pedidosEntregados.reduce((sum, p) => sum + (p.total || 0), 0);
-  };
+  // helper: suma total (computeTotal removed because it was unused)
 
   // helper: fecha dentro de n dias
   const isWithinLastNDays = (dateStr, days = 30) => {

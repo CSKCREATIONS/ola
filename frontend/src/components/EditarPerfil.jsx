@@ -1,9 +1,187 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 /* global globalThis */
 import Swal from 'sweetalert2';
 import { closeModal } from '../funciones/animaciones';
 import api from '../api/axiosConfig';
 import { useNavigate } from 'react-router-dom';
+
+const styles = {
+  overlay: {
+    position: 'fixed',
+    inset: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    display: 'none',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1000,
+    backdropFilter: 'blur(4px)',
+    padding: '1rem'
+  },
+  dialog: {
+    backgroundColor: 'white',
+    borderRadius: '20px',
+    maxWidth: '900px',
+    width: '95%',
+    maxHeight: '95vh',
+    overflow: 'hidden',
+    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+    display: 'flex',
+    flexDirection: 'column',
+    border: 'none',
+    padding: 0
+  },
+  header: {
+    background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
+    color: 'white',
+    padding: '2rem',
+    borderRadius: '20px 20px 0 0'
+  },
+  content: {
+    flex: 1,
+    overflowY: 'auto',
+    padding: '2rem',
+    backgroundColor: '#f8fafc'
+  },
+  section: (accent) => ({
+    background: 'white',
+    padding: '1.5rem',
+    borderRadius: '12px',
+    marginBottom: '1.5rem',
+    border: '1px solid #e2e8f0',
+    borderLeft: `4px solid ${accent}`
+  }),
+  label: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    marginBottom: '0.5rem',
+    fontWeight: '600',
+    color: '#374151',
+    fontSize: '0.95rem'
+  },
+  input: {
+    width: '100%',
+    padding: '0.875rem 1rem',
+    border: '2px solid #e5e7eb',
+    borderRadius: '10px',
+    fontSize: '0.95rem',
+    transition: 'all 0.3s ease',
+    backgroundColor: '#ffffff',
+    fontFamily: 'inherit',
+    boxSizing: 'border-box'
+  },
+  footer: {
+    display: 'flex',
+    gap: '1rem',
+    justifyContent: 'flex-end',
+    padding: '2rem',
+    borderTop: '2px solid #e5e7eb',
+    backgroundColor: 'white',
+    borderRadius: '0 0 20px 20px'
+  },
+  btnCancel: {
+    padding: '0.875rem 1.5rem',
+    border: '2px solid #e5e7eb',
+    borderRadius: '10px',
+    backgroundColor: 'white',
+    color: '#374151',
+    cursor: 'pointer',
+    fontWeight: '600',
+    fontSize: '0.95rem',
+    transition: 'all 0.15s ease',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem'
+  },
+  btnSave: {
+    padding: '0.875rem 1.5rem',
+    border: 'none',
+    borderRadius: '10px',
+    background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
+    color: 'white',
+    cursor: 'pointer',
+    fontWeight: '600',
+    fontSize: '0.95rem',
+    transition: 'all 0.15s ease',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    boxShadow: '0 4px 6px -1px rgba(99, 102, 241, 0.3)'
+  }
+};
+
+function TextInput({
+  id,
+  name,
+  type = 'text',
+  value,
+  onChange,
+  placeholder,
+  disabled = false,
+  focusColor,
+  focusBox,
+  style = {}
+}) {
+  const handleFocus = useCallback((e) => {
+    const color = focusColor || '#6366f1';
+    const box = focusBox || 'rgba(99, 102, 241, 0.1)';
+    if (e?.target?.style) {
+      e.target.style.borderColor = color;
+      e.target.style.boxShadow = `0 0 0 3px ${box}`;
+    }
+  }, [focusColor, focusBox]);
+
+  const handleBlur = useCallback((e) => {
+    try {
+      e.target.style.borderColor = '#e5e7eb';
+      e.target.style.boxShadow = 'none';
+    } catch (_) {}
+  }, []);
+
+  return (
+    <input
+      id={id}
+      name={name}
+      type={type}
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      disabled={disabled}
+      style={{ ...styles.input, ...(disabled ? { backgroundColor: '#f3f4f6', cursor: 'not-allowed', color: '#6b7280' } : {}), ...style }}
+      onFocus={handleFocus}
+      onBlur={handleBlur}
+      data-focus-color={focusColor}
+      data-focus-box={focusBox}
+    />
+  );
+}
+
+function Section({ titleIcon, title, accent = '#6366f1', children, collapsible = false, open = true, onToggle }) {
+  return (
+    <div style={styles.section(accent)}>
+      {collapsible ? (
+        <button
+          type="button"
+          onClick={onToggle}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', marginBottom: open ? '1.5rem' : 0, background: 'transparent', border: 'none', padding: 0, width: '100%' }}
+        >
+          <h4 style={{ margin: 0, color: '#1e293b', fontSize: '1.05rem', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <i className={titleIcon} style={{ color: accent }} aria-hidden />
+            <span>{title}</span>
+          </h4>
+          <i className={`fa-solid fa-chevron-${open ? 'up' : 'down'}`} style={{ color: '#6b7280' }} aria-hidden />
+        </button>
+      ) : (
+        <h4 style={{ margin: '0 0 1.5rem 0', color: '#1e293b', fontSize: '1.05rem', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <i className={titleIcon} style={{ color: accent }} aria-hidden />
+          <span>{title}</span>
+        </h4>
+      )}
+
+      {children}
+    </div>
+  );
+}
 
 export default function EditarPerfil() {
   const [form, setForm] = useState({});
@@ -27,592 +205,181 @@ export default function EditarPerfil() {
     });
   }, []);
 
-  // Shared focus/blur handlers to reduce duplicated inline code
-  const handleFocus = (e) => {
-    const color = e?.target?.dataset?.focusColor || '#6366f1';
-    const box = e?.target?.dataset?.focusBox || 'rgba(99, 102, 241, 0.1)';
-    // Only apply styles if the event target is a DOM element with a style property
-    if (e?.target?.style) {
-      e.target.style.borderColor = color;
-      e.target.style.boxShadow = `0 0 0 3px ${box}`;
-    } else if (typeof process !== 'undefined' && process.env && process.env.NODE_ENV !== 'production') {
-      // Not a DOM element — no-op, but log in development to aid debugging
-      console.warn('handleFocus: event target is not a DOM element', e?.target);
-    }
-  };
-
-  const handleBlur = (e) => {
-    try {
-      e.target.style.borderColor = '#e5e7eb';
-      e.target.style.boxShadow = 'none';
-    } catch (error_) {
-      // Only log in non-production to avoid noisy output in production
-      if (typeof process !== 'undefined' && process.env && process.env.NODE_ENV !== 'production') {
-        // provide context to help debugging focus/blur issues
-        // eslint-disable-next-line no-console
-        console.warn('EditarPerfil.handleBlur: failed to reset element styles', error_);
-      }
-    }
-  };
-
-  // Attach Escape key handler at document level to avoid adding keyboard
-  // listeners directly to non-interactive elements (satisfies a11y lint rules)
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape' || e.key === 'Esc') {
-        closeModal('editar-perfil');
-      }
+      if (e.key === 'Escape' || e.key === 'Esc') closeModal('editar-perfil');
     };
-
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  const handleChange = useCallback((e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  }, []);
 
-  const handlePasswordChange = (e) => {
-    setPasswords({ ...passwords, [e.target.name]: e.target.value });
-  };
+  const handlePasswordChange = useCallback((e) => {
+    const { name, value } = e.target;
+    setPasswords((prev) => ({ ...prev, [name]: value }));
+  }, []);
 
-  const guardarCambios = async (e) => {
-    e.preventDefault();
-    const user = JSON.parse(localStorage.getItem('user'));
+  const guardarCambios = useCallback(
+    async (e) => {
+      e.preventDefault();
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
 
-    if (passwords.new || passwords.confirm) {
-      if (passwords.new !== passwords.confirm) {
-        return Swal.fire('Error', 'Las contraseñas no coinciden', 'error');
-      }
-      if (passwords.new.length < 6) {
-        return Swal.fire('Error', 'La contraseña debe tener al menos 6 caracteres', 'error');
-      }
-    }
-
-    try {
-      const res = await api.patch('/api/users/me', form);
-      const resData = res.data || res;
-      if (!(res.status >= 200 && res.status < 300)) {
-        throw new Error(resData.message || 'Error al actualizar el perfil');
+      if (passwords.new || passwords.confirm) {
+        if (passwords.new !== passwords.confirm) {
+          return Swal.fire('Error', 'Las contraseñas no coinciden', 'error');
+        }
+        if (passwords.new.length < 6) {
+          return Swal.fire('Error', 'La contraseña debe tener al menos 6 caracteres', 'error');
+        }
       }
 
-      if (passwords.new && passwords.confirm && passwords.new === passwords.confirm) {
-        const resPassword = await api.patch('/api/users/change-password', {
-          newPassword: passwords.new
-        });
-        const data = resPassword.data || resPassword;
-        if (!(resPassword.status >= 200 && resPassword.status < 300)) {
-          throw new Error(data.message || 'Error al cambiar la contraseña');
+      try {
+        const res = await api.patch('/api/users/me', form);
+        const resData = res.data || res;
+        if (!(res.status >= 200 && res.status < 300)) throw new Error(resData.message || 'Error al actualizar el perfil');
+
+        if (passwords.new && passwords.confirm && passwords.new === passwords.confirm) {
+          const resPassword = await api.patch('/api/users/change-password', { newPassword: passwords.new });
+          const data = resPassword.data || resPassword;
+          if (!(resPassword.status >= 200 && resPassword.status < 300)) throw new Error(data.message || 'Error al cambiar la contraseña');
+
+          await Swal.fire({
+            title: 'Contraseña actualizada',
+            text: 'Tu sesión expirará. Debes iniciar sesión nuevamente.',
+            icon: 'info',
+            confirmButtonText: 'OK'
+          });
+          navigate('/');
+          return;
         }
 
-        await Swal.fire({
-          title: 'Contraseña actualizada',
-          text: 'Tu sesión expirará. Debes iniciar sesión nuevamente.',
-          icon: 'info',
-          confirmButtonText: 'OK'
-        }).then(() => {
-          navigate('/');
-        });
+        const updatedUser = { ...user, ...form, role: user.role };
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        globalThis.dispatchEvent(new Event('storage'));
 
-        return;
+        Swal.fire('Éxito', 'Perfil actualizado correctamente', 'success');
+        closeModal('editar-perfil');
+        setPasswords({ new: '', confirm: '' });
+        setMostrarCambiarPassword(false);
+      } catch (err) {
+        Swal.fire('Error', err.message || 'Error', 'error');
       }
+    },
+    [form, passwords, navigate]
+  );
 
-      const updatedUser = {
-        ...user,
-        ...form,
-        role: user.role
-      };
-
-      localStorage.setItem('user', JSON.stringify(updatedUser));
-      globalThis.dispatchEvent(new Event('storage'));
-
-      Swal.fire('Éxito', 'Perfil actualizado correctamente', 'success');
-      closeModal('editar-perfil');
-      setPasswords({ new: '', confirm: '' });
-      setMostrarCambiarPassword(false);
-
-    } catch (err) {
-      Swal.fire('Error', err.message, 'error');
-    }
-  };
-
-  const inputStyle = {
-    width: '100%',
-    padding: '0.875rem 1rem',
-    border: '2px solid #e5e7eb',
-    borderRadius: '10px',
-    fontSize: '0.95rem',
-    transition: 'all 0.3s ease',
-    backgroundColor: '#ffffff',
-    fontFamily: 'inherit',
-    boxSizing: 'border-box'
-  };
-
-  const labelStyle = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-    marginBottom: '0.5rem',
-    fontWeight: '600',
-    color: '#374151',
-    fontSize: '0.95rem'
-  };
+  const gridCommon = useMemo(
+    () => ({ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }),
+    []
+  );
 
   return (
-    <div 
+    <div
       id="editar-perfil"
       aria-hidden="true"
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.6)',
-        display: 'none',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1000,
-        backdropFilter: 'blur(4px)',
-        padding: '1rem'
-      }}
+      style={styles.overlay}
       onClick={(e) => {
-        if (e.target.id === 'editar-perfil') {
-          closeModal('editar-perfil');
-        }
+        if (e.target.id === 'editar-perfil') closeModal('editar-perfil');
       }}
-      // Keyboard handling (Escape) is attached at document level via useEffect.
     >
-      <dialog
-        aria-modal="true"
-        aria-labelledby="edit-profile-title"
-        style={{
-          backgroundColor: 'white',
-          borderRadius: '20px',
-          maxWidth: '900px',
-          width: '95%',
-          maxHeight: '95vh',
-          overflow: 'hidden',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-          display: 'flex',
-          flexDirection: 'column',
-          border: 'none',
-          padding: 0
-        }}
-        open
-      >
+      <dialog aria-modal="true" aria-labelledby="edit-profile-title" style={styles.dialog} open>
         <form onSubmit={guardarCambios} style={{ display: 'flex', flexDirection: 'column' }}>
-        {/* Header del modal */}
-        <div style={{
-          background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
-          color: 'white',
-          padding: '2rem',
-          borderRadius: '20px 20px 0 0'
-        }}>
-          <h3 
-            id="edit-profile-title"
-            style={{ 
-              margin: 0, 
-              fontSize: '1.5rem', 
-              fontWeight: '600',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.75rem'
-            }}>
-            <div style={{
-              width: '50px',
-              height: '50px',
-              borderRadius: '12px',
-              background: 'rgba(255, 255, 255, 0.2)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}>
-              <i className="fa-solid fa-user-circle" style={{ fontSize: '1.5rem' }} aria-hidden={true}></i>
-            </div>
-            <span>Editar Mi Perfil</span>
-          </h3>
-          <p style={{ 
-            margin: '0.5rem 0 0 4rem', 
-            opacity: 0.9, 
-            fontSize: '0.95rem' 
-          }}>
-            Actualiza tu información personal
-          </p>
-        </div>
-
-        {/* Contenido scrolleable */}
-        <div style={{ 
-          flex: 1,
-          overflowY: 'auto',
-          padding: '2rem',
-          backgroundColor: '#f8fafc'
-        }}>
-          {/* Información Personal */}
-          <div style={{
-            background: 'white',
-            padding: '1.5rem',
-            borderRadius: '12px',
-            marginBottom: '1.5rem',
-            border: '1px solid #e2e8f0',
-            borderLeft: '4px solid #6366f1'
-          }}>
-            <h4 style={{
-              margin: '0 0 1.5rem 0',
-              color: '#1e293b',
-              fontSize: '1.05rem',
-              fontWeight: '600',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem'
-            }}>
-              <i className="fa-solid fa-id-card" style={{ color: '#6366f1' }} aria-hidden={true}></i>
-              <span>Información Personal</span>
-            </h4>
-
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-              gap: '1rem'
-            }}>
-              <div>
-                <label htmlFor="firstName" style={labelStyle}><i className="fa-solid fa-user" style={{ color: '#6366f1', fontSize: '0.875rem' }} aria-hidden={true}></i><span>Primer nombre</span></label><input id="firstName" 
-                  type="text" 
-                  name="firstName" 
-                  value={form.firstName || ''}
-                  onChange={handleChange}
-                  style={inputStyle}
-                  data-focus-color="#6366f1"
-                  data-focus-box="rgba(99, 102, 241, 0.1)"
-                  onFocus={handleFocus}
-                  onBlur={handleBlur}
-                />
+          <div style={styles.header}>
+            <h3 id="edit-profile-title" style={{ margin: 0, fontSize: '1.5rem', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div style={{ width: '50px', height: '50px', borderRadius: '12px', background: 'rgba(255, 255, 255, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <i className="fa-solid fa-user-circle" style={{ fontSize: '1.5rem' }} aria-hidden />
               </div>
-
-              <div>
-                <label htmlFor="secondName" style={labelStyle}><i className="fa-solid fa-user" style={{ color: '#6366f1', fontSize: '0.875rem' }} aria-hidden={true}></i><span>Segundo nombre</span></label><input id="secondName" 
-                  type="text" 
-                  name="secondName" 
-                  value={form.secondName || ''}
-                  onChange={handleChange}
-                  style={inputStyle}
-                  data-focus-color="#6366f1"
-                  data-focus-box="rgba(99, 102, 241, 0.1)"
-                  onFocus={handleFocus}
-                  onBlur={handleBlur}
-                />
-              </div>
-
-              <div>
-                <label htmlFor="surname" style={labelStyle}>
-                  <i className="fa-solid fa-user" style={{ color: '#6366f1', fontSize: '0.875rem' }} aria-hidden={true}></i>
-                  <span>Primer apellido</span>
-                </label>
-                <input 
-                  id="surname"
-                  type="text" 
-                  name="surname" 
-                  value={form.surname || ''}
-                  onChange={handleChange}
-                  style={inputStyle}
-                  data-focus-color="#6366f1"
-                  data-focus-box="rgba(99, 102, 241, 0.1)"
-                  onFocus={handleFocus}
-                  onBlur={handleBlur}
-                />
-              </div>
-
-              <div>
-                <label htmlFor="secondSurname" style={labelStyle}>
-                  <i className="fa-solid fa-user" style={{ color: '#6366f1', fontSize: '0.875rem' }} aria-hidden={true}></i>
-                  <span>Segundo apellido</span>
-                </label>
-                <input 
-                  id="secondSurname"
-                  type="text" 
-                  name="secondSurname" 
-                  value={form.secondSurname || ''}
-                  onChange={handleChange}
-                  style={inputStyle}
-                  data-focus-color="#6366f1"
-                  data-focus-box="rgba(99, 102, 241, 0.1)"
-                  onFocus={handleFocus}
-                  onBlur={handleBlur}
-                />
-              </div>
-            </div>
+              <span>Editar Mi Perfil</span>
+            </h3>
+            <p style={{ margin: '0.5rem 0 0 4rem', opacity: 0.9, fontSize: '0.95rem' }}>Actualiza tu información personal</p>
           </div>
 
-          {/* Información de Cuenta */}
-          <div style={{
-            background: 'white',
-            padding: '1.5rem',
-            borderRadius: '12px',
-            marginBottom: '1.5rem',
-            border: '1px solid #e2e8f0',
-            borderLeft: '4px solid #10b981'
-          }}>
-              <h4 style={{
-              margin: '0 0 1.5rem 0',
-              color: '#1e293b',
-              fontSize: '1.05rem',
-              fontWeight: '600',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem'
-            }}>
-              <i className="fa-solid fa-key" style={{ color: '#10b981' }} aria-hidden={true}></i>
-              <span>Información de Cuenta</span>
-            </h4>
+          <div style={styles.content}>
+            <Section titleIcon="fa-solid fa-id-card" title="Información Personal" accent="#6366f1">
+              <div style={gridCommon}>
+                <div>
+                  <label htmlFor="firstName" style={styles.label}><i className="fa-solid fa-user" style={{ color: '#6366f1', fontSize: '0.875rem' }} aria-hidden /><span>Primer nombre</span></label>
+                  <TextInput id="firstName" name="firstName" value={form.firstName || ''} onChange={handleChange} focusColor="#6366f1" focusBox="rgba(99, 102, 241, 0.1)" />
+                </div>
 
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-              gap: '1rem'
-            }}>
-              <div>
-                <label htmlFor="email-perfil" style={labelStyle}>
-                  <i className="fa-solid fa-envelope" style={{ color: '#10b981', fontSize: '0.875rem' }} aria-hidden={true}></i>
-                  <span>Correo electrónico</span>
-                </label>
-                <input 
-                  id="email-perfil"
-                  type="email" 
-                  name="email" 
-                  value={form.email || ''}
-                  onChange={handleChange}
-                  style={inputStyle}
-                  data-focus-color="#10b981"
-                  data-focus-box="rgba(16, 185, 129, 0.1)"
-                  onFocus={handleFocus}
-                  onBlur={handleBlur}
-                />
-              </div>
+                <div>
+                  <label htmlFor="secondName" style={styles.label}><i className="fa-solid fa-user" style={{ color: '#6366f1', fontSize: '0.875rem' }} aria-hidden /><span>Segundo nombre</span></label>
+                  <TextInput id="secondName" name="secondName" value={form.secondName || ''} onChange={handleChange} focusColor="#6366f1" focusBox="rgba(99, 102, 241, 0.1)" />
+                </div>
 
-              <div>
-                <label htmlFor="username-perfil" style={labelStyle}>
-                  <i className="fa-solid fa-at" style={{ color: '#10b981', fontSize: '0.875rem' }} aria-hidden={true}></i>
-                  <span>Nombre de usuario</span>
-                </label>
-                <input 
-                  id="username-perfil"
-                  type="text" 
-                  name="username" 
-                  value={form.username || ''}
-                  onChange={handleChange}
-                  style={inputStyle}
-                  data-focus-color="#10b981"
-                  data-focus-box="rgba(16, 185, 129, 0.1)"
-                  onFocus={handleFocus}
-                  onBlur={handleBlur}
-                />
-              </div>
+                <div>
+                  <label htmlFor="surname" style={styles.label}><i className="fa-solid fa-user" style={{ color: '#6366f1', fontSize: '0.875rem' }} aria-hidden /><span>Primer apellido</span></label>
+                  <TextInput id="surname" name="surname" value={form.surname || ''} onChange={handleChange} focusColor="#6366f1" focusBox="rgba(99, 102, 241, 0.1)" />
+                </div>
 
-              <div>
-                <label htmlFor="role-perfil" style={labelStyle}>
-                  <i className="fa-solid fa-shield-alt" style={{ color: '#10b981', fontSize: '0.875rem' }} aria-hidden={true}></i>
-                  <span>Rol asignado</span>
-                </label>
-                <input 
-                  id="role-perfil"
-                  type="text" 
-                  value={form.role || ''} 
-                  readOnly 
-                  disabled
-                  style={{
-                    ...inputStyle,
-                    backgroundColor: '#f3f4f6',
-                    cursor: 'not-allowed',
-                    color: '#6b7280'
-                  }}
-                />
+                <div>
+                  <label htmlFor="secondSurname" style={styles.label}><i className="fa-solid fa-user" style={{ color: '#6366f1', fontSize: '0.875rem' }} aria-hidden /><span>Segundo apellido</span></label>
+                  <TextInput id="secondSurname" name="secondSurname" value={form.secondSurname || ''} onChange={handleChange} focusColor="#6366f1" focusBox="rgba(99, 102, 241, 0.1)" />
+                </div>
               </div>
-            </div>
+            </Section>
+
+            <Section titleIcon="fa-solid fa-key" title="Información de Cuenta" accent="#10b981">
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem' }}>
+                <div>
+                  <label htmlFor="email-perfil" style={styles.label}><i className="fa-solid fa-envelope" style={{ color: '#10b981', fontSize: '0.875rem' }} aria-hidden /><span>Correo electrónico</span></label>
+                  <TextInput id="email-perfil" name="email" type="email" value={form.email || ''} onChange={handleChange} focusColor="#10b981" focusBox="rgba(16, 185, 129, 0.1)" />
+                </div>
+
+                <div>
+                  <label htmlFor="username-perfil" style={styles.label}><i className="fa-solid fa-at" style={{ color: '#10b981', fontSize: '0.875rem' }} aria-hidden /><span>Nombre de usuario</span></label>
+                  <TextInput id="username-perfil" name="username" value={form.username || ''} onChange={handleChange} focusColor="#10b981" focusBox="rgba(16, 185, 129, 0.1)" />
+                </div>
+
+                <div>
+                  <label htmlFor="role-perfil" style={styles.label}><i className="fa-solid fa-shield-alt" style={{ color: '#10b981', fontSize: '0.875rem' }} aria-hidden /><span>Rol asignado</span></label>
+                  <TextInput id="role-perfil" name="role" value={form.role || ''} disabled />
+                </div>
+              </div>
+            </Section>
+
+            <Section titleIcon="fa-solid fa-lock" title="Cambiar Contraseña" accent="#f59e0b" collapsible open={mostrarCambiarPassword} onToggle={() => setMostrarCambiarPassword((s) => !s)}>
+              {mostrarCambiarPassword && (
+                <>
+                  <div style={{ backgroundColor: '#fef3c7', padding: '1rem', borderRadius: '8px', marginBottom: '1rem', border: '1px solid #fde68a' }}>
+                    <p style={{ margin: 0, fontSize: '0.875rem', color: '#92400e', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <i className="fa-solid fa-info-circle" aria-hidden />
+                      <span>Al cambiar tu contraseña, deberás iniciar sesión nuevamente</span>
+                    </p>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem' }}>
+                    <div>
+                      <label htmlFor="new-password-perfil" style={styles.label}><i className="fa-solid fa-key" style={{ color: '#f59e0b', fontSize: '0.875rem' }} aria-hidden /><span>Nueva contraseña</span></label>
+                      <TextInput id="new-password-perfil" name="new" type="password" value={passwords.new} onChange={handlePasswordChange} placeholder="Mínimo 6 caracteres" focusColor="#f59e0b" focusBox="rgba(245, 158, 11, 0.1)" />
+                    </div>
+                    <div>
+                      <label htmlFor="confirm-password-perfil" style={styles.label}><i className="fa-solid fa-check" style={{ color: '#f59e0b', fontSize: '0.875rem' }} aria-hidden /><span>Confirmar contraseña</span></label>
+                      <TextInput id="confirm-password-perfil" name="confirm" type="password" value={passwords.confirm} onChange={handlePasswordChange} placeholder="Repite la contraseña" focusColor="#f59e0b" focusBox="rgba(245, 158, 11, 0.1)" />
+                    </div>
+                  </div>
+                </>
+              )}
+            </Section>
           </div>
 
-          {/* Cambiar contraseña */}
-          <div style={{
-            background: 'white',
-            padding: '1.5rem',
-            borderRadius: '12px',
-            border: '1px solid #e2e8f0',
-            borderLeft: '4px solid #f59e0b'
-          }}>
-              <button
-              type="button"
-              onClick={() => setMostrarCambiarPassword(!mostrarCambiarPassword)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                cursor: 'pointer',
-                marginBottom: mostrarCambiarPassword ? '1.5rem' : 0,
-                background: 'transparent',
-                border: 'none',
-                padding: 0,
-                width: '100%'
-              }}
-            >
-              <h4 style={{
-                margin: 0,
-                color: '#1e293b',
-                fontSize: '1.05rem',
-                fontWeight: '600',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem'
-              }}>
-                <i className="fa-solid fa-lock" style={{ color: '#f59e0b' }} aria-hidden={true}></i>
-                <span>Cambiar Contraseña</span>
-              </h4>
-          <i className={`fa-solid fa-chevron-${mostrarCambiarPassword ? 'up' : 'down'}`} 
-            style={{ color: '#6b7280' }} aria-hidden={true}></i>
+          <div style={styles.footer}>
+            <button type="button" onClick={() => closeModal('editar-perfil')} style={styles.btnCancel}>
+              <i className="fa-solid fa-times" aria-hidden />
+              <span>Cancelar</span>
             </button>
 
-            {mostrarCambiarPassword && (
-              <div>
-                <div style={{
-                  backgroundColor: '#fef3c7',
-                  padding: '1rem',
-                  borderRadius: '8px',
-                  marginBottom: '1rem',
-                  border: '1px solid #fde68a'
-                }}>
-                  <p style={{ 
-                    margin: 0, 
-                    fontSize: '0.875rem', 
-                    color: '#92400e',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem'
-                  }}>
-                    <i className="fa-solid fa-info-circle" aria-hidden={true}></i>
-                    <span>Al cambiar tu contraseña, deberás iniciar sesión nuevamente</span>
-                  </p>
-                </div>
-                
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-                  gap: '1rem'
-                }}>
-                  <div>
-                    <label htmlFor="new-password-perfil" style={labelStyle}>
-                      <i className="fa-solid fa-key" style={{ color: '#f59e0b', fontSize: '0.875rem' }} aria-hidden={true}></i>
-                      <span>Nueva contraseña</span>
-                    </label>
-                    <input
-                      id="new-password-perfil"
-                      type="password"
-                      name="new"
-                      value={passwords.new}
-                      onChange={handlePasswordChange}
-                      placeholder="Mínimo 6 caracteres"
-                      style={inputStyle}
-                      data-focus-color="#f59e0b"
-                      data-focus-box="rgba(245, 158, 11, 0.1)"
-                      onFocus={handleFocus}
-                      onBlur={handleBlur}
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="confirm-password-perfil" style={labelStyle}>
-                      <i className="fa-solid fa-check" style={{ color: '#f59e0b', fontSize: '0.875rem' }} aria-hidden={true}></i>
-                      <span>Confirmar contraseña</span>
-                    </label>
-                    <input
-                      id="confirm-password-perfil"
-                      type="password"
-                      name="confirm"
-                      value={passwords.confirm}
-                      onChange={handlePasswordChange}
-                      placeholder="Repite la contraseña"
-                      style={inputStyle}
-                      data-focus-color="#f59e0b"
-                      data-focus-box="rgba(245, 158, 11, 0.1)"
-                      onFocus={handleFocus}
-                      onBlur={handleBlur}
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
+            <button type="submit" style={styles.btnSave}>
+              <i className="fa-solid fa-save" aria-hidden />
+              <span>Guardar Cambios</span>
+            </button>
           </div>
-        </div>
-
-        {/* Footer con botones */}
-        <div style={{ 
-          display: 'flex', 
-          gap: '1rem', 
-          justifyContent: 'flex-end',
-          padding: '2rem',
-          borderTop: '2px solid #e5e7eb',
-          backgroundColor: 'white',
-          borderRadius: '0 0 20px 20px'
-        }}>
-          <button 
-            type="button" 
-            onClick={() => closeModal('editar-perfil')}
-            style={{
-              padding: '0.875rem 1.5rem',
-              border: '2px solid #e5e7eb',
-              borderRadius: '10px',
-              backgroundColor: 'white',
-              color: '#374151',
-              cursor: 'pointer',
-              fontWeight: '600',
-              fontSize: '0.95rem',
-              transition: 'all 0.3s ease',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem'
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.backgroundColor = '#f3f4f6';
-              e.target.style.borderColor = '#d1d5db';
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.backgroundColor = 'white';
-              e.target.style.borderColor = '#e5e7eb';
-            }}
-          >
-            <i className="fa-solid fa-times" aria-hidden={true}></i>
-            <span>Cancelar</span>
-          </button>
-          
-          <button 
-            type="submit"
-            style={{
-              padding: '0.875rem 1.5rem',
-              border: 'none',
-              borderRadius: '10px',
-              background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
-              color: 'white',
-              cursor: 'pointer',
-              fontWeight: '600',
-              fontSize: '0.95rem',
-              transition: 'all 0.3s ease',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              boxShadow: '0 4px 6px -1px rgba(99, 102, 241, 0.3)'
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.transform = 'translateY(-1px)';
-              e.target.style.boxShadow = '0 6px 12px -1px rgba(99, 102, 241, 0.4)';
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.transform = 'translateY(0)';
-              e.target.style.boxShadow = '0 4px 6px -1px rgba(99, 102, 241, 0.3)';
-            }}
-          >
-            <i className="fa-solid fa-save" aria-hidden={true}></i>
-            <span>Guardar Cambios</span>
-          </button>
-        </div>
-      </form>
+        </form>
       </dialog>
     </div>
   );
 }
-

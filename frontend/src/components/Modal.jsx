@@ -4,14 +4,17 @@ import PropTypes from 'prop-types';
 export default function Modal({ isOpen, onClose, title, children, className, hideHeader }) {
   useEffect(() => {
     // always call the hook; only attach the listener when the modal is open
-    if (!isOpen) return;
-    const handleKey = (e) => {
-      if (e.key === 'Escape') onClose?.();
-    };
-    const target = (typeof window !== 'undefined') ? window : (typeof global !== 'undefined' ? global : null);
-    if (target && target.addEventListener) {
-      target.addEventListener('keydown', handleKey);
-      return () => target.removeEventListener('keydown', handleKey);
+    if (isOpen) {
+      const handleKey = (e) => {
+        if (e.key === 'Escape') onClose?.();
+      };
+
+      // determine the global event target safely (browser -> window, Node -> global)
+      const target = (typeof window !== 'undefined') ? window : (typeof global !== 'undefined' ? global : null);
+      if (target && typeof target.addEventListener === 'function') {
+        target.addEventListener('keydown', handleKey);
+        return () => target.removeEventListener('keydown', handleKey);
+      }
     }
     return undefined;
   }, [isOpen, onClose]);
@@ -50,21 +53,21 @@ export default function Modal({ isOpen, onClose, title, children, className, hid
     <div
       style={overlayStyle}
       role="button"
-      aria-label="Close modal"
       tabIndex={0}
-      onKeyDown={(e) => {
-        // support Enter and Space keys to close the modal when overlay is focused
-        if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
-          e.preventDefault();
-          onClose?.();
-        }
-      }}
+      aria-label="Close modal"
       onClick={(e) => {
         // click on backdrop closes modal when clicking outside dialog
         if (e.target === e.currentTarget) onClose?.();
       }}
+      onKeyDown={(e) => {
+        // allow keyboard activation (Enter or Space) to close when the backdrop has focus
+        if ((e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') && e.target === e.currentTarget) {
+          e.preventDefault();
+          onClose?.();
+        }
+      }}
     >
-      <div style={dialogStyle} className={className || ''} role="dialog" aria-label={title || 'Modal'} aria-modal="true">
+      <dialog style={dialogStyle} className={className || ''} open aria-label={title || 'Modal'}>
         {!hideHeader && (
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1rem', borderBottom: '1px solid #ececec' }}>
             <div style={{ fontWeight: 700 }}>{title}</div>
@@ -72,7 +75,7 @@ export default function Modal({ isOpen, onClose, title, children, className, hid
           </div>
         )}
         <div style={bodyStyle}>{children}</div>
-      </div>
+      </dialog>
     </div>
   );
 }
