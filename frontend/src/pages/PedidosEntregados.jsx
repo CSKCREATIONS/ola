@@ -2,6 +2,11 @@ import React, { useEffect, useState } from 'react';
 import Fijo from '../components/Fijo';
 import NavVentas from '../components/NavVentas';
 import exportElementToPdf from '../utils/exportToPdf';
+import api from '../api/axiosConfig';
+import Swal from 'sweetalert2';
+import * as XLSX from 'xlsx';
+import { sumarProp } from '../utils/calculations';
+import RemisionPreview from '../components/RemisionPreview';
 
 export default function PedidosEntregados() {
   const [pedidosEntregados, setPedidosEntregados] = useState([]);
