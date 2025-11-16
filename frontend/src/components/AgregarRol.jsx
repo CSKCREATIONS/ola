@@ -62,6 +62,25 @@ const ModuleCard = ({ bg, border, color, checked, onChange, iconClass, label }) 
    </div>
 );
 
+ModuleCard.propTypes = {
+   bg: PropTypes.string,
+   border: PropTypes.string,
+   color: PropTypes.string,
+   checked: PropTypes.bool,
+   onChange: PropTypes.func,
+   iconClass: PropTypes.string,
+   label: PropTypes.node.isRequired
+};
+
+ModuleCard.defaultProps = {
+   bg: undefined,
+   border: undefined,
+   color: undefined,
+   checked: false,
+   onChange: () => {},
+   iconClass: ''
+};
+
 const PermissionCheckbox = ({ checked, onChange, label }) => (
    <label className="form-option" style={{ display: 'block', marginBottom: 8 }}>
       <input className="input-gap" type="checkbox" checked={checked} onChange={onChange} />
