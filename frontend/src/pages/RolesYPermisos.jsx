@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Fijo from '../components/Fijo'
 import NavUsuarios from '../components/NavUsuarios'
 import SharedListHeaderCard from '../components/SharedListHeaderCard'
+import PrimaryButton from '../components/PrimaryButton'
 import AgregarRol from '../components/AgregarRol';
 import { openModal } from '../funciones/animaciones';
 import Swal from 'sweetalert2';
@@ -262,35 +263,10 @@ export default function RolesYPermisos() {
             iconClass="fa-solid fa-shield-alt"
           >
             {puedeCrearRol && (
-              <button 
-                onClick={() => openModal('crear-rol')}
-                style={{
-                  background: 'linear-gradient(135deg, #10b981, #059669)',
-                  border: 'none',
-                  borderRadius: '12px',
-                  padding: '12px 24px',
-                  color: 'white',
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  boxShadow: '0 4px 15px rgba(16, 185, 129, 0.4)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px'
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.transform = 'translateY(-2px)';
-                  e.target.style.boxShadow = '0 6px 20px rgba(16, 185, 129, 0.6)';
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.transform = 'translateY(0)';
-                  e.target.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.4)';
-                }}
-              >
+              <PrimaryButton onClick={() => openModal('crear-rol')} title="Crear Rol">
                 <i className="fa-solid fa-plus"></i>
                 <span>Crear Rol</span>
-              </button>
+              </PrimaryButton>
             )}
           </SharedListHeaderCard>
 

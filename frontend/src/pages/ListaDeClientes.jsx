@@ -6,8 +6,7 @@ import Swal from 'sweetalert2';
 import '../App.css';
 import Fijo from '../components/Fijo';
 import NavVentas from '../components/NavVentas';
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
+
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 

@@ -10,6 +10,8 @@ import { randomString } from '../utils/secureRandom';
 import { calcularTotales as calcularTotalesShared, sumarProp } from '../utils/calculations';
 import { isValidEmail } from '../utils/emailHelpers';
 import OrderDetailsHeader from '../components/OrderDetailsHeader';
+import SharedListHeaderCard from '../components/SharedListHeaderCard';
+import DeleteButton from '../components/DeleteButton';
 
 // CSS inyectado para diseño avanzado
 const advancedStyles = `
@@ -753,76 +755,42 @@ JLA Global Company</textarea>
       <div className="content">
         <NavCompras />
         <div className="contenido-modulo">
-          {/* Encabezado profesional */}
-          <div style={{
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            borderRadius: '20px',
-            padding: '30px',
-            marginBottom: '30px',
-            color: 'white',
-            position: 'relative',
-            overflow: 'hidden'
-          }}>
-            <div style={{
-              position: 'absolute',
-              top: '-50%',
-              right: '-10%',
-              width: '300px',
-              height: '300px',
-              background: 'rgba(255,255,255,0.1)',
-              borderRadius: '50%',
-              zIndex: 1
-            }}></div>
-            <div style={{ position: 'relative', zIndex: 2 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                <div style={{
-                  background: 'rgba(255,255,255,0.2)',
-                  borderRadius: '16px',
-                  padding: '20px',
-                  backdropFilter: 'blur(10px)'
-                }}>
-                  <i className="fa-solid fa-history" style={{ fontSize: '2.5rem', color: 'white' }} aria-hidden={true}></i>
-                </div>
-                <div style={{ flex: 1 }}>
-                  <h2 style={{ margin: '0 0 8px 0', fontSize: '2rem', fontWeight: '700' }}>
-                    Historial de Compras
-                  </h2>
-                  <p style={{ margin: 0, fontSize: '1.1rem', opacity: 0.9 }}>
-                    Compras realizadas a partir de órdenes de compra
-                  </p>
-                </div>
-                <button
-                  onClick={abrirModalNuevaCompra}
-                  style={{
-                    background: 'linear-gradient(135deg, #10b981, #059669)',
-                    color: 'white',
-                    border: 'none',
-                    padding: '12px 24px',
-                    borderRadius: '12px',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s ease',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.target.style.transform = 'translateY(-2px)';
-                    e.target.style.boxShadow = '0 6px 20px rgba(16, 185, 129, 0.4)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.transform = 'translateY(0)';
-                    e.target.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.3)';
-                  }}
-                >
-                  <i className="fa-solid fa-plus" aria-hidden={true}></i>
-                  <span>Nueva Compra</span>
-                </button>
-              </div>
-            </div>
-          </div>
+          {/* Encabezado profesional (reused component) */}
+          <SharedListHeaderCard
+            iconClass="fa-solid fa-history"
+            title="Historial de Compras"
+            subtitle="Compras realizadas a partir de órdenes de compra"
+          >
+            <button
+              onClick={abrirModalNuevaCompra}
+              style={{
+                background: 'linear-gradient(135deg, #10b981, #059669)',
+                color: 'white',
+                border: 'none',
+                padding: '12px 24px',
+                borderRadius: '12px',
+                fontSize: '14px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 6px 20px rgba(16, 185, 129, 0.4)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.3)';
+              }}
+            >
+              <i className="fa-solid fa-plus" aria-hidden={true}></i>
+              <span>Nueva Compra</span>
+            </button>
+          </SharedListHeaderCard>
 
           {/* Estadísticas avanzadas */}
           <div style={{

@@ -7,6 +7,8 @@ import NavCompras from '../components/NavCompras';
 import DetallesOrdenModal from '../components/DetallesOrdenModal';
 import OrderDetailsHeader from '../components/OrderDetailsHeader';
 import DeleteButton from '../components/DeleteButton';
+import SharedListHeaderCard from '../components/SharedListHeaderCard';
+import PrimaryButton from '../components/PrimaryButton';
 import { roundMoney } from '../utils/formatters';
 import { randomString } from '../utils/secureRandom';
 import { calcularTotales as calcularTotalesShared, sumarProp } from '../utils/calculations';
@@ -1077,80 +1079,17 @@ export default function OrdenCompra() {
       <div className="content">
         <NavCompras />
         <div className="contenido-modulo">
-          {/* Encabezado profesional */}
-          <div style={{
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            borderRadius: '20px',
-            padding: '30px',
-            marginBottom: '30px',
-            color: 'white',
-            position: 'relative',
-            overflow: 'hidden'
-          }}>
-            <div style={{
-              position: 'absolute',
-              top: '-50%',
-              right: '-10%',
-              width: '300px',
-              height: '300px',
-              background: 'rgba(255,255,255,0.1)',
-              borderRadius: '50%',
-              zIndex: 1
-            }}></div>
-            <div style={{ position: 'relative', zIndex: 2 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '20px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                  <div style={{
-                    background: 'rgba(255,255,255,0.2)',
-                    borderRadius: '16px',
-                    padding: '20px',
-                    backdropFilter: 'blur(10px)'
-                  }}>
-                    <i className="fa-solid fa-file-invoice-dollar" style={{ fontSize: '2.5rem', color: 'white' }}></i>
-                  </div>
-                  <div>
-                    <h2 style={{ margin: '0 0 8px 0', fontSize: '2rem', fontWeight: '700' }}>
-                      Órdenes de Compra
-                    </h2>
-                    <p style={{ margin: 0, fontSize: '1.1rem', opacity: 0.9 }}>
-                      Gestiona y supervisa las órdenes de compra a proveedores
-                    </p>
-                  </div>
-                </div>
-                <div>
-                  <button
-                    onClick={abrirModalAgregar}
-                    style={{
-                      background: 'linear-gradient(135deg, #10b981, #059669)',
-                      border: 'none',
-                      borderRadius: '12px',
-                      padding: '12px 24px',
-                      color: 'white',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      cursor: 'pointer',
-                      transition: 'all 0.3s ease',
-                      boxShadow: '0 4px 15px rgba(16, 185, 129, 0.4)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.target.style.transform = 'translateY(-2px)';
-                      e.target.style.boxShadow = '0 6px 20px rgba(16, 185, 129, 0.6)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.target.style.transform = 'translateY(0)';
-                      e.target.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.4)';
-                    }}
-                  >
-                    <i className="fa-solid fa-plus" aria-hidden={true}></i>
-                    <span>Agregar Orden de Compra</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* Encabezado profesional (reutilizable) */}
+          <SharedListHeaderCard
+            title="Órdenes de Compra"
+            subtitle="Gestiona y supervisa las órdenes de compra a proveedores"
+            iconClass="fa-solid fa-file-invoice-dollar"
+          >
+            <PrimaryButton onClick={abrirModalAgregar} title="Agregar Orden de Compra">
+              <i className="fa-solid fa-plus" aria-hidden={true}></i>
+              <span>Agregar Orden de Compra</span>
+            </PrimaryButton>
+          </SharedListHeaderCard>
 
           {/* Estadísticas avanzadas */}
           <div style={{

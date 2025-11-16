@@ -8,8 +8,6 @@ import { openModal } from '../funciones/animaciones'
 import EditarUsuario from '../components/EditarUsuario'
 import Swal from 'sweetalert2';
 import api from '../api/axiosConfig';
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 

@@ -1,21 +1,21 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-export default function DeleteButton({ onClick, title = 'Eliminar', disabled = false, ariaLabel = 'Eliminar', children, className = '', style = {} }) {
+export default function PrimaryButton({ onClick, children, title = '', disabled = false, className = '', style = {} }) {
   const baseStyle = {
-    background: 'linear-gradient(135deg, #fee2e2, #fecaca)',
-    color: '#dc2626',
+    background: 'linear-gradient(135deg, #10b981, #059669)',
     border: 'none',
-    borderRadius: '8px',
-    padding: '8px 10px',
-    cursor: disabled ? 'not-allowed' : 'pointer',
-    fontSize: '12px',
+    borderRadius: '12px',
+    padding: '12px 24px',
+    color: 'white',
+    fontSize: '14px',
     fontWeight: '600',
-    transition: 'all 0.2s ease',
-    boxShadow: '0 2px 4px rgba(220, 38, 38, 0.2)',
-    display: 'inline-flex',
+    cursor: disabled ? 'not-allowed' : 'pointer',
+    transition: 'all 0.3s ease',
+    boxShadow: '0 4px 15px rgba(16, 185, 129, 0.4)',
+    display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center'
+    gap: '8px'
   };
 
   const combinedStyle = { ...baseStyle, ...style };
@@ -23,20 +23,20 @@ export default function DeleteButton({ onClick, title = 'Eliminar', disabled = f
   const handleMouseEnter = (e) => {
     if (disabled) return;
     e.currentTarget.style.transform = 'translateY(-2px)';
-    e.currentTarget.style.boxShadow = '0 4px 8px rgba(220, 38, 38, 0.3)';
+    e.currentTarget.style.boxShadow = '0 6px 20px rgba(16, 185, 129, 0.6)';
   };
 
   const handleMouseLeave = (e) => {
     if (disabled) return;
     e.currentTarget.style.transform = 'translateY(0)';
-    e.currentTarget.style.boxShadow = '0 2px 4px rgba(220, 38, 38, 0.2)';
+    e.currentTarget.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.4)';
   };
 
   return (
     <button
       type="button"
       title={title}
-      aria-label={ariaLabel}
+      aria-label={title || undefined}
       onClick={onClick}
       disabled={disabled}
       className={className}
@@ -49,12 +49,11 @@ export default function DeleteButton({ onClick, title = 'Eliminar', disabled = f
   );
 }
 
-DeleteButton.propTypes = {
+PrimaryButton.propTypes = {
   onClick: PropTypes.func,
+  children: PropTypes.node,
   title: PropTypes.string,
   disabled: PropTypes.bool,
-  ariaLabel: PropTypes.string,
-  children: PropTypes.node,
   className: PropTypes.string,
   style: PropTypes.object
 };
