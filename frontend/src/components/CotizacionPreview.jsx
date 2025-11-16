@@ -736,7 +736,15 @@ export default function CotizacionPreview({ datos, onClose, onEmailSent, onRemis
                   borderLeft: '4px solid #2563eb',
                   lineHeight: '1.6'
                 }}>
-                  {datos.descripcion}
+                  {/* Renderizar contenido HTML si la descripción contiene etiquetas; en caso contrario, mostrar texto */}
+                  {(() => {
+                    const desc = datos.descripcion;
+                    const looksLikeHtml = typeof desc === 'string' && /<[^>]+>/.test(desc);
+                    if (looksLikeHtml) {
+                      return <div dangerouslySetInnerHTML={{ __html: desc }} />;
+                    }
+                    return <div style={{ whiteSpace: 'pre-wrap' }}>{desc}</div>;
+                  })()}
                 </div>
               </div>
             )}

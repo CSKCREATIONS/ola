@@ -9,6 +9,7 @@ import * as XLSX from 'xlsx';
 import EditarPedido from '../components/EditarPedido';
 import PedidoAgendadoPreview from '../components/PedidoAgendadoPreview';
 import { sumarProp } from '../utils/calculations';
+import AdvancedStats from '../components/AdvancedStats';
 
 /* Estilos CSS avanzados para Pedidos Agendados */
 const pedidosAgendadosStyles = `
@@ -415,81 +416,28 @@ export default function PedidosAgendados() {
           </div>
 
           {/* Estadísticas avanzadas */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-            gap: '20px',
-            marginBottom: '30px'
-          }}>
-            <div className="pedidos-stats-card">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <div style={{
-                  background: 'linear-gradient(135deg, #f59e0b, #ea580c)',
-                  borderRadius: '12px',
-                  padding: '15px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <i className="fa-solid fa-calendar-check" style={{ color: 'white', fontSize: '1.5rem' }}></i>
-                </div>
-                <div>
-                  <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                    {pedidos.length}
-                  </h3>
-                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
-                    Pedidos Agendados
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="pedidos-stats-card">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <div style={{
-                  background: 'linear-gradient(135deg, #10b981, #059669)',
-                  borderRadius: '12px',
-                  padding: '15px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <i className="fa-solid fa-chart-line" style={{ color: 'white', fontSize: '1.5rem' }}></i>
-                </div>
-                <div>
-                  <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                    ${sumarProp(pedidos, 'total').toLocaleString('es-CO')}
-                  </h3>
-                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
-                    Total en Ventas
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="pedidos-stats-card">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <div style={{
-                  background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                  borderRadius: '12px',
-                  padding: '15px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <i className="fa-solid fa-clock" style={{ color: 'white', fontSize: '1.5rem' }}></i>
-                </div>
-                <div>
-                  <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                    {pedidos.filter(p => new Date(p.fechaEntrega) <= new Date(Date.now() + 24*60*60*1000)).length}
-                  </h3>
-                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
-                    Entregas Próximas
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+          <AdvancedStats
+            cards={[
+              {
+                iconClass: 'fa-solid fa-calendar-check',
+                gradient: 'linear-gradient(135deg, #f59e0b, #ea580c)',
+                value: pedidos.length,
+                label: 'Pedidos Agendados'
+              },
+              {
+                iconClass: 'fa-solid fa-chart-line',
+                gradient: 'linear-gradient(135deg, #10b981, #059669)',
+                value: '$' + sumarProp(pedidos, 'total').toLocaleString('es-CO'),
+                label: 'Total en Ventas'
+              },
+              {
+                iconClass: 'fa-solid fa-clock',
+                gradient: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                value: pedidos.filter(p => new Date(p.fechaEntrega) <= new Date(Date.now() + 24*60*60*1000)).length,
+                label: 'Entregas Próximas'
+              }
+            ]}
+          />
 
           {/* Controles de exportación y acciones */}
           <div style={{

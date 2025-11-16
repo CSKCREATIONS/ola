@@ -9,6 +9,7 @@ import EditarUsuario from '../components/EditarUsuario'
 import Swal from 'sweetalert2';
 import api from '../api/axiosConfig';
 import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 import AdvancedStats from '../components/AdvancedStats';
 
 const advancedStyles = `
