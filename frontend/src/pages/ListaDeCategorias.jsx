@@ -3,6 +3,7 @@ import Swal from 'sweetalert2';
 import '../App.css';
 import Fijo from '../components/Fijo';
 import NavProductos from '../components/NavProductos'
+import AdvancedStats from '../components/AdvancedStats';
 
 import api from '../api/axiosConfig';
 import PropTypes from 'prop-types';
@@ -509,6 +510,11 @@ const CategoriaModal = ({ categoria, onClose, onSave }) => {
 
 const ListaDeCategorias = () => {
   const [categorias, setCategorias] = useState([]);
+  const statsCards = [
+    { iconClass: 'fa-solid fa-tags', gradient: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', value: categorias.length, label: 'Total Categorías' },
+    { iconClass: 'fa-solid fa-check-circle', gradient: 'linear-gradient(135deg, #10b981, #059669)', value: categorias.filter(c => c.activo !== false).length, label: 'Categorías Activas' },
+    { iconClass: 'fa-solid fa-pause-circle', gradient: 'linear-gradient(135deg, #8b5cf6, #7c3aed)', value: categorias.filter(c => c.activo === false).length, label: 'Categorías Inactivas' }
+  ];
   const [modalVisible, setModalVisible] = useState(false);
   const [categoriaEditando, setCategoriaEditando] = useState(null);
 
@@ -629,81 +635,7 @@ const ListaDeCategorias = () => {
           </div>
 
           {/* Estadísticas avanzadas */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-            gap: '20px',
-            marginBottom: '30px'
-          }}>
-            <div className="categoria-stats-card">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <div style={{
-                  background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-                  borderRadius: '12px',
-                  padding: '15px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <i className="fa-solid fa-tags" style={{ color: 'white', fontSize: '1.5rem' }} aria-hidden={true}></i>
-                </div>
-                <div>
-                  <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                    {categorias.length}
-                  </h3>
-                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
-                    Total Categorías
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="categoria-stats-card">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <div style={{
-                  background: 'linear-gradient(135deg, #10b981, #059669)',
-                  borderRadius: '12px',
-                  padding: '15px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <i className="fa-solid fa-check-circle" style={{ color: 'white', fontSize: '1.5rem' }} aria-hidden={true}></i>
-                </div>
-                <div>
-                  <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                    {categorias.filter(c => c.activo !== false).length}
-                  </h3>
-                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
-                    Categorías Activas
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="categoria-stats-card">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <div style={{
-                  background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
-                  borderRadius: '12px',
-                  padding: '15px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <i className="fa-solid fa-pause-circle" style={{ color: 'white', fontSize: '1.5rem' }} aria-hidden={true}></i>
-                </div>
-                <div>
-                  <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                    {categorias.filter(c => c.activo === false).length}
-                  </h3>
-                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
-                    Categorías Inactivas
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+          <AdvancedStats cards={statsCards} />
 
           {/* Botón agregar */}
           <button

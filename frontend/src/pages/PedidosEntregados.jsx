@@ -2,206 +2,26 @@ import React, { useEffect, useState } from 'react';
 import Fijo from '../components/Fijo';
 import NavVentas from '../components/NavVentas';
 import exportElementToPdf from '../utils/exportToPdf';
-import * as XLSX from 'xlsx';
-import Swal from 'sweetalert2';
-import api from '../api/axiosConfig';
-import RemisionPreview from '../components/RemisionPreview';
-import { sumarProp } from '../utils/calculations';
-
-/* Estilos CSS avanzados para Pedidos Entregados */
-const pedidosEntregadosStyles = `
-  <style>
-    .pedidos-entregados-container {
-      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-      min-height: 100vh;
-      padding: 20px;
-    }
-
-    .entregados-stats-card {
-      background: linear-gradient(135deg, #ffffff, #f8fafc);
-      border-radius: 16px;
-      padding: 25px;
-      border: 1px solid #e5e7eb;
-      transition: all 0.3s ease;
-      cursor: pointer;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .entregados-stats-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-    }
-
-    .entregados-stats-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 4px;
-      background: linear-gradient(90deg, #10b981, #059669, #047857);
-    }
-
-    .entregados-professional-header {
-      background: linear-gradient(135deg, #10b981 0%, #047857 100%);
-      border-radius: 20px;
-      padding: 30px;
-      margin-bottom: 30px;
-      color: white;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .entregados-header-decoration {
-      position: absolute;
-      top: -50%;
-      right: -10%;
-      width: 300px;
-      height: 300px;
-      background: rgba(255,255,255,0.1);
-      border-radius: 50%;
-      z-index: 1;
-    }
-
-    .entregados-icon-container {
-      background: rgba(255,255,255,0.2);
-      border-radius: 16px;
-      padding: 20px;
-      backdrop-filter: blur(10px);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .entregados-table-modern {
-      background: linear-gradient(135deg, #ffffff, #f8fafc);
-      border-radius: 20px;
-      padding: 30px;
-      border: 1px solid #e5e7eb;
-      backdrop-filter: blur(10px);
-    }
-
-    .entregados-table-wrapper {
-      overflow-x: auto;
-      border-radius: 12px;
-      border: 1px solid #e5e7eb;
-    }
-
-    .entregados-table {
-      width: 100%;
-      border-collapse: collapse;
-      background: white;
-      border-radius: 12px;
-      overflow: hidden;
-    }
-
-    .entregados-table thead tr {
-      background: linear-gradient(135deg, #10b981 0%, #047857 100%);
-      color: white;
-    }
-
-    .entregados-table th {
-      padding: 20px 15px;
-      text-align: left;
-      font-size: 14px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .entregados-table tbody tr {
-      border-bottom: 1px solid #f3f4f6;
-      transition: all 0.3s ease;
-      cursor: pointer;
-    }
-
-    .entregados-table tbody tr:hover {
-      background: linear-gradient(135deg, #d1fae5, #a7f3d0);
-      transform: scale(1.01);
-    }
-
-    .entregados-table td {
-      padding: 20px 15px;
-      font-size: 14px;
-      color: #374151;
-    }
-
-    .entregados-action-btn {
-      background: linear-gradient(135deg, #10b981, #059669);
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 8px;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      margin: 0 2px;
-    }
-
-    .entregados-action-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4);
-    }
-
-    .entregados-action-btn.info {
-      background: linear-gradient(135deg, #3b82f6, #2563eb);
-    }
-
-    .entregados-action-btn.info:hover {
-      box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4);
-    }
-
-    .entregados-export-btn {
-      background: linear-gradient(135deg, #6366f1, #8b5cf6);
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 10px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      margin: 0 5px;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .entregados-export-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
-    }
-
-    .entregados-badge {
-      background: linear-gradient(135deg, #d1fae5, #a7f3d0);
-      color: #10b981;
-      padding: 6px 12px;
-      border-radius: 8px;
-      font-size: 12px;
-      font-weight: 600;
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-    }
-  </style>
-`;
-
-if (typeof document !== 'undefined') {
-  const existingStyles = document.getElementById('pedidos-entregados-styles');
-  if (!existingStyles) {
-    const styleElement = document.createElement('div');
-    styleElement.id = 'pedidos-entregados-styles';
-    styleElement.innerHTML = pedidosEntregadosStyles;
-    document.head.appendChild(styleElement);
-  }
-}
 
 export default function PedidosEntregados() {
   const [pedidosEntregados, setPedidosEntregados] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const [remisionPreview, setRemisionPreview] = useState(null);
+
+  const countThisMonth = pedidosEntregados.filter(p => {
+    const fechaEntrega = new Date(p.updatedAt || p.fechaRemision || p.createdAt || 0);
+    const hoy = new Date();
+    const diferencia = hoy.getTime() - fechaEntrega.getTime();
+    const diasDiferencia = Math.ceil(diferencia / (1000 * 3600 * 24));
+    return diasDiferencia <= 30;
+  }).length;
+
+  const statsCards = [
+    { iconClass: 'fa-solid fa-check-circle', gradient: 'linear-gradient(135deg, #10b981, #059669)', value: pedidosEntregados.length, label: 'Pedidos Entregados' },
+    { iconClass: 'fa-solid fa-dollar-sign', gradient: 'linear-gradient(135deg, #f59e0b, #ea580c)', value: `$${sumarProp(pedidosEntregados, 'total').toLocaleString('es-CO')}`, label: 'Ingresos Totales' },
+    { iconClass: 'fa-solid fa-calendar-alt', gradient: 'linear-gradient(135deg, #6366f1, #8b5cf6)', value: countThisMonth, label: 'Este Mes' }
+  ];
 
   const indexOfFirstItem = (currentPage - 1) * itemsPerPage;
   const currentItems = pedidosEntregados.slice(indexOfFirstItem, indexOfFirstItem + itemsPerPage);
@@ -234,7 +54,7 @@ export default function PedidosEntregados() {
   // Función para ver/obtener remisión (separada para reducir anidamiento en JSX)
   const verRemisionPreview = async (remision) => {
     try {
-      // Si la remisión tiene un _id, intentar obtener la versión completa desde el servidor
+      // Si la remisión tiene un _id, intentar obtener l;a versión completa desde el servidor
       if (remision?._id) {
         try {
           const res = await api.get(`/api/remisiones/${remision._id}`);
@@ -248,7 +68,7 @@ export default function PedidosEntregados() {
         }
       }
 
-      // Fallback: usar el objeto que llegó desde la lista
+      const styleElement = document.createElement('style');
       setRemisionPreview(remision);
     } catch (error) {
       console.error('Error cargando remisión para vista previa:', error);

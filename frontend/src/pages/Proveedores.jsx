@@ -6,6 +6,7 @@ import Swal from 'sweetalert2';
 import '../App.css';
 import Fijo from '../components/Fijo';
 import NavCompras from '../components/NavCompras';
+import AdvancedStats from '../components/AdvancedStats';
 import { contarProductosEnProveedores } from '../utils/calculations';
 
 const API_URL = '/api/proveedores';
@@ -827,6 +828,11 @@ ModalProductosProveedor.defaultProps = {
 
 const GestionProveedores = () => {
   const [proveedores, setProveedores] = useState([]);
+  const statsCards = [
+    { iconClass: 'fa-solid fa-truck', gradient: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', value: proveedores.length, label: 'Total Proveedores' },
+    { iconClass: 'fa-solid fa-check-circle', gradient: 'linear-gradient(135deg, #10b981, #059669)', value: proveedores.filter(p => p.activo !== false).length, label: 'Proveedores Activos' },
+    { iconClass: 'fa-solid fa-boxes', gradient: 'linear-gradient(135deg, #8b5cf6, #7c3aed)', value: contarProductosEnProveedores(proveedores), label: 'Total Productos' }
+  ];
   const [modalVisible, setModalVisible] = useState(false);
   const [modalProductosVisible, setModalProductosVisible] = useState(false);
   const [productosProveedor, setProductosProveedor] = useState([]);
@@ -915,81 +921,7 @@ const GestionProveedores = () => {
           </div>
 
           {/* Estadísticas avanzadas */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-            gap: '20px',
-            marginBottom: '30px'
-          }}>
-            <div className="proveedor-stats-card">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <div style={{
-                  background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-                  borderRadius: '12px',
-                  padding: '15px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <i className="fa-solid fa-truck" style={{ color: 'white', fontSize: '1.5rem' }}></i>
-                </div>
-                <div>
-                  <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                    {proveedores.length}
-                  </h3>
-                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
-                    Total Proveedores
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="proveedor-stats-card">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <div style={{
-                  background: 'linear-gradient(135deg, #10b981, #059669)',
-                  borderRadius: '12px',
-                  padding: '15px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <i className="fa-solid fa-check-circle" style={{ color: 'white', fontSize: '1.5rem' }}></i>
-                </div>
-                <div>
-                  <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                    {proveedores.filter(p => p.activo !== false).length}
-                  </h3>
-                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
-                    Proveedores Activos
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="proveedor-stats-card">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <div style={{
-                  background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
-                  borderRadius: '12px',
-                  padding: '15px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <i className="fa-solid fa-boxes" style={{ color: 'white', fontSize: '1.5rem' }}></i>
-                </div>
-                <div>
-                  <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                    {contarProductosEnProveedores(proveedores)}
-                  </h3>
-                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
-                    Total Productos
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+          <AdvancedStats cards={statsCards} />
 
           {/* Botón agregar */}
           <button 
