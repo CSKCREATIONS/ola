@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+/* global globalThis */
 import PropTypes from 'prop-types';
 
 export default function Modal({ isOpen, onClose, title, children, className, hideHeader }) {
@@ -9,8 +10,16 @@ export default function Modal({ isOpen, onClose, title, children, className, hid
         if (e.key === 'Escape') onClose?.();
       };
 
-      // determine the global event target safely (browser -> window, Node -> global)
-      const target = (typeof globalThis.window !== 'undefined') ? globalThis.window : (typeof global !== 'undefined' ? globalThis.window : null);
+      // determine the event target safely, prefer `globalThis.window` for Sonar/consistency
+      let target = null;
+      if (typeof globalThis !== 'undefined' && globalThis && globalThis.window) {
+        target = globalThis.window;
+      } else if (typeof window !== 'undefined') {
+        target = window;
+      } else if (typeof global !== 'undefined') {
+        target = global;
+      }
+
       if (target && typeof target.addEventListener === 'function') {
         target.addEventListener('keydown', handleKey);
         return () => target.removeEventListener('keydown', handleKey);
