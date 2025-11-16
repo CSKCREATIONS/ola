@@ -230,7 +230,8 @@ export default function PedidosCancelados() {
 
       const normalized = normalizePedidosArray(arr);
       const cancelados = normalized.filter(pedido => pedido?.estado === 'cancelado');
-      const canceladosOrdenados = cancelados.sort((a, b) => new Date(b.createdAt || b.fechaCreacion) - new Date(a.createdAt || a.fechaCreacion));
+      const canceladosOrdenados = cancelados.slice();
+      canceladosOrdenados.sort((a, b) => new Date(b.createdAt || b.fechaCreacion) - new Date(a.createdAt || a.fechaCreacion));
       setPedidosCancelados(canceladosOrdenados);
     } catch (error) {
       console.error('Error:', error);

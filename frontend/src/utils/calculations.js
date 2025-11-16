@@ -177,12 +177,12 @@ export const normalizePedido = (raw) => {
       // si el item tiene producto.data (Strapi)
       if (cloned.producto?.data) {
         const prod = cloned.producto.data;
-        cloned.producto = { _id: prod.id, ...(prod.attributes || {}) };
+        cloned.producto = prod.attributes ? { _id: prod.id, ...prod.attributes } : { _id: prod.id };
       }
       // si el item tiene product (mongoose populated)
       if (cloned.product?.attributes) {
         const prod = cloned.product;
-        cloned.product = { _id: prod.id || prod._id, ...(prod.attributes || {}) };
+        cloned.product = prod.attributes ? { _id: prod.id || prod._id, ...prod.attributes } : { _id: prod.id || prod._id };
       }
 
       // asegurarnos de que existan campos numericos coherentes

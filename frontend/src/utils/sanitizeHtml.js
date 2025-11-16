@@ -49,8 +49,8 @@ export default function sanitizeHtml(dirty) {
   } catch (e) {
     // Log and fallback: strip tags conservatively
     console.error('sanitizeHtml parse error:', e);
-    return dirty.replace(/<script[\s\S]*?>[\s\S]*?<\script>/gi, '')
-                .replace(/<style[\s\S]*?>[\s\S]*?<\style>/gi, '')
-                .replace(/on[a-z]+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, '');
+    return dirty.replaceAll(/<script[\s\S]*?>[\s\S]*?<\script>/gi, '')
+                .replaceAll(/<style[\s\S]*?>[\s\S]*?<\style>/gi, '')
+                .replaceAll(/on[a-z]+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, '');
   }
 }

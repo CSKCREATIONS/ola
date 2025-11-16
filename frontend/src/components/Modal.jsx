@@ -1,7 +1,21 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
 
 export default function Modal({ isOpen, onClose, title, children, className, hideHeader }) {
+  useEffect(() => {
+    // always call the hook; only attach the listener when the modal is open
+    if (!isOpen) return;
+    const handleKey = (e) => {
+      if (e.key === 'Escape') onClose?.();
+    };
+    const target = (typeof window !== 'undefined') ? window : (typeof global !== 'undefined' ? global : null);
+    if (target && target.addEventListener) {
+      target.addEventListener('keydown', handleKey);
+      return () => target.removeEventListener('keydown', handleKey);
+    }
+    return undefined;
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const overlayStyle = {
@@ -35,16 +49,22 @@ export default function Modal({ isOpen, onClose, title, children, className, hid
   return (
     <div
       style={overlayStyle}
-      aria-label={title || 'Modal'}
+      role="button"
+      aria-label="Close modal"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        // support Enter and Space keys to close the modal when overlay is focused
+        if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+          e.preventDefault();
+          onClose?.();
+        }
+      }}
       onClick={(e) => {
         // click on backdrop closes modal when clicking outside dialog
         if (e.target === e.currentTarget) onClose?.();
       }}
-      onKeyDown={(e) => {
-        if (e.key === 'Escape') onClose?.();
-      }}
     >
-      <div style={dialogStyle} className={className || ''}>
+      <div style={dialogStyle} className={className || ''} role="dialog" aria-label={title || 'Modal'} aria-modal="true">
         {!hideHeader && (
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1rem', borderBottom: '1px solid #ececec' }}>
             <div style={{ fontWeight: 700 }}>{title}</div>

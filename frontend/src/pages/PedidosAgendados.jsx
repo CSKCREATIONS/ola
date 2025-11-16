@@ -282,7 +282,7 @@ export default function PedidosAgendados() {
 
   const exportarPDF = () => {
     const elementosNoExport = document.querySelectorAll('.no-export');
-    elementosNoExport.forEach(el => el.style.display = 'none');
+    for (const el of elementosNoExport) { el.style.display = 'none'; }
 
     const input = document.getElementById('tabla_despachos');
     html2canvas(input).then((canvas) => {
@@ -305,20 +305,20 @@ export default function PedidosAgendados() {
       }
 
       pdf.save('pedidos_agendados.pdf');
-      elementosNoExport.forEach(el => el.style.display = '');
+      for (const el of elementosNoExport) { el.style.display = ''; }
     });
   };
 
   const exportarExcel = () => {
     const elementosNoExport = document.querySelectorAll('.no-export');
-    elementosNoExport.forEach(el => el.style.display = 'none');
+    for (const el of elementosNoExport) { el.style.display = 'none'; }
 
     const tabla = document.getElementById("tabla_despachos");
     const workbook = XLSX.utils.table_to_book(tabla, { sheet: "Pedidos Agendados" });
-    workbook.Sheets["Pedidos Agendados"]["!cols"] = Array(8).fill({ width: 20 });
+    workbook.Sheets["Pedidos Agendados"]["!cols"] = new Array(8).fill({ width: 20 });
 
     XLSX.writeFile(workbook, 'pedidos_agendados.xlsx');
-    elementosNoExport.forEach(el => el.style.display = '');
+    for (const el of elementosNoExport) { el.style.display = ''; }
   };
 
   const cancelarPedido = async (id) => {

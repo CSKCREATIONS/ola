@@ -1,6 +1,6 @@
 // services/emailService.js
-const { enviarCorreoGmail } = require('../utils/gmailSender');
-const { enviarCorreoSendGrid } = require('../utils/emailSender');
+const { enviarConGmail } = require('../utils/gmailSender');
+const { sendMail } = require('../utils/emailSender');
 
 class EmailService {
   /**
@@ -15,18 +15,18 @@ class EmailService {
     
     try {
       console.log('📧 Intentando enviar con Gmail...');
-      await enviarCorreoGmail(destinatario, asunto, htmlContent, attachments);
+      await enviarConGmail(destinatario, asunto, htmlContent, attachments);
       console.log('✅ Correo enviado exitosamente con Gmail');
       return { success: true, provider: 'gmail' };
     } catch (error) {
-      console.warn('⚠️ Gmail falló, intentando con SendGrid...', error.message);
+      console.warn('⚠️ Gmail falló, intentando con sendMail wrapper...', error.message);
       try {
-        await enviarCorreoSendGrid(destinatario, asunto, htmlContent, attachments);
-        console.log('✅ Correo enviado exitosamente con SendGrid (fallback)');
-        return { success: true, provider: 'sendgrid' };
+        await sendMail(destinatario, asunto, htmlContent, attachments);
+        console.log('✅ Correo enviado exitosamente con sendMail (fallback)');
+        return { success: true, provider: 'sendmail-wrapper' };
       } catch (error_) {
         console.error('❌ Ambos servicios de email fallaron');
-        throw new Error(`Gmail: ${error.message}. SendGrid: ${error_.message}`);
+        throw new Error(`Gmail: ${error.message}. sendMail: ${error_.message}`);
       }
     }
   }

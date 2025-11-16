@@ -139,6 +139,7 @@ exports.enviarRemisionPorCorreo = async (req, res) => {
 // Obtener todas las remisiones
 exports.getAllRemisiones = async (req, res) => {
   try {
+    console.log(`[remisionController] getAllRemisiones - reqId: ${req.id} userId: ${req.userId} permissions:`, req.permissions);
     const { estado, limite = 50, pagina = 1 } = req.query;
     
     let filtro = {};

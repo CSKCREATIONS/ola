@@ -7,8 +7,8 @@ const Cliente = require('../models/Cliente');
 const Remision = require('../models/Remision');
 const Venta = require('../models/venta');
 const PDFService = require('../services/pdfService');
-const { enviarCorreoGmail } = require('../utils/gmailSender');
-const { enviarCorreoSendGrid } = require('../utils/emailSender');
+const { enviarConGmail } = require('../utils/gmailSender');
+const { sendMail } = require('../utils/emailSender');
 const mongoose = require('mongoose');
 
 // Helper: sanitizar IDs para prevenir inyección NoSQL
@@ -26,16 +26,16 @@ async function enviarCorreoConAttachment(destinatario, asunto, htmlContent, pdfA
   
   try {
     console.log('📧 Intentando enviar con Gmail...');
-    await enviarCorreoGmail(destinatario, asunto, htmlContent, attachments);
+    await enviarConGmail(destinatario, asunto, htmlContent, attachments);
     console.log('✅ Correo enviado exitosamente con Gmail');
   } catch (error) {
-    console.warn('⚠️ Gmail falló, intentando con SendGrid...', error.message);
+    console.warn('⚠️ Gmail falló, intentando con sendMail wrapper...', error.message);
     try {
-      await enviarCorreoSendGrid(destinatario, asunto, htmlContent, attachments);
-      console.log('✅ Correo enviado exitosamente con SendGrid (fallback)');
+      await sendMail(destinatario, asunto, htmlContent, attachments);
+      console.log('✅ Correo enviado exitosamente con sendMail (fallback)');
     } catch (error_) {
       console.error('❌ Ambos servicios de email fallaron');
-      throw new Error(`Gmail: ${error.message}. SendGrid: ${error_.message}`);
+      throw new Error(`Gmail: ${error.message}. sendMail: ${error_.message}`);
     }
   }
 }
@@ -107,7 +107,7 @@ exports.createPedido = async (req, res) => {
     } = req.body || {};
 
     // Validaciones mínimas
-    if (!cliente || !cliente.correo) {
+    if (!cliente?.correo) {
       return res.status(400).json({ message: 'Datos de cliente inválidos' });
     }
 

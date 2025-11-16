@@ -3,6 +3,7 @@ const router = express.Router();
 const { verifyToken } = require('../middlewares/authJwt');
 const { checkPermission } = require('../middlewares/role');
 const remisionController = require('../controllers/remisionController');
+const pedidoController = require('../controllers/pedidoControllers');
 
 // Obtener todas las remisiones
 router.get('/',
@@ -30,6 +31,13 @@ router.get('/debug/ids',
       res.status(500).json({ error: error.message });
     }
   }
+);
+
+// Crear remisión desde un pedido (si ya existe, retorna la existente)
+router.post('/crear-desde-pedido/:id',
+  verifyToken,
+  checkPermission('remisiones.crear'),
+  pedidoController.remisionarPedido
 );
 
 // Obtener estadísticas de remisiones

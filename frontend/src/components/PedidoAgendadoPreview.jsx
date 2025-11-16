@@ -49,12 +49,16 @@ const PedidoAgendadoPreview = ({ datos, onClose, onEmailSent, onRemisionar }) =>
         asunto: asunto,
         mensaje: mensaje
       });
+      // Si el backend devuelve un body con información, usarla para decidir éxito
+      const resData = response?.data;
+      const okStatus = response?.status >= 200 && response?.status < 300;
+      const backendOk = resData?.success !== false; // si backend indica explícitamente failure
 
-      if (response.status >= 200 && response.status < 300) {
+      if (okStatus && backendOk) {
         Swal.fire({
           icon: 'success',
           title: 'Correo enviado',
-          text: 'El pedido agendado ha sido enviado exitosamente',
+          text: (resData && (resData.message || 'El pedido agendado ha sido enviado exitosamente')) || 'El pedido agendado ha sido enviado exitosamente',
           confirmButtonColor: '#fd7e14'
         });
         setShowEnviarModal(false);
@@ -69,14 +73,17 @@ const PedidoAgendadoPreview = ({ datos, onClose, onEmailSent, onRemisionar }) =>
           onEmailSent(datos._id);
         }
       } else {
-        throw new Error('Error al enviar correo');
+        const errMsg = (resData && (resData.message || JSON.stringify(resData))) || `HTTP ${response?.status}`;
+        console.error('Enviar correo - backend responded with error-like body:', response, resData);
+        throw new Error(errMsg);
       }
     } catch (error_) {
-      console.error('Error:', error_);
+      console.error('Error enviando pedido por correo:', error_);
+      const backendMessage = error_?.response?.data?.message || error_?.message || 'No se pudo enviar el correo';
       Swal.fire({
         icon: 'error',
         title: 'Error',
-        text: 'No se pudo enviar el correo',
+        text: backendMessage,
         confirmButtonColor: '#fd7e14'
       });
     }
