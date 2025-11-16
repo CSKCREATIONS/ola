@@ -8,6 +8,7 @@ const crypto = require('node:crypto');
 const { sendMail } = require('../utils/emailSender');
 
 const { validationResult } = require('express-validator');
+const { normalizeCotizacionProductos } = require('../utils/normalize');
 
 // Configurar SendGrid de forma segura para no bloquear el arranque
 try {
@@ -193,24 +194,10 @@ exports.getCotizaciones = async (req, res) => {
         .sort({ createdAt: -1 });
     }
 
-    // Process each cotization to ensure product data is properly structured
+    // Normalize product entries for each cotización
     const processedCotizaciones = cotizaciones.map(cotizacion => {
-      const cotObj = cotizacion.toObject();
-      if (Array.isArray(cotObj.productos)) {
-        cotObj.productos = cotObj.productos.map(p => {
-          if (p.producto?.id) {
-            // Handle both populated and non-populated product data
-            if (typeof p.producto.id === 'object' && p.producto.id.name) {
-              // Populated data
-              p.producto.name = p.producto.id.name || p.producto.name;
-              p.producto.price = p.producto.id.price || p.producto.price;
-              p.producto.description = p.producto.id.description || p.producto.description;
-            }
-            // If not populated or missing, keep original name
-          }
-          return p;
-        });
-      }
+      const cotObj = (typeof cotizacion.toObject === 'function') ? cotizacion.toObject() : structuredClone(cotizacion);
+      cotObj.productos = normalizeCotizacionProductos(cotObj.productos);
       return cotObj;
     });
 
@@ -254,18 +241,9 @@ exports.getCotizacionById = async (req, res) => {
       return res.status(404).json({ message: 'Cotización no encontrada' });
     }
 
-    // Flatten populated product data for easier frontend consumption
-    const cotObj = cotizacion.toObject();
-    if (Array.isArray(cotObj.productos)) {
-      cotObj.productos = cotObj.productos.map(p => {
-        if (p.producto?.id) {
-          p.producto.name = p.producto.id.name || p.producto.name;
-          p.producto.price = p.producto.id.price || p.producto.price;
-          p.producto.description = p.producto.id.description || p.producto.description;
-        }
-        return p;
-      });
-    }
+    // Flatten populated product data for easier frontend consumption using helper
+    const cotObj = (typeof cotizacion.toObject === 'function') ? cotizacion.toObject() : structuredClone(cotizacion);
+    cotObj.productos = normalizeCotizacionProductos(cotObj.productos);
 
     res.status(200).json({ data: cotObj });
   } catch (error) {
@@ -408,17 +386,8 @@ exports.getUltimaCotizacionPorCliente = async (req, res) => {
 
     if (!cotizacion) return res.status(404).json({ message: 'No hay cotización' });
 
-    const cotObj = cotizacion.toObject();
-    if (Array.isArray(cotObj.productos)) {
-      cotObj.productos = cotObj.productos.map(p => {
-        if (p.producto?.id) {
-          p.producto.name = p.producto.id.name || p.producto.name;
-          p.producto.price = p.producto.id.price || p.producto.price;
-          p.producto.description = p.producto.id.description || p.producto.description;
-        }
-        return p;
-      });
-    }
+    const cotObj = (typeof cotizacion.toObject === 'function') ? cotizacion.toObject() : structuredClone(cotizacion);
+    cotObj.productos = normalizeCotizacionProductos(cotObj.productos);
 
     res.json({ data: cotObj });
   } catch (error) {

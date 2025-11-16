@@ -36,4 +36,31 @@ function calcularTotales(productos = []) {
   return { subtotal: Number(subtotal), descuentos: Number(descuentos), total: Number(total) };
 }
 
-module.exports = { parseNumber, normalizeProducto, calcularTotales };
+// Normalize product entries coming from cotizaciones so that when
+// `producto.id` is populated (as an object) we merge fields into
+// the `producto` object used by the frontend/export templates.
+function normalizeCotizacionProductos(productos = []) {
+  if (!Array.isArray(productos)) return productos;
+  return productos.map((p) => {
+    try {
+      const prodRef = p.producto?.id;
+      if (prodRef && typeof prodRef === 'object') {
+        p.producto = {
+          ...p.producto,
+          name: prodRef.name ?? p.producto?.name,
+          price: prodRef.price ?? p.producto?.price,
+          description: prodRef.description ?? p.producto?.description,
+          codigo: prodRef.codigo ?? p.producto?.codigo
+        };
+      }
+    } catch (error_) {
+      // keep original item on error, but log the exception for debugging
+      if (typeof console !== 'undefined' && typeof console.error === 'function') {
+        console.error('normalizeCotizacionProductos error for item:', error_, p);
+      }
+    }
+    return p;
+  });
+}
+
+module.exports = { parseNumber, normalizeProducto, calcularTotales, normalizeCotizacionProductos };

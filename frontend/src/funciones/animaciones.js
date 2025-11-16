@@ -62,7 +62,8 @@ export function openModal(modalId) {
                 return;
             }
         } catch (e) {
-            // fallthrough a estilo display
+            // Si ocurre un error al usar la API de <dialog>, registrarlo y seguir con el fallback por estilos
+            console.warn('openModal: fallback to display due to dialog API error:', e);
         }
 
         targetModal.style.display = 'flex';
@@ -89,7 +90,8 @@ export function closeModal(modalId) {
             return;
         }
     } catch (e) {
-        // ignore and fallback to style changes
+        // Registrar el error y seguir con el fallback por estilos
+        console.warn('closeModal: fallback to style due to dialog API error:', e);
     }
 
     // Fallback: ocultar por CSS si existe style

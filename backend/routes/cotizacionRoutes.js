@@ -6,6 +6,7 @@ const Cotizacion = require('../models/cotizaciones'); // ajusta la ruta si es di
 const Product = require('../models/Products'); // Ensure Product model is loaded
 const { checkPermission } = require('../middlewares/role');
 const { validateObjectIdParam, isValidObjectId } = require('../utils/objectIdValidator');
+const { normalizeCotizacionProductos } = require('../utils/normalize');
 
 /**
  * normalizeCotizacion
@@ -15,30 +16,8 @@ const { validateObjectIdParam, isValidObjectId } = require('../utils/objectIdVal
  */
 function normalizeCotizacion(cotizacionDoc) {
   if (!cotizacionDoc) return cotizacionDoc;
-  const cotObj = (typeof cotizacionDoc.toObject === 'function')
-    ? cotizacionDoc.toObject()
-    : structuredClone(cotizacionDoc);
-
-  if (!Array.isArray(cotObj.productos)) return cotObj;
-
-  cotObj.productos = cotObj.productos.map((p) => {
-    try {
-      const prodRef = p.producto?.id;
-      if (prodRef && typeof prodRef === 'object' && (prodRef.name || prodRef.price || prodRef.description)) {
-        p.producto = {
-          ...p.producto,
-          name: prodRef.name ?? p.producto.name,
-          price: prodRef.price ?? p.producto.price,
-          description: prodRef.description ?? p.producto.description
-        };
-      }
-    } catch (e) {
-      // Don't fail the whole response for a single malformed item
-      console.debug('normalizeCotizacion item error', e);
-    }
-    return p;
-  });
-
+  const cotObj = (typeof cotizacionDoc.toObject === 'function') ? cotizacionDoc.toObject() : structuredClone(cotizacionDoc);
+  cotObj.productos = normalizeCotizacionProductos(cotObj.productos);
   return cotObj;
 }
 

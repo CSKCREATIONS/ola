@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import api from '../api/axiosConfig';
 import PropTypes from 'prop-types';
+import LabeledInput from '../components/LabeledInput';
 import Swal from 'sweetalert2';
 import '../App.css';
 import Fijo from '../components/Fijo';
@@ -86,8 +87,13 @@ const ModalEditarCliente = ({ cliente, onClose, onSave }) => {
   };
 
   return (
-      <div
+      <div role="dialog" tabIndex={-1}
       onClick={handleOverlayClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') {
+          onClose();
+        }
+      }}
       style={{
         position: 'fixed',
         top: 0,
@@ -99,9 +105,10 @@ const ModalEditarCliente = ({ cliente, onClose, onSave }) => {
         alignItems: 'center',
         justifyContent: 'center',
         zIndex: 1000,
-        padding: '1rem'
+        padding: '1rem',
+        border: 'none',
+        WebkitOverflowScrolling: 'touch'
       }}
-      role="dialog"
       aria-modal="true"
       aria-label="Editar cliente"
     >
@@ -174,7 +181,7 @@ const ModalEditarCliente = ({ cliente, onClose, onSave }) => {
             flexDirection: 'column'
           }}
         >
-          <div style={{
+            <div style={{
             background: 'white',
             padding: '1.5rem',
             borderRadius: '12px',
@@ -183,181 +190,46 @@ const ModalEditarCliente = ({ cliente, onClose, onSave }) => {
             flexDirection: 'column',
             gap: '1.25rem'
           }}>
-            <div>
-              <label
-                htmlFor="input-cliente-nombre"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  marginBottom: '0.5rem',
-                  fontWeight: '600',
-                  color: '#374151',
-                  fontSize: '0.95rem'
-                }}
-              >
-                <i className="fa-solid fa-user" style={{ color: '#2563eb' }} aria-hidden="true"></i>
-                <span>Nombre</span>
-                <span style={{ color: '#ef4444' }}>*</span>
-              </label>
-              <input
-                id="input-cliente-nombre"
-                type="text"
-                name="nombre"
-                value={form.nombre || ''}
-                onChange={handleChange}
-                required
-                style={{
-                  width: '100%',
-                  padding: '0.75rem 1rem',
-                  border: '2px solid #e5e7eb',
-                  borderRadius: '8px',
-                  fontSize: '1rem',
-                  transition: 'all 0.3s ease',
-                  backgroundColor: '#f9fafb'
-                }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = '#2563eb';
-                  e.target.style.backgroundColor = 'white';
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = '#e5e7eb';
-                  e.target.style.backgroundColor = '#f9fafb';
-                }}
-              />
-            </div>
+            <LabeledInput
+              id="input-cliente-nombre"
+              label="Nombre"
+              iconClass="fa-solid fa-user"
+              name="nombre"
+              value={form.nombre || ''}
+              onChange={handleChange}
+              required
+            />
 
-            <div>
-              <label
-                htmlFor="input-cliente-ciudad"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  marginBottom: '0.5rem',
-                  fontWeight: '600',
-                  color: '#374151',
-                  fontSize: '0.95rem'
-                }}
-              >
-                <i className="fa-solid fa-city" style={{ color: '#2563eb' }} aria-hidden="true"></i>
-                <span>Ciudad</span>
-                <span style={{ color: '#ef4444' }}>*</span>
-              </label>
-              <input
-                id="input-cliente-ciudad"
-                type="text"
-                name="ciudad"
-                value={form.ciudad || ''}
-                onChange={handleChange}
-                required
-                style={{
-                  width: '100%',
-                  padding: '0.75rem 1rem',
-                  border: '2px solid #e5e7eb',
-                  borderRadius: '8px',
-                  fontSize: '1rem',
-                  transition: 'all 0.3s ease',
-                  backgroundColor: '#f9fafb'
-                }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = '#2563eb';
-                  e.target.style.backgroundColor = 'white';
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = '#e5e7eb';
-                  e.target.style.backgroundColor = '#f9fafb';
-                }}
-              />
-            </div>
+            <LabeledInput
+              id="input-cliente-ciudad"
+              label="Ciudad"
+              iconClass="fa-solid fa-city"
+              name="ciudad"
+              value={form.ciudad || ''}
+              onChange={handleChange}
+              required
+            />
 
-            <div>
-              <label
-                htmlFor="input-cliente-telefono"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  marginBottom: '0.5rem',
-                  fontWeight: '600',
-                  color: '#374151',
-                  fontSize: '0.95rem'
-                }}
-              >
-                <i className="fa-solid fa-phone" style={{ color: '#2563eb' }} aria-hidden="true"></i>
-                <span>Teléfono</span>
-                <span style={{ color: '#ef4444' }}>*</span>
-              </label>
-              <input
-                id="input-cliente-telefono"
-                type="text"
-                name="telefono"
-                value={form.telefono || ''}
-                onChange={handleChange}
-                required
-                style={{
-                  width: '100%',
-                  padding: '0.75rem 1rem',
-                  border: '2px solid #e5e7eb',
-                  borderRadius: '8px',
-                  fontSize: '1rem',
-                  transition: 'all 0.3s ease',
-                  backgroundColor: '#f9fafb'
-                }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = '#2563eb';
-                  e.target.style.backgroundColor = 'white';
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = '#e5e7eb';
-                  e.target.style.backgroundColor = '#f9fafb';
-                }}
-              />
-            </div>
+            <LabeledInput
+              id="input-cliente-telefono"
+              label="Teléfono"
+              iconClass="fa-solid fa-phone"
+              name="telefono"
+              value={form.telefono || ''}
+              onChange={handleChange}
+              required
+            />
 
-            <div>
-              <label
-                htmlFor="input-cliente-correo"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  marginBottom: '0.5rem',
-                  fontWeight: '600',
-                  color: '#374151',
-                  fontSize: '0.95rem'
-                }}
-              >
-                <i className="fa-solid fa-envelope" style={{ color: '#2563eb' }} aria-hidden="true"></i>
-                <span>Correo</span>
-                <span style={{ color: '#ef4444' }}>*</span>
-              </label>
-              <input
-                id="input-cliente-correo"
-                type="email"
-                name="correo"
-                value={form.correo || ''}
-                onChange={handleChange}
-                required
-                style={{
-                  width: '100%',
-                  padding: '0.75rem 1rem',
-                  border: '2px solid #e5e7eb',
-                  borderRadius: '8px',
-                  fontSize: '1rem',
-                  transition: 'all 0.3s ease',
-                  backgroundColor: '#f9fafb'
-                }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = '#2563eb';
-                  e.target.style.backgroundColor = 'white';
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = '#e5e7eb';
-                  e.target.style.backgroundColor = '#f9fafb';
-                }}
-              />
-            </div>
+            <LabeledInput
+              id="input-cliente-correo"
+              label="Correo"
+              iconClass="fa-solid fa-envelope"
+              name="correo"
+              type="email"
+              value={form.correo || ''}
+              onChange={handleChange}
+              required
+            />
           </div>
         </form>
 
@@ -421,7 +293,7 @@ const ModalEditarCliente = ({ cliente, onClose, onSave }) => {
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = 'none';
+              e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.08)';
             }}
           >
             <i className="fa-solid fa-save" aria-hidden="true"></i>
