@@ -7,6 +7,7 @@ import api from '../api/axiosConfig';
 import {
   getStoredUser,
 } from '../utils/emailHelpers';
+import sanitizeHtml from '../utils/sanitizeHtml';
 import { makeCotizacionTemplate } from '../utils/emailTemplates';
 import { calcularSubtotalProducto, calcularTotales } from '../utils/calculations';
 import { formatCurrency } from '../utils/formatters';
@@ -246,10 +247,10 @@ export default function FormatoCotizacion({ datos, onClose, onEmailSent }) {
           <hr />
           {!isEmptyHTML(datos.descripcion) && (
             <>
-              <div className="descripcion-cotizacion">
-                <h4>Descripción cotización</h4>
-                <div dangerouslySetInnerHTML={{ __html: datos.descripcion }} />
-              </div>
+                  <div className="descripcion-cotizacion">
+                    <h4>Descripción cotización</h4>
+                    <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(datos.descripcion) }} />
+                  </div>
               <hr />
             </>
           )}
@@ -292,7 +293,7 @@ export default function FormatoCotizacion({ datos, onClose, onEmailSent }) {
             <>
               <div className="condiciones-pago">
                 <h4>Condiciones de pago</h4>
-                <div dangerouslySetInnerHTML={{ __html: datos.condicionesPago }} />
+                <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(datos.condicionesPago) }} />
               </div>
               <br />
             </>

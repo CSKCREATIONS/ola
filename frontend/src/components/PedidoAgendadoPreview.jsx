@@ -5,6 +5,7 @@ import api from '../api/axiosConfig';
 import { makePedidoAgendadoTemplate } from '../utils/emailTemplates';
 import { formatDate } from '../utils/formatters';
 import { calcularTotales } from '../utils/calculations';
+import sanitizeHtml from '../utils/sanitizeHtml';
 
 const PedidoAgendadoPreview = ({ datos, onClose, onEmailSent, onRemisionar }) => {
   const [showEnviarModal, setShowEnviarModal] = useState(false);
@@ -150,12 +151,13 @@ const PedidoAgendadoPreview = ({ datos, onClose, onEmailSent, onRemisionar }) =>
       const doc = newWindow.document;
       const title = `Pedido Agendado - ${datos?.numeroPedido}`;
       const htmlContent = printContent?.innerHTML || '';
+      const safeHtml = sanitizeHtml(htmlContent);
       const style = buildStyle();
 
       // Try DOM manipulation first
-      if (!trySetDocWithDOM(doc, title, htmlContent, style)) {
+      if (!trySetDocWithDOM(doc, title, safeHtml, style)) {
         // Fallback to outerHTML
-        trySetDocOuterHTML(doc, title, htmlContent, style);
+        trySetDocOuterHTML(doc, title, safeHtml, style);
       }
 
       newWindow.focus();

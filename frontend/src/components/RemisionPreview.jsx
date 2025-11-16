@@ -9,6 +9,7 @@ import {
 } from '../utils/emailHelpers';
 import { randomString } from '../utils/secureRandom';
 import { calcularTotales } from '../utils/calculations';
+import sanitizeHtml from '../utils/sanitizeHtml';
 /* global globalThis */
 
 export default function RemisionPreview({ datos, onClose }) {
@@ -289,7 +290,8 @@ ${getCompanyName()}
                 headEl.appendChild(styleEl);
                 // Set body content
                 const bodyEl = doc.body || doc.createElement('body');
-                bodyEl.innerHTML = printContent?.innerHTML || '';
+                const raw = printContent?.innerHTML || '';
+                bodyEl.innerHTML = sanitizeHtml(raw);
                 if (!doc.body) doc.documentElement.appendChild(bodyEl);
                 // Print after DOM is ready
                 setTimeout(() => {

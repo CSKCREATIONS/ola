@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { calcularSubtotalProducto } from '../utils/calculations';
 import { formatCurrency } from '../utils/formatters';
 import OrderDetailsHeader from './OrderDetailsHeader';
+import sanitizeHtml from '../utils/sanitizeHtml';
 
 export default function DetallesOrdenModal({ visible, orden, onClose, onPrint, onSendEmail }) {
   const modalRef = useRef(null);
@@ -71,6 +72,8 @@ export default function DetallesOrdenModal({ visible, orden, onClose, onPrint, o
                   if (!printContent) return;
                   const newWindow = window.open('', '_blank');
                   if (!newWindow) return;
+                  const rawContent = printContent.innerHTML;
+                  const safeContent = sanitizeHtml(rawContent);
                   const html = `
                     <html>
                       <head>
@@ -87,7 +90,7 @@ export default function DetallesOrdenModal({ visible, orden, onClose, onPrint, o
                               </style>
                       </head>
                       <body>
-                        ${printContent.innerHTML}
+                        ${safeContent}
                       </body>
                     </html>
                   `;

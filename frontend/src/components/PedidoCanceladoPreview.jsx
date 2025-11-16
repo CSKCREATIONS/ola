@@ -9,6 +9,7 @@ import {
 import { makePedidoCanceladoTemplate } from '../utils/emailTemplates';
 import { formatDate } from '../utils/formatters';
 import { calcularTotales } from '../utils/calculations';
+import sanitizeHtml from '../utils/sanitizeHtml';
 
 export default function PedidoCanceladoPreview({ datos, onClose, onEmailSent }) {
   // Obtener usuario del localStorage
@@ -141,6 +142,7 @@ export default function PedidoCanceladoPreview({ datos, onClose, onEmailSent }) 
                 if (!newWindow) return;
 
                 const contentHtml = printContent ? printContent.innerHTML : '';
+                const safeContent = sanitizeHtml(contentHtml);
 
                 const html = `
                   <!doctype html>
@@ -161,14 +163,14 @@ export default function PedidoCanceladoPreview({ datos, onClose, onEmailSent }) 
                           <span>Enviar Notificación</span>
                         </button>
                       </div>
-                      ${contentHtml}
+                      ${safeContent}
                     </body>
                   </html>
                 `;
 
                 try {
                   // Preferred: replace the documentElement's HTML without using document.write
-                  newWindow.document.documentElement.innerHTML = html;
+                    newWindow.document.documentElement.innerHTML = html;
                 } catch (err) {
                   // Log the original error and fallback to safer DOM methods
                   console.warn('Failed to set newWindow.document.documentElement.innerHTML, falling back to safe DOM population.', err);
@@ -176,10 +178,10 @@ export default function PedidoCanceladoPreview({ datos, onClose, onEmailSent }) 
                     newWindow.document.open();
                     newWindow.document.close();
                     if (newWindow.document.body) {
-                      newWindow.document.body.innerHTML = contentHtml;
+                      newWindow.document.body.innerHTML = safeContent;
                     } else {
                       const body = newWindow.document.createElement('body');
-                      body.innerHTML = contentHtml;
+                      body.innerHTML = safeContent;
                       newWindow.document.documentElement.appendChild(body);
                     }
                   } catch (e) {
