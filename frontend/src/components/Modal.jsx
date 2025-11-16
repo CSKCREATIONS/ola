@@ -14,9 +14,9 @@ export default function Modal({ isOpen, onClose, title, children, className, hid
       let target = null;
       if (typeof globalThis !== 'undefined' && globalThis && globalThis.window) {
         target = globalThis.window;
-      } else if (typeof window !== 'undefined') {
-        target = window;
-      } else if (typeof global !== 'undefined') {
+      } else if (typeof globalThis.window !== 'undefined') {
+        target = globalThis.window;
+      } else if (typeof globalThis !== 'undefined') {
         target = global;
       }
 
