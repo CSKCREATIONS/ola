@@ -7,6 +7,7 @@ import {
   getStoredUser,
   getCompanyName
 } from '../utils/emailHelpers';
+import sanitizeHtml from '../utils/sanitizeHtml';
 import { makeCotizacionTemplate } from '../utils/emailTemplates';
 import { formatDate } from '../utils/formatters';
 import { calcularTotales } from '../utils/calculations';
@@ -741,7 +742,8 @@ export default function CotizacionPreview({ datos, onClose, onEmailSent, onRemis
                     const desc = datos.descripcion;
                     const looksLikeHtml = typeof desc === 'string' && /<[^>]+>/.test(desc);
                     if (looksLikeHtml) {
-                      return <div dangerouslySetInnerHTML={{ __html: desc }} />;
+                      const safeHtml = sanitizeHtml(desc);
+                      return <div dangerouslySetInnerHTML={{ __html: safeHtml }} />;
                     }
                     return <div style={{ whiteSpace: 'pre-wrap' }}>{desc}</div>;
                   })()}
