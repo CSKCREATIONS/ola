@@ -149,3 +149,65 @@ export const calcularInventario = (productos = []) => {
     avgValuePerProduct: roundMoney(avg)
   };
 };
+
+/**
+ * Normaliza un objeto pedido a una forma consistente usada por el frontend.
+ * Soporta objetos provenientes de Strapi ({ id, attributes }) y de Mongo ({ _id, ... }).
+ * También desanida `cliente` y `productos` cuando vienen en forma poblada de Strapi.
+ * @param {object} raw - pedido crudo
+ * @returns {object} pedido normalizado
+ */
+export const normalizePedido = (raw) => {
+  if (!raw) return null;
+
+  // Si es Strapi-like: { id, attributes }
+  const base = raw.attributes ? { ...raw.attributes, _id: raw.id } : { ...raw };
+
+  // Normalizar cliente (Strapi nested: cliente.data)
+  if (base.cliente?.data) {
+    const c = base.cliente.data;
+    base.cliente = { _id: c.id, ...(c.attributes) };
+  }
+
+  // Normalizar productos (pueden venir como array de objetos con producto.data)
+  if (Array.isArray(base.productos)) {
+    base.productos = base.productos.map((p) => {
+      if (!p) return p;
+      const cloned = { ...p };
+      // si el item tiene producto.data (Strapi)
+      if (cloned.producto?.data) {
+        const prod = cloned.producto.data;
+        cloned.producto = { _id: prod.id, ...(prod.attributes || {}) };
+      }
+      // si el item tiene product (mongoose populated)
+      if (cloned.product?.attributes) {
+        const prod = cloned.product;
+        cloned.product = { _id: prod.id || prod._id, ...(prod.attributes || {}) };
+      }
+
+      // asegurarnos de que existan campos numericos coherentes
+      cloned.cantidad = Number(cloned.cantidad) || Number(cloned.qty) || 0;
+      cloned.valorUnitario = Number(cloned.valorUnitario || cloned.precioUnitario || cloned.price || cloned.producto?.precioUnitario || cloned.product?.precioUnitario) || 0;
+      cloned.precioUnitario = cloned.valorUnitario;
+      cloned.total = Number(cloned.total) || roundMoney(cloned.cantidad * cloned.precioUnitario) || 0;
+
+      return cloned;
+    });
+  }
+
+  // Asegurar campos base numéricos
+  base.total = Number(base.total) || (Array.isArray(base.productos) ? base.productos.reduce((s, it) => s + (Number(it.total) || 0), 0) : 0);
+  base.numeroPedido = base.numeroPedido || base.numero || base.codigoPedido || null;
+
+  return base;
+};
+
+/**
+ * Normaliza un arreglo de pedidos
+ * @param {Array} arr
+ * @returns {Array}
+ */
+export const normalizePedidosArray = (arr = []) => {
+  if (!Array.isArray(arr)) return [];
+  return arr.map(normalizePedido).filter(Boolean);
+};

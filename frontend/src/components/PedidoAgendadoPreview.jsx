@@ -202,7 +202,7 @@ const PedidoAgendadoPreview = ({ datos, onClose, onEmailSent, onRemisionar }) =>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <i className="fa-solid fa-calendar-check" style={{ fontSize: '1.8rem' }} aria-hidden={true}></i>
             <div>
-              <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 'bold' }}>
+              <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 'bold' ,  alignItems: 'center'}}>
                 Pedido Agendado
               </h2>
               <p style={{ margin: 0, opacity: 0.9, fontSize: '0.95rem' }}>

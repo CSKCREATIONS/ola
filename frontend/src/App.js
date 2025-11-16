@@ -1,6 +1,7 @@
 import React from 'react';
 import { Routes, Route, BrowserRouter, } from "react-router-dom";
 import './tablesModernStyles.css'; // Estilos para eliminar bordes blancos
+import './App.css';
 import ListaDeUsuarios from './pages/ListaDeUsuarios';
 import CambiarContrasena from './components/CambiarContraseña';
 import Perfil from './pages/Perfil';

@@ -1,12 +1,202 @@
 import React, { useEffect, useState } from 'react';
 import Fijo from '../components/Fijo';
 import NavVentas from '../components/NavVentas';
-import exportElementToPdf from '../utils/exportToPdf';
-import api from '../api/axiosConfig';
-import Swal from 'sweetalert2';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 import * as XLSX from 'xlsx';
-import { sumarProp } from '../utils/calculations';
+import Swal from 'sweetalert2';
+import api from '../api/axiosConfig';
+import { normalizePedidosArray } from '../utils/calculations';
 import RemisionPreview from '../components/RemisionPreview';
+
+/* Estilos CSS avanzados para Pedidos Entregados */
+const pedidosEntregadosStyles = `
+  <style>
+    .pedidos-entregados-container {
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .entregados-stats-card {
+      background: linear-gradient(135deg, #ffffff, #f8fafc);
+      border-radius: 16px;
+      padding: 25px;
+      border: 1px solid #e5e7eb;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .entregados-stats-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    }
+
+    .entregados-stats-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #10b981, #059669, #047857);
+    }
+
+    .entregados-professional-header {
+      background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+      border-radius: 20px;
+      padding: 30px;
+      margin-bottom: 30px;
+      color: white;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .entregados-header-decoration {
+      position: absolute;
+      top: -50%;
+      right: -10%;
+      width: 300px;
+      height: 300px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 50%;
+      z-index: 1;
+    }
+
+    .entregados-icon-container {
+      background: rgba(255,255,255,0.2);
+      border-radius: 16px;
+      padding: 20px;
+      backdrop-filter: blur(10px);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .entregados-table-modern {
+      background: linear-gradient(135deg, #ffffff, #f8fafc);
+      border-radius: 20px;
+      padding: 30px;
+      border: 1px solid #e5e7eb;
+      backdrop-filter: blur(10px);
+    }
+
+    .entregados-table-wrapper {
+      overflow-x: auto;
+      border-radius: 12px;
+      border: 1px solid #e5e7eb;
+    }
+
+    .entregados-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .entregados-table thead tr {
+      background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+      color: white;
+    }
+
+    .entregados-table th {
+      padding: 20px 15px;
+      text-align: left;
+      font-size: 14px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .entregados-table tbody tr {
+      border-bottom: 1px solid #f3f4f6;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .entregados-table tbody tr:hover {
+      background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+      transform: scale(1.01);
+    }
+
+    .entregados-table td {
+      padding: 20px 15px;
+      font-size: 14px;
+      color: #374151;
+    }
+
+    .entregados-action-btn {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin: 0 2px;
+    }
+
+    .entregados-action-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4);
+    }
+
+    .entregados-action-btn.info {
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+    }
+
+    .entregados-action-btn.info:hover {
+      box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4);
+    }
+
+    .entregados-export-btn {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin: 0 5px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .entregados-export-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+    }
+
+    .entregados-badge {
+      background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+      color: #10b981;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+  </style>
+`;
+
+if (typeof document !== 'undefined') {
+  const existingStyles = document.getElementById('pedidos-entregados-styles');
+  if (!existingStyles) {
+    const styleElement = document.createElement('div');
+    styleElement.id = 'pedidos-entregados-styles';
+    styleElement.innerHTML = pedidosEntregadosStyles;
+    document.head.appendChild(styleElement);
+  }
+}
 
 export default function PedidosEntregados() {
   const [pedidosEntregados, setPedidosEntregados] = useState([]);
@@ -14,92 +204,90 @@ export default function PedidosEntregados() {
   const itemsPerPage = 10;
   const [remisionPreview, setRemisionPreview] = useState(null);
 
-  const countThisMonth = pedidosEntregados.filter(p => {
-    const fechaEntrega = new Date(p.updatedAt || p.fechaRemision || p.createdAt || 0);
-    const hoy = new Date();
-    const diferencia = hoy.getTime() - fechaEntrega.getTime();
-    const diasDiferencia = Math.ceil(diferencia / (1000 * 3600 * 24));
-    return diasDiferencia <= 30;
-  }).length;
-
-  const statsCards = [
-    { iconClass: 'fa-solid fa-check-circle', gradient: 'linear-gradient(135deg, #10b981, #059669)', value: pedidosEntregados.length, label: 'Pedidos Entregados' },
-    { iconClass: 'fa-solid fa-dollar-sign', gradient: 'linear-gradient(135deg, #f59e0b, #ea580c)', value: `$${sumarProp(pedidosEntregados, 'total').toLocaleString('es-CO')}`, label: 'Ingresos Totales' },
-    { iconClass: 'fa-solid fa-calendar-alt', gradient: 'linear-gradient(135deg, #6366f1, #8b5cf6)', value: countThisMonth, label: 'Este Mes' }
-  ];
-
-  const indexOfFirstItem = (currentPage - 1) * itemsPerPage;
-  const currentItems = pedidosEntregados.slice(indexOfFirstItem, indexOfFirstItem + itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = pedidosEntregados.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(pedidosEntregados.length / itemsPerPage);
 
   useEffect(() => {
-    cargarRemisionesEntregadas();
+    cargarPedidosEntregados();
   }, []);
-  const cargarRemisionesEntregadas = async () => {
+
+  const cargarPedidosEntregados = async () => {
     try {
-      // Usar el endpoint del controlador de remisiones. Cargar todas las remisiones (sin filtrar)
-      const res = await api.get('/api/remisiones?limite=1000');
-      const data = res.data || res;
-      const remisionesArr = Array.isArray(data) ? data : data.remisiones || data.data || [];
+      const res = await api.get('/api/pedidos?populate=true');
+      const raw = res?.data ?? res;
 
-      // Normalizar y ordenar por fechaRemision (fallback a updatedAt/createdAt)
-      const entregadasOrdenadas = (remisionesArr || []).slice().sort((a, b) => {
-        const da = new Date(a.fechaRemision || a.updatedAt || a.createdAt || 0);
-        const db = new Date(b.fechaRemision || b.updatedAt || b.createdAt || 0);
-        return db - da;
-      });
-
-      setPedidosEntregados(entregadasOrdenadas);
-    } catch (error) {
-      console.error('Error cargando remisiones:', error);
-      Swal.fire('Error', 'Error de conexión al cargar remisiones', 'error');
-    }
-  };
-
-  // Función para ver/obtener remisión (separada para reducir anidamiento en JSX)
-  const verRemisionPreview = async (remision) => {
-    try {
-      // Si la remisión tiene un _id, intentar obtener l;a versión completa desde el servidor
-      if (remision?._id) {
-        try {
-          const res = await api.get(`/api/remisiones/${remision._id}`);
-          const data = res.data || res;
-          const rem = data.remision || data;
-          setRemisionPreview(rem);
-          return;
-        } catch (e) {
-          // Si falla el fetch, caer al fallback y usar el objeto que ya tenemos
-          console.warn('No se pudo obtener remisión por id, usando datos disponibles', e);
-        }
+      let arr = [];
+      if (Array.isArray(raw)) arr = raw;
+      else if (Array.isArray(raw.data)) arr = raw.data;
+      else if (Array.isArray(raw.pedidos)) arr = raw.pedidos;
+      else if (raw.data && Array.isArray(raw.data.pedidos)) arr = raw.data.pedidos;
+      else {
+        const candidate = Object.values(raw || {}).find(v => Array.isArray(v));
+        arr = Array.isArray(candidate) ? candidate : [];
       }
+      const normalized = normalizePedidosArray(arr);
+      const entregados = normalized.filter(pedido => pedido?.estado === 'entregado');
+      const entregadosOrdenados = entregados.sort((a, b) => new Date(b.createdAt || b.fechaCreacion) - new Date(a.createdAt || a.fechaCreacion));
+      // Intentar obtener remisiones existentes y mapear su número al pedido correspondiente
+      try {
+        const remRes = await api.get('/api/remisiones?limite=1000');
+        const remData = remRes.data || remRes;
+        // controller retorna { remisiones, total, ... }
+        const remisionesArr = Array.isArray(remData) ? remData : remData.remisiones || remData.data || [];
+        const mapRemisionByPedido = {};
+        for (const r of remisionesArr) {
+          // r.pedidoReferencia puede ser ObjectId (string) o poblado
+          const pedidoRef = r.pedidoReferencia?._id || r.pedidoReferencia || r.pedidoReferenciaId || null;
+          if (pedidoRef) mapRemisionByPedido[String(pedidoRef)] = r.numeroRemision || r.numero || r.numeroRemision;
+        }
 
-      const styleElement = document.createElement('style');
-      setRemisionPreview(remision);
+        const entregadosConRemision = entregadosOrdenados.map(p => ({
+          ...p,
+          numeroRemision: mapRemisionByPedido[String(p._id)] || p.numeroRemision || null
+        }));
+
+        setPedidosEntregados(entregadosConRemision);
+      } catch (remError) {
+        console.warn('No se pudieron cargar remisiones, se muestra la lista de pedidos sin números de remisión', remError);
+        setPedidosEntregados(entregadosOrdenados);
+      }
     } catch (error) {
-      console.error('Error cargando remisión para vista previa:', error);
-      Swal.fire('Error', 'No se pudo cargar la remisión', 'error');
+      console.error('Error:', error);
+      Swal.fire('Error', 'Error de conexión', 'error');
+    } finally {
+      // loading eliminado por no usarse
     }
   };
 
-  // Note: crearRemisionDesdePedido removed — not referenced anywhere in this file. Kept pagination and preview handlers.
-
-  const exportarPDF = async () => {
+  const exportarPDF = () => {
     const elementosNoExport = document.querySelectorAll('.no-export');
     for (const el of elementosNoExport) { el.style.display = 'none'; }
 
     const input = document.getElementById('tabla_entregados');
-    if (!input) {
-      for (const el of elementosNoExport) { el.style.display = ''; }
-      return;
-    }
+    html2canvas(input).then((canvas) => {
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const imgWidth = 190;
+      const pageHeight = 295;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+      let position = 10;
 
-    try {
-      await exportElementToPdf(input, 'pedidos_entregados.pdf');
-    } catch (err) {
-      console.error('Error exporting PDF:', err);
-    } finally {
+      pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      pdf.save('pedidos_entregados.pdf');
       for (const el of elementosNoExport) { el.style.display = ''; }
-    }
+    });
   };
 
   const exportarExcel = () => {
@@ -107,8 +295,8 @@ export default function PedidosEntregados() {
     for (const el of elementosNoExport) { el.style.display = 'none'; }
 
     const tabla = document.getElementById("tabla_entregados");
-  const workbook = XLSX.utils.table_to_book(tabla, { sheet: "Pedidos Entregados" });
-  workbook.Sheets["Pedidos Entregados"]["!cols"] = new Array(7).fill({ width: 20 });
+    const workbook = XLSX.utils.table_to_book(tabla, { sheet: "Pedidos Entregados" });
+    workbook.Sheets["Pedidos Entregados"]["!cols"] = new Array(7).fill({ width: 20 });
 
     XLSX.writeFile(workbook, 'pedidos_entregados.xlsx');
     for (const el of elementosNoExport) { el.style.display = ''; }
@@ -187,7 +375,7 @@ export default function PedidosEntregados() {
                 </div>
                 <div>
                   <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                    ${sumarProp(pedidosEntregados, 'total').toLocaleString('es-CO')}
+                    ${pedidosEntregados.reduce((sum, p) => sum + (p.total || 0), 0).toLocaleString('es-CO')}
                   </h3>
                   <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
                     Ingresos Totales
@@ -260,8 +448,8 @@ export default function PedidosEntregados() {
                   </tr>
                 </thead>
                 <tbody>
-                  {currentItems.map((remision, index) => (
-                    <tr key={remision._id}>
+                  {currentItems.map((pedido, index) => (
+                    <tr key={pedido._id}>
                       <td style={{ fontWeight: '500', color: '#6b7280' }}>
                         {indexOfFirstItem + index + 1}
                       </td>
@@ -290,23 +478,63 @@ export default function PedidosEntregados() {
                               padding: 0,
                               font: 'inherit'
                             }} 
-                            onClick={() => verRemisionPreview(remision)}
+                            onClick={async () => {
+                              try {
+                                // Primero intentar obtener remisión existente desde el pedido
+                                // Estrategia: buscar remisión llamando endpoint crear-desde-pedido (que retorna existente si ya hay)
+                                const res = await api.post(`/api/remisiones/crear-desde-pedido/${pedido._id}`);
+                                const data = res.data || res;
+                                if (data.remision) {
+                                  // actualizar estado local para mostrar numeroRemision en la tabla
+                                  setPedidosEntregados(prev => prev.map(p => p._id === pedido._id ? { ...p, numeroRemision: data.remision.numeroRemision } : p));
+                                  setRemisionPreview(data.remision);
+                                } else {
+                                  // Si no viene remision detallada, intentar fallback obtener pedido completo y mapear estructura mínima
+                                  const pedidoRes = await api.get(`/api/pedidos/${pedido._id}?populate=true`);
+                                  const pedidoData = (pedidoRes.data || pedidoRes).data || (pedidoRes.data || pedidoRes);
+                                  const remisionLike = {
+                                    numeroRemision: 'REM-PED-' + (pedidoData.numeroPedido || pedidoData._id?.slice(-6)),
+                                    codigoPedido: pedidoData.numeroPedido,
+                                    fechaRemision: pedidoData.updatedAt || pedidoData.createdAt,
+                                    fechaEntrega: pedidoData.fechaEntrega,
+                                    estado: 'activa',
+                                    cliente: pedidoData.cliente || {},
+                                    productos: (pedidoData.productos || []).map(p => ({
+                                      nombre: p.product?.name || p.product?.nombre || p.nombre || 'Producto',
+                                      cantidad: p.cantidad,
+                                      precioUnitario: p.precioUnitario,
+                                      total: p.cantidad * (p.precioUnitario || 0),
+                                      descripcion: p.product?.description || p.product?.descripcion || '',
+                                      codigo: p.product?.code || p.product?.codigo || ''
+                                    })),
+                                    total: (pedidoData.productos || []).reduce((sum, pr) => sum + pr.cantidad * (pr.precioUnitario || 0), 0),
+                                    observaciones: pedidoData.observacion || '',
+                                  };
+                                  // actualizar estado local con número de remisión estimado
+                                  setPedidosEntregados(prev => prev.map(p => p._id === pedido._id ? { ...p, numeroRemision: remisionLike.numeroRemision } : p));
+                                  setRemisionPreview(remisionLike);
+                                }
+                              } catch (error) {
+                                console.error('Error cargando remisión/pedido para vista previa:', error);
+                                Swal.fire('Error', 'No se pudo cargar la remisión del pedido', 'error');
+                              }
+                            }}
                           >
-                            {remision.numeroRemision || '---'}
+                            {pedido.numeroRemision || '---'}
                           </button>
                         </div>
                       </td>
                       <td style={{ color: '#6b7280' }}>
-                        {new Date(remision.fechaEntrega || remision.fechaRemision || remision.updatedAt || remision.createdAt).toLocaleDateString()}
+                        {new Date(pedido.updatedAt).toLocaleDateString()}
                       </td>
                       <td style={{ fontWeight: '500', color: '#1f2937' }}>
-                        {remision.cliente?.nombre || remision.cliente?.nombreCliente || remision.cliente?.nombreCompleto || ''}
+                        {pedido.cliente?.nombre}
                       </td>
                       <td style={{ color: '#6b7280' }}>
-                        {remision.cliente?.ciudad || remision.cliente?.direccion?.ciudad || ''}
+                        {pedido.cliente?.ciudad}
                       </td>
                       <td style={{ fontWeight: '600', color: '#10b981', fontSize: '14px' }}>
-                        ${(remision.total || 0).toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        ${(pedido.total || 0).toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
                     </tr>
                   ))}

@@ -91,6 +91,62 @@ function generarHTMLRemision(pedido, numeroRemision, mensaje = '') {
 }
 
 
+// Crear pedido (handler usado por rutas)
+exports.createPedido = async (req, res) => {
+  try {
+    const {
+      cliente,
+      productos,
+      fecha,
+      fechaEntrega,
+      descripcion,
+      observacion,
+      estado,
+      cotizacionReferenciada,
+      empresa
+    } = req.body || {};
+
+    // Validaciones mínimas
+    if (!cliente || !cliente.correo) {
+      return res.status(400).json({ message: 'Datos de cliente inválidos' });
+    }
+
+    // Generar número de pedido usando Counter
+    const Counter = require('../models/Counter');
+    const counter = await Counter.findByIdAndUpdate(
+      'pedido',
+      { $inc: { seq: 1 } },
+      { new: true, upsert: true }
+    );
+    const numeroPedido = `PED-${String(counter.seq).padStart(5, '0')}`;
+
+    const pedidoObj = new Pedido({
+      numeroPedido,
+      cliente: cliente,
+      productos: productos || [],
+      fecha: fecha ? new Date(fecha) : new Date(),
+      fechaEntrega: fechaEntrega ? new Date(fechaEntrega) : null,
+      descripcion: descripcion || '',
+      observacion: observacion || '',
+      estado: estado || 'agendado',
+      cotizacionReferenciada: cotizacionReferenciada || null,
+      empresa: empresa || undefined,
+      creadoPor: req.userId || null
+    });
+
+    await pedidoObj.save();
+
+    // Populate minimal relations for the response
+    const pedidoPop = await Pedido.findById(pedidoObj._id).populate('cliente').lean();
+
+    return res.status(201).json({ message: 'Pedido creado', data: pedidoPop });
+  } catch (error) {
+    console.error('❌ Error creating pedido:', error);
+    return res.status(500).json({ message: 'Error al crear pedido', error: error.message });
+  }
+};
+
+
 
 
 
@@ -305,6 +361,121 @@ exports.testEmailConfiguration = async (req, res) => {
       error: error.message,
       timestamp: new Date().toISOString()
     });
+  }
+};
+
+// Obtener todos los pedidos
+exports.getPedidos = async (req, res) => {
+  try {
+    const pedidos = await Pedido.find()
+      .populate('cliente')
+      .populate('productos.product')
+      .sort({ createdAt: -1 })
+      .lean();
+    return res.json(pedidos);
+  } catch (err) {
+    console.error('Error obteniendo pedidos:', err);
+    return res.status(500).json({ message: 'Error al obtener pedidos', error: err.message });
+  }
+};
+
+// Obtener pedido por ID
+exports.getPedidoById = async (req, res) => {
+  try {
+    const id = typeof req.params.id === 'string' ? req.params.id.trim() : '';
+    if (!/^[0-9a-fA-F]{24}$/.exec(id)) return res.status(400).json({ message: 'ID inválido' });
+    const pedido = await Pedido.findById(id).populate('cliente').populate('productos.product').lean();
+    if (!pedido) return res.status(404).json({ message: 'Pedido no encontrado' });
+    return res.json(pedido);
+  } catch (err) {
+    console.error('Error getPedidoById:', err);
+    return res.status(500).json({ message: 'Error interno', error: err.message });
+  }
+};
+
+// Cambiar estado del pedido (genérico)
+exports.cambiarEstadoPedido = async (req, res) => {
+  try {
+    const id = typeof req.params.id === 'string' ? req.params.id.trim() : '';
+    const { estado } = req.body || {};
+    if (!/^[0-9a-fA-F]{24}$/.exec(id)) return res.status(400).json({ message: 'ID inválido' });
+    if (!estado) return res.status(400).json({ message: 'Estado requerido' });
+    const pedido = await Pedido.findByIdAndUpdate(id, { estado }, { new: true }).populate('cliente').populate('productos.product');
+    if (!pedido) return res.status(404).json({ message: 'Pedido no encontrado' });
+    return res.json({ message: 'Estado actualizado', pedido });
+  } catch (err) {
+    console.error('Error cambiarEstadoPedido:', err);
+    return res.status(500).json({ message: 'Error interno', error: err.message });
+  }
+};
+
+// Enviar pedido agendado por correo (wrapper)
+exports.enviarPedidoAgendadoPorCorreo = async (req, res) => {
+  try {
+    // Delegate to the generic enviarPedidoPorCorreo but allow a custom subject prefix
+    req.body = req.body || {};
+    req.body.asunto = req.body.asunto || `Pedido Agendado - ${process.env.COMPANY_NAME || 'Empresa'}`;
+    return await exports.enviarPedidoPorCorreo(req, res);
+  } catch (err) {
+    console.error('Error enviarPedidoAgendadoPorCorreo:', err);
+    return res.status(500).json({ message: 'Error interno al enviar pedido agendado', error: err.message });
+  }
+};
+
+// Enviar pedido cancelado por correo (wrapper)
+exports.enviarPedidoCanceladoPorCorreo = async (req, res) => {
+  try {
+    req.body = req.body || {};
+    req.body.asunto = req.body.asunto || `Pedido Cancelado - ${process.env.COMPANY_NAME || 'Empresa'}`;
+    return await exports.enviarPedidoPorCorreo(req, res);
+  } catch (err) {
+    console.error('Error enviarPedidoCanceladoPorCorreo:', err);
+    return res.status(500).json({ message: 'Error interno al enviar pedido cancelado', error: err.message });
+  }
+};
+
+// Remisionar pedido: crear remisión básica basada en pedido
+exports.remisionarPedido = async (req, res) => {
+  try {
+    const id = typeof req.params.id === 'string' ? req.params.id.trim() : '';
+    if (!/^[0-9a-fA-F]{24}$/.exec(id)) return res.status(400).json({ message: 'ID inválido' });
+    const pedido = await Pedido.findById(id).populate('cliente').populate('productos.product');
+    if (!pedido) return res.status(404).json({ message: 'Pedido no encontrado' });
+
+    const Remision = require('../models/Remision');
+    const numeroRemision = `REM-${pedido.numeroPedido || id}-${Date.now().toString().slice(-6)}`;
+
+    const productosRemision = (pedido.productos || []).map(p => ({
+      nombre: p.product?.name || p.nombre || 'Producto',
+      cantidad: p.cantidad || 0,
+      precioUnitario: p.precioUnitario || p.product?.price || 0,
+      total: (p.cantidad || 0) * (p.precioUnitario || p.product?.price || 0),
+      descripcion: p.descripcion || ''
+    }));
+
+    const total = productosRemision.reduce((s, it) => s + (Number(it.total) || 0), 0);
+
+    const nuevaRemision = new Remision({
+      numeroRemision,
+      pedidoReferencia: pedido._id,
+      cliente: pedido.cliente?._id || null,
+      productos: productosRemision,
+      fechaRemision: new Date(),
+      fechaEntrega: pedido.fechaEntrega || new Date(),
+      observaciones: `Remisión generada desde pedido ${pedido.numeroPedido || id}`,
+      total,
+      estado: 'activa'
+    });
+
+    await nuevaRemision.save();
+
+    // Optionally link remision to pedido
+    try { await Pedido.findByIdAndUpdate(pedido._id, { remisionReferencia: nuevaRemision._id, estado: 'remisionada' }); } catch (e) { /* non-fatal */ }
+
+    return res.status(201).json({ message: 'Remisión creada', remision: nuevaRemision });
+  } catch (err) {
+    console.error('Error remisionarPedido:', err);
+    return res.status(500).json({ message: 'Error al remisionar pedido', error: err.message });
   }
 };
 
