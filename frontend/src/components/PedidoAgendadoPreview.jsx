@@ -309,7 +309,7 @@ const PedidoAgendadoPreview = ({ datos = {}, onClose = () => {}, onEmailSent, on
               <div>
                 <h3 style={{ borderBottom: '3px solid #fd7e14', paddingBottom: '0.5rem', color: '#fd7e14', fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '1rem' }}>Detalles del Pedido</h3>
                 <div style={{ lineHeight: '1.8' }}>
-                  <p><strong>Fecha de Pedido:</strong> {formatDate(datos?.createdAt)}</p>
+                  <p><strong>Fecha de agendamiento:</strong> {formatDate(datos?.createdAt)}</p>
                   <p><strong>Fecha de Entrega:</strong> {formatDate(datos?.fechaEntrega)}</p>
                 </div>
               </div>

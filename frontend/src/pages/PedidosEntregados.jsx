@@ -6,7 +6,6 @@ import jsPDF from 'jspdf';
 import * as XLSX from 'xlsx';
 import Swal from 'sweetalert2';
 import api from '../api/axiosConfig';
-import { normalizePedidosArray } from '../utils/calculations';
 import RemisionPreview from '../components/RemisionPreview';
 
 /* Estilos CSS avanzados para Pedidos Entregados */
@@ -204,63 +203,60 @@ export default function PedidosEntregados() {
   const itemsPerPage = 10;
   const [remisionPreview, setRemisionPreview] = useState(null);
 
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = pedidosEntregados.slice(indexOfFirstItem, indexOfLastItem);
+  const indexOfFirstItem = (currentPage - 1) * itemsPerPage;
+  const currentItems = pedidosEntregados.slice(indexOfFirstItem, indexOfFirstItem + itemsPerPage);
   const totalPages = Math.ceil(pedidosEntregados.length / itemsPerPage);
 
   useEffect(() => {
-    cargarPedidosEntregados();
+    cargarRemisionesEntregadas();
   }, []);
-
-  const cargarPedidosEntregados = async () => {
+  const cargarRemisionesEntregadas = async () => {
     try {
-      const res = await api.get('/api/pedidos?populate=true');
-      const raw = res?.data ?? res;
+      // Usar el endpoint del controlador de remisiones. Cargar todas las remisiones (sin filtrar)
+      const res = await api.get('/api/remisiones?limite=1000');
+      const data = res.data || res;
+      const remisionesArr = Array.isArray(data) ? data : data.remisiones || data.data || [];
 
-      let arr = [];
-      if (Array.isArray(raw)) arr = raw;
-      else if (Array.isArray(raw.data)) arr = raw.data;
-      else if (Array.isArray(raw.pedidos)) arr = raw.pedidos;
-      else if (raw.data && Array.isArray(raw.data.pedidos)) arr = raw.data.pedidos;
-      else {
-        const candidate = Object.values(raw || {}).find(v => Array.isArray(v));
-        arr = Array.isArray(candidate) ? candidate : [];
-      }
-      const normalized = normalizePedidosArray(arr);
-      const entregados = normalized.filter(pedido => pedido?.estado === 'entregado');
-      const entregadosOrdenados = [...entregados];
-      entregadosOrdenados.sort((a, b) => new Date(b.createdAt || b.fechaCreacion) - new Date(a.createdAt || a.fechaCreacion));
-      // Intentar obtener remisiones existentes y mapear su número al pedido correspondiente
-      try {
-        const remRes = await api.get('/api/remisiones?limite=1000');
-        const remData = remRes.data || remRes;
-        // controller retorna { remisiones, total, ... }
-        const remisionesArr = Array.isArray(remData) ? remData : remData.remisiones || remData.data || [];
-        const mapRemisionByPedido = {};
-        for (const r of remisionesArr) {
-          // r.pedidoReferencia puede ser ObjectId (string) o poblado
-          const pedidoRef = r.pedidoReferencia?._id || r.pedidoReferencia || r.pedidoReferenciaId || null;
-          if (pedidoRef) mapRemisionByPedido[String(pedidoRef)] = r.numeroRemision || r.numero || r.numeroRemision;
-        }
+      // Normalizar y ordenar por fechaRemision (fallback a updatedAt/createdAt)
+      const entregadasOrdenadas = (remisionesArr || []).slice().sort((a, b) => {
+        const da = new Date(a.fechaRemision || a.updatedAt || a.createdAt || 0);
+        const db = new Date(b.fechaRemision || b.updatedAt || b.createdAt || 0);
+        return db - da;
+      });
 
-        const entregadosConRemision = entregadosOrdenados.map(p => ({
-          ...p,
-          numeroRemision: mapRemisionByPedido[String(p._id)] || p.numeroRemision || null
-        }));
-
-        setPedidosEntregados(entregadosConRemision);
-      } catch (remError) {
-        console.warn('No se pudieron cargar remisiones, se muestra la lista de pedidos sin números de remisión', remError);
-        setPedidosEntregados(entregadosOrdenados);
-      }
+      setPedidosEntregados(entregadasOrdenadas);
     } catch (error) {
-      console.error('Error:', error);
-      Swal.fire('Error', 'Error de conexión', 'error');
-    } finally {
-      // loading eliminado por no usarse
+      console.error('Error cargando remisiones:', error);
+      Swal.fire('Error', 'Error de conexión al cargar remisiones', 'error');
     }
   };
+
+  // Función para ver/obtener remisión (separada para reducir anidamiento en JSX)
+  const verRemisionPreview = async (remision) => {
+    try {
+      // Si la remisión tiene un _id, intentar obtener la versión completa desde el servidor
+      if (remision?._id) {
+        try {
+          const res = await api.get(`/api/remisiones/${remision._id}`);
+          const data = res.data || res;
+          const rem = data.remision || data;
+          setRemisionPreview(rem);
+          return;
+        } catch (e) {
+          // Si falla el fetch, caer al fallback y usar el objeto que ya tenemos
+          console.warn('No se pudo obtener remisión por id, usando datos disponibles', e);
+        }
+      }
+
+      // Fallback: usar el objeto que llegó desde la lista
+      setRemisionPreview(remision);
+    } catch (error) {
+      console.error('Error cargando remisión para vista previa:', error);
+      Swal.fire('Error', 'No se pudo cargar la remisión', 'error');
+    }
+  };
+
+  // Note: crearRemisionDesdePedido removed — not referenced anywhere in this file. Kept pagination and preview handlers.
 
   const exportarPDF = () => {
     const elementosNoExport = document.querySelectorAll('.no-export');
@@ -296,72 +292,13 @@ export default function PedidosEntregados() {
     for (const el of elementosNoExport) { el.style.display = 'none'; }
 
     const tabla = document.getElementById("tabla_entregados");
-    const workbook = XLSX.utils.table_to_book(tabla, { sheet: "Pedidos Entregados" });
-    workbook.Sheets["Pedidos Entregados"]["!cols"] = new Array(7).fill({ width: 20 });
+  const workbook = XLSX.utils.table_to_book(tabla, { sheet: "Pedidos Entregados" });
+  workbook.Sheets["Pedidos Entregados"]["!cols"] = new Array(7).fill({ width: 20 });
 
     XLSX.writeFile(workbook, 'pedidos_entregados.xlsx');
     for (const el of elementosNoExport) { el.style.display = ''; }
   };
   
-  // helper: suma total (computeTotal removed because it was unused)
-
-  // helper: fecha dentro de n dias
-  const isWithinLastNDays = (dateStr, days = 30) => {
-    if (!dateStr) return false;
-    const fechaEntrega = new Date(dateStr);
-    const hoy = new Date();
-    const diferencia = hoy.getTime() - fechaEntrega.getTime();
-    const diasDiferencia = Math.ceil(diferencia / (1000 * 3600 * 24));
-    return diasDiferencia <= days;
-  };
-
-  // helper para actualizar número de remisión en estado local
-  const updatePedidoNumeroRemision = (pedidoId, numeroRemision) => {
-    setPedidosEntregados(prev => prev.map(p => p._id === pedidoId ? { ...p, numeroRemision } : p));
-  };
-
-  // mover el handler fuera del JSX para reducir anidamiento
-  const handleRemisionClick = async (pedido) => {
-    try {
-      // Primero intentar obtener remisión existente desde el pedido
-      // Estrategia: buscar remisión llamando endpoint crear-desde-pedido (que retorna existente si ya hay)
-      const res = await api.post(`/api/remisiones/crear-desde-pedido/${pedido._id}`);
-      const data = res.data || res;
-      if (data.remision) {
-        // actualizar estado local para mostrar numeroRemision en la tabla
-        updatePedidoNumeroRemision(pedido._id, data.remision.numeroRemision);
-        setRemisionPreview(data.remision);
-      } else {
-        // Si no viene remision detallada, intentar fallback obtener pedido completo y mapear estructura mínima
-        const pedidoRes = await api.get(`/api/pedidos/${pedido._id}?populate=true`);
-        const pedidoData = (pedidoRes.data || pedidoRes).data || (pedidoRes.data || pedidoRes);
-        const remisionLike = {
-          numeroRemision: 'REM-PED-' + (pedidoData.numeroPedido || pedidoData._id?.slice(-6)),
-          codigoPedido: pedidoData.numeroPedido,
-          fechaRemision: pedidoData.updatedAt || pedidoData.createdAt,
-          fechaEntrega: pedidoData.fechaEntrega,
-          estado: 'activa',
-          cliente: pedidoData.cliente || {},
-          productos: (pedidoData.productos || []).map(p => ({
-            nombre: p.product?.name || p.product?.nombre || p.nombre || 'Producto',
-            cantidad: p.cantidad,
-            precioUnitario: p.precioUnitario,
-            total: p.cantidad * (p.precioUnitario || 0),
-            descripcion: p.product?.description || p.product?.descripcion || '',
-            codigo: p.product?.code || p.product?.codigo || ''
-          })),
-          total: (pedidoData.productos || []).reduce((sum, pr) => sum + pr.cantidad * (pr.precioUnitario || 0), 0),
-          observaciones: pedidoData.observacion || '',
-        };
-        // actualizar estado local con número de remisión estimado
-        updatePedidoNumeroRemision(pedido._id, remisionLike.numeroRemision);
-        setRemisionPreview(remisionLike);
-      }
-    } catch (error) {
-      console.error('Error cargando remisión/pedido para vista previa:', error);
-      Swal.fire('Error', 'No se pudo cargar la remisión del pedido', 'error');
-    }
-  };
 
   // ModalProductosCotizacion eliminado por no utilizarse
 
@@ -458,7 +395,13 @@ export default function PedidosEntregados() {
                 </div>
                 <div>
                   <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                    {pedidosEntregados.filter(p => isWithinLastNDays(p.updatedAt, 30)).length}
+                    {pedidosEntregados.filter(p => {
+                      const fechaEntrega = new Date(p.updatedAt);
+                      const hoy = new Date();
+                      const diferencia = hoy.getTime() - fechaEntrega.getTime();
+                      const diasDiferencia = Math.ceil(diferencia / (1000 * 3600 * 24));
+                      return diasDiferencia <= 30;
+                    }).length}
                   </h3>
                   <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
                     Este Mes
@@ -502,8 +445,8 @@ export default function PedidosEntregados() {
                   </tr>
                 </thead>
                 <tbody>
-                  {currentItems.map((pedido, index) => (
-                    <tr key={pedido._id}>
+                  {currentItems.map((remision, index) => (
+                    <tr key={remision._id}>
                       <td style={{ fontWeight: '500', color: '#6b7280' }}>
                         {indexOfFirstItem + index + 1}
                       </td>
@@ -531,24 +474,24 @@ export default function PedidosEntregados() {
                               border: 'none',
                               padding: 0,
                               font: 'inherit'
-                            }}
-                            onClick={() => handleRemisionClick(pedido)}
+                            }} 
+                            onClick={() => verRemisionPreview(remision)}
                           >
-                            {pedido.numeroRemision || '---'}
+                            {remision.numeroRemision || '---'}
                           </button>
                         </div>
                       </td>
                       <td style={{ color: '#6b7280' }}>
-                        {new Date(pedido.updatedAt).toLocaleDateString()}
+                        {new Date(remision.fechaEntrega || remision.fechaRemision || remision.updatedAt || remision.createdAt).toLocaleDateString()}
                       </td>
                       <td style={{ fontWeight: '500', color: '#1f2937' }}>
-                        {pedido.cliente?.nombre}
+                        {remision.cliente?.nombre || remision.cliente?.nombreCliente || remision.cliente?.nombreCompleto || ''}
                       </td>
                       <td style={{ color: '#6b7280' }}>
-                        {pedido.cliente?.ciudad}
+                        {remision.cliente?.ciudad || remision.cliente?.direccion?.ciudad || ''}
                       </td>
                       <td style={{ fontWeight: '600', color: '#10b981', fontSize: '14px' }}>
-                        ${(pedido.total || 0).toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        ${(remision.total || 0).toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
                     </tr>
                   ))}

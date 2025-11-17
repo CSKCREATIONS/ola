@@ -61,24 +61,73 @@ exports.createCotizacion = async (req, res) => {
 
     // Buscar cliente existente por correo
     let clienteExistente = await Cliente.findOne({ correo: correoSanitizado });
+    if (clienteExistente) {
+      // Si ya existe en clientes: operacion 'compra' y esCliente true
+      try {
+        if (clienteExistente.operacion !== 'compra' || !clienteExistente.esCliente) {
+          await Cliente.findByIdAndUpdate(
+            clienteExistente._id,
+            { operacion: 'compra', esCliente: true }
+          );
+          clienteExistente.operacion = 'compra';
+          clienteExistente.esCliente = true;
+        }
+      } catch (opErr) {
+        console.warn('No se pudo actualizar Cliente existente a compra/true:', opErr?.message || opErr);
+      }
+    } else {
+      // No existe en clientes: verificar si hay pedidos ENTREGADOS asociados a este correo
+      try {
+        const Pedido = require('../models/Pedido');
+        const resultado = await Pedido.aggregate([
+          { $match: { estado: 'entregado' } },
+          { $lookup: { from: 'clientes', localField: 'cliente', foreignField: '_id', as: 'cli' } },
+          { $unwind: '$cli' },
+          { $match: { 'cli.correo': correoSanitizado } },
+          { $limit: 1 }
+        ]);
 
-    if (!clienteExistente) {
-      // Crear cliente potencial
-      clienteExistente = new Cliente({
-        nombre: cliente.nombre,
-        ciudad: cliente.ciudad,
-        direccion: cliente.direccion,
-        telefono: cliente.telefono,
-        correo: correoSanitizado,
-        esCliente: !clientePotencial // true si es cliente, false si prospecto
-      });
-      await clienteExistente.save();
-    }
-
-    // Si ya existe y no está marcado como cliente pero no es prospecto, márcalo
-    if (!clienteExistente?.esCliente && !clientePotencial) {
-      clienteExistente.esCliente = true;
-      await clienteExistente.save();
+        if (Array.isArray(resultado) && resultado.length > 0 && resultado[0].cli?._id) {
+          // Ya hay un pedido entregado para este correo: NO crear nuevo cliente, reutilizar el existente
+          const clienteRelacionadoId = resultado[0].cli._id;
+          clienteExistente = await Cliente.findById(clienteRelacionadoId);
+          if (clienteExistente) {
+            // asegurar esCliente=true y operacion='compra'
+            const updates = {};
+            if (!clienteExistente.esCliente) updates.esCliente = true;
+            if (clienteExistente.operacion !== 'compra') updates.operacion = 'compra';
+            if (Object.keys(updates).length) {
+              await Cliente.findByIdAndUpdate(clienteExistente._id, updates);
+              Object.assign(clienteExistente, updates);
+            }
+          }
+        } else {
+          // No hay cliente ni pedidos entregados: crear como prospecto (esCliente=false, operacion='cotiza')
+          clienteExistente = new Cliente({
+            nombre: cliente.nombre,
+            ciudad: cliente.ciudad,
+            direccion: cliente.direccion,
+            telefono: cliente.telefono,
+            correo: correoSanitizado,
+            esCliente: false,
+            operacion: 'cotiza'
+          });
+          await clienteExistente.save();
+        }
+      } catch (aggErr) {
+        console.warn('No se pudo verificar pedidos entregados por correo:', aggErr?.message || aggErr);
+        // Fallback seguro: crear prospecto
+        clienteExistente = new Cliente({
+          nombre: cliente.nombre,
+          ciudad: cliente.ciudad,
+          direccion: cliente.direccion,
+          telefono: cliente.telefono,
+          correo: correoSanitizado,
+          esCliente: false,
+          operacion: 'cotiza'
+        });
+        await clienteExistente.save();
+      }
     }
 
     let fechaCotizacion = null;
@@ -1052,6 +1101,13 @@ exports.remisionarCotizacion = async (req, res) => {
     });
 
     await nuevaRemision.save();
+
+    // Al crear una remisión, la operación del cliente pasa a 'compra'
+    try {
+      await Cliente.findByIdAndUpdate(clienteId, { operacion: 'compra' });
+    } catch (opErr) {
+      console.warn('No se pudo actualizar operacion a compra tras remisión:', opErr?.message || opErr);
+    }
 
     await Cotizacion.findByIdAndUpdate(cotizacionId, {
       estado: 'Remisionada',

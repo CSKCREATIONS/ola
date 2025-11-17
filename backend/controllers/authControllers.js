@@ -3,19 +3,34 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const config = require('../config/auth.config');
 const sgMail = require('@sendgrid/mail');
+const EmailService = require('../services/emailService');
 const crypto = require('node:crypto');
-// Configurar SendGrid de forma segura para no bloquear el arranque
+
+// Helper: configura SendGrid usando la clave específica de recuperación
+function ensureSendGridForRecovery() {
   try {
-  const apiKey = process.env.SENDGRID_RECUPERACION;
-  if (apiKey?.startsWith('SG.')) {
+    const apiKey = process.env.SENDGRID_RECUPERACION;
+
+    if (!apiKey) {
+      console.warn("❌ No existe SENDGRID_RECUPERACION en el .env");
+      return false;
+    }
+
+    if (!apiKey.startsWith('SG.')) {
+      console.warn("❌ La API key de SENDGRID_RECUPERACION no es válida");
+      return false;
+    }
+
     sgMail.setApiKey(apiKey);
-    console.log('✉️  SendGrid listo (auth)');
-  } else {
-    console.log('✉️  SendGrid no configurado (auth): se omitirá hasta el envío');
+    console.log("✅ SendGrid configurado para recuperación");
+    return true;
+
+  } catch (e) {
+    console.warn('⚠️ No se pudo configurar SendGrid (auth):', e.message);
+    return false;
   }
-} catch (e) {
-  console.warn('⚠️  No se pudo inicializar SendGrid (auth). Continuando sin correo:', e.message);
 }
+
 
 
 
@@ -257,37 +272,71 @@ exports.recoverPassword = async (req, res) => {
     }
 
     const provisionalPassword = generateSecurePassword(8);
-    // Consider increasing bcrypt rounds to 12 in the future for stronger hashing
-    const hashedPassword = await bcrypt.hash(provisionalPassword, 10);
 
-    user.password = hashedPassword;
-    user.provisional = true; // existing flag used by the app to force change on next login
-    await user.save();
+    // Configurar SendGrid en el momento del envío
+    const sgReady = ensureSendGridForRecovery();
+    if (!sgReady) {
+      return res.status(500).json({ success: false, message: 'Servicio de correo no configurado. Falta SENDGRID_RECUPERACION.' });
+    }
+
+    const fromEmail =  'gaseosaconpan1@gmail.com';
+    const fromName = process.env.SENDGRID_FROM_NAME || 'JLA Global Company';
 
     const msg = {
       to: sanitizedEmail,
-      from: 'gaseosaconpan1@gmail.com', // usa el Gmail verificado
+      from: { email: fromEmail, name: fromName },
       subject: 'Recuperación de contraseña - JLA Global Company',
       html: `
         <div style="font-family: Arial, sans-serif; padding: 20px;">
           <h2>Recuperación de contraseña</h2>
-          <p>Hola <strong>${user.firstName}</strong>,</p>
+          <p>Hola <strong>${user.firstName || user.username}</strong>,</p>
           <p>Tu contraseña provisional es:</p>
           <h3 style="color: #333; background: #f0f0f0; padding: 10px; display: inline-block;">${provisionalPassword}</h3>
           <p>Ingresa al sistema con esta contraseña y cámbiala inmediatamente.</p>
           <p>Si no solicitaste este cambio, ignora este mensaje.</p>
           <hr />
-          <small>JLA Global Company</small>
+          <small>${fromName}</small>
         </div>
       `
     };
 
-    await sgMail.send(msg);
-    return res.status(200).json({ success: true, message: 'Correo enviado correctamente' });
+    try {
+      await sgMail.send(msg);
+      // Solo si el envío por SendGrid fue exitoso, actualizamos la contraseña (plain, el pre-save la hashea)
+      user.password = provisionalPassword;
+      user.provisional = true; // fuerza cambio en próximo login
+      user.mustChangePassword = true; // obliga cambio de contraseña
+      await user.save();
+      return res.status(200).json({ success: true, message: 'Correo enviado correctamente (SendGrid)' });
+    } catch (sgError) {
+      console.warn('SendGrid falló, intentando Gmail/emailService...', sgError?.message || sgError);
+      if (sgError?.response?.body) {
+        console.warn('SendGrid body:', sgError.response.body);
+      }
+
+      // Fallback: intentar con Gmail/emailService
+      try {
+        const emailSrv = new EmailService();
+        await emailSrv.enviarCorreoConAttachment(sanitizedEmail, 'Recuperación de contraseña - JLA Global Company', msg.html, null);
+        user.password = provisionalPassword; // pre-save hash
+        user.provisional = true;
+        user.mustChangePassword = true; // obliga cambio de contraseña
+        await user.save();
+        return res.status(200).json({ success: true, message: 'Correo enviado correctamente (Gmail)' });
+      } catch (fallbackError) {
+        console.error('Fallback de correo falló:', fallbackError?.message || fallbackError);
+        // No guardamos la nueva contraseña si no se pudo enviar el correo
+        return res.status(500).json({ success: false, message: 'No se pudo enviar el correo de recuperación. Intente más tarde.' });
+      }
+    }
 
   } catch (error) {
     console.error('Error al recuperar contraseña:', error);
-    return res.status(500).json({ success: false, message: 'Error del servidor' });
+    // Intentar capturar errores de SendGrid para dar más contexto
+    if (error?.response?.body) {
+      console.error('SendGrid response:', error.response.body);
+    }
+    return res.status(500).json({ success: false, message: 'Error del servidor al enviar el correo de recuperación' });
   }
 };
 

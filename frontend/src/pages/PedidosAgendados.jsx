@@ -4,7 +4,6 @@ import Fijo from '../components/Fijo';
 import NavVentas from '../components/NavVentas';
 import Swal from 'sweetalert2';
 import api from '../api/axiosConfig';
-import { normalizePedidosArray } from '../utils/calculations';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import * as XLSX from 'xlsx';
@@ -249,42 +248,35 @@ export default function PedidosAgendados() {
   const currentItems = pedidos.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(pedidos.length / itemsPerPage);
 
-  useEffect(() => {
-    const fetchAll = async () => {
-      try {
-        const pedidosRes = await api.get('/api/pedidos?populate=true');
-        const raw = pedidosRes.data || pedidosRes;
+  // Cargar pedidos (reutilizable)
+  const fetchPedidosAgendados = async () => {
+    try {
+      const pedidosRes = await api.get('/api/pedidos?populate=true');
+      const pedidosData = pedidosRes.data || pedidosRes;
+      const agendados = (Array.isArray(pedidosData) ? pedidosData : pedidosData.data || []).filter(p => p.estado === 'agendado');
+      const agendadosOrdenados = agendados.sort((a, b) => new Date(b.createdAt || b.fechaCreacion) - new Date(a.createdAt || a.fechaCreacion));
+      setPedidos(agendadosOrdenados);
+    } catch (error_) {
+      console.error('❌ Error al cargar pedidos agendados:', error_);
+    }
+  };
 
-        // Normalizar distintas formas de respuesta: array directo, { data: [...] }, { pedidos: [...] }, { data: { pedidos: [...] } }
-        let arr = [];
-        if (Array.isArray(raw)) arr = raw;
-        else if (Array.isArray(raw.data)) arr = raw.data;
-        else if (Array.isArray(raw.pedidos)) arr = raw.pedidos;
-        else if (raw.data && Array.isArray(raw.data.pedidos)) arr = raw.data.pedidos;
-        else {
-          // Buscar primer valor que sea un array
-          const candidate = Object.values(raw || {}).find(v => Array.isArray(v));
-          arr = Array.isArray(candidate) ? candidate : [];
-        }
-
-        const normalized = normalizePedidosArray(arr);
-        const agendados = normalized.filter(p => p.estado === 'agendado');
-        const agendadosOrdenados = agendados.slice();
-        agendadosOrdenados.sort((a, b) => new Date(b.createdAt || b.fechaCreacion) - new Date(a.createdAt || a.fechaCreacion));
-        setPedidos(agendadosOrdenados);
-      } catch (err) {
-        console.error('❌ Error al cargar pedidos agendados:', err);
-      }
-    };
-
-    fetchAll();
-  }, []);
+  useEffect(() => { fetchPedidosAgendados(); }, []);
 
   const exportarPDF = () => {
     const elementosNoExport = document.querySelectorAll('.no-export');
-    for (const el of elementosNoExport) { el.style.display = 'none'; }
+    for (const el of elementosNoExport) {
+      el.style.display = 'none';
+    }
 
     const input = document.getElementById('tabla_despachos');
+    if (!input) {
+      for (const el of elementosNoExport) {
+        el.style.display = '';
+      }
+      return;
+    }
+
     html2canvas(input).then((canvas) => {
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF('p', 'mm', 'a4');
@@ -305,20 +297,38 @@ export default function PedidosAgendados() {
       }
 
       pdf.save('pedidos_agendados.pdf');
-      for (const el of elementosNoExport) { el.style.display = ''; }
+      for (const el of elementosNoExport) {
+        el.style.display = '';
+      }
+    }).catch((err) => {
+      console.error('Error exporting PDF:', err);
+      for (const el of elementosNoExport) {
+        el.style.display = '';
+      }
     });
   };
 
   const exportarExcel = () => {
     const elementosNoExport = document.querySelectorAll('.no-export');
-    for (const el of elementosNoExport) { el.style.display = 'none'; }
+    for (const el of elementosNoExport) {
+      el.style.display = 'none';
+    }
 
     const tabla = document.getElementById("tabla_despachos");
+    if (!tabla) {
+      for (const el of elementosNoExport) {
+        el.style.display = '';
+      }
+      return;
+    }
+
     const workbook = XLSX.utils.table_to_book(tabla, { sheet: "Pedidos Agendados" });
     workbook.Sheets["Pedidos Agendados"]["!cols"] = new Array(8).fill({ width: 20 });
 
     XLSX.writeFile(workbook, 'pedidos_agendados.xlsx');
-    for (const el of elementosNoExport) { el.style.display = ''; }
+    for (const el of elementosNoExport) {
+      el.style.display = '';
+    }
   };
 
   const cancelarPedido = async (id) => {
@@ -348,43 +358,53 @@ export default function PedidosAgendados() {
     }
   };
 
-  const marcarComoEntregado = async (id) => {
-    
-    // Confirmación antes de entregar
-    const confirm = await Swal.fire({
-      title: '¿Marcar como entregado?',
-      text: 'Esta acción actualizará el inventario descontando los productos del stock.',
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonText: 'Sí, entregar',
-      cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#10b981'
-    });
-
-    if (!confirm.isConfirmed) return;
-    
+  const remisionarPedido = async (id) => {
+    // Mostrar modal para seleccionar fecha de entrega y luego llamar al endpoint de remisión
     try {
-      const res = await api.patch(`/api/pedidos/${id}/estado`, { estado: 'entregado' });
-      const result = res.data || res;
+      const defaultDate = pedidoDefaultDateForSwal(id);
+      const { value: fechaSeleccionada } = await Swal.fire({
+        title: 'Seleccione la fecha de entrega',
+        input: 'date',
+        inputLabel: 'Fecha de entrega',
+        inputValue: defaultDate,
+        showCancelButton: true,
+        confirmButtonText: 'Confirmar',
+        cancelButtonText: 'Cancelar'
+      });
+
+      if (!fechaSeleccionada) return; // usuario canceló o no escogió
+
+      // Llamar al backend para crear la remisión desde el pedido
+      const res = await api.post(`/api/pedidos/${id}/remisionar`, { fechaEntrega: fechaSeleccionada });
+      const data = res.data || res;
       if (res.status >= 200 && res.status < 300) {
         setPedidos(prev => prev.filter(p => p._id !== id));
-        await Swal.fire({
-          title: '¡Entregado!', 
-          text: 'El pedido ha sido marcado como entregado y el inventario ha sido actualizado.', 
-          icon: 'success',
-          confirmButtonColor: '#10b981'
-        });
+        await Swal.fire('Remisión creada', 'La remisión se ha creado correctamente.', 'success');
         navigate('/PedidosEntregados');
       } else {
-        throw new Error(result.message || 'No se pudo marcar como entregado');
+        throw new Error(data.message || 'No se pudo crear la remisión');
       }
     } catch (error) {
-      console.error('Error al marcar como entregado:', error);
-      Swal.fire({
-        title: 'Error', 
-        text: error.message || 'No se pudo marcar como entregado', 
-        icon: 'error'
-      });
+      console.error('Error al remisionar pedido:', error);
+      Swal.fire('Error', error.message || 'No se pudo remisionar el pedido', 'error');
+    }
+  };
+
+  // Helper: compute YYYY-MM-DD default date for Swal input from pedido fechaEntrega if available
+  const pedidoDefaultDateForSwal = (pedidoId) => {
+    try {
+      const p = pedidos.find(x => x._id === pedidoId) || {};
+      if (!p?.fechaEntrega) {
+        return '';
+      }
+      const d = new Date(p.fechaEntrega);
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    } catch (error_) {
+      console.error('Error computing default date for pedido:', error_);
+      return '';
     }
   };
 
@@ -515,8 +535,8 @@ export default function PedidosAgendados() {
                 className='pedidos-add-btn' 
                 onClick={() => setMostrarModalAgendar(true)}
               >
-                <i className="fa-solid fa-plus"></i>{" "}
-                Agendar Pedido
+                <i className="fa-solid fa-plus"></i>
+                <span>Agendar Pedido</span>
               </button>
             </div>
           </div>
@@ -607,7 +627,7 @@ export default function PedidosAgendados() {
                         <div style={{ display: 'flex', gap: '5px' }}>
                           <button
                             className='pedidos-action-btn success'
-                            onClick={() => marcarComoEntregado(pedido._id)}
+                            onClick={() => remisionarPedido(pedido._id)}
                             title="Marcar como entregado"
                           >
                             <i className="fas fa-check"></i>
@@ -680,7 +700,7 @@ export default function PedidosAgendados() {
               datos={cotizacionPreview}
               onClose={() => setCotizacionPreview(null)}
               onEmailSent={handleEmailSent}
-              onRemisionar={() => marcarComoEntregado(cotizacionPreview._id)}
+              onRemisionar={() => remisionarPedido(cotizacionPreview._id)}
             />
           )}
 
@@ -709,14 +729,6 @@ export default function PedidosAgendados() {
                   }}>
                     Esta funcionalidad estará disponible próximamente.
                   </p>
-                </div>
-                <div className="modal-footer">
-                  <button 
-                    className="btn btn-cancel" 
-                    onClick={() => setMostrarModalAgendar(false)}
-                  >
-                    Cerrar
-                  </button>
                 </div>
               </div>
             </div>
