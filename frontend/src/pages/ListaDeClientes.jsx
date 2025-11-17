@@ -779,7 +779,7 @@ export default function ListaDeClientes() {
                   
                   {currentItems.length === 0 && (
                     <tr>
-                      <td colSpan="5" style={{ textAlign: 'center', padding: '80px 20px' }}>
+                      <td colSpan="6" style={{ textAlign: 'center', padding: '80px 20px' }}>
                         <div style={{
                           display: 'flex',
                           flexDirection: 'column',

@@ -33,7 +33,7 @@ h3 {
 /* ===== VARIABLES Y ESTILOS GLOBALES ===== */
 :root {
   --gradient-primary: linear-gradient(135deg, #05083c 0%, #340e80 50%, #e3dffa 100%);
-  --gradient-secondary: linear-gradient(135deg, #05083c 0%, #1a1d61 50%, #3d19ac 100%);
+  --gradient-secondary: linear-gradient(135deg, #05083c 0%, #272b79 50%, #461fb9 100%);
   --gradient-accent: linear-gradient(135deg, #340e80 0%, #3d19ac 50%, #5e35b1 100%);
   --text-white: #ffffff;
   --text-light: #ecf0f1;

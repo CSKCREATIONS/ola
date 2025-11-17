@@ -511,7 +511,7 @@ const exportarPDF = async () => {
                       letterSpacing: '0.5px'
                     }}>
                       <i className="fa-solid fa-file-alt icon-gap" style={{ color: '#6366f1' }}></i>
-                      <span>COTIZACIONES</span>
+                      <span>SOPORTE</span>
                     </th>
                     <th style={{ 
                       padding: '16px 12px', 
@@ -557,6 +557,7 @@ const exportarPDF = async () => {
                       <i className="fa-solid fa-envelope icon-gap" style={{ color: '#6366f1' }}></i>
                       <span>CORREO</span>
                     </th>
+                    <th>Probabilidad</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -565,7 +566,7 @@ const exportarPDF = async () => {
                       <td>
                         
                       </td>
-                      <td colSpan="5" style={{ textAlign: 'center', padding: '80px 20px' }}>
+                      <td colSpan="6" style={{ textAlign: 'center', padding: '80px 20px' }}>
                         <div style={{
                           display: 'flex',
                           flexDirection: 'column',
@@ -646,6 +647,7 @@ const exportarPDF = async () => {
                         <td style={{ padding: '16px 12px', color: '#4b5563', fontWeight: '500' }}>
                           {cliente.correo}
                         </td>
+                        <td></td>
                       </tr>
                     ))
                   )}

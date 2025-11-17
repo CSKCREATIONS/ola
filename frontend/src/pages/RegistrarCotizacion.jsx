@@ -5,9 +5,6 @@ import { useNavigate } from 'react-router-dom';
 import { Editor } from "@tinymce/tinymce-react";
 import { useRef, useState, useEffect } from 'react';
 import api from '../api/axiosConfig';
-import { uid as secureUid } from '../utils/secureRandom';
-import { calcularTotales } from '../utils/calculations';
-import { isValidEmail } from '../utils/emailHelpers';
 
 // Move small pure helpers to module scope to avoid re-creating them on each render
 function obtenerFechaLocal(inputDate) {
@@ -18,12 +15,43 @@ function obtenerFechaLocal(inputDate) {
   return `${year}-${month}-${day}`;
 }
 
-// `isValidEmail` moved to `frontend/src/utils/emailHelpers.js` to avoid duplication across pages
+// Deterministic, linear-time email validator to avoid catastrophic backtracking
+function isValidEmail(email) {
+  if (typeof email !== 'string') return false;
+  const trimmed = email.trim();
+  if (trimmed.length === 0 || trimmed.length > 254) return false;
 
-// Normalizar moved to module scope to avoid deep nesting inside useEffect/loadClientes
-function normalizar(arr, esClienteFlag) {
-  if (!Array.isArray(arr)) return [];
-  return arr.map(c => ({ ...c, esCliente: !!esClienteFlag }));
+  const at = trimmed.indexOf('@');
+  // single @ and not first/last
+  if (at <= 0 || trimmed.indexOf('@', at + 1) !== -1) return false;
+
+  const local = trimmed.slice(0, at);
+  const domain = trimmed.slice(at + 1);
+  if (!local || !domain) return false;
+
+  // length constraints
+  if (local.length > 64 || domain.length > 253) return false;
+
+  // allowed char sets
+  const localAllowed = /^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+$/;
+  const labelAllowed = /^[A-Za-z0-9-]+$/;
+
+  // local checks
+  if (local.startsWith('.') || local.endsWith('.') || local.includes('..')) return false;
+  if (!localAllowed.test(local)) return false;
+
+  // domain checks
+  if (domain.includes('..')) return false;
+  const labels = domain.split('.');
+  if (labels.length < 2) return false;
+
+  const allLabelsValid = labels.every(lab => {
+    if (!lab || lab.length > 63) return false;
+    if (lab.startsWith('-') || lab.endsWith('-')) return false;
+    return labelAllowed.test(lab);
+  });
+
+  return allLabelsValid;
 }
 
 export default function RegistrarCotizacion() {
@@ -63,28 +91,27 @@ export default function RegistrarCotizacion() {
     const loadClientes = async () => {
       try {
         const [clientesRes, prospectosRes] = await Promise.all([
-          api.get('/api/clientes'),
-          api.get('/api/prospectos')
+          api.get('/api/clientes'), // sólo esCliente:true
+          api.get('/api/clientes/prospectos') // esCliente:false
         ]);
-        
+
         const listaClientes = clientesRes.data?.data || clientesRes.data || [];
         const listaProspectos = prospectosRes.data?.data || prospectosRes.data || [];
 
-        // Normalizar y marcar tipo (usar helper en scope del módulo)
-        const clientesNorm = normalizar(listaClientes, true);
-        const prospectosNorm = normalizar(listaProspectos, false);
-        const todos = [...clientesNorm, ...prospectosNorm];
+        // Normalizar y marcar tipo
+        const normalizar = (arr, esClienteFlag) => (Array.isArray(arr) ? arr.map(c => ({ ...c, esCliente: !!esClienteFlag })) : []);
+        const todos = [...normalizar(listaClientes, true), ...normalizar(listaProspectos, false)];
 
         // De-duplicar por correo (preferir cliente real sobre prospecto si coincide)
         const dedupMap = new Map();
         for (const c of todos) {
           const key = (c.correo || '').toLowerCase().trim() || c._id;
-          if (dedupMap.has(key)) {
+          if (!dedupMap.has(key)) {
+            dedupMap.set(key, c);
+          } else {
             const existente = dedupMap.get(key);
             // Si el existente es prospecto y el nuevo es cliente, reemplazar
-            if (c.esCliente && existente.esCliente === false) dedupMap.set(key, c);
-          } else {
-            dedupMap.set(key, c);
+            if (!existente.esCliente && c.esCliente) dedupMap.set(key, c);
           }
         }
         const resultado = Array.from(dedupMap.values()).sort((a,b) => (a.nombre || '').localeCompare(b.nombre || ''));
@@ -106,7 +133,7 @@ export default function RegistrarCotizacion() {
 
   const agregarProducto = () => {
     // create a lightweight stable id for React keys so re-orders/removals don't rely on index
-    const uid = secureUid();
+    const uid = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2,9)}`;
     setProductosSeleccionados([...productosSeleccionados, {
       uid,
       producto: '', descripcion: '', cantidad: '', valorUnitario: '', descuento: '', valorTotal: ''
@@ -170,16 +197,6 @@ export default function RegistrarCotizacion() {
     setProductosSeleccionados(nuevosProductos);
   };
 
-  // Calcular total general usando el helper compartido
-  const calcularTotal = () => {
-    try {
-      return calcularTotales(productosSeleccionados || []).total;
-    } catch (e) {
-      console.error('Error calculando totales en RegistrarCotizacion:', e);
-      return 0;
-    }
-  };
-
   const handleCancelado = () => {
     Swal.fire({
       title: '¿Estás seguro?',
@@ -193,10 +210,10 @@ export default function RegistrarCotizacion() {
     }).then((result) => {
       if (result.isConfirmed) {
         const inputIds = ['cliente', 'ciudad', 'direccion', 'telefono', 'email', 'fecha'];
-        for (const id of inputIds) {
+        inputIds.forEach(id => {
           const input = document.getElementById(id);
           if (input) input.value = '';
-        }
+        });
 
         setProductosSeleccionados([]);
 
@@ -322,9 +339,7 @@ export default function RegistrarCotizacion() {
       const allInputs = document.querySelectorAll('.cuadroTexto');
       // use optional chaining: querySelectorAll never returns null, but this is concise and
       // avoids a verbose length check while remaining safe if APIs change.
-      for (const input of allInputs) {
-        if (input) input.value = '';
-      }
+      allInputs?.forEach(input => { if (input) input.value = ''; });
       setProductosSeleccionados([]);
       if (descripcionRef.current) descripcionRef.current.setContent('');
       if (condicionesPagoRef.current) condicionesPagoRef.current.setContent('');
@@ -1236,7 +1251,9 @@ export default function RegistrarCotizacion() {
                             color: '#059669',
                             fontSize: '1.2rem'
                           }}>
-                            S/. {calcularTotal().toLocaleString('es-ES', { minimumFractionDigits: 2 })}
+                            S/. {productosSeleccionados
+                              .reduce((acc, prod) => acc + (Number.parseFloat(prod.subtotal) || 0), 0)
+                              .toLocaleString('es-ES', { minimumFractionDigits: 2 })}
                           </td>
                           <td style={{ padding: '1rem 0.75rem' }}></td>
                         </tr>
@@ -1296,7 +1313,9 @@ export default function RegistrarCotizacion() {
                       <td colSpan={5}></td>
                       <td style={{ fontWeight: 'bold', textAlign: 'right' }}>Total</td>
                       <td style={{ fontWeight: 'bold' }}>
-                          {calcularTotal().toFixed(2)}
+                        {productosSeleccionados
+                          .reduce((acc, prod) => acc + (Number.parseFloat(prod.subtotal) || 0), 0)
+                          .toFixed(2)}
                       </td>
                       <td></td>
                     </tr>

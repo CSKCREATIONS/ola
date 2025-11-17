@@ -174,6 +174,15 @@ export default function Fijo() {
     };
   }, []);
 
+  const getInitials = (u) => {
+    const fn = (u?.firstName || '').trim();
+    const ln = (u?.surname || '').trim();
+    const a = fn ? fn[0] : '';
+    const b = ln ? ln[0] : '';
+    const res = `${a}${b}`.toUpperCase();
+    return res || 'U';
+  };
+
   const handleClick = async () => {
     const result = await Swal.fire({
       title: '¿Estás seguro?',
@@ -218,27 +227,22 @@ export default function Fijo() {
             </Link>
           )}
           <Link as={Link} to="/Perfil" >
-            <img
-              src="https://cdn-icons-png.freepik.com/256/17740/17740782.png?ga=GA1.1.755740385.1744083497&semt=ais_hybrid"
-              alt="Perfil"
-              className='user-icon'
-            />
+            <div className='user-icon avatar-initials' aria-label="Avatar usuario">
+              {getInitials(user)}
+            </div>
           </Link>
         </div>
       </header>
 
       <div id='menu' className="menu">
         <Link as={Link} to="/Perfil" className="preview-usuario">
-          <img
-            src="https://cdn-icons-png.freepik.com/256/17740/17740782.png?ga=GA1.1.755740385.1744083497&semt=ais_hybrid"
-            alt="Perfil"
-            className="preview-usuario-img"
-          />
+          <div className="preview-usuario-img avatar-initials" aria-label="Avatar usuario grande">
+            {getInitials(user)}
+          </div>
           <div className="datos-usuario">
             {user && (
               <span className="usuario-nombre">{user.firstName} {user.surname}</span>
             )}
-            <br />
             {user && (
               <span className="usuario-rol">
                 {typeof user.role === 'object' ? user.role.name : user.role}
@@ -306,7 +310,7 @@ export default function Fijo() {
                   <Link as={Link} to="/Proveedores" className="dropdown-link"><li><i className="fas fa-truck" aria-hidden={true}></i> <span>Lista de proveedores</span></li></Link>
                 )}
                 {puedeVerReportesCompras && (
-                  <Link as={Link} to="/ReporteProveedores" className="dropdown-link"><li> <i className="fas fa-chart-bar" aria-hidden={true}></i> <span>Reportes de compras</span></li></Link>
+                  <Link as={Link} to="/ReporteProveedores" className="dropdown-link"><li> <i className="fas fa-chart-bar" aria-hidden={true}></i> <span>Reportes</span></li></Link>
                 )}
               </ul>
             </nav>
@@ -339,7 +343,7 @@ export default function Fijo() {
                   <Link as={Link} to="/GestionProductos" className="dropdown-link"><li><i className="fas fa-box" aria-hidden={true}></i> <span>Lista de productos</span></li></Link>
                 )}
                 {puedeVerReportesProductos && (
-                  <Link as={Link} to="/ReporteProductos" className="dropdown-link"><li> <i className="fas fa-chart-bar" aria-hidden={true}></i> <span>Reportes de productos</span></li></Link>
+                  <Link as={Link} to="/ReporteProductos" className="dropdown-link"><li> <i className="fas fa-chart-bar" aria-hidden={true}></i> <span>Reportes</span></li></Link>
                 )}
               </ul>
             </nav>

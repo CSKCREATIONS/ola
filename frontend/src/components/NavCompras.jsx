@@ -65,7 +65,7 @@ export default function NavUsuarios() {
                 location.pathname === '/ReporteProveedores' ? 'nav-item active' : 'nav-item'
               }
             >
-                Reportes de Compras
+                Reportes
             </Link>
           )}
         </nav>

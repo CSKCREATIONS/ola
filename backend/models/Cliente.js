@@ -72,8 +72,9 @@ const ClienteSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
-  agendaCotiza:{
+  operacion:{
     type: String,
+    enum: ['agenda', 'cotiza', 'compra'],
     trim: true
   }
 }, { timestamps: true });
