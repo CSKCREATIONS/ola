@@ -23,7 +23,7 @@ function isValidEmail(email) {
 
   const at = trimmed.indexOf('@');
   // single @ and not first/last
-  if (at <= 0 || trimmed.indexOf('@', at + 1) !== -1) return false;
+  if (at <= 0 || trimmed.includes('@', at + 1)) return false;
 
   const local = trimmed.slice(0, at);
   const domain = trimmed.slice(at + 1);

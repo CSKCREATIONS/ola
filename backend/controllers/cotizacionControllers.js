@@ -25,11 +25,118 @@ try {
 
 // Gmail sending is centralized in backend/utils/gmailSender.js (enviarConGmail)
 
+// Helper: validate responsible id and client email, return sanitized email
+function validateBasicInputs(responsable, cliente) {
+  if (!/^[0-9a-fA-F]{24}$/.exec(responsable?.id)) {
+    return { error: 'El responsable debe ser el id del usuario registrado.' };
+  }
+  if (!cliente?.correo) {
+    return { error: 'Datos de cliente inválidos' };
+  }
+  const correoSanitizado = typeof cliente?.correo === 'string' ? cliente.correo.toLowerCase().trim() : '';
+  if (!correoSanitizado?.includes('@')) {
+    return { error: 'Correo electrónico inválido' };
+  }
+  return { correoSanitizado };
+}
+
 // Crear cotización
 exports.createCotizacion = async (req, res) => {
   const errores = validationResult(req);
   if (!errores.isEmpty()) {
     return res.status(400).json({ errors: errores.array() });
+  }
+
+  // Helper: find existing cliente or create/prospect based on delivered pedidos
+  async function findOrCreateClienteByCorreo(correoSanitizado, clientePayload) {
+    let clienteExistente = await Cliente.findOne({ correo: correoSanitizado });
+    if (clienteExistente) {
+      try {
+        if (clienteExistente.operacion !== 'compra' || !clienteExistente.esCliente) {
+          await Cliente.findByIdAndUpdate(clienteExistente._id, { operacion: 'compra', esCliente: true });
+          clienteExistente.operacion = 'compra';
+          clienteExistente.esCliente = true;
+        }
+      } catch (opErr) {
+        console.warn('No se pudo actualizar Cliente existente a compra/true:', opErr?.message || opErr);
+      }
+      return clienteExistente;
+    }
+
+    // Not found: check for delivered Pedido linked to this correo
+    try {
+      const Pedido = require('../models/Pedido');
+      const resultado = await Pedido.aggregate([
+        { $match: { estado: 'entregado' } },
+        { $lookup: { from: 'clientes', localField: 'cliente', foreignField: '_id', as: 'cli' } },
+        { $unwind: '$cli' },
+        { $match: { 'cli.correo': correoSanitizado } },
+        { $limit: 1 }
+      ]);
+
+      if (Array.isArray(resultado) && resultado.length > 0 && resultado[0].cli?._id) {
+        const clienteRelacionadoId = resultado[0].cli._id;
+        clienteExistente = await Cliente.findById(clienteRelacionadoId);
+        if (clienteExistente) {
+          const updates = {};
+          if (!clienteExistente.esCliente) updates.esCliente = true;
+          if (clienteExistente.operacion !== 'compra') updates.operacion = 'compra';
+          if (Object.keys(updates).length) {
+            await Cliente.findByIdAndUpdate(clienteExistente._id, updates);
+            Object.assign(clienteExistente, updates);
+          }
+          return clienteExistente;
+        }
+      }
+    } catch (aggErr) {
+      console.warn('No se pudo verificar pedidos entregados por correo:', aggErr?.message || aggErr);
+    }
+
+    // Fallback: create prospect cliente
+    const nuevoCliente = new Cliente({
+      nombre: clientePayload.nombre,
+      ciudad: clientePayload.ciudad,
+      direccion: clientePayload.direccion,
+      telefono: clientePayload.telefono,
+      correo: correoSanitizado,
+      esCliente: false,
+      operacion: 'cotiza'
+    });
+    await nuevoCliente.save();
+    return nuevoCliente;
+  }
+
+  // Helper: generate code
+  function generarCodigoCotizacion() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const length = 4;
+    let codigo = '';
+    for (let i = 0; i < length; i++) {
+      const idx = crypto.randomInt(0, chars.length);
+      codigo += chars.charAt(idx);
+    }
+    return `COT-${codigo}`;
+  }
+
+  // Helper: map productos to include product name if available
+  async function mapProductosConNombre(productos = []) {
+    return Promise.all(productos.map(async (prod) => {
+      let productoInfo = null;
+      if (prod.producto?.id) {
+        productoInfo = await Producto.findById(prod.producto.id).lean();
+      }
+      return {
+        producto: {
+          id: prod.producto?.id,
+          name: productoInfo ? productoInfo.name : prod.producto?.name
+        },
+        descripcion: prod.descripcion,
+        cantidad: prod.cantidad,
+        valorUnitario: prod.valorUnitario,
+        descuento: prod.descuento,
+        subtotal: prod.subtotal
+      };
+    }));
   }
 
   try {
@@ -44,139 +151,24 @@ exports.createCotizacion = async (req, res) => {
       enviadoCorreo
     } = req.body;
 
-    // Validar que responsable.id sea un ObjectId válido
-    if (!/^[0-9a-fA-F]{24}$/.exec(responsable?.id)) {
-      return res.status(400).json({ message: 'El responsable debe ser el id del usuario registrado.' });
+    // Basic validations and email sanitization
+    const validated = validateBasicInputs(responsable, cliente);
+    if (validated.error) {
+      return res.status(400).json({ message: validated.error });
     }
-    if (!cliente?.correo) {
-      return res.status(400).json({ message: 'Datos de cliente inválidos' });
-    }
+    const correoSanitizado = validated.correoSanitizado;
 
-    // Sanitizar el correo para prevenir inyección NoSQL
-    const correoSanitizado = typeof cliente?.correo === 'string' ? cliente.correo.toLowerCase().trim() : '';
-    
-    if (!correoSanitizado?.includes('@')) {
-      return res.status(400).json({ message: 'Correo electrónico inválido' });
-    }
+    // Resolve or create cliente document
+    const clienteExistente = await findOrCreateClienteByCorreo(correoSanitizado, cliente);
 
-    // Buscar cliente existente por correo
-    let clienteExistente = await Cliente.findOne({ correo: correoSanitizado });
-    if (clienteExistente) {
-      // Si ya existe en clientes: operacion 'compra' y esCliente true
-      try {
-        if (clienteExistente.operacion !== 'compra' || !clienteExistente.esCliente) {
-          await Cliente.findByIdAndUpdate(
-            clienteExistente._id,
-            { operacion: 'compra', esCliente: true }
-          );
-          clienteExistente.operacion = 'compra';
-          clienteExistente.esCliente = true;
-        }
-      } catch (opErr) {
-        console.warn('No se pudo actualizar Cliente existente a compra/true:', opErr?.message || opErr);
-      }
-    } else {
-      // No existe en clientes: verificar si hay pedidos ENTREGADOS asociados a este correo
-      try {
-        const Pedido = require('../models/Pedido');
-        const resultado = await Pedido.aggregate([
-          { $match: { estado: 'entregado' } },
-          { $lookup: { from: 'clientes', localField: 'cliente', foreignField: '_id', as: 'cli' } },
-          { $unwind: '$cli' },
-          { $match: { 'cli.correo': correoSanitizado } },
-          { $limit: 1 }
-        ]);
+    // Fecha de cotización
+    const fechaCotizacion = (fecha && !Number.isNaN(new Date(fecha).getTime())) ? new Date(fecha) : new Date();
 
-        if (Array.isArray(resultado) && resultado.length > 0 && resultado[0].cli?._id) {
-          // Ya hay un pedido entregado para este correo: NO crear nuevo cliente, reutilizar el existente
-          const clienteRelacionadoId = resultado[0].cli._id;
-          clienteExistente = await Cliente.findById(clienteRelacionadoId);
-          if (clienteExistente) {
-            // asegurar esCliente=true y operacion='compra'
-            const updates = {};
-            if (!clienteExistente.esCliente) updates.esCliente = true;
-            if (clienteExistente.operacion !== 'compra') updates.operacion = 'compra';
-            if (Object.keys(updates).length) {
-              await Cliente.findByIdAndUpdate(clienteExistente._id, updates);
-              Object.assign(clienteExistente, updates);
-            }
-          }
-        } else {
-          // No hay cliente ni pedidos entregados: crear como prospecto (esCliente=false, operacion='cotiza')
-          clienteExistente = new Cliente({
-            nombre: cliente.nombre,
-            ciudad: cliente.ciudad,
-            direccion: cliente.direccion,
-            telefono: cliente.telefono,
-            correo: correoSanitizado,
-            esCliente: false,
-            operacion: 'cotiza'
-          });
-          await clienteExistente.save();
-        }
-      } catch (aggErr) {
-        console.warn('No se pudo verificar pedidos entregados por correo:', aggErr?.message || aggErr);
-        // Fallback seguro: crear prospecto
-        clienteExistente = new Cliente({
-          nombre: cliente.nombre,
-          ciudad: cliente.ciudad,
-          direccion: cliente.direccion,
-          telefono: cliente.telefono,
-          correo: correoSanitizado,
-          esCliente: false,
-          operacion: 'cotiza'
-        });
-        await clienteExistente.save();
-      }
-    }
+    // Map productos
+    const productosConNombre = await mapProductosConNombre(productos);
 
-    let fechaCotizacion = null;
-
-    if (fecha && !Number.isNaN(new Date(fecha).getTime())) {
-      fechaCotizacion = new Date(fecha);
-    } else {
-      fechaCotizacion = new Date(); // si no viene, usa la fecha actual
-    }
-
-
-
-    // Generar código aleatorio COT-XXXX (letras y números) usando RNG criptográficamente seguro
-    function generarCodigoCotizacion() {
-      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-      const length = 4;
-      let codigo = '';
-      for (let i = 0; i < length; i++) {
-        // crypto.randomInt es seguro y evita la predictibilidad de Math.random
-        const idx = crypto.randomInt(0, chars.length);
-        codigo += chars.charAt(idx);
-      }
-      return `COT-${codigo}`;
-    }
-
-    // Mapear productos con nombre
-    const productosConNombre = await Promise.all(
-      productos.map(async (prod) => {
-        let productoInfo = null;
-        if (prod.producto?.id) {
-          productoInfo = await Producto.findById(prod.producto.id).lean();
-        }
-        return {
-          producto: {
-            id: prod.producto?.id,
-            name: productoInfo ? productoInfo.name : prod.producto?.name
-          },
-          descripcion: prod.descripcion,
-          cantidad: prod.cantidad,
-          valorUnitario: prod.valorUnitario,
-          descuento: prod.descuento,
-          subtotal: prod.subtotal
-        };
-      })
-    );
-
-    // Crear cotización con todos los datos embebidos y referencias
-    // IMPORTANT: embed exactly the data provided in the request inputs (no automatic fetch-overwrite)
-    const cotizacion = new Cotizacion({
+    // Build cotizacion payload (embed request-provided fields)
+    const cotizacionPayload = {
       codigo: generarCodigoCotizacion(),
       cliente: {
         referencia: clienteExistente ? clienteExistente._id : undefined,
@@ -201,19 +193,19 @@ exports.createCotizacion = async (req, res) => {
       empresa: req.body.empresa || undefined,
       clientePotencial,
       enviadoCorreo
-    });
+    };
 
+    const cotizacion = new Cotizacion(cotizacionPayload);
     await cotizacion.save();
 
-    // Obtener datos completos del cliente
+    // Populate cliente reference for response
     const cotizacionConCliente = await Cotizacion.findById(cotizacion._id)
       .populate('cliente.referencia', 'nombre correo ciudad telefono esCliente');
 
-    res.status(201).json({ message: 'Cotización creada', data: cotizacionConCliente });
-
+    return res.status(201).json({ message: 'Cotización creada', data: cotizacionConCliente });
   } catch (error) {
     console.error('❌ Error al crear cotización:', error);
-    res.status(500).json({ message: 'Error al crear cotización', error: error.message });
+    return res.status(500).json({ message: 'Error al crear cotización', error: error.message });
   }
 };
 
