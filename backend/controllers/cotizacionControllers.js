@@ -40,6 +40,37 @@ function validateBasicInputs(responsable, cliente) {
   return { correoSanitizado };
 }
 
+// Helper (module-scope): try to find a cliente by correo
+async function findClienteByCorreo(correoSanitizado) {
+  try {
+    const clienteExistente = await Cliente.findOne({ correo: correoSanitizado });
+    if (!clienteExistente) return null;
+
+    // Normalize some fields to ensure predictable shape
+    clienteExistente.esCliente = !!clienteExistente.esCliente;
+    clienteExistente.operacion = clienteExistente.operacion || 'compra';
+
+    return clienteExistente;
+  } catch (err) {
+    console.warn('Error buscando cliente por correo:', err?.message || err);
+    return null;
+  }
+}
+
+// Helper (module-scope): find existing cliente or create/prospect based on delivered pedidos
+async function findOrCreateClienteByCorreo(correoSanitizado, clientePayload) {
+  // 1) Try direct find
+  const direct = await findClienteByCorreo(correoSanitizado);
+  if (direct) return direct;
+
+  // 2) Try to resolve from delivered Pedido
+  const fromPedido = await findClienteFromDeliveredPedido(correoSanitizado);
+  if (fromPedido) return fromPedido;
+
+  // 3) Fallback: create prospect
+  return createProspectCliente(correoSanitizado, clientePayload);
+}
+
 // Crear cotización
 exports.createCotizacion = async (req, res) => {
   const errores = validationResult(req);
