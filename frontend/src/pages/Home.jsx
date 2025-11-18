@@ -76,32 +76,29 @@ const usePermisos = () => {
 // Hook para stats por módulo
 const useModuleStats = (permisos) => {
   return useMemo(() => {
-    const stats = { usuarios: 0, compras: 0, productos: 0, ventas: 0 };
+    const groups = {
+      usuarios: ['verUsuarios', 'verRoles'],
+      compras: ['ordenesCompra', 'hcompras', 'proveedores', 'reportesCompras'],
+      productos: ['verCategorias', 'verSubcategorias', 'verProductos', 'verReportesProductos'],
+      ventas: [
+        'cotCrear',
+        'cotVer',
+        'pedidosAg',
+        'pedidosDesp',
+        'pedidosEnt',
+        'pedidosCanc',
+        'pedidosDev',
+        'clientes',
+        'prospectos',
+        'reportesVentas',
+        'remisiones'
+      ]
+    };
 
-    if (permisos.verUsuarios) stats.usuarios++;
-    if (permisos.verRoles) stats.usuarios++;
-
-    if (permisos.ordenesCompra) stats.compras++;
-    if (permisos.hcompras) stats.compras++;
-    if (permisos.proveedores) stats.compras++;
-    if (permisos.reportesCompras) stats.compras++;
-
-    if (permisos.verCategorias) stats.productos++;
-    if (permisos.verSubcategorias) stats.productos++;
-    if (permisos.verProductos) stats.productos++;
-    if (permisos.verReportesProductos) stats.productos++;
-
-    if (permisos.cotCrear) stats.ventas++;
-    if (permisos.cotVer) stats.ventas++;
-    if (permisos.pedidosAg) stats.ventas++;
-    if (permisos.pedidosDesp) stats.ventas++;
-    if (permisos.pedidosEnt) stats.ventas++;
-    if (permisos.pedidosCanc) stats.ventas++;
-    if (permisos.pedidosDev) stats.ventas++;
-    if (permisos.clientes) stats.ventas++;
-    if (permisos.prospectos) stats.ventas++;
-    if (permisos.reportesVentas) stats.ventas++;
-    if (permisos.remisiones) stats.ventas++;
+    const stats = Object.keys(groups).reduce((acc, key) => {
+      acc[key] = groups[key].reduce((count, permKey) => count + (permisos[permKey] ? 1 : 0), 0);
+      return acc;
+    }, { usuarios: 0, compras: 0, productos: 0, ventas: 0 });
 
     return stats;
   }, [permisos]);
@@ -132,9 +129,6 @@ export default function Home() {
   );
 
   const modulos = useMemo(() => {
-    const buildLinksCount = (component) =>
-      React.Children.toArray(component.props.children).filter(Boolean).length;
-
     const mods = [
       permisos.usuarios && {
         id: 'usuarios',
