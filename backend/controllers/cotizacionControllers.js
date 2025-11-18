@@ -57,6 +57,64 @@ async function findClienteByCorreo(correoSanitizado) {
   }
 }
 
+// Try to find a cliente by searching delivered Pedidos that reference a cliente with this correo
+async function findClienteFromDeliveredPedido(correoSanitizado) {
+  try {
+    const Pedido = require('../models/Pedido');
+    const resultado = await Pedido.aggregate([
+      { $match: { estado: 'entregado' } },
+      { $lookup: { from: 'clientes', localField: 'cliente', foreignField: '_id', as: 'cli' } },
+      { $unwind: '$cli' },
+      { $match: { 'cli.correo': correoSanitizado } },
+      { $limit: 1 }
+    ]);
+
+    if (!Array.isArray(resultado) || resultado.length === 0) return null;
+    const cliRef = resultado[0].cli;
+    if (!cliRef?._id) return null;
+
+    const clienteExistente = await Cliente.findById(cliRef._id);
+    if (!clienteExistente) return null;
+
+    const updates = {};
+    if (!clienteExistente.esCliente) updates.esCliente = true;
+    if (clienteExistente.operacion !== 'compra') updates.operacion = 'compra';
+    if (Object.keys(updates).length) {
+      try {
+        await Cliente.findByIdAndUpdate(clienteExistente._id, updates);
+        Object.assign(clienteExistente, updates);
+      } catch (error_) {
+        console.warn('No se pudo actualizar cliente desde pedido entregado:', error_?.message || error_);
+      }
+    }
+    return clienteExistente;
+  } catch (err) {
+    console.warn('No se pudo verificar pedidos entregados por correo:', err?.message || err);
+    return null;
+  }
+}
+
+// Create a prospect client document when no existing cliente is found
+async function createProspectCliente(correoSanitizado, clientePayload = {}) {
+  try {
+    const nuevoCliente = new Cliente({
+      nombre: clientePayload.nombre || '',
+      ciudad: clientePayload.ciudad || '',
+      direccion: clientePayload.direccion || '',
+      telefono: clientePayload.telefono || '',
+      correo: correoSanitizado,
+      esCliente: false,
+      operacion: 'cotiza'
+    });
+    await nuevoCliente.save();
+    return nuevoCliente;
+  } catch (err) {
+    console.warn('No se pudo crear cliente prospecto:', err?.message || err);
+    return null;
+  }
+
+}
+
 // Helper (module-scope): find existing cliente or create/prospect based on delivered pedidos
 async function findOrCreateClienteByCorreo(correoSanitizado, clientePayload) {
   // 1) Try direct find
@@ -72,104 +130,42 @@ async function findOrCreateClienteByCorreo(correoSanitizado, clientePayload) {
 }
 
 // Crear cotización
+
+// Helper: generate code (moved to module scope to avoid nested function)
+function generarCodigoCotizacion() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const length = 4;
+  let codigo = '';
+  for (let i = 0; i < length; i++) {
+    const idx = crypto.randomInt(0, chars.length);
+    codigo += chars.charAt(idx);
+  }
+  return `COT-${codigo}`;
+}
+
+// Helper: map productos to include product name if available (module scope)
+async function mapProductosConNombre(productos = []) {
+  return Promise.all(productos.map(async (prod) => {
+    let productoInfo = null;
+    if (prod.producto?.id) {
+      productoInfo = await Producto.findById(prod.producto.id).lean();
+    }
+    return {
+      producto: {
+        id: prod.producto?.id,
+        name: productoInfo ? productoInfo.name : prod.producto?.name
+      },
+      descripcion: prod.descripcion,
+      cantidad: prod.cantidad,
+      valorUnitario: prod.valorUnitario,
+      descuento: prod.descuento,
+      subtotal: prod.subtotal
+    };
+  }));
+}
+
+// Crear cotización
 exports.createCotizacion = async (req, res) => {
-  const errores = validationResult(req);
-  if (!errores.isEmpty()) {
-    return res.status(400).json({ errors: errores.array() });
-  }
-
-  // Helper: find existing cliente or create/prospect based on delivered pedidos
-  async function findOrCreateClienteByCorreo(correoSanitizado, clientePayload) {
-    let clienteExistente = await Cliente.findOne({ correo: correoSanitizado });
-    if (clienteExistente) {
-      try {
-        if (clienteExistente.operacion !== 'compra' || !clienteExistente.esCliente) {
-          await Cliente.findByIdAndUpdate(clienteExistente._id, { operacion: 'compra', esCliente: true });
-          clienteExistente.operacion = 'compra';
-          clienteExistente.esCliente = true;
-        }
-      } catch (opErr) {
-        console.warn('No se pudo actualizar Cliente existente a compra/true:', opErr?.message || opErr);
-      }
-      return clienteExistente;
-    }
-
-    // Not found: check for delivered Pedido linked to this correo
-    try {
-      const Pedido = require('../models/Pedido');
-      const resultado = await Pedido.aggregate([
-        { $match: { estado: 'entregado' } },
-        { $lookup: { from: 'clientes', localField: 'cliente', foreignField: '_id', as: 'cli' } },
-        { $unwind: '$cli' },
-        { $match: { 'cli.correo': correoSanitizado } },
-        { $limit: 1 }
-      ]);
-
-      if (Array.isArray(resultado) && resultado.length > 0 && resultado[0].cli?._id) {
-        const clienteRelacionadoId = resultado[0].cli._id;
-        clienteExistente = await Cliente.findById(clienteRelacionadoId);
-        if (clienteExistente) {
-          const updates = {};
-          if (!clienteExistente.esCliente) updates.esCliente = true;
-          if (clienteExistente.operacion !== 'compra') updates.operacion = 'compra';
-          if (Object.keys(updates).length) {
-            await Cliente.findByIdAndUpdate(clienteExistente._id, updates);
-            Object.assign(clienteExistente, updates);
-          }
-          return clienteExistente;
-        }
-      }
-    } catch (aggErr) {
-      console.warn('No se pudo verificar pedidos entregados por correo:', aggErr?.message || aggErr);
-    }
-
-    // Fallback: create prospect cliente
-    const nuevoCliente = new Cliente({
-      nombre: clientePayload.nombre,
-      ciudad: clientePayload.ciudad,
-      direccion: clientePayload.direccion,
-      telefono: clientePayload.telefono,
-      correo: correoSanitizado,
-      esCliente: false,
-      operacion: 'cotiza'
-    });
-    await nuevoCliente.save();
-    return nuevoCliente;
-  }
-
-  // Helper: generate code
-  function generarCodigoCotizacion() {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    const length = 4;
-    let codigo = '';
-    for (let i = 0; i < length; i++) {
-      const idx = crypto.randomInt(0, chars.length);
-      codigo += chars.charAt(idx);
-    }
-    return `COT-${codigo}`;
-  }
-
-  // Helper: map productos to include product name if available
-  async function mapProductosConNombre(productos = []) {
-    return Promise.all(productos.map(async (prod) => {
-      let productoInfo = null;
-      if (prod.producto?.id) {
-        productoInfo = await Producto.findById(prod.producto.id).lean();
-      }
-      return {
-        producto: {
-          id: prod.producto?.id,
-          name: productoInfo ? productoInfo.name : prod.producto?.name
-        },
-        descripcion: prod.descripcion,
-        cantidad: prod.cantidad,
-        valorUnitario: prod.valorUnitario,
-        descuento: prod.descuento,
-        subtotal: prod.subtotal
-      };
-    }));
-  }
-
   try {
     const {
       cliente,
