@@ -417,7 +417,7 @@ const GestionSubcategorias = () => {
       title: activar ? '¿Activar subcategoría?' : '¿Desactivar subcategoría?',
       text: activar
         ? 'Esto hará que vuelva a estar disponible. Deberás activar manualmente sus productos si lo deseas.'
-        : 'Esto también inhabilitará sus productos asociados.',
+        : 'Esto también deshabilitará sus productos asociados.',
       icon: activar ? 'question' : 'warning',
       showCancelButton: true,
       confirmButtonText: activar ? 'Sí, activar' : 'Sí, desactivar',
@@ -490,15 +490,14 @@ const GestionSubcategorias = () => {
     <div>
       <Fijo />
       <div className="content">
-        <div className="max-width">
-          <NavProductos />
+        <NavProductos />
         <div className="contenido-modulo">
           {/* Encabezado profesional */}
-          <div className="subcategoria-professional-header">
-            <div className="subcategoria-header-decoration"></div>
+          <div className="categoria-professional-header">
+            <div className="categoria-header-decoration"></div>
             <div style={{ position: 'relative', zIndex: 2 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                <div className="subcategoria-icon-container">
+                <div className="categoria-icon-container">
                   <i className="fa-solid fa-sitemap" style={{ fontSize: '2.5rem', color: 'white' }}></i>
                 </div>
                 <div>
@@ -519,7 +518,7 @@ const GestionSubcategorias = () => {
 
           {/* Botón agregar */}
           <button 
-            className="subcategoria-add-btn" 
+            className="categoria-add-btn" 
             onClick={() => { setSubcategoriaEditando(null); setModalVisible(true); }}
           >
             <i className="fa-solid fa-plus"></i>
@@ -561,7 +560,7 @@ const GestionSubcategorias = () => {
                         {subcat.description}
                       </td>
                       <td>
-                        <span className="subcategoria-category-badge">
+                        <span className="categoria-category-badge">
                           <i className="fa-solid fa-tag"></i>
                           {subcat.category?.name || 'Sin categoría'}
                         </span>
@@ -580,7 +579,7 @@ const GestionSubcategorias = () => {
                       <td>
                         <div style={{ display: 'flex', gap: '5px' }}>
                           <button 
-                            className="subcategoria-action-btn"
+                            className="categoria-action-btn"
                             onClick={() => handleEdit(subcat)}
                             title="Editar"
                           >
@@ -633,8 +632,6 @@ const GestionSubcategorias = () => {
             />
           )}
         </div>
-        </div>
-        
         
       </div>
       <div className="custom-footer">
