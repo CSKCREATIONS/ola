@@ -50,6 +50,7 @@ export default function DetallesOrdenModal({ visible, orden = {}, onClose = () =
   const modalRef = useRef(null);
   useDraggable(modalRef, visible);
 
+
   const styles = useMemo(() => ({
     modalWrapper: { maxWidth: '700px', width: '90%', position: 'fixed', cursor: 'move' },
     body: { padding: 0, maxHeight: '70vh', overflowY: 'auto' },
@@ -61,6 +62,8 @@ export default function DetallesOrdenModal({ visible, orden = {}, onClose = () =
     footerBar: { padding: '1rem', borderTop: '1px solid #e0e0e0', background: '#f8f9fa', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
     btnGhost: { background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: '8px', padding: '0.6rem 0.8rem', color: 'white', cursor: 'pointer' }
   }), []);
+
+  const o = orden || {};
 
   const handleOpenPrintWindow = useCallback((sourceSelector = '.pdf-orden-compra .header') => {
     const printContent = document.querySelector(sourceSelector) || modalRef.current?.querySelector(sourceSelector);
@@ -98,7 +101,7 @@ export default function DetallesOrdenModal({ visible, orden = {}, onClose = () =
     newWindow.close();
   }, [orden]);
 
-  const o = orden || {};
+  if (!visible) return null;
 
   return (
     <div className="modal-overlay">

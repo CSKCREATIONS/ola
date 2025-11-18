@@ -24,7 +24,7 @@ function isValidEmail(email) {
 
   const at = trimmed.indexOf('@');
   // single @ and not first/last
-  if (at <= 0 || trimmed.indexOf('@', at + 1) !== -1) return false;
+  if (at <= 0 || trimmed.includes('@', at + 1)) return false;
 
   const local = trimmed.slice(0, at);
   const domain = trimmed.slice(at + 1);
@@ -53,6 +53,11 @@ function isValidEmail(email) {
   });
 
   return allLabelsValid;
+}
+
+function normalizar(arr, esClienteFlag) {
+  if (!Array.isArray(arr)) return [];
+  return arr.map(c => ({ ...c, esCliente: !!esClienteFlag }));
 }
 
 export default function RegistrarCotizacion() {
@@ -99,20 +104,21 @@ export default function RegistrarCotizacion() {
         const listaClientes = clientesRes.data?.data || clientesRes.data || [];
         const listaProspectos = prospectosRes.data?.data || prospectosRes.data || [];
 
-        // Normalizar y marcar tipo
-        const normalizar = (arr, esClienteFlag) => (Array.isArray(arr) ? arr.map(c => ({ ...c, esCliente: !!esClienteFlag })) : []);
+        // Normalizar y marcar tipo usando el helper de módulo
         const todos = [...normalizar(listaClientes, true), ...normalizar(listaProspectos, false)];
 
         // De-duplicar por correo (preferir cliente real sobre prospecto si coincide)
         const dedupMap = new Map();
         for (const c of todos) {
           const key = (c.correo || '').toLowerCase().trim() || c._id;
-          if (!dedupMap.has(key)) {
-            dedupMap.set(key, c);
-          } else {
+          if (dedupMap.has(key)) {
             const existente = dedupMap.get(key);
             // Si el existente es prospecto y el nuevo es cliente, reemplazar
-            if (!existente.esCliente && c.esCliente) dedupMap.set(key, c);
+            if (existente.esCliente === false && c.esCliente) {
+              dedupMap.set(key, c);
+            }
+          } else {
+            dedupMap.set(key, c);
           }
         }
         const resultado = Array.from(dedupMap.values()).sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
@@ -211,10 +217,10 @@ export default function RegistrarCotizacion() {
     }).then((result) => {
       if (result.isConfirmed) {
         const inputIds = ['cliente', 'ciudad', 'direccion', 'telefono', 'email', 'fecha'];
-        inputIds.forEach(id => {
+        for (const id of inputIds) {
           const input = document.getElementById(id);
           if (input) input.value = '';
-        });
+        }
 
         setProductosSeleccionados([]);
 
@@ -338,9 +344,9 @@ export default function RegistrarCotizacion() {
   const limpiarFormulario = () => {
     try {
       const allInputs = document.querySelectorAll('.cuadroTexto');
-      // use optional chaining: querySelectorAll never returns null, but this is concise and
-      // avoids a verbose length check while remaining safe if APIs change.
-      allInputs?.forEach(input => { if (input) input.value = ''; });
+      // use a for...of loop which works with NodeList and avoids relying on .forEach
+      // (and potential lint rules that require for...of).
+      for (const input of allInputs) { if (input) input.value = ''; }
       setProductosSeleccionados([]);
       if (descripcionRef.current) descripcionRef.current.setContent('');
       if (condicionesPagoRef.current) condicionesPagoRef.current.setContent('');
