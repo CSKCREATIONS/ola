@@ -899,7 +899,8 @@ const GestionProveedores = () => {
       <Fijo />
       <div className="content">
         <NavCompras />
-        <div className="contenido-modulo">
+        <div className="max-width">
+          <div className="contenido-modulo">
           {/* Encabezado profesional */}
           <div className="proveedor-professional-header">
             <div className="proveedor-header-decoration"></div>
@@ -1085,6 +1086,8 @@ const GestionProveedores = () => {
           {modalVisible && <ProveedorModal proveedor={proveedorEditando} onClose={() => setModalVisible(false)} onSave={guardarProveedor} />}
           <ModalProductosProveedor visible={modalProductosVisible} onClose={() => setModalProductosVisible(false)} productos={productosProveedor} proveedor={proveedorNombre} />
         </div>
+        </div>
+        
 
       </div>
       <div className="custom-footer">

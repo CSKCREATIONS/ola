@@ -491,22 +491,22 @@ const CategoriaModal = ({ categoria, onClose, onSave }) => {
     </div>
   );
 };
-  // PropTypes for CategoriaModal
-  CategoriaModal.propTypes = {
-    categoria: PropTypes.shape({
-      _id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-      name: PropTypes.string,
-      description: PropTypes.string,
-      activo: PropTypes.bool
-    }),
-    onClose: PropTypes.func,
-    onSave: PropTypes.func.isRequired
-  };
+// PropTypes for CategoriaModal
+CategoriaModal.propTypes = {
+  categoria: PropTypes.shape({
+    _id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    name: PropTypes.string,
+    description: PropTypes.string,
+    activo: PropTypes.bool
+  }),
+  onClose: PropTypes.func,
+  onSave: PropTypes.func.isRequired
+};
 
-  CategoriaModal.defaultProps = {
-    categoria: null,
-    onClose: () => {}
-  };
+CategoriaModal.defaultProps = {
+  categoria: null,
+  onClose: () => { }
+};
 
 const ListaDeCategorias = () => {
   const [categorias, setCategorias] = useState([]);
@@ -564,7 +564,7 @@ const ListaDeCategorias = () => {
       setModalVisible(false);
       setCategoriaEditando(null);
       loadCategories();
-  } catch (err) {
+    } catch (err) {
       console.error('❌ Error en handleSave:', err);
       Swal.fire('Error', err.message, 'error');
     }
@@ -613,138 +613,141 @@ const ListaDeCategorias = () => {
       <Fijo />
       <div className="content">
         <NavProductos />
-        <div className="contenido-modulo">
-          {/* Encabezado profesional */}
-          <div className="categoria-professional-header">
-            <div className="categoria-header-decoration"></div>
-            <div style={{ position: 'relative', zIndex: 2 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                <div className="categoria-icon-container">
-                  <i className="fa-solid fa-tags" style={{ fontSize: '2.5rem', color: 'white' }}></i>
-                </div>
-                <div>
-                  <h2 style={{ margin: '0 0 8px 0', fontSize: '2rem', fontWeight: '700' }}>
-                    Categorías
-                  </h2>
-                  <p style={{ margin: 0, fontSize: '1.1rem', opacity: 0.9 }}>
-                    Aquí podrá gestionar todas las categorías de productos
-                  </p>
+        <div className="max-width">
+          <div className="contenido-modulo">
+            {/* Encabezado profesional */}
+            <div className="categoria-professional-header">
+              <div className="categoria-header-decoration"></div>
+              <div style={{ position: 'relative', zIndex: 2 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                  <div className="categoria-icon-container">
+                    <i className="fa-solid fa-tags" style={{ fontSize: '2.5rem', color: 'white' }}></i>
+                  </div>
+                  <div>
+                    <h2 style={{ margin: '0 0 8px 0', fontSize: '2rem', fontWeight: '700' }}>
+                      Categorías
+                    </h2>
+                    <p style={{ margin: 0, fontSize: '1.1rem', opacity: 0.9 }}>
+                      Aquí podrá gestionar todas las categorías de productos
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Estadísticas avanzadas */}
-          <AdvancedStats cards={statsCards} />
+            {/* Estadísticas avanzadas */}
+            <AdvancedStats cards={statsCards} />
 
-          {/* Botón agregar */}
-          <button
-            type="button"
-            className="categoria-add-btn"
-            onClick={() => { setCategoriaEditando(null); setModalVisible(true); }}
-          >
-            <i className="fa-solid fa-plus" aria-hidden={true}></i>
-            <span>Nueva Categoría</span>
-          </button>
+            {/* Botón agregar */}
+            <button
+              type="button"
+              className="categoria-add-btn"
+              onClick={() => { setCategoriaEditando(null); setModalVisible(true); }}
+            >
+              <i className="fa-solid fa-plus" aria-hidden={true}></i>
+              <span>Nueva Categoría</span>
+            </button>
 
-          {/* Tabla principal con diseño moderno */}
-          <div className="categoria-table-modern">
-            <div className="categoria-table-wrapper">
-              <table className="categoria-table">
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Categoría</th>
-                    <th>Descripción</th>
-                    <th>Estado</th>
-                    <th>Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {categorias.length === 0 ? (
+            {/* Tabla principal con diseño moderno */}
+            <div className="categoria-table-modern">
+              <div className="categoria-table-wrapper">
+                <table className="categoria-table">
+                  <thead>
                     <tr>
-                      <td
-                        colSpan={5}
-                        style={{
-                          padding: '40px',
-                          textAlign: 'center',
-                          color: '#9ca3af',
-                          fontStyle: 'italic',
-                          fontSize: '16px'
-                        }}
-                      >
-                        No hay categorías disponibles
-                      </td>
+                      <th>#</th>
+                      <th>Categoría</th>
+                      <th>Descripción</th>
+                      <th>Estado</th>
+                      <th>Acciones</th>
                     </tr>
-                  ) : (
-                    currentCategorias.map((cat, index) => (
-                      <tr key={cat._id}>
-                        <td >
-                          {indexOfFirstItem + index + 1}
+                  </thead>
+                  <tbody>
+                    {categorias.length === 0 ? (
+                      <tr>
+                        <td
+                          colSpan={5}
+                          style={{
+                            padding: '40px',
+                            textAlign: 'center',
+                            color: '#9ca3af',
+                            fontStyle: 'italic',
+                            fontSize: '16px'
+                          }}
+                        >
+                          No hay categorías disponibles
                         </td>
-                        <td style={{ fontWeight: '600', color: '#1f2937' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <div style={{
-                              background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                              borderRadius: '8px',
-                              padding: '8px',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              minWidth: '35px'
-                            }}>
-                              <i className="fa-solid fa-tag" style={{ color: 'white', fontSize: '12px' }} aria-hidden={true}></i>
+                      </tr>
+                    ) : (
+                      currentCategorias.map((cat, index) => (
+                        <tr key={cat._id}>
+                          <td >
+                            {indexOfFirstItem + index + 1}
+                          </td>
+                          <td style={{ fontWeight: '600', color: '#1f2937' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                              <div style={{
+                                background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                                borderRadius: '8px',
+                                padding: '8px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                minWidth: '35px'
+                              }}>
+                                <i className="fa-solid fa-tag" style={{ color: 'white', fontSize: '12px' }} aria-hidden={true}></i>
+                              </div>
+                              {cat.name}
                             </div>
-                            {cat.name}
-                          </div>
-                        </td>
-                        <td style={{ color: '#6b7280', fontSize: '14px' }}>
-                          {cat.description}
-                        </td>
-                        <td>
-                          <label className="switch">
-                            <input
+                          </td>
+                          <td style={{ color: '#6b7280', fontSize: '14px' }}>
+                            {cat.description}
+                          </td>
+                          <td>
+                            <label className="switch">
+                              <input
                                 type="checkbox"
                                 checked={!!cat.activo}
                                 aria-label={`Estado de la categoría ${cat.name || cat._id}`}
                                 onChange={(e) => toggleEstadoCategoria(cat._id, e.target.checked)}
                               />
-                            <span className="slider"></span>
-                          </label>
-                        </td>
-                        <td>
-                          <div style={{ display: 'flex', gap: '5px' }}>
-                            <button
-                              className="categoria-action-btn"
-                              onClick={() => handleEdit(cat)}
-                              aria-label={`Editar categoría ${cat.name || cat._id}`}
-                            >
-                              <i className="fa-solid fa-pen-to-square" aria-hidden={true}></i>
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+                              <span className="slider"></span>
+                            </label>
+                          </td>
+                          <td>
+                            <div style={{ display: 'flex', gap: '5px' }}>
+                              <button
+                                className="categoria-action-btn"
+                                onClick={() => handleEdit(cat)}
+                                aria-label={`Editar categoría ${cat.name || cat._id}`}
+                              >
+                                <i className="fa-solid fa-pen-to-square" aria-hidden={true}></i>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+
             </div>
-
-
-          </div>
-          {/* Paginación de la tabla*/}
-          <div className="pagination">
-            {Array.from({ length: totalPages }, (_, i) => (
-              <button
-                key={i + 1}
-                onClick={() => paginate(i + 1)}
-                className={currentPage === i + 1 ? 'active-page' : ''}
-              >
-                {i + 1}
-              </button>
-            ))}
+            {/* Paginación de la tabla*/}
+            <div className="pagination">
+              {Array.from({ length: totalPages }, (_, i) => (
+                <button
+                  key={i + 1}
+                  onClick={() => paginate(i + 1)}
+                  className={currentPage === i + 1 ? 'active-page' : ''}
+                >
+                  {i + 1}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
+
 
         {modalVisible && (
           <CategoriaModal

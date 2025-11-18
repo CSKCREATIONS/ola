@@ -10,6 +10,7 @@ import { saveAs } from 'file-saver';
 import React, { useState, useEffect } from 'react';
 import api from '../api/axiosConfig';
 import CotizacionPreview from '../components/CotizacionPreview';
+import PedidoAgendadoPreview from '../components/PedidoAgendadoPreview';
 import { contarLongitudesObjetoValues } from '../utils/calculations';
 import AdvancedStats from '../components/AdvancedStats';
 
@@ -178,30 +179,33 @@ if (!document.getElementById('prospectos-advanced-styles')) {
   styleSheet.textContent = advancedStyles;
   document.head.appendChild(styleSheet);
 }
- 
-export default function ProspectosDeCliente() {
-/*** Funcion para exportar a pdf ***/
-const exportarPDF = async () => {
-  const input = document.getElementById('tabla_prospectos');
-  if (!input) {
-    console.error('Elemento para exportar no encontrado: tabla_prospectos');
-    return;
-  }
 
-  try {
-    await exportElementToPdf(input, 'prospectos.pdf');
-  } catch (err) {
-    console.error('Error exportando PDF:', err);
-  }
-};
+export default function ProspectosDeCliente() {
+  /*** Funcion para exportar a pdf ***/
+  const exportarPDF = async () => {
+    const input = document.getElementById('tabla_prospectos');
+    if (!input) {
+      console.error('Elemento para exportar no encontrado: tabla_prospectos');
+      return;
+    }
+
+    try {
+      await exportElementToPdf(input, 'prospectos.pdf');
+    } catch (err) {
+      console.error('Error exportando PDF:', err);
+    }
+  };
 
   const location = useLocation();
 
   // Estado local
   const [prospectos, setProspectos] = useState([]);
   const [cotizacionesMap, setCotizacionesMap] = useState({});
+  const [pedidosMap, setPedidosMap] = useState({});
   const [cotizacionSeleccionada, setCotizacionSeleccionada] = useState(null);
   const [mostrarPreview, setMostrarPreview] = useState(false);
+  const [pedidoSeleccionado, setPedidoSeleccionado] = useState(null);
+  const [mostrarPedidoPreview, setMostrarPedidoPreview] = useState(false);
   const [expandedEmails, setExpandedEmails] = useState({});
   const [filtroTexto, setFiltroTexto] = useState('');
   const [paginaActual, setPaginaActual] = useState(1);
@@ -243,9 +247,27 @@ const exportarPDF = async () => {
           const email = (cot.cliente?.correo || '').toLowerCase();
           if (!email) continue;
           if (!map[email]) map[email] = [];
-          if (cot.codigo) map[email].push({ codigo: cot.codigo, id: cot._id });
+          if (cot.codigo) map[email].push({ tipo: 'cotizacion', codigo: cot.codigo, id: cot._id });
         }
         setCotizacionesMap(map);
+
+        // También cargar pedidos agendados y mapear por correo de cliente
+        try {
+          const pedidosRes = await api.get('/api/pedidos?populate=true');
+          const pedidosData = pedidosRes.data || pedidosRes;
+          const pedidosList = Array.isArray(pedidosData) ? pedidosData : (pedidosData.data || []);
+          const pedidosMapLocal = {};
+          for (const p of pedidosList) {
+            if ((p.estado || '').toString().toLowerCase() !== 'agendado') continue;
+            const correo = (p.cliente?.correo || '').toLowerCase();
+            if (!correo) continue;
+            if (!pedidosMapLocal[correo]) pedidosMapLocal[correo] = [];
+            pedidosMapLocal[correo].push({ tipo: 'pedido', numeroPedido: p.numeroPedido || p._id, id: p._id });
+          }
+          setPedidosMap(pedidosMapLocal);
+        } catch (errPedidos) {
+          console.error('Error al cargar pedidos agendados:', errPedidos);
+        }
       } catch (err) {
         console.error('Error al cargar cotizaciones:', err);
       }
@@ -275,26 +297,52 @@ const exportarPDF = async () => {
   // Renderizar lista de cotizaciones para un cliente (extraído para mantener JSX limpio)
   const renderCotizacionesForCliente = (cliente) => {
     const emailKey = (cliente.correo || '').toLowerCase();
-    const list = cotizacionesMap[emailKey] || [];
+    const cotList = cotizacionesMap[emailKey] || [];
+    const pedidoList = pedidosMap[emailKey] || [];
     const isExpanded = !!expandedEmails[emailKey];
-    const toShow = isExpanded ? list : list.slice(0, 3);
+    const merged = [...cotList, ...pedidoList];
+    const toShow = isExpanded ? merged : merged.slice(0, 3);
 
     return (
       <div>
         {toShow.map((c) => (
           <div key={c.id} style={{ display: 'block', marginBottom: 6 }}>
-            <button
-              type="button"
-              onClick={() => abrirCotizacionPreview(c.id)}
-              className="prospectos-cotizacion-link"
-              aria-label={`Abrir cotización ${c.codigo}`}
-            >
-              {c.codigo}
-            </button>
+            {c.tipo === 'cotizacion' ? (
+              <button
+                type="button"
+                onClick={() => abrirCotizacionPreview(c.id)}
+                className="prospectos-cotizacion-link"
+                aria-label={`Abrir cotización ${c.codigo}`}
+              >
+                {c.codigo}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    const res = await api.get(`/api/pedidos/${c.id}?populate=true`);
+                    const data = res.data || res;
+                    const pedido = data.data || data;
+                    setPedidoSeleccionado(pedido);
+                    setMostrarPedidoPreview(true);
+                    // ensure cotizacion preview is closed if open
+                    setMostrarPreview(false);
+                  } catch (e) {
+                    console.error('Error loading pedido:', e);
+                    Swal.fire('Error', 'No se pudo cargar el pedido.', 'error');
+                  }
+                }}
+                className="prospectos-cotizacion-link"
+                aria-label={`Abrir pedido ${c.numeroPedido}`}
+              >
+                {c.numeroPedido}
+              </button>
+            )}
           </div>
         ))}
 
-        {list.length > 3 && (
+        {merged.length > 3 && (
           <div>
             <button
               type="button"
@@ -303,12 +351,20 @@ const exportarPDF = async () => {
               aria-expanded={isExpanded}
               aria-controls={`cotizaciones-${emailKey}`}
             >
-              {isExpanded ? 'mostrar menos' : `...ver ${list.length - 3} más`}
+              {isExpanded ? 'mostrar menos' : `...ver ${merged.length - 3} más`}
             </button>
           </div>
         )}
       </div>
     );
+  };
+
+  // Progreso visual según la operación del cliente
+  const getProgressForCliente = (cliente) => {
+    const op = (cliente?.operacion || '').toString();
+    if (op === 'agenda') return 80;
+    if (op === 'cotiza') return 10;
+    return 0;
   };
 
   useEffect(() => {
@@ -332,282 +388,280 @@ const exportarPDF = async () => {
       <Fijo />
       <div className="content">
         <NavVentas />
-        <div className="contenido-modulo">
-          <SharedListHeaderCard
-            title="Prospectos de Clientes"
-            subtitle="Gestiona y supervisa los clientes potenciales"
-            iconClass="fa-solid fa-chart-line"
-          >
-            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-              <button
-                onClick={exportToExcel}
-                style={{
-                  background: 'rgba(255,255,255,0.2)',
-                  border: '2px solid rgba(255,255,255,0.3)',
-                  borderRadius: '12px',
-                  padding: '12px 20px',
-                  color: 'white',
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  backdropFilter: 'blur(10px)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px'
-                }}
-              >
-                <i className="fa-solid fa-file-excel"></i>
-                <span>Exportar Excel</span>
-              </button>
-              <button
-                onClick={exportarPDF}
-                style={{
-                  background: 'rgba(255,255,255,0.2)',
-                  border: '2px solid rgba(255,255,255,0.3)',
-                  borderRadius: '12px',
-                  padding: '12px 20px',
-                  color: 'white',
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  backdropFilter: 'blur(10px)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px'
-                }}
-              >
-                <i className="fa-solid fa-file-pdf"></i>
-                <span>Exportar PDF</span>
-              </button>
-            </div>
-          </SharedListHeaderCard>
+        <div className="max-width">
+          <div className="contenido-modulo">
+            <SharedListHeaderCard
+              title="Prospectos de Clientes"
+              subtitle="Gestiona y supervisa los clientes potenciales"
+              iconClass="fa-solid fa-chart-line"
+            >
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                <button
+                  onClick={exportToExcel}
+                  style={{
+                    background: 'rgba(255,255,255,0.2)',
+                    border: '2px solid rgba(255,255,255,0.3)',
+                    borderRadius: '12px',
+                    padding: '12px 20px',
+                    color: 'white',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    backdropFilter: 'blur(10px)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}
+                >
+                  <i className="fa-solid fa-file-excel"></i>
+                  <span>Exportar Excel</span>
+                </button>
+                <button
+                  onClick={exportarPDF}
+                  style={{
+                    background: 'rgba(255,255,255,0.2)',
+                    border: '2px solid rgba(255,255,255,0.3)',
+                    borderRadius: '12px',
+                    padding: '12px 20px',
+                    color: 'white',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    backdropFilter: 'blur(10px)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}
+                >
+                  <i className="fa-solid fa-file-pdf"></i>
+                  <span>Exportar PDF</span>
+                </button>
+              </div>
+            </SharedListHeaderCard>
 
-          {/* Estadísticas avanzadas */}
-          <AdvancedStats cards={[
-            { iconClass: 'fa-solid fa-chart-line', gradient: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', value: prospectos.length, label: 'Total Prospectos' },
-            { iconClass: 'fa-solid fa-file-alt', gradient: 'linear-gradient(135deg, #8b5cf6, #7c3aed)', value: contarLongitudesObjetoValues(cotizacionesMap), label: 'Cotizaciones Asociadas' },
-            { iconClass: 'fa-solid fa-filter', gradient: 'linear-gradient(135deg, #10b981, #059669)', value: prospectosFiltrados.length, label: 'Resultados Filtrados' }
-          ]} />
+            {/* Estadísticas avanzadas */}
+            <AdvancedStats cards={[
+              { iconClass: 'fa-solid fa-chart-line', gradient: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', value: prospectos.length, label: 'Total Prospectos' },
+              { iconClass: 'fa-solid fa-file-alt', gradient: 'linear-gradient(135deg, #8b5cf6, #7c3aed)', value: contarLongitudesObjetoValues(cotizacionesMap), label: 'Cotizaciones Asociadas' },
+              { iconClass: 'fa-solid fa-filter', gradient: 'linear-gradient(135deg, #10b981, #059669)', value: prospectosFiltrados.length, label: 'Resultados Filtrados' }
+            ]} />
 
-          {/* Panel de filtros avanzado */}
-          <div style={{
-            background: 'linear-gradient(135deg, #f9fafb, #f3f4f6)',
-            borderRadius: '16px',
-            padding: '25px',
-            marginBottom: '30px',
-            border: '1px solid #e5e7eb'
-          }}>
+            {/* Panel de filtros avanzado */}
             <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-              marginBottom: '20px'
+              background: 'linear-gradient(135deg, #f9fafb, #f3f4f6)',
+              borderRadius: '16px',
+              padding: '25px',
+              marginBottom: '30px',
+              border: '1px solid #e5e7eb'
             }}>
-              <i className="fa-solid fa-search" style={{ color: '#6366f1', fontSize: '1.2rem' }}></i>
-              <h4 style={{ margin: 0, color: '#374151', fontSize: '1.1rem', fontWeight: '600' }}>
-                Buscar Prospectos
-              </h4>
-            </div>
-            
-            <div style={{ position: 'relative', maxWidth: '400px' }}>
-              <label htmlFor="input-prospectos-1" style={{
-                position: 'absolute',
-                top: '-8px',
-                left: '12px',
-                background: '#f9fafb',
-                padding: '0 8px',
-                fontSize: '12px',
-                fontWeight: '600',
-                color: '#6366f1',
-                zIndex: 1
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                marginBottom: '20px'
               }}>
-                Filtrar por Cliente</label>
-              <input id="input-prospectos-1"
-                type="text"
-                placeholder="Buscar por nombre, ciudad, teléfono o correo..."
-                value={filtroTexto}
-                onChange={(e) => {
-                  setFiltroTexto(e.target.value);
-                  setPaginaActual(1);
-                }}
-                style={{
-                  width: '100%',
-                  padding: '12px 16px',
-                  border: '2px solid #e5e7eb',
-                  borderRadius: '10px',
-                  fontSize: '14px',
-                  transition: 'all 0.3s ease',
-                  background: 'white'
-                }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = '#6366f1';
-                  e.target.style.boxShadow = '0 0 0 3px rgba(99, 102, 241, 0.1)';
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = '#e5e7eb';
-                  e.target.style.boxShadow = 'none';
-                }}
-              />
-            </div>
-          </div>
-          {/* Tabla de prospectos mejorada */}
-          <div style={{
-            background: 'white',
-            borderRadius: '16px',
-            overflow: 'hidden',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-            border: '1px solid #e5e7eb'
-          }}>
-            <div style={{
-              background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)',
-              padding: '20px 25px',
-              borderBottom: '1px solid #e5e7eb',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{
-                  background: 'linear-gradient(135deg, #667eea, #764ba2)',
-                  borderRadius: '12px',
-                  padding: '10px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
+                <i className="fa-solid fa-search" style={{ color: '#6366f1', fontSize: '1.2rem' }}></i>
+                <h4 style={{ margin: 0, color: '#374151', fontSize: '1.1rem', fontWeight: '600' }}>
+                  Buscar Prospectos
+                </h4>
+              </div>
+
+              <div style={{ position: 'relative', maxWidth: '400px' }}>
+                <label htmlFor="input-prospectos-1" style={{
+                  position: 'absolute',
+                  top: '-8px',
+                  left: '12px',
+                  background: '#f9fafb',
+                  padding: '0 8px',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  color: '#6366f1',
+                  zIndex: 1
                 }}>
-                  <i className="fa-solid fa-table" style={{ color: 'white', fontSize: '16px' }}></i>
-                </div>
-                <div>
-                  <h4 style={{ margin: '0 0 4px 0', color: '#1f2937', fontSize: '1.3rem', fontWeight: '600' }}>
-                    Lista de Prospectos
-                  </h4>
-                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px' }}>
-                    Mostrando {prospectosPaginados.length} de {prospectosFiltrados.length} prospectos
-                  </p>
-                </div>
+                  Filtrar por Cliente</label>
+                <input id="input-prospectos-1"
+                  type="text"
+                  placeholder="Buscar por nombre, ciudad, teléfono o correo..."
+                  value={filtroTexto}
+                  onChange={(e) => {
+                    setFiltroTexto(e.target.value);
+                    setPaginaActual(1);
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    border: '2px solid #e5e7eb',
+                    borderRadius: '10px',
+                    fontSize: '14px',
+                    transition: 'all 0.3s ease',
+                    background: 'white'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#6366f1';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(99, 102, 241, 0.1)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#e5e7eb';
+                    e.target.style.boxShadow = 'none';
+                  }}
+                />
               </div>
             </div>
-            
-            <div style={{ overflow: 'auto' }}>
-              <table style={{
-                width: '100%',
-                borderCollapse: 'collapse',
-                fontSize: '14px'
-              }} id='tabla_prospectos'>
-                <thead>
-                  <tr style={{ 
-                    background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)',
-                    borderBottom: '2px solid #e5e7eb'
+            {/* Tabla de prospectos mejorada */}
+            <div style={{
+              background: 'white',
+              borderRadius: '16px',
+              overflow: 'hidden',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+              border: '1px solid #e5e7eb'
+            }}>
+              <div style={{
+                background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)',
+                padding: '20px 25px',
+                borderBottom: '1px solid #e5e7eb',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{
+                    background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                    borderRadius: '12px',
+                    padding: '10px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
                   }}>
-                    <th>#</th>
-                    <th style={{ 
-                      padding: '16px 12px', 
-                      textAlign: 'left', 
-                      fontWeight: '600', 
-                      color: '#374151',
-                      fontSize: '13px',
-                      letterSpacing: '0.5px'
+                    <i className="fa-solid fa-table" style={{ color: 'white', fontSize: '16px' }}></i>
+                  </div>
+                  <div>
+                    <h4 style={{ margin: '0 0 4px 0', color: '#1f2937', fontSize: '1.3rem', fontWeight: '600' }}>
+                      Lista de Prospectos
+                    </h4>
+                    <p style={{ margin: 0, color: '#6b7280', fontSize: '14px' }}>
+                      Mostrando {prospectosPaginados.length} de {prospectosFiltrados.length} prospectos
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ overflow: 'auto' }}>
+                <table style={{
+                  width: '100%',
+                  borderCollapse: 'collapse',
+                  fontSize: '14px'
+                }} id='tabla_prospectos'>
+                  <thead>
+                    <tr style={{
+                      background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)',
+                      borderBottom: '2px solid #e5e7eb'
                     }}>
-                      <i className="fa-solid fa-file-alt icon-gap" style={{ color: '#6366f1' }}></i>
-                      <span>SOPORTE</span>
-                    </th>
-                    <th style={{ 
-                      padding: '16px 12px', 
-                      textAlign: 'left', 
-                      fontWeight: '600', 
-                      color: '#374151',
-                      fontSize: '13px',
-                      letterSpacing: '0.5px'
-                    }}>
-                      <i className="fa-solid fa-user icon-gap" style={{ color: '#6366f1' }}></i>
-                      <span>CLIENTE</span>
-                    </th>
-                    <th style={{ 
-                      padding: '16px 12px', 
-                      textAlign: 'left', 
-                      fontWeight: '600', 
-                      color: '#374151',
-                      fontSize: '13px',
-                      letterSpacing: '0.5px'
-                    }}>
-                      <i className="fa-solid fa-map-marker-alt icon-gap" style={{ color: '#6366f1' }}></i>
-                      <span>CIUDAD</span>
-                    </th>
-                    <th style={{ 
-                      padding: '16px 12px', 
-                      textAlign: 'left', 
-                      fontWeight: '600', 
-                      color: '#374151',
-                      fontSize: '13px',
-                      letterSpacing: '0.5px'
-                    }}>
-                      <i className="fa-solid fa-phone icon-gap" style={{ color: '#6366f1' }}></i>
-                      <span>TELÉFONO</span>
-                    </th>
-                    <th style={{ 
-                      padding: '16px 12px', 
-                      textAlign: 'left', 
-                      fontWeight: '600', 
-                      color: '#374151',
-                      fontSize: '13px',
-                      letterSpacing: '0.5px'
-                    }}>
-                      <i className="fa-solid fa-envelope icon-gap" style={{ color: '#6366f1' }}></i>
-                      <span>CORREO</span>
-                    </th>
-                    <th>Probabilidad</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {prospectosPaginados.length === 0 ? (
-                    <tr>
-                      <td>
-                        
-                      </td>
-                      <td colSpan="6" style={{ textAlign: 'center', padding: '80px 20px' }}>
-                        <div style={{
-                          display: 'flex',
-                          flexDirection: 'column',
-                          alignItems: 'center',
-                          gap: '20px'
-                        }}>
-                          <div style={{
-                            background: 'linear-gradient(135deg, #f3f4f6, #e5e7eb)',
-                            borderRadius: '50%',
-                            padding: '25px',
-                            marginBottom: '10px'
-                          }}>
-                            <i className="fa-solid fa-chart-line" style={{ 
-                              fontSize: '3.5rem', 
-                              color: '#9ca3af'
-                            }}></i>
-                          </div>
-                          <div style={{ textAlign: 'center' }}>
-                            <h5 style={{ 
-                              color: '#6b7280', 
-                              margin: '0 0 12px 0',
-                              fontSize: '1.2rem',
-                              fontWeight: '600'
-                            }}>
-                              No hay prospectos registrados
-                            </h5>
-                            <p style={{ 
-                              color: '#9ca3af', 
-                              margin: 0, 
-                              fontSize: '14px',
-                              lineHeight: '1.5'
-                            }}>
-                              No se encontraron prospectos con los criterios de búsqueda
-                            </p>
-                          </div>
-                        </div>
-                      </td>
+                      <th>#</th>
+                      <th style={{
+                        padding: '16px 12px',
+                        textAlign: 'left',
+                        fontWeight: '600',
+                        color: '#374151',
+                        fontSize: '13px',
+                        letterSpacing: '0.5px'
+                      }}>
+                        <i className="fa-solid fa-file-alt icon-gap" style={{ color: '#6366f1' }}></i>
+                        <span>SOPORTE</span>
+                      </th>
+                      <th style={{
+                        padding: '16px 12px',
+                        textAlign: 'left',
+                        fontWeight: '600',
+                        color: '#374151',
+                        fontSize: '13px',
+                        letterSpacing: '0.5px'
+                      }}>
+                        <i className="fa-solid fa-user icon-gap" style={{ color: '#6366f1' }}></i>
+                        <span>CLIENTE</span>
+                      </th>
+                      <th style={{
+                        padding: '16px 12px',
+                        textAlign: 'left',
+                        fontWeight: '600',
+                        color: '#374151',
+                        fontSize: '13px',
+                        letterSpacing: '0.5px'
+                      }}>
+                        <i className="fa-solid fa-map-marker-alt icon-gap" style={{ color: '#6366f1' }}></i>
+                        <span>CIUDAD</span>
+                      </th>
+                      <th style={{
+                        padding: '16px 12px',
+                        textAlign: 'left',
+                        fontWeight: '600',
+                        color: '#374151',
+                        fontSize: '13px',
+                        letterSpacing: '0.5px'
+                      }}>
+                        <i className="fa-solid fa-phone icon-gap" style={{ color: '#6366f1' }}></i>
+                        <span>TELÉFONO</span>
+                      </th>
+                      <th style={{
+                        padding: '16px 12px',
+                        textAlign: 'left',
+                        fontWeight: '600',
+                        color: '#374151',
+                        fontSize: '13px',
+                        letterSpacing: '0.5px'
+                      }}>
+                        <i className="fa-solid fa-envelope icon-gap" style={{ color: '#6366f1' }}></i>
+                        <span>CORREO</span>
+                      </th>
+                      <th>Probabilidad</th>
                     </tr>
-                  ) : (
-                    prospectosPaginados.map((cliente, index) => (
-                      <tr key={cliente._id || cliente.id || index} 
+                  </thead>
+                  <tbody>
+                    {prospectosPaginados.length === 0 ? (
+                      <tr>
+                        <td colSpan="7" style={{ textAlign: 'center', padding: '80px 20px' }}>
+                          <div style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            gap: '20px'
+                          }}>
+                            <div style={{
+                              background: 'linear-gradient(135deg, #f3f4f6, #e5e7eb)',
+                              borderRadius: '50%',
+                              padding: '25px',
+                              marginBottom: '10px'
+                            }}>
+                              <i className="fa-solid fa-chart-line" style={{
+                                fontSize: '3.5rem',
+                                color: '#9ca3af'
+                              }}></i>
+                            </div>
+                            <div style={{ textAlign: 'center' }}>
+                              <h5 style={{
+                                color: '#6b7280',
+                                margin: '0 0 12px 0',
+                                fontSize: '1.2rem',
+                                fontWeight: '600'
+                              }}>
+                                No hay prospectos registrados
+                              </h5>
+                              <p style={{
+                                color: '#9ca3af',
+                                margin: 0,
+                                fontSize: '14px',
+                                lineHeight: '1.5'
+                              }}>
+                                No se encontraron prospectos con los criterios de búsqueda
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : (
+                      prospectosPaginados.map((cliente, index) => (
+                        <tr key={cliente._id || cliente.id || index}
                           style={{
                             borderBottom: '1px solid #f3f4f6',
                             transition: 'all 0.2s ease'
@@ -618,98 +672,112 @@ const exportarPDF = async () => {
                           onMouseLeave={(e) => {
                             e.currentTarget.style.backgroundColor = 'transparent';
                           }}
-                      >
-                        <td></td>
-                        <td style={{ padding: '16px 12px', whiteSpace: 'nowrap' }}>
-                          {renderCotizacionesForCliente(cliente)}
-                        </td>
-                        <td style={{ padding: '16px 12px' }}>
-                          <div style={{ fontWeight: '600', color: '#1f2937', fontSize: '14px' }}>
-                            {cliente.nombre}
-                          </div>
-                        </td>
-                        <td style={{ padding: '16px 12px' }}>
-                          <span style={{
-                            background: '#fef3c7',
-                            color: '#d97706',
-                            padding: '6px 12px',
-                            borderRadius: '20px',
-                            fontSize: '12px',
-                            fontWeight: '600',
-                            display: 'inline-block'
-                          }}>
-                            {cliente.ciudad}
-                          </span>
-                        </td>
-                        <td style={{ padding: '16px 12px', color: '#4b5563', fontWeight: '500' }}>
-                          {cliente.telefono}
-                        </td>
-                        <td style={{ padding: '16px 12px', color: '#4b5563', fontWeight: '500' }}>
-                          {cliente.correo}
-                        </td>
-                        <td></td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-            
-            {/* Paginación mejorada */}
-            {totalPaginas > 1 && (
-              <div style={{
-                padding: '20px 25px',
-                borderTop: '1px solid #e5e7eb',
-                display: 'flex',
-                justifyContent: 'center',
-                gap: '8px'
-              }}>
-                {Array.from({ length: totalPaginas }, (_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setPaginaActual(i + 1)}
-                    style={{
-                      padding: '8px 16px',
-                      border: paginaActual === i + 1 ? '2px solid #6366f1' : '2px solid #e5e7eb',
-                      borderRadius: '8px',
-                      background: paginaActual === i + 1 ? '#6366f1' : 'white',
-                      color: paginaActual === i + 1 ? 'white' : '#4b5563',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease'
-                    }}
-                    onMouseEnter={(e) => {
-                      if (paginaActual !== i + 1) {
-                        e.target.style.borderColor = '#6366f1';
-                        e.target.style.color = '#6366f1';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (paginaActual !== i + 1) {
-                        e.target.style.borderColor = '#e5e7eb';
-                        e.target.style.color = '#4b5563';
-                      }
-                    }}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
+                        >
+                          <td style={{ padding: '16px 12px', textAlign: 'center', fontWeight: '600' }}>{(paginaActual - 1) * registrosPorPagina + index + 1}</td>
+                          <td style={{ padding: '16px 12px', whiteSpace: 'nowrap' }}>
+                            {renderCotizacionesForCliente(cliente)}
+                          </td>
+                          <td style={{ padding: '16px 12px' }}>
+                            <div style={{ fontWeight: '600', color: '#1f2937', fontSize: '14px' }}>
+                              {cliente.nombre}
+                            </div>
+                          </td>
+                          <td style={{ padding: '16px 12px' }}>
+                            <span style={{
+                              background: '#fef3c7',
+                              color: '#d97706',
+                              padding: '6px 12px',
+                              borderRadius: '20px',
+                              fontSize: '12px',
+                              fontWeight: '600',
+                              display: 'inline-block'
+                            }}>
+                              {cliente.ciudad}
+                            </span>
+                          </td>
+                          <td style={{ padding: '16px 12px', color: '#4b5563', fontWeight: '500' }}>
+                            {cliente.telefono}
+                          </td>
+                          <td style={{ padding: '16px 12px', color: '#4b5563', fontWeight: '500' }}>
+                            {cliente.correo}
+                          </td>
+                          <td style={{ padding: '16px 12px', width: 160 }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }} title={cliente.operacion || 'Sin operación'}>
+                              <div style={{ width: 120, height: 10, background: '#e6e6e6', borderRadius: 999, overflow: 'hidden' }}>
+                                <div style={{ width: `${getProgressForCliente(cliente)}%`, height: '100%', borderRadius: 999, background: getProgressForCliente(cliente) >= 80 ? 'linear-gradient(90deg,#34d399,#10b981)' : getProgressForCliente(cliente) >= 10 ? 'linear-gradient(90deg,#f59e0b,#f97316)' : '#cbd5e1', transition: 'width 400ms ease' }} />
+                              </div>
+                              <div style={{ fontSize: '0.75rem', color: '#374151', fontWeight: 600 }}>{getProgressForCliente(cliente)}%</div>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
               </div>
-            )}
-          </div>
-          {
-            mostrarPreview && cotizacionSeleccionada && (
-              <CotizacionPreview datos={cotizacionSeleccionada} onClose={() => { setMostrarPreview(false); setCotizacionSeleccionada(null); }} />
-            )
-          }
-          <div className="custom-footer">
-            <p className="custom-footer-text">
-              © 2025 <span className="custom-highlight">PANGEA</span>. Todos los derechos reservados.
 
-            </p>
+              {/* Paginación mejorada */}
+              {totalPaginas > 1 && (
+                <div style={{
+                  padding: '20px 25px',
+                  borderTop: '1px solid #e5e7eb',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  gap: '8px'
+                }}>
+                  {Array.from({ length: totalPaginas }, (_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setPaginaActual(i + 1)}
+                      style={{
+                        padding: '8px 16px',
+                        border: paginaActual === i + 1 ? '2px solid #6366f1' : '2px solid #e5e7eb',
+                        borderRadius: '8px',
+                        background: paginaActual === i + 1 ? '#6366f1' : 'white',
+                        color: paginaActual === i + 1 ? 'white' : '#4b5563',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (paginaActual !== i + 1) {
+                          e.target.style.borderColor = '#6366f1';
+                          e.target.style.color = '#6366f1';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (paginaActual !== i + 1) {
+                          e.target.style.borderColor = '#e5e7eb';
+                          e.target.style.color = '#4b5563';
+                        }
+                      }}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            {
+              mostrarPreview && cotizacionSeleccionada && (
+                <CotizacionPreview datos={cotizacionSeleccionada} onClose={() => { setMostrarPreview(false); setCotizacionSeleccionada(null); }} />
+              )
+            }
+            {
+              mostrarPedidoPreview && pedidoSeleccionado && (
+                <PedidoAgendadoPreview datos={pedidoSeleccionado} onClose={() => { setMostrarPedidoPreview(false); setPedidoSeleccionado(null); }} />
+              )
+            }
+            <div className="custom-footer">
+              <p className="custom-footer-text">
+                © 2025 <span className="custom-highlight">PANGEA</span>. Todos los derechos reservados.
+
+              </p>
+            </div>
           </div>
         </div>
+
       </div>
     </div>
   )

@@ -2,6 +2,7 @@ const Cotizacion = require('../models/cotizaciones');
 const Cliente = require('../models/Cliente');
 const Producto = require('../models/Products');
 const Product = require('../models/Products'); // Ensure both references work
+const mongoose = require('mongoose');
 const sgMail = require('@sendgrid/mail');
 const PDFService = require('../services/pdfService');
 const crypto = require('node:crypto');

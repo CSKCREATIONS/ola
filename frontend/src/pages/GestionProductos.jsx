@@ -704,11 +704,11 @@ ProductoModal.propTypes = {
 
 ProductoModal.defaultProps = {
   producto: null,
-  onClose: () => {},
+  onClose: () => { },
   categorias: [],
   subcategorias: [],
   proveedores: [],
-  onToggleEstado: () => {}
+  onToggleEstado: () => { }
 };
 
 const GestionProductos = () => {
@@ -747,7 +747,7 @@ const GestionProductos = () => {
     loadProductos();
     loadCategorias();
     loadSubcategorias();
-    
+
     // Inject styles at mount time (avoids module-level DOM access)
     if (typeof document !== 'undefined') {
       const existing = document.getElementById('productos-advanced-styles');
@@ -897,235 +897,236 @@ const GestionProductos = () => {
       <Fijo />
       <div className="content">
         <NavProductos />
-        <div className="contenido-modulo">
-          <SharedListHeaderCard
-            title="Gestión de Productos"
-            subtitle="Administra el inventario y catálogo de productos"
-            iconClass="fa-solid fa-boxes-stacked"
-          >
-            <button 
-              onClick={() => {
-                setProductoEditando(null);
-                setModalVisible(true);
-              }}
-              style={{
-                background: 'linear-gradient(135deg, #10b981, #059669)',
-                border: 'none',
-                borderRadius: '12px',
-                padding: '12px 24px',
-                color: 'white',
-                fontSize: '14px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                transition: 'all 0.3s ease',
-                boxShadow: '0 4px 15px rgba(16, 185, 129, 0.4)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}
+        <div className="max-width">
+          <div className="contenido-modulo">
+            <SharedListHeaderCard
+              title="Gestión de Productos"
+              subtitle="Administra el inventario y catálogo de productos"
+              iconClass="fa-solid fa-boxes-stacked"
             >
-              <i className="fa-solid fa-plus" aria-hidden={true}></i>
-              <span>Agregar Producto</span>
-            </button>
-          </SharedListHeaderCard>
-          {/* Estadísticas avanzadas */}
-          <AdvancedStats cards={[
-            { iconClass: 'fa-solid fa-boxes-stacked', gradient: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', value: productos.length, label: 'Total Productos' },
-            { iconClass: 'fa-solid fa-check-circle', gradient: 'linear-gradient(135deg, #10b981, #059669)', value: productos.filter(p => p.activo).length, label: 'Productos Activos' },
-            { iconClass: 'fa-solid fa-exclamation-triangle', gradient: 'linear-gradient(135deg, #ef4444, #dc2626)', value: productos.filter(p => p.stock < 10).length, label: 'Stock Bajo' },
-            { iconClass: 'fa-solid fa-dollar-sign', gradient: 'linear-gradient(135deg, #8b5cf6, #7c3aed)', value: `$${calcularInventario(productos).totalValue.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`, label: 'Valor Total del Inventario' }
-          ]} />
-
-          {/* Estadísticas adicionales del inventario */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-            gap: '20px',
-            marginBottom: '30px'
-          }}>
-            {/* Valor promedio por producto */}
-            <div style={{
-              background: 'linear-gradient(135deg, #e0f2fe, #b3e5fc)',
-              borderRadius: '16px',
-              padding: '20px',
-              border: '1px solid #81d4fa'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <div style={{
-                  background: 'linear-gradient(135deg, #0288d1, #0277bd)',
-                  width: '60px',
-                  height: '60px',
-                  borderRadius: '12px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <i className="fa-solid fa-calculator" style={{ color: 'white', fontSize: '1.5rem' }}></i>
-                </div>
-                <div>
-                  <h3 style={{ margin: '0 0 5px 0', fontSize: '1.8rem', fontWeight: '700', color: '#1f2937' }}>
-                    ${productos.length > 0 ? calcularInventario(productos).avgValuePerProduct.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) : '0'}
-                  </h3>
-                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
-                    Valor Promedio por Producto
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Stock total */}
-            <div style={{
-              background: 'linear-gradient(135deg, #f3e8ff, #e9d5ff)',
-              borderRadius: '16px',
-              padding: '20px',
-              border: '1px solid #c4b5fd'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <div style={{
-                  background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
-                  width: '60px',
-                  height: '60px',
-                  borderRadius: '12px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <i className="fa-solid fa-boxes-stacked" style={{ color: 'white', fontSize: '1.5rem' }}></i>
-                </div>
-                <div>
-                  <h3 style={{ margin: '0 0 5px 0', fontSize: '1.8rem', fontWeight: '700', color: '#1f2937' }}>
-                    {calcularInventario(productos).totalStock.toLocaleString()}
-                  </h3>
-                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
-                    Unidades en Stock Total
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Productos con bajo stock */}
-            <div style={{
-              background: 'linear-gradient(135deg, #fef3c7, #fde68a)',
-              borderRadius: '16px',
-              padding: '20px',
-              border: '1px solid #f59e0b'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <div style={{
-                  background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-                  width: '60px',
-                  height: '60px',
-                  borderRadius: '12px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <i className="fa-solid fa-triangle-exclamation" style={{ color: 'white', fontSize: '1.5rem' }}></i>
-                </div>
-                <div>
-                  <h3 style={{ margin: '0 0 5px 0', fontSize: '1.8rem', fontWeight: '700', color: '#1f2937' }}>
-                    {productos.filter(p => (Number.parseInt(p.stock) || 0) < 10).length}
-                  </h3>
-                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
-                    Productos con Bajo Stock
-                  </p>
-                  <p style={{ margin: '5px 0 0 0', color: '#9ca3af', fontSize: '12px' }}>
-                    Menos de 10 unidades
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Panel de filtros avanzado */}
-          <div style={{
-            background: 'linear-gradient(135deg, #f9fafb, #f3f4f6)',
-            borderRadius: '16px',
-            padding: '25px',
-            marginBottom: '30px',
-            border: '1px solid #e5e7eb'
-          }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-              marginBottom: '20px'
-            }}>
-              <i className="fa-solid fa-filter" style={{ color: '#6366f1', fontSize: '1.2rem' }}></i>
-              <h4 style={{ margin: 0, color: '#374151', fontSize: '1.1rem', fontWeight: '600' }}>
-                Filtros de Productos
-              </h4>
-            </div>
-            
-            <div style={{ position: 'relative', maxWidth: '300px' }}>
-              <label htmlFor="input-gestion-prod-1" style={{
-                position: 'absolute',
-                top: '-8px',
-                left: '12px',
-                background: '#f9fafb',
-                padding: '0 8px',
-                fontSize: '12px',
-                fontWeight: '600',
-                color: '#6366f1',
-                zIndex: 1
-              }}>
-                Estado del Producto
-              </label>
-              <select id="input-gestion-prod-1"
-                value={filtroEstado}
-                onChange={(e) => setFiltroEstado(e.target.value)}
+              <button
+                onClick={() => {
+                  setProductoEditando(null);
+                  setModalVisible(true);
+                }}
                 style={{
-                  width: '100%',
-                  padding: '12px 16px',
-                  border: '2px solid #e5e7eb',
-                  borderRadius: '10px',
+                  background: 'linear-gradient(135deg, #10b981, #059669)',
+                  border: 'none',
+                  borderRadius: '12px',
+                  padding: '12px 24px',
+                  color: 'white',
                   fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
                   transition: 'all 0.3s ease',
-                  background: 'white',
-                  cursor: 'pointer'
-                }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = '#6366f1';
-                  e.target.style.boxShadow = '0 0 0 3px rgba(99, 102, 241, 0.1)';
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = '#e5e7eb';
-                  e.target.style.boxShadow = 'none';
+                  boxShadow: '0 4px 15px rgba(16, 185, 129, 0.4)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
                 }}
               >
-                <option value="todos">Todos los estados</option>
-                <option value="activos">Productos Activos</option>
-                <option value="inactivos">Productos Inactivos</option>
-              </select>
+                <i className="fa-solid fa-plus" aria-hidden={true}></i>
+                <span>Agregar Producto</span>
+              </button>
+            </SharedListHeaderCard>
+            {/* Estadísticas avanzadas */}
+            <AdvancedStats cards={[
+              { iconClass: 'fa-solid fa-boxes-stacked', gradient: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', value: productos.length, label: 'Total Productos' },
+              { iconClass: 'fa-solid fa-check-circle', gradient: 'linear-gradient(135deg, #10b981, #059669)', value: productos.filter(p => p.activo).length, label: 'Productos Activos' },
+              { iconClass: 'fa-solid fa-exclamation-triangle', gradient: 'linear-gradient(135deg, #ef4444, #dc2626)', value: productos.filter(p => p.stock < 10).length, label: 'Stock Bajo' },
+              { iconClass: 'fa-solid fa-dollar-sign', gradient: 'linear-gradient(135deg, #8b5cf6, #7c3aed)', value: `$${calcularInventario(productos).totalValue.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`, label: 'Valor Total del Inventario' }
+            ]} />
+
+            {/* Estadísticas adicionales del inventario */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+              gap: '20px',
+              marginBottom: '30px'
+            }}>
+              {/* Valor promedio por producto */}
+              <div style={{
+                background: 'linear-gradient(135deg, #e0f2fe, #b3e5fc)',
+                borderRadius: '16px',
+                padding: '20px',
+                border: '1px solid #81d4fa'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                  <div style={{
+                    background: 'linear-gradient(135deg, #0288d1, #0277bd)',
+                    width: '60px',
+                    height: '60px',
+                    borderRadius: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <i className="fa-solid fa-calculator" style={{ color: 'white', fontSize: '1.5rem' }}></i>
+                  </div>
+                  <div>
+                    <h3 style={{ margin: '0 0 5px 0', fontSize: '1.8rem', fontWeight: '700', color: '#1f2937' }}>
+                      ${productos.length > 0 ? calcularInventario(productos).avgValuePerProduct.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) : '0'}
+                    </h3>
+                    <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
+                      Valor Promedio por Producto
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Stock total */}
+              <div style={{
+                background: 'linear-gradient(135deg, #f3e8ff, #e9d5ff)',
+                borderRadius: '16px',
+                padding: '20px',
+                border: '1px solid #c4b5fd'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                  <div style={{
+                    background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+                    width: '60px',
+                    height: '60px',
+                    borderRadius: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <i className="fa-solid fa-boxes-stacked" style={{ color: 'white', fontSize: '1.5rem' }}></i>
+                  </div>
+                  <div>
+                    <h3 style={{ margin: '0 0 5px 0', fontSize: '1.8rem', fontWeight: '700', color: '#1f2937' }}>
+                      {calcularInventario(productos).totalStock.toLocaleString()}
+                    </h3>
+                    <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
+                      Unidades en Stock Total
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Productos con bajo stock */}
+              <div style={{
+                background: 'linear-gradient(135deg, #fef3c7, #fde68a)',
+                borderRadius: '16px',
+                padding: '20px',
+                border: '1px solid #f59e0b'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                  <div style={{
+                    background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                    width: '60px',
+                    height: '60px',
+                    borderRadius: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <i className="fa-solid fa-triangle-exclamation" style={{ color: 'white', fontSize: '1.5rem' }}></i>
+                  </div>
+                  <div>
+                    <h3 style={{ margin: '0 0 5px 0', fontSize: '1.8rem', fontWeight: '700', color: '#1f2937' }}>
+                      {productos.filter(p => (Number.parseInt(p.stock) || 0) < 10).length}
+                    </h3>
+                    <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
+                      Productos con Bajo Stock
+                    </p>
+                    <p style={{ margin: '5px 0 0 0', color: '#9ca3af', fontSize: '12px' }}>
+                      Menos de 10 unidades
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-          <div className="table-container">
-            <table>
-              <thead>
-                <tr>
-                  <th>Nombre</th>
-                  <th>Descripción</th>
-                  <th>Precio</th>
-                  <th>Stock</th>
-                  <th>Categoría</th>
-                  <th>Subcategoría</th>
-                  <th>Proveedor</th>
-                  <th>Estado</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {productosPaginados.map(prod => (
-                  <tr key={prod._id}>
-                    <td>{prod.name}</td>
-                    <td>{prod.description}</td>
-                    <td>{prod.price}</td>
-                    <td>{prod.stock}</td>
-                    <td>{prod.category?.name || '-'}</td>
-                    <td>{prod.subcategory?.name || '-'}</td>
-                    <td>{prod.proveedor?.nombre || '-'}</td>
-                    <td>
-                      <label className="switch">
+
+            {/* Panel de filtros avanzado */}
+            <div style={{
+              background: 'linear-gradient(135deg, #f9fafb, #f3f4f6)',
+              borderRadius: '16px',
+              padding: '25px',
+              marginBottom: '30px',
+              border: '1px solid #e5e7eb'
+            }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                marginBottom: '20px'
+              }}>
+                <i className="fa-solid fa-filter" style={{ color: '#6366f1', fontSize: '1.2rem' }}></i>
+                <h4 style={{ margin: 0, color: '#374151', fontSize: '1.1rem', fontWeight: '600' }}>
+                  Filtros de Productos
+                </h4>
+              </div>
+
+              <div style={{ position: 'relative', maxWidth: '300px' }}>
+                <label htmlFor="input-gestion-prod-1" style={{
+                  position: 'absolute',
+                  top: '-8px',
+                  left: '12px',
+                  background: '#f9fafb',
+                  padding: '0 8px',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  color: '#6366f1',
+                  zIndex: 1
+                }}>
+                  Estado del Producto
+                </label>
+                <select id="input-gestion-prod-1"
+                  value={filtroEstado}
+                  onChange={(e) => setFiltroEstado(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    border: '2px solid #e5e7eb',
+                    borderRadius: '10px',
+                    fontSize: '14px',
+                    transition: 'all 0.3s ease',
+                    background: 'white',
+                    cursor: 'pointer'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#6366f1';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(99, 102, 241, 0.1)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#e5e7eb';
+                    e.target.style.boxShadow = 'none';
+                  }}
+                >
+                  <option value="todos">Todos los estados</option>
+                  <option value="activos">Productos Activos</option>
+                  <option value="inactivos">Productos Inactivos</option>
+                </select>
+              </div>
+            </div>
+            <div className="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Descripción</th>
+                    <th>Precio</th>
+                    <th>Stock</th>
+                    <th>Categoría</th>
+                    <th>Subcategoría</th>
+                    <th>Proveedor</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {productosPaginados.map(prod => (
+                    <tr key={prod._id}>
+                      <td>{prod.name}</td>
+                      <td>{prod.description}</td>
+                      <td>{prod.price}</td>
+                      <td>{prod.stock}</td>
+                      <td>{prod.category?.name || '-'}</td>
+                      <td>{prod.subcategory?.name || '-'}</td>
+                      <td>{prod.proveedor?.nombre || '-'}</td>
+                      <td>
+                        <label className="switch">
                           <input
                             type="checkbox"
                             checked={!!prod.activo}
@@ -1134,44 +1135,46 @@ const GestionProductos = () => {
                           />
                           <span className="slider"></span>
                         </label>
-                    </td>
-                    <td>
-                      <button className="btnTransparente" onClick={() => handleEdit(prod)}>
-                        <i className="fa-solid fa-pen-to-square"></i>
-                      </button>
-                        
-                      
-                    </td>
-                  </tr>
-                ))}
-                {productos.length === 0 && <tr><td colSpan="9">No hay productos disponibles</td></tr>}
-              </tbody>
+                      </td>
+                      <td>
+                        <button className="btnTransparente" onClick={() => handleEdit(prod)}>
+                          <i className="fa-solid fa-pen-to-square"></i>
+                        </button>
 
-            </table>
-          </div>
-          {modalVisible && (
-            <ProductoModal
-              producto={productoEditando}
-              onClose={() => setModalVisible(false)}
-              onSave={handleSave}
-              categorias={categorias || []}
-              subcategorias={subcategorias || []}
-              proveedores={proveedores || []}
-              onToggleEstado={handleToggleEstado}
-            />
-          )}
-          <div className="pagination">
-            {Array.from({ length: totalPaginas }, (_, i) => (
-              <button
-                key={i + 1}
-                onClick={() => cambiarPagina(i + 1)}
-                className={paginaActual === i + 1 ? 'active-page' : ''}
-              >
-                {i + 1}
-              </button>
-            ))}
+
+                      </td>
+                    </tr>
+                  ))}
+                  {productos.length === 0 && <tr><td colSpan="9">No hay productos disponibles</td></tr>}
+                </tbody>
+
+              </table>
+            </div>
+            {modalVisible && (
+              <ProductoModal
+                producto={productoEditando}
+                onClose={() => setModalVisible(false)}
+                onSave={handleSave}
+                categorias={categorias || []}
+                subcategorias={subcategorias || []}
+                proveedores={proveedores || []}
+                onToggleEstado={handleToggleEstado}
+              />
+            )}
+            <div className="pagination">
+              {Array.from({ length: totalPaginas }, (_, i) => (
+                <button
+                  key={i + 1}
+                  onClick={() => cambiarPagina(i + 1)}
+                  className={paginaActual === i + 1 ? 'active-page' : ''}
+                >
+                  {i + 1}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
+
 
 
         <div className="custom-footer">

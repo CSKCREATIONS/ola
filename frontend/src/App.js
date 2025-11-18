@@ -7,7 +7,6 @@ import CambiarContrasena from './components/CambiarContraseña';
 import Perfil from './pages/Perfil';
 import RolesYPermisos from './pages/RolesYPermisos'
 import Home from './pages/Home';
-import AgendarVenta from './pages/AgendarVenta';
 import PedidosAgendados from './pages/PedidosAgendados';
 import PedidosEntregados from './pages/PedidosEntregados';
 import PedidosCancelados from './pages/PedidosCancelados';
@@ -194,12 +193,6 @@ const App = () => {
 
           {/*****Rutas modulo ventas*** */}
 
-          <Route
-            path="/AgendarVenta/:id"
-            element={
-              <AgendarVenta />
-            }
-          />
 
           <Route
             path='/RegistrarCotizacion'

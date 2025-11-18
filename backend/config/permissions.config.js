@@ -3,14 +3,14 @@ module.exports = {
     VER: 'usuarios.ver',
     CREAR: 'usuarios.crear',
     EDITAR: 'usuarios.editar',
-    INHABILITAR: 'usuarios.inhabilitar',
+    inhabilitar: 'usuarios.inhabilitar',
     ELIMINAR: 'usuarios.eliminar'
   },
   ROLES: {
     VER: 'roles.ver',
     CREAR: 'roles.crear',
     EDITAR: 'roles.editar',
-    INHABILITAR: 'roles.inhabilitar'
+    inhabilitar: 'roles.inhabilitar'
   },
   PRODUCTOS: {
     VER: 'productos.ver',

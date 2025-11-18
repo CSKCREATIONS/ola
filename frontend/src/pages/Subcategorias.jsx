@@ -417,7 +417,7 @@ const GestionSubcategorias = () => {
       title: activar ? '¿Activar subcategoría?' : '¿Desactivar subcategoría?',
       text: activar
         ? 'Esto hará que vuelva a estar disponible. Deberás activar manualmente sus productos si lo deseas.'
-        : 'Esto también deshabilitará sus productos asociados.',
+        : 'Esto también inhabilitará sus productos asociados.',
       icon: activar ? 'question' : 'warning',
       showCancelButton: true,
       confirmButtonText: activar ? 'Sí, activar' : 'Sí, desactivar',
@@ -490,7 +490,8 @@ const GestionSubcategorias = () => {
     <div>
       <Fijo />
       <div className="content">
-        <NavProductos />
+        <div className="max-width">
+          <NavProductos />
         <div className="contenido-modulo">
           {/* Encabezado profesional */}
           <div className="subcategoria-professional-header">
@@ -632,6 +633,8 @@ const GestionSubcategorias = () => {
             />
           )}
         </div>
+        </div>
+        
         
       </div>
       <div className="custom-footer">

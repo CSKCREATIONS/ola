@@ -23,12 +23,18 @@ const styles = {
     borderRadius: '20px',
     maxWidth: '900px',
     width: '95%',
-    maxHeight: '95vh',
+    maxHeight: 'calc(100vh - 2rem)',
+    height: 'auto',
+    minHeight: 0,
     overflow: 'hidden',
     boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
     display: 'flex',
     flexDirection: 'column',
     border: 'none',
+    position: 'fixed',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
     padding: 0
   },
   header: {
@@ -39,6 +45,7 @@ const styles = {
   },
   content: {
     flex: 1,
+    minHeight: 0,
     overflowY: 'auto',
     padding: '2rem',
     backgroundColor: '#f8fafc'
@@ -337,15 +344,14 @@ export default function EditarPerfil() {
       }}
     >
       <dialog aria-modal="true" aria-labelledby="edit-profile-title" style={styles.dialog} open>
-        <form onSubmit={guardarCambios} style={{ display: 'flex', flexDirection: 'column' }}>
+        <form onSubmit={guardarCambios} style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
           <div style={styles.header}>
             <h3 id="edit-profile-title" style={{ margin: 0, fontSize: '1.5rem', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <div style={{ width: '50px', height: '50px', borderRadius: '12px', background: 'rgba(255, 255, 255, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <i className="fa-solid fa-user-circle" style={{ fontSize: '1.5rem' }} aria-hidden />
               </div>
-              <span>Editar Mi Perfil</span>
+              <span>Editar Perfil</span>
             </h3>
-            <p style={{ margin: '0.5rem 0 0 4rem', opacity: 0.9, fontSize: '0.95rem' }}>Actualiza tu información personal</p>
           </div>
 
           <div style={styles.content}>

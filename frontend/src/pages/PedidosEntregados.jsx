@@ -292,13 +292,13 @@ export default function PedidosEntregados() {
     for (const el of elementosNoExport) { el.style.display = 'none'; }
 
     const tabla = document.getElementById("tabla_entregados");
-  const workbook = XLSX.utils.table_to_book(tabla, { sheet: "Pedidos Entregados" });
-  workbook.Sheets["Pedidos Entregados"]["!cols"] = new Array(7).fill({ width: 20 });
+    const workbook = XLSX.utils.table_to_book(tabla, { sheet: "Pedidos Entregados" });
+    workbook.Sheets["Pedidos Entregados"]["!cols"] = new Array(7).fill({ width: 20 });
 
     XLSX.writeFile(workbook, 'pedidos_entregados.xlsx');
     for (const el of elementosNoExport) { el.style.display = ''; }
   };
-  
+
 
   // ModalProductosCotizacion eliminado por no utilizarse
 
@@ -307,254 +307,257 @@ export default function PedidosEntregados() {
       <Fijo />
       <div className="content">
         <NavVentas />
-        <div className="contenido-modulo">
-          {/* Encabezado profesional */}
-          <div className="entregados-professional-header">
-            <div className="entregados-header-decoration"></div>
-            <div style={{ position: 'relative', zIndex: 2 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                <div className="entregados-icon-container">
-                  <i className="fa-solid fa-check-circle" style={{ fontSize: '2.5rem', color: 'white' }}></i>
-                </div>
-                <div>
-                  <h2 style={{ margin: '0 0 8px 0', fontSize: '2rem', fontWeight: '700' }}>
-                    Pedidos Entregados
-                  </h2>
-                  <p style={{ margin: 0, fontSize: '1.1rem', opacity: 0.9 }}>
-                    Aquí encontrará las ventas concretadas con sus respectivas remisiones
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Estadísticas avanzadas */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-            gap: '20px',
-            marginBottom: '30px'
-          }}>
-            <div className="entregados-stats-card">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <div style={{
-                  background: 'linear-gradient(135deg, #10b981, #059669)',
-                  borderRadius: '12px',
-                  padding: '15px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <i className="fa-solid fa-check-circle" style={{ color: 'white', fontSize: '1.5rem' }}></i>
-                </div>
-                <div>
-                  <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                    {pedidosEntregados.length}
-                  </h3>
-                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
-                    Pedidos Entregados
-                  </p>
+        <div className="max-width">
+          <div className="contenido-modulo">
+            {/* Encabezado profesional */}
+            <div className="entregados-professional-header">
+              <div className="entregados-header-decoration"></div>
+              <div style={{ position: 'relative', zIndex: 2 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                  <div className="entregados-icon-container">
+                    <i className="fa-solid fa-check-circle" style={{ fontSize: '2.5rem', color: 'white' }}></i>
+                  </div>
+                  <div>
+                    <h2 style={{ margin: '0 0 8px 0', fontSize: '2rem', fontWeight: '700' }}>
+                      Pedidos Entregados
+                    </h2>
+                    <p style={{ margin: 0, fontSize: '1.1rem', opacity: 0.9 }}>
+                      Aquí encontrará las ventas concretadas con sus respectivas remisiones
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="entregados-stats-card">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <div style={{
-                  background: 'linear-gradient(135deg, #f59e0b, #ea580c)',
-                  borderRadius: '12px',
-                  padding: '15px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <i className="fa-solid fa-dollar-sign" style={{ color: 'white', fontSize: '1.5rem' }}></i>
-                </div>
-                <div>
-                  <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                    ${pedidosEntregados.reduce((sum, p) => sum + (p.total || 0), 0).toLocaleString('es-CO')}
-                  </h3>
-                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
-                    Ingresos Totales
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="entregados-stats-card">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <div style={{
-                  background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                  borderRadius: '12px',
-                  padding: '15px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <i className="fa-solid fa-calendar-alt" style={{ color: 'white', fontSize: '1.5rem' }}></i>
-                </div>
-                <div>
-                  <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                    {pedidosEntregados.filter(p => {
-                      const fechaEntrega = new Date(p.updatedAt);
-                      const hoy = new Date();
-                      const diferencia = hoy.getTime() - fechaEntrega.getTime();
-                      const diasDiferencia = Math.ceil(diferencia / (1000 * 3600 * 24));
-                      return diasDiferencia <= 30;
-                    }).length}
-                  </h3>
-                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
-                    Este Mes
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Controles de exportación */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'flex-start',
-            alignItems: 'center',
-            marginBottom: '20px',
-            flexWrap: 'wrap',
-            gap: '10px'
-          }}>
-            <button className="entregados-export-btn" onClick={exportarExcel}>
-              <i className="fa-solid fa-file-excel"></i>
-              <span>Exportar a Excel</span>
-            </button>
-            <button className="entregados-export-btn" onClick={exportarPDF}>
-              <i className="fa-solid fa-file-pdf"></i>
-              <span>Exportar a PDF</span>
-            </button>
-          </div>
-
-          {/* Tabla principal con diseño moderno */}
-          <div className="entregados-table-modern">
-            <div className="entregados-table-wrapper">
-              <table className="entregados-table" id="tabla_entregados">
-                <thead>
-                  <tr>
-                    <th>No</th>
-                    <th>Remisión</th>
-                    <th>F. Entrega</th>
-                    <th>Cliente</th>
-                    <th>Ciudad</th>
-                    <th>Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentItems.map((remision, index) => (
-                    <tr key={remision._id}>
-                      <td style={{ fontWeight: '500', color: '#6b7280' }}>
-                        {indexOfFirstItem + index + 1}
-                      </td>
-                      <td style={{ fontWeight: '600', color: '#1f2937' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <div style={{
-                            background: 'linear-gradient(135deg, #10b981, #059669)',
-                            borderRadius: '8px',
-                            padding: '8px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            minWidth: '35px'
-                          }}>
-                            <i className="fa-solid fa-file-invoice" style={{ color: 'white', fontSize: '12px' }}></i>
-                          </div>
-                          <button
-                            type="button"
-                            style={{
-                              cursor: 'pointer',
-                              color: '#10b981',
-                              textDecoration: 'underline',
-                              fontWeight: 'bold',
-                              background: 'none',
-                              border: 'none',
-                              padding: 0,
-                              font: 'inherit'
-                            }} 
-                            onClick={() => verRemisionPreview(remision)}
-                          >
-                            {remision.numeroRemision || '---'}
-                          </button>
-                        </div>
-                      </td>
-                      <td style={{ color: '#6b7280' }}>
-                        {new Date(remision.fechaEntrega || remision.fechaRemision || remision.updatedAt || remision.createdAt).toLocaleDateString()}
-                      </td>
-                      <td style={{ fontWeight: '500', color: '#1f2937' }}>
-                        {remision.cliente?.nombre || remision.cliente?.nombreCliente || remision.cliente?.nombreCompleto || ''}
-                      </td>
-                      <td style={{ color: '#6b7280' }}>
-                        {remision.cliente?.ciudad || remision.cliente?.direccion?.ciudad || ''}
-                      </td>
-                      <td style={{ fontWeight: '600', color: '#10b981', fontSize: '14px' }}>
-                        ${(remision.total || 0).toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </td>
-                    </tr>
-                  ))}
-                  {pedidosEntregados.length === 0 && (
-                    <tr>
-                      <td 
-                        colSpan={6} 
-                        style={{
-                          padding: '40px',
-                          textAlign: 'center',
-                          color: '#9ca3af',
-                          fontStyle: 'italic',
-                          fontSize: '16px'
-                        }}
-                      >
-                        No hay pedidos entregados disponibles
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Paginación */}
-          {totalPages > 1 && (
-            <div className="pagination" style={{ 
-              display: 'flex', 
-              justifyContent: 'center', 
-              marginTop: '20px',
-              gap: '5px'
+            {/* Estadísticas avanzadas */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+              gap: '20px',
+              marginBottom: '30px'
             }}>
-              {Array.from({ length: totalPages }, (_, i) => (
-                <button
-                  key={i + 1}
-                  onClick={() => setCurrentPage(i + 1)}
-                  style={{
-                    padding: '8px 12px',
-                    border: 'none',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    background: currentPage === i + 1 ? 
-                      'linear-gradient(135deg, #10b981, #059669)' : 
-                      '#f3f4f6',
-                    color: currentPage === i + 1 ? 'white' : '#374151',
-                    fontWeight: '500'
-                  }}
-                >
-                  {i + 1}
-                </button>
-              ))}
+              <div className="entregados-stats-card">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                  <div style={{
+                    background: 'linear-gradient(135deg, #10b981, #059669)',
+                    borderRadius: '12px',
+                    padding: '15px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <i className="fa-solid fa-check-circle" style={{ color: 'white', fontSize: '1.5rem' }}></i>
+                  </div>
+                  <div>
+                    <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
+                      {pedidosEntregados.length}
+                    </h3>
+                    <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
+                      Pedidos Entregados
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="entregados-stats-card">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                  <div style={{
+                    background: 'linear-gradient(135deg, #f59e0b, #ea580c)',
+                    borderRadius: '12px',
+                    padding: '15px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <i className="fa-solid fa-dollar-sign" style={{ color: 'white', fontSize: '1.5rem' }}></i>
+                  </div>
+                  <div>
+                    <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
+                      ${pedidosEntregados.reduce((sum, p) => sum + (p.total || 0), 0).toLocaleString('es-CO')}
+                    </h3>
+                    <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
+                      Ingresos Totales
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="entregados-stats-card">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                  <div style={{
+                    background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                    borderRadius: '12px',
+                    padding: '15px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <i className="fa-solid fa-calendar-alt" style={{ color: 'white', fontSize: '1.5rem' }}></i>
+                  </div>
+                  <div>
+                    <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
+                      {pedidosEntregados.filter(p => {
+                        const fechaEntrega = new Date(p.updatedAt);
+                        const hoy = new Date();
+                        const diferencia = hoy.getTime() - fechaEntrega.getTime();
+                        const diasDiferencia = Math.ceil(diferencia / (1000 * 3600 * 24));
+                        return diasDiferencia <= 30;
+                      }).length}
+                    </h3>
+                    <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
+                      Este Mes
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
-          )}
 
-          {remisionPreview && (
-            <RemisionPreview
-              datos={remisionPreview}
-              onClose={() => setRemisionPreview(null)}
-            />
-          )}
+            {/* Controles de exportación */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'flex-start',
+              alignItems: 'center',
+              marginBottom: '20px',
+              flexWrap: 'wrap',
+              gap: '10px'
+            }}>
+              <button className="entregados-export-btn" onClick={exportarExcel}>
+                <i className="fa-solid fa-file-excel"></i>
+                <span>Exportar a Excel</span>
+              </button>
+              <button className="entregados-export-btn" onClick={exportarPDF}>
+                <i className="fa-solid fa-file-pdf"></i>
+                <span>Exportar a PDF</span>
+              </button>
+            </div>
 
-          
+            {/* Tabla principal con diseño moderno */}
+            <div className="entregados-table-modern">
+              <div className="entregados-table-wrapper">
+                <table className="entregados-table" id="tabla_entregados">
+                  <thead>
+                    <tr>
+                      <th>No</th>
+                      <th>Remisión</th>
+                      <th>F. Entrega</th>
+                      <th>Cliente</th>
+                      <th>Ciudad</th>
+                      <th>Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {currentItems.map((remision, index) => (
+                      <tr key={remision._id}>
+                        <td style={{ fontWeight: '500', color: '#6b7280' }}>
+                          {indexOfFirstItem + index + 1}
+                        </td>
+                        <td style={{ fontWeight: '600', color: '#1f2937' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <div style={{
+                              background: 'linear-gradient(135deg, #10b981, #059669)',
+                              borderRadius: '8px',
+                              padding: '8px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              minWidth: '35px'
+                            }}>
+                              <i className="fa-solid fa-file-invoice" style={{ color: 'white', fontSize: '12px' }}></i>
+                            </div>
+                            <button
+                              type="button"
+                              style={{
+                                cursor: 'pointer',
+                                color: '#10b981',
+                                textDecoration: 'underline',
+                                fontWeight: 'bold',
+                                background: 'none',
+                                border: 'none',
+                                padding: 0,
+                                font: 'inherit'
+                              }}
+                              onClick={() => verRemisionPreview(remision)}
+                            >
+                              {remision.numeroRemision || '---'}
+                            </button>
+                          </div>
+                        </td>
+                        <td style={{ color: '#6b7280' }}>
+                          {new Date(remision.fechaEntrega || remision.fechaRemision || remision.updatedAt || remision.createdAt).toLocaleDateString()}
+                        </td>
+                        <td style={{ fontWeight: '500', color: '#1f2937' }}>
+                          {remision.cliente?.nombre || remision.cliente?.nombreCliente || remision.cliente?.nombreCompleto || ''}
+                        </td>
+                        <td style={{ color: '#6b7280' }}>
+                          {remision.cliente?.ciudad || remision.cliente?.direccion?.ciudad || ''}
+                        </td>
+                        <td style={{ fontWeight: '600', color: '#10b981', fontSize: '14px' }}>
+                          ${(remision.total || 0).toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </td>
+                      </tr>
+                    ))}
+                    {pedidosEntregados.length === 0 && (
+                      <tr>
+                        <td
+                          colSpan={6}
+                          style={{
+                            padding: '40px',
+                            textAlign: 'center',
+                            color: '#9ca3af',
+                            fontStyle: 'italic',
+                            fontSize: '16px'
+                          }}
+                        >
+                          No hay pedidos entregados disponibles
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Paginación */}
+            {totalPages > 1 && (
+              <div className="pagination" style={{
+                display: 'flex',
+                justifyContent: 'center',
+                marginTop: '20px',
+                gap: '5px'
+              }}>
+                {Array.from({ length: totalPages }, (_, i) => (
+                  <button
+                    key={i + 1}
+                    onClick={() => setCurrentPage(i + 1)}
+                    style={{
+                      padding: '8px 12px',
+                      border: 'none',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      background: currentPage === i + 1 ?
+                        'linear-gradient(135deg, #10b981, #059669)' :
+                        '#f3f4f6',
+                      color: currentPage === i + 1 ? 'white' : '#374151',
+                      fontWeight: '500'
+                    }}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {remisionPreview && (
+              <RemisionPreview
+                datos={remisionPreview}
+                onClose={() => setRemisionPreview(null)}
+              />
+            )}
+
+
+          </div>
         </div>
+
       </div>
       <div className="custom-footer">
         <p className="custom-footer-text">

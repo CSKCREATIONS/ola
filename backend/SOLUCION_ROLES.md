@@ -34,7 +34,7 @@ Los roles base del sistema siempre deben incluir:
 - `roles.ver` - Para ver la lista de roles
 - `roles.crear` - Para crear nuevos roles  
 - `roles.editar` - Para editar roles existentes
-- `roles.inhabilitar` - Para habilitar/deshabilitar roles
+- `roles.inhabilitar` - Para habilitar/inhabilitar roles
 
 ## Scripts útiles
 - `verificarPermisoRoles.js` - Verifica qué usuarios tienen permiso roles.ver

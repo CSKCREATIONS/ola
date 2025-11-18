@@ -755,7 +755,8 @@ JLA Global Company</textarea>
       <Fijo />
       <div className="content">
         <NavCompras />
-        <div className="contenido-modulo">
+        <div className="max-width">
+          <div className="contenido-modulo">
           {/* Encabezado profesional (reused component) */}
           <SharedListHeaderCard
             iconClass="fa-solid fa-history"
@@ -1596,6 +1597,8 @@ JLA Global Company</textarea>
           )}
           
         </div>
+        </div>
+        
       </div>
       <div className="custom-footer">
           <p className="custom-footer-text">

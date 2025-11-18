@@ -160,15 +160,15 @@ if (!document.getElementById('usuarios-advanced-styles')) {
 
 /****Funcion para exportar a pdf*** */
 
-  const exportarPDF = async () => {
-    try {
-      const exportElementToPdf = (await import('../utils/exportToPdf')).default;
-      await exportElementToPdf('tabla_lista_usuarios', 'listaUsuarios.pdf');
-    } catch (err) {
-      console.error('Error exportando PDF:', err);
-      Swal.fire('Error', 'No se pudo generar el PDF', 'error');
-    }
-  };
+const exportarPDF = async () => {
+  try {
+    const exportElementToPdf = (await import('../utils/exportToPdf')).default;
+    await exportElementToPdf('tabla_lista_usuarios', 'listaUsuarios.pdf');
+  } catch (err) {
+    console.error('Error exportando PDF:', err);
+    Swal.fire('Error', 'No se pudo generar el PDF', 'error');
+  }
+};
 
 
 // Funcion exportar a Excel
@@ -210,7 +210,7 @@ export default function ListaDeUsuarios() {
   const [todosLosUsuarios, setTodosLosUsuarios] = useState([]);
   const [usuarios, setUsuarios] = useState([]);
   const [puedeEditarUsuario, setPuedeEditarUsuario] = useState(false);
-  const [puedeInhabilitarUsuario, setPuedeInhabilitarUsuario] = useState(false);
+  const [puedeinhabilitarUsuario, setPuedeinhabilitarUsuario] = useState(false);
   const [puedeCrearUsuario, setPuedeCrearUsuario] = useState(false);
   const [puedeEliminarUsuario, setPuedeEliminarUsuario] = useState(false);
   const [usuarioEditando, setUsuarioEditando] = useState(null);
@@ -235,7 +235,7 @@ export default function ListaDeUsuarios() {
       const response = await api.get('/api/users');
       const data = response.data || response;
       if (data.success || Array.isArray(data)) {
-        const usuariosOrdenados = (data.data || data).sort((a, b) => 
+        const usuariosOrdenados = (data.data || data).sort((a, b) =>
           new Date(b.createdAt) - new Date(a.createdAt)
         );
         setTodosLosUsuarios(usuariosOrdenados);
@@ -257,7 +257,7 @@ export default function ListaDeUsuarios() {
     if (user?.permissions) {
       setPuedeCrearUsuario(user.permissions.includes('usuarios.crear'));
       setPuedeEditarUsuario(user.permissions.includes('usuarios.editar'));
-      setPuedeInhabilitarUsuario(user.permissions.includes('usuarios.inhabilitar'));
+      setPuedeinhabilitarUsuario(user.permissions.includes('usuarios.inhabilitar'));
       setPuedeEliminarUsuario(user.permissions.includes('usuarios.eliminar'));
     }
   }, []);
@@ -372,383 +372,384 @@ export default function ListaDeUsuarios() {
       <Fijo />
       <div className="content">
         <NavUsuarios />
-        <div className="contenido-modulo">
-          <SharedListHeaderCard
-            title="Gestión de Usuarios"
-            subtitle="Administre y supervise todos los usuarios del sistema"
-            iconClass="fa-solid fa-users"
-          >
-            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-              <button
-                onClick={() => exportToExcel(todosLosUsuarios)}
-                style={{
-                  background: 'rgba(255,255,255,0.2)',
-                  border: '2px solid rgba(255,255,255,0.3)',
-                  borderRadius: '12px',
-                  padding: '12px 20px',
-                  color: 'white',
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  backdropFilter: 'blur(10px)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px'
-                }}
-              >
-                <i className="fa-solid fa-file-excel"></i><span>Exportar Excel</span>
-              </button>
-              <button
-                onClick={exportarPDF}
-                style={{
-                  background: 'rgba(255,255,255,0.2)',
-                  border: '2px solid rgba(255,255,255,0.3)',
-                  borderRadius: '12px',
-                  padding: '12px 20px',
-                  color: 'white',
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  backdropFilter: 'blur(10px)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px'
-                }}
-              >
-                <i className="fa-solid fa-file-pdf"></i><span>Exportar PDF</span>
-              </button>
-              {puedeCrearUsuario && (
-                <button 
-                  onClick={() => openModal('agregar-usuario')}
+        <div className="max-width">
+          <div className="contenido-modulo">
+            <SharedListHeaderCard
+              title="Gestión de Usuarios"
+              subtitle="Administre y supervise todos los usuarios del sistema"
+              iconClass="fa-solid fa-users"
+            >
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                <button
+                  onClick={() => exportToExcel(todosLosUsuarios)}
                   style={{
-                    background: 'linear-gradient(135deg, #10b981, #059669)',
-                    border: 'none',
+                    background: 'rgba(255,255,255,0.2)',
+                    border: '2px solid rgba(255,255,255,0.3)',
                     borderRadius: '12px',
-                    padding: '12px 24px',
+                    padding: '12px 20px',
                     color: 'white',
                     fontSize: '14px',
                     fontWeight: '600',
                     cursor: 'pointer',
                     transition: 'all 0.3s ease',
-                    boxShadow: '0 4px 15px rgba(16, 185, 129, 0.4)',
+                    backdropFilter: 'blur(10px)',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '8px'
                   }}
                 >
-                  <i className="fa-solid fa-plus"></i><span>Crear Usuario</span>
+                  <i className="fa-solid fa-file-excel"></i><span>Exportar Excel</span>
                 </button>
-              )}
-            </div>
-          </SharedListHeaderCard>
-
-          {/* Estadísticas avanzadas */}
-          <AdvancedStats cards={[
-            { iconClass: 'fa-solid fa-users', gradient: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', value: todosLosUsuarios.length, label: 'Total Usuarios' },
-            { iconClass: 'fa-solid fa-user-check', gradient: 'linear-gradient(135deg, #10b981, #059669)', value: todosLosUsuarios.filter(u => u.enabled).length, label: 'Activos' },
-            { iconClass: 'fa-solid fa-user-slash', gradient: 'linear-gradient(135deg, #ef4444, #dc2626)', value: todosLosUsuarios.filter(u => !u.enabled).length, label: 'Inactivos' },
-            { iconClass: 'fa-solid fa-shield-alt', gradient: 'linear-gradient(135deg, #8b5cf6, #7c3aed)', value: [...new Set(todosLosUsuarios.map(u => u.role?.name))].filter(Boolean).length, label: 'Roles Diferentes' }
-          ]} />
-
-          {/* Panel de filtros avanzado */}
-          <div style={{
-            background: 'linear-gradient(135deg, #f9fafb, #f3f4f6)',
-            borderRadius: '16px',
-            padding: '25px',
-            marginBottom: '30px',
-            border: '1px solid #e5e7eb'
-          }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-              marginBottom: '20px'
-            }}>
-              <i className="fa-solid fa-filter" style={{ color: '#6366f1', fontSize: '1.2rem' }}></i>
-              <h4 style={{ margin: 0, color: '#374151', fontSize: '1.1rem', fontWeight: '600' }}>
-                Filtros Avanzados
-              </h4>
-            </div>
-            
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-              gap: '20px'
-            }}>
-              <div style={{ position: 'relative' }}>
-                <label htmlFor="input-usuarios-1" style={{
-                  position: 'absolute',
-                  top: '-8px',
-                  left: '12px',
-                  background: '#f9fafb',
-                  padding: '0 8px',
-                  fontSize: '12px',
-                  fontWeight: '600',
-                  color: '#6366f1',
-                  zIndex: 1
-                }}>
-                  Buscar Usuario</label>
-                <input id="input-usuarios-1"
-                  type="text"
-                  placeholder="Nombre o correo electrónico..."
-                  value={filtroTexto}
-                  onChange={(e) => setFiltroTexto(e.target.value)}
+                <button
+                  onClick={exportarPDF}
                   style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    border: '2px solid #e5e7eb',
-                    borderRadius: '10px',
+                    background: 'rgba(255,255,255,0.2)',
+                    border: '2px solid rgba(255,255,255,0.3)',
+                    borderRadius: '12px',
+                    padding: '12px 20px',
+                    color: 'white',
                     fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
                     transition: 'all 0.3s ease',
-                    background: 'white'
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = '#6366f1';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(99, 102, 241, 0.1)';
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = '#e5e7eb';
-                    e.target.style.boxShadow = 'none';
-                  }}
-                />
-              </div>
-
-              <div style={{ position: 'relative' }}>
-                <label htmlFor="input-usuarios-2" style={{
-                  position: 'absolute',
-                  top: '-8px',
-                  left: '12px',
-                  background: '#f9fafb',
-                  padding: '0 8px',
-                  fontSize: '12px',
-                  fontWeight: '600',
-                  color: '#6366f1',
-                  zIndex: 1
-                }}>
-                  Filtrar por Rol</label>
-                <select id="input-usuarios-2"
-                  value={filtroRol}
-                  onChange={(e) => setFiltroRol(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    border: '2px solid #e5e7eb',
-                    borderRadius: '10px',
-                    fontSize: '14px',
-                    transition: 'all 0.3s ease',
-                    background: 'white',
-                    cursor: 'pointer'
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = '#6366f1';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(99, 102, 241, 0.1)';
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = '#e5e7eb';
-                    e.target.style.boxShadow = 'none';
+                    backdropFilter: 'blur(10px)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
                   }}
                 >
-                  <option value="todos">Todos los roles</option>
-                  {[...new Set(todosLosUsuarios.map((u) => u.role?._id))].map((rolId) => {
-                    const rol = todosLosUsuarios.find(u => u.role?._id === rolId)?.role;
-                    return (
-                      <option key={rolId} value={rolId}>
-                        {rol?.name || 'Sin rol'}
-                      </option>
-                    );
-                  })}
-                </select>
+                  <i className="fa-solid fa-file-pdf"></i><span>Exportar PDF</span>
+                </button>
+                {puedeCrearUsuario && (
+                  <button
+                    onClick={() => openModal('agregar-usuario')}
+                    style={{
+                      background: 'linear-gradient(135deg, #10b981, #059669)',
+                      border: 'none',
+                      borderRadius: '12px',
+                      padding: '12px 24px',
+                      color: 'white',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                      boxShadow: '0 4px 15px rgba(16, 185, 129, 0.4)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}
+                  >
+                    <i className="fa-solid fa-plus"></i><span>Crear Usuario</span>
+                  </button>
+                )}
               </div>
+            </SharedListHeaderCard>
 
-              <div style={{ position: 'relative' }}>
-                <label htmlFor="input-usuarios-3" style={{
-                  position: 'absolute',
-                  top: '-8px',
-                  left: '12px',
-                  background: '#f9fafb',
-                  padding: '0 8px',
-                  fontSize: '12px',
-                  fontWeight: '600',
-                  color: '#6366f1',
-                  zIndex: 1
-                }}>
-                  Estado del Usuario</label>
-                <select id="input-usuarios-3"
-                  value={filtroEstado}
-                  onChange={(e) => setFiltroEstado(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    border: '2px solid #e5e7eb',
-                    borderRadius: '10px',
-                    fontSize: '14px',
-                    transition: 'all 0.3s ease',
-                    background: 'white',
-                    cursor: 'pointer'
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = '#6366f1';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(99, 102, 241, 0.1)';
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = '#e5e7eb';
-                    e.target.style.boxShadow = 'none';
-                  }}
-                >
-                  <option value="todos">Todos los estados</option>
-                  <option value="habilitado">Usuarios Activos</option>
-                  <option value="inhabilitado">Usuarios Inactivos</option>
-                </select>
-              </div>
-            </div>
-          </div>
+            {/* Estadísticas avanzadas */}
+            <AdvancedStats cards={[
+              { iconClass: 'fa-solid fa-users', gradient: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', value: todosLosUsuarios.length, label: 'Total Usuarios' },
+              { iconClass: 'fa-solid fa-user-check', gradient: 'linear-gradient(135deg, #10b981, #059669)', value: todosLosUsuarios.filter(u => u.enabled).length, label: 'Activos' },
+              { iconClass: 'fa-solid fa-user-slash', gradient: 'linear-gradient(135deg, #ef4444, #dc2626)', value: todosLosUsuarios.filter(u => !u.enabled).length, label: 'Inactivos' },
+              { iconClass: 'fa-solid fa-shield-alt', gradient: 'linear-gradient(135deg, #8b5cf6, #7c3aed)', value: [...new Set(todosLosUsuarios.map(u => u.role?.name))].filter(Boolean).length, label: 'Roles Diferentes' }
+            ]} />
 
-
-
-          {/* Tabla de usuarios mejorada */}
-          <div style={{
-            background: 'white',
-            borderRadius: '16px',
-            overflow: 'hidden',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-            border: '1px solid #e5e7eb'
-          }}>
+            {/* Panel de filtros avanzado */}
             <div style={{
-              background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)',
-              padding: '20px 25px',
-              borderBottom: '1px solid #e5e7eb',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center'
+              background: 'linear-gradient(135deg, #f9fafb, #f3f4f6)',
+              borderRadius: '16px',
+              padding: '25px',
+              marginBottom: '30px',
+              border: '1px solid #e5e7eb'
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{
-                  background: 'linear-gradient(135deg, #667eea, #764ba2)',
-                  borderRadius: '12px',
-                  padding: '10px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <i className="fa-solid fa-table" style={{ color: 'white', fontSize: '16px' }}></i>
-                </div>
-                <div>
-                  <h4 style={{ margin: '0 0 4px 0', color: '#1f2937', fontSize: '1.3rem', fontWeight: '600' }}>
-                    Lista de Usuarios
-                  </h4>
-                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px' }}>
-                    Mostrando {usuarios.length} de {todosLosUsuarios.length} usuarios
-                  </p>
-                </div>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                marginBottom: '20px'
+              }}>
+                <i className="fa-solid fa-filter" style={{ color: '#6366f1', fontSize: '1.2rem' }}></i>
+                <h4 style={{ margin: 0, color: '#374151', fontSize: '1.1rem', fontWeight: '600' }}>
+                  Filtros Avanzados
+                </h4>
               </div>
-            </div>
-            
-            <div style={{ overflow: 'auto' }}>
-              <table style={{
-                width: '100%'
-              }} id='tabla_lista_usuarios'>
-                <thead>
-                  <tr style={{ 
-                    background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)',
-                    borderBottom: '2px solid #e5e7eb'
+
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+                gap: '20px'
+              }}>
+                <div style={{ position: 'relative' }}>
+                  <label htmlFor="input-usuarios-1" style={{
+                    position: 'absolute',
+                    top: '-8px',
+                    left: '12px',
+                    background: '#f9fafb',
+                    padding: '0 8px',
+                    fontSize: '12px',
+                    fontWeight: '600',
+                    color: '#6366f1',
+                    zIndex: 1
                   }}>
-                    <th style={{ 
-                      padding: '16px 12px', 
-                      textAlign: 'left', 
-                      fontWeight: '600', 
-                      color: '#374151',
-                      fontSize: '13px',
-                      letterSpacing: '0.5px'
+                    Buscar Usuario</label>
+                  <input id="input-usuarios-1"
+                    type="text"
+                    placeholder="Nombre o correo electrónico..."
+                    value={filtroTexto}
+                    onChange={(e) => setFiltroTexto(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      border: '2px solid #e5e7eb',
+                      borderRadius: '10px',
+                      fontSize: '14px',
+                      transition: 'all 0.3s ease',
+                      background: 'white'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#6366f1';
+                      e.target.style.boxShadow = '0 0 0 3px rgba(99, 102, 241, 0.1)';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#e5e7eb';
+                      e.target.style.boxShadow = 'none';
+                    }}
+                  />
+                </div>
+
+                <div style={{ position: 'relative' }}>
+                  <label htmlFor="input-usuarios-2" style={{
+                    position: 'absolute',
+                    top: '-8px',
+                    left: '12px',
+                    background: '#f9fafb',
+                    padding: '0 8px',
+                    fontSize: '12px',
+                    fontWeight: '600',
+                    color: '#6366f1',
+                    zIndex: 1
+                  }}>
+                    Filtrar por Rol</label>
+                  <select id="input-usuarios-2"
+                    value={filtroRol}
+                    onChange={(e) => setFiltroRol(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      border: '2px solid #e5e7eb',
+                      borderRadius: '10px',
+                      fontSize: '14px',
+                      transition: 'all 0.3s ease',
+                      background: 'white',
+                      cursor: 'pointer'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#6366f1';
+                      e.target.style.boxShadow = '0 0 0 3px rgba(99, 102, 241, 0.1)';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#e5e7eb';
+                      e.target.style.boxShadow = 'none';
+                    }}
+                  >
+                    <option value="todos">Todos los roles</option>
+                    {[...new Set(todosLosUsuarios.map((u) => u.role?._id))].map((rolId) => {
+                      const rol = todosLosUsuarios.find(u => u.role?._id === rolId)?.role;
+                      return (
+                        <option key={rolId} value={rolId}>
+                          {rol?.name || 'Sin rol'}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+
+                <div style={{ position: 'relative' }}>
+                  <label htmlFor="input-usuarios-3" style={{
+                    position: 'absolute',
+                    top: '-8px',
+                    left: '12px',
+                    background: '#f9fafb',
+                    padding: '0 8px',
+                    fontSize: '12px',
+                    fontWeight: '600',
+                    color: '#6366f1',
+                    zIndex: 1
+                  }}>
+                    Estado del Usuario</label>
+                  <select id="input-usuarios-3"
+                    value={filtroEstado}
+                    onChange={(e) => setFiltroEstado(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      border: '2px solid #e5e7eb',
+                      borderRadius: '10px',
+                      fontSize: '14px',
+                      transition: 'all 0.3s ease',
+                      background: 'white',
+                      cursor: 'pointer'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#6366f1';
+                      e.target.style.boxShadow = '0 0 0 3px rgba(99, 102, 241, 0.1)';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#e5e7eb';
+                      e.target.style.boxShadow = 'none';
+                    }}
+                  >
+                    <option value="todos">Todos los estados</option>
+                    <option value="habilitado">Usuarios Activos</option>
+                    <option value="inhabilitado">Usuarios Inactivos</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+
+
+            {/* Tabla de usuarios mejorada */}
+            <div style={{
+              background: 'white',
+              borderRadius: '16px',
+              overflow: 'hidden',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+              border: '1px solid #e5e7eb'
+            }}>
+              <div style={{
+                background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)',
+                padding: '20px 25px',
+                borderBottom: '1px solid #e5e7eb',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{
+                    background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                    borderRadius: '12px',
+                    padding: '10px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <i className="fa-solid fa-table" style={{ color: 'white', fontSize: '16px' }}></i>
+                  </div>
+                  <div>
+                    <h4 style={{ margin: '0 0 4px 0', color: '#1f2937', fontSize: '1.3rem', fontWeight: '600' }}>
+                      Lista de Usuarios
+                    </h4>
+                    <p style={{ margin: 0, color: '#6b7280', fontSize: '14px' }}>
+                      Mostrando {usuarios.length} de {todosLosUsuarios.length} usuarios
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ overflow: 'auto' }}>
+                <table style={{
+                  width: '100%'
+                }} id='tabla_lista_usuarios'>
+                  <thead>
+                    <tr style={{
+                      background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)',
+                      borderBottom: '2px solid #e5e7eb'
                     }}>
-                      <i className="fa-solid fa-hashtag icon-gap" style={{ color: '#6366f1' }}></i><span>#</span>
-                    </th>
-                    <th style={{ 
-                      padding: '16px 12px', 
-                      textAlign: 'left', 
-                      fontWeight: '600', 
-                      color: '#374151',
-                      fontSize: '13px',
-                      letterSpacing: '0.5px'
-                    }}>
-                      <i className="fa-solid fa-user icon-gap" style={{}}></i><span>NOMBRE COMPLETO</span>
-                    </th>
-                    <th style={{ 
-                      padding: '16px 12px', 
-                      textAlign: 'left', 
-                      fontWeight: '600', 
-                      color: '#374151',
-                      fontSize: '13px',
-                      letterSpacing: '0.5px'
-                    }}>
-                      <i className="fa-solid fa-shield-alt icon-gap" style={{}}></i><span>ROL</span>
-                    </th>
-                    <th style={{ 
-                      padding: '16px 12px', 
-                      textAlign: 'left', 
-                      fontWeight: '600', 
-                      color: '#374151',
-                      fontSize: '13px',
-                      letterSpacing: '0.5px'
-                    }}>
-                      <i className="fa-solid fa-envelope icon-gap" style={{ color: '#6366f1' }}></i><span>CORREO</span>
-                    </th>
-                    <th style={{ 
-                      padding: '16px 12px', 
-                      textAlign: 'left', 
-                      fontWeight: '600', 
-                      color: '#374151',
-                      fontSize: '13px',
-                      letterSpacing: '0.5px'
-                    }}>
-                      <i className="fa-solid fa-at icon-gap" style={{ color: '#6366f1' }}></i><span>USUARIO</span>
-                    </th>
-                    <th style={{ 
-                      padding: '16px 12px', 
-                      textAlign: 'center', 
-                      fontWeight: '600', 
-                      color: '#374151',
-                      fontSize: '13px',
-                      letterSpacing: '0.5px'
-                    }}>
-                      <i className="fa-solid fa-toggle-on icon-gap" style={{ color: '#6366f1' }}></i><span>ESTADO</span>
-                    </th>
-                    <th style={{ 
-                      padding: '16px 12px', 
-                      textAlign: 'left', 
-                      fontWeight: '600', 
-                      color: '#374151',
-                      fontSize: '13px',
-                      letterSpacing: '0.5px'
-                    }}>
-                      <i className="fa-solid fa-calendar-plus icon-gap" style={{ color: '#6366f1' }}></i><span>CREADO</span>
-                    </th>
-                    <th style={{ 
-                      padding: '16px 12px', 
-                      textAlign: 'left', 
-                      fontWeight: '600', 
-                      color: '#374151',
-                      fontSize: '13px',
-                      letterSpacing: '0.5px'
-                    }}>
-                      <i className="fa-solid fa-clock icon-gap" style={{ color: '#6366f1' }}></i><span>ÚLTIMO ACCESO</span>
-                    </th>
-                    <th style={{ 
-                      padding: '16px 12px', 
-                      textAlign: 'center', 
-                      fontWeight: '600', 
-                      color: '#374151',
-                      fontSize: '13px',
-                      letterSpacing: '0.5px'
-                    }}>
-                      <i className="fa-solid fa-cogs icon-gap" style={{ color: '#6366f1' }}></i><span>ACCIONES</span>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentItems.map((usuario, index) => (
-                    <tr key={usuario._id} 
+                      <th style={{
+                        padding: '16px 12px',
+                        textAlign: 'left',
+                        fontWeight: '600',
+                        color: '#374151',
+                        fontSize: '13px',
+                        letterSpacing: '0.5px'
+                      }}>
+                        <i className="fa-solid fa-hashtag icon-gap" style={{ color: '#6366f1' }}></i><span>#</span>
+                      </th>
+                      <th style={{
+                        padding: '16px 12px',
+                        textAlign: 'left',
+                        fontWeight: '600',
+                        color: '#374151',
+                        fontSize: '13px',
+                        letterSpacing: '0.5px'
+                      }}>
+                        <i className="fa-solid fa-user icon-gap" style={{}}></i><span>NOMBRE COMPLETO</span>
+                      </th>
+                      <th style={{
+                        padding: '16px 12px',
+                        textAlign: 'left',
+                        fontWeight: '600',
+                        color: '#374151',
+                        fontSize: '13px',
+                        letterSpacing: '0.5px'
+                      }}>
+                        <i className="fa-solid fa-shield-alt icon-gap" style={{}}></i><span>ROL</span>
+                      </th>
+                      <th style={{
+                        padding: '16px 12px',
+                        textAlign: 'left',
+                        fontWeight: '600',
+                        color: '#374151',
+                        fontSize: '13px',
+                        letterSpacing: '0.5px'
+                      }}>
+                        <i className="fa-solid fa-envelope icon-gap" style={{ color: '#6366f1' }}></i><span>CORREO</span>
+                      </th>
+                      <th style={{
+                        padding: '16px 12px',
+                        textAlign: 'left',
+                        fontWeight: '600',
+                        color: '#374151',
+                        fontSize: '13px',
+                        letterSpacing: '0.5px'
+                      }}>
+                        <i className="fa-solid fa-at icon-gap" style={{ color: '#6366f1' }}></i><span>USUARIO</span>
+                      </th>
+                      <th style={{
+                        padding: '16px 12px',
+                        textAlign: 'center',
+                        fontWeight: '600',
+                        color: '#374151',
+                        fontSize: '13px',
+                        letterSpacing: '0.5px'
+                      }}>
+                        <i className="fa-solid fa-toggle-on icon-gap" style={{ color: '#6366f1' }}></i><span>ESTADO</span>
+                      </th>
+                      <th style={{
+                        padding: '16px 12px',
+                        textAlign: 'left',
+                        fontWeight: '600',
+                        color: '#374151',
+                        fontSize: '13px',
+                        letterSpacing: '0.5px'
+                      }}>
+                        <i className="fa-solid fa-calendar-plus icon-gap" style={{ color: '#6366f1' }}></i><span>CREADO</span>
+                      </th>
+                      <th style={{
+                        padding: '16px 12px',
+                        textAlign: 'left',
+                        fontWeight: '600',
+                        color: '#374151',
+                        fontSize: '13px',
+                        letterSpacing: '0.5px'
+                      }}>
+                        <i className="fa-solid fa-clock icon-gap" style={{ color: '#6366f1' }}></i><span>ÚLTIMO ACCESO</span>
+                      </th>
+                      <th style={{
+                        padding: '16px 12px',
+                        textAlign: 'center',
+                        fontWeight: '600',
+                        color: '#374151',
+                        fontSize: '13px',
+                        letterSpacing: '0.5px'
+                      }}>
+                        <i className="fa-solid fa-cogs icon-gap" style={{ color: '#6366f1' }}></i><span>ACCIONES</span>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {currentItems.map((usuario, index) => (
+                      <tr key={usuario._id}
                         style={{
                           borderBottom: '1px solid #f3f4f6',
                           transition: 'all 0.2s ease'
@@ -759,224 +760,226 @@ export default function ListaDeUsuarios() {
                         onMouseLeave={(e) => {
                           e.currentTarget.style.backgroundColor = 'transparent';
                         }}
-                    >
-                      <td style={{ padding: '16px 12px', fontWeight: '600', color: '#6366f1' }}>
-                        {indexOfFirstItem + index + 1}
-                      </td>
-                      <td style={{ padding: '16px 12px' }}>
-                        <div style={{ fontWeight: '600', color: '#1f2937', fontSize: '14px' }}>
-                          {`${usuario.firstName} ${usuario.secondName} ${usuario.surname} ${usuario.secondSurname}`}
-                        </div>
-                      </td>
-                      <td style={{ padding: '16px 12px' }}>
-                        <span style={{
-                          background: '#fef3c7',
-                          color: '#d97706',
-                          padding: '6px 12px',
-                          borderRadius: '20px',
-                          fontSize: '12px',
-                          fontWeight: '600',
-                          display: 'inline-block'
-                        }}>
-                          {usuario.role?.name || 'Sin rol'}
-                        </span>
-                      </td>
-                      <td style={{ padding: '16px 12px', color: '#4b5563', fontWeight: '500' }}>
-                        {usuario.email}
-                      </td>
-                      <td style={{ padding: '16px 12px', color: '#4b5563', fontWeight: '500' }}>
-                        {usuario.username}
-                      </td>
-                      <td style={{ padding: '16px 12px', textAlign: 'center' }}>
-                        <label className="switch" style={{ position: 'relative', display: 'inline-block', width: '50px', height: '24px' }}>
-                          <input
-                            type="checkbox"
-                            checked={usuario.enabled}
-                            aria-label={`Estado del usuario ${usuario.username || usuario._id}`}
-                            onChange={() => {
-                              if (puedeInhabilitarUsuario) {
-                                toggleEstadoUsuario(usuario._id, usuario.enabled, usuario.username);
-                              } else {
-                                Swal.fire({
-                                  icon: 'error',
-                                  title: 'Acción no permitida',
-                                  text: 'No tienes permisos para esta accion',
-                                  confirmButtonText: 'Entendido'
-                                });
-                              }
-                            }}
-                            style={{ opacity: 0, width: 0, height: 0 }}
-                          />
-                          <span className="slider" style={{
-                            position: 'absolute',
-                            cursor: 'pointer',
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            backgroundColor: usuario.enabled ? '#10b981' : '#ef4444',
-                            transition: '0.4s',
-                            borderRadius: '24px'
-                          }}></span>
-                        </label>
-                      </td>
-                      <td style={{ padding: '16px 12px', color: '#4b5563', fontWeight: '500' }}>
-                        {new Date(usuario.createdAt).toLocaleDateString()}
-                      </td>
-                      <td style={{ padding: '16px 12px', color: '#4b5563', fontWeight: '500' }}>
-                        {usuario.lastLogin
-                          ? new Date(usuario.lastLogin).toLocaleString('es-CO', {
+                      >
+                        <td style={{ padding: '16px 12px', fontWeight: '600', color: '#6366f1' }}>
+                          {indexOfFirstItem + index + 1}
+                        </td>
+                        <td style={{ padding: '16px 12px' }}>
+                          <div style={{ fontWeight: '600', color: '#1f2937', fontSize: '14px' }}>
+                            {`${usuario.firstName} ${usuario.secondName} ${usuario.surname} ${usuario.secondSurname}`}
+                          </div>
+                        </td>
+                        <td style={{ padding: '16px 12px' }}>
+                          <span style={{
+                            background: '#fef3c7',
+                            color: '#d97706',
+                            padding: '6px 12px',
+                            borderRadius: '20px',
+                            fontSize: '12px',
+                            fontWeight: '600',
+                            display: 'inline-block'
+                          }}>
+                            {usuario.role?.name || 'Sin rol'}
+                          </span>
+                        </td>
+                        <td style={{ padding: '16px 12px', color: '#4b5563', fontWeight: '500' }}>
+                          {usuario.email}
+                        </td>
+                        <td style={{ padding: '16px 12px', color: '#4b5563', fontWeight: '500' }}>
+                          {usuario.username}
+                        </td>
+                        <td style={{ padding: '16px 12px', textAlign: 'center' }}>
+                          <label className="switch" style={{ position: 'relative', display: 'inline-block', width: '50px', height: '24px' }}>
+                            <input
+                              type="checkbox"
+                              checked={usuario.enabled}
+                              aria-label={`Estado del usuario ${usuario.username || usuario._id}`}
+                              onChange={() => {
+                                if (puedeinhabilitarUsuario) {
+                                  toggleEstadoUsuario(usuario._id, usuario.enabled, usuario.username);
+                                } else {
+                                  Swal.fire({
+                                    icon: 'error',
+                                    title: 'Acción no permitida',
+                                    text: 'No tienes permisos para esta accion',
+                                    confirmButtonText: 'Entendido'
+                                  });
+                                }
+                              }}
+                              style={{ opacity: 0, width: 0, height: 0 }}
+                            />
+                            <span className="slider" style={{
+                              position: 'absolute',
+                              cursor: 'pointer',
+                              top: 0,
+                              left: 0,
+                              right: 0,
+                              bottom: 0,
+                              backgroundColor: usuario.enabled ? '#10b981' : '#ef4444',
+                              transition: '0.4s',
+                              borderRadius: '24px'
+                            }}></span>
+                          </label>
+                        </td>
+                        <td style={{ padding: '16px 12px', color: '#4b5563', fontWeight: '500' }}>
+                          {new Date(usuario.createdAt).toLocaleDateString()}
+                        </td>
+                        <td style={{ padding: '16px 12px', color: '#4b5563', fontWeight: '500' }}>
+                          {usuario.lastLogin
+                            ? new Date(usuario.lastLogin).toLocaleString('es-CO', {
                               day: '2-digit',
                               month: '2-digit',
                               year: 'numeric',
                               hour: '2-digit',
                               minute: '2-digit'
                             })
-                          : 'Nunca'}
-                      </td>
-                      <td style={{ padding: '16px 12px', textAlign: 'center' }}>
-                        <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
-                          {puedeEditarUsuario && (
-                            <button
-                              onClick={() => { setUsuarioEditando(usuario); openModal('editUserModal'); }}
-                              title="Editar usuario"
-                              style={{
-                                background: 'linear-gradient(135deg, #dbeafe, #bfdbfe)',
-                                color: '#1e40af',
-                                border: 'none',
-                                borderRadius: '8px',
-                                padding: '8px 10px',
-                                cursor: 'pointer',
-                                fontSize: '12px',
-                                fontWeight: '600',
-                                transition: 'all 0.2s ease',
-                                boxShadow: '0 2px 4px rgba(30, 64, 175, 0.2)'
-                              }}
-                              onMouseEnter={(e) => {
-                                e.target.style.transform = 'translateY(-2px)';
-                                e.target.style.boxShadow = '0 4px 8px rgba(30, 64, 175, 0.3)';
-                              }}
-                              onMouseLeave={(e) => {
-                                e.target.style.transform = 'translateY(0)';
-                                e.target.style.boxShadow = '0 2px 4px rgba(30, 64, 175, 0.2)';
-                              }}
-                            >
-                              <i className="fa-solid fa-pen-to-square"></i>
-                            </button>
-                          )}
-                          {puedeEliminarUsuario && usuario.lastLogin === null && (
-                            <DeleteButton onClick={() => eliminarUsuario(usuario)} title="Eliminar usuario" ariaLabel={`Eliminar usuario ${usuario.username || usuario._id}`}>
-                              <i className="fa-solid fa-trash"></i>
-                            </DeleteButton>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                  
-                  {usuarios.length === 0 && (
-                    <tr>
-                      <td colSpan="9" style={{ textAlign: 'center', padding: '80px 20px' }}>
-                        <div style={{
-                          display: 'flex',
-                          flexDirection: 'column',
-                          alignItems: 'center',
-                          gap: '20px'
-                        }}>
+                            : 'Nunca'}
+                        </td>
+                        <td style={{ padding: '16px 12px', textAlign: 'center' }}>
+                          <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
+                            {puedeEditarUsuario && (
+                              <button
+                                onClick={() => { setUsuarioEditando(usuario); openModal('editUserModal'); }}
+                                title="Editar usuario"
+                                style={{
+                                  background: 'linear-gradient(135deg, #dbeafe, #bfdbfe)',
+                                  color: '#1e40af',
+                                  border: 'none',
+                                  borderRadius: '8px',
+                                  padding: '8px 10px',
+                                  cursor: 'pointer',
+                                  fontSize: '12px',
+                                  fontWeight: '600',
+                                  transition: 'all 0.2s ease',
+                                  boxShadow: '0 2px 4px rgba(30, 64, 175, 0.2)'
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.target.style.transform = 'translateY(-2px)';
+                                  e.target.style.boxShadow = '0 4px 8px rgba(30, 64, 175, 0.3)';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.target.style.transform = 'translateY(0)';
+                                  e.target.style.boxShadow = '0 2px 4px rgba(30, 64, 175, 0.2)';
+                                }}
+                              >
+                                <i className="fa-solid fa-pen-to-square"></i>
+                              </button>
+                            )}
+                            {puedeEliminarUsuario && usuario.lastLogin === null && (
+                              <DeleteButton onClick={() => eliminarUsuario(usuario)} title="Eliminar usuario" ariaLabel={`Eliminar usuario ${usuario.username || usuario._id}`}>
+                                <i className="fa-solid fa-trash"></i>
+                              </DeleteButton>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+
+                    {usuarios.length === 0 && (
+                      <tr>
+                        <td colSpan="9" style={{ textAlign: 'center', padding: '80px 20px' }}>
                           <div style={{
-                            background: 'linear-gradient(135deg, #f3f4f6, #e5e7eb)',
-                            borderRadius: '50%',
-                            padding: '25px',
-                            marginBottom: '10px'
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            gap: '20px'
                           }}>
-                            <i className="fa-solid fa-users" style={{ 
-                              fontSize: '3.5rem', 
-                              color: '#9ca3af'
-                            }}></i>
-                          </div>
-                          <div style={{ textAlign: 'center' }}>
-                            <h5 style={{ 
-                              color: '#6b7280', 
-                              margin: '0 0 12px 0',
-                              fontSize: '1.2rem',
-                              fontWeight: '600'
+                            <div style={{
+                              background: 'linear-gradient(135deg, #f3f4f6, #e5e7eb)',
+                              borderRadius: '50%',
+                              padding: '25px',
+                              marginBottom: '10px'
                             }}>
-                              No hay usuarios disponibles
-                            </h5>
-                            <p style={{ 
-                              color: '#9ca3af', 
-                              margin: 0, 
-                              fontSize: '14px',
-                              lineHeight: '1.5'
-                            }}>
-                              No se encontraron usuarios con los criterios de búsqueda
-                            </p>
+                              <i className="fa-solid fa-users" style={{
+                                fontSize: '3.5rem',
+                                color: '#9ca3af'
+                              }}></i>
+                            </div>
+                            <div style={{ textAlign: 'center' }}>
+                              <h5 style={{
+                                color: '#6b7280',
+                                margin: '0 0 12px 0',
+                                fontSize: '1.2rem',
+                                fontWeight: '600'
+                              }}>
+                                No hay usuarios disponibles
+                              </h5>
+                              <p style={{
+                                color: '#9ca3af',
+                                margin: 0,
+                                fontSize: '14px',
+                                lineHeight: '1.5'
+                              }}>
+                                No se encontraron usuarios con los criterios de búsqueda
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-            
-            {/* Paginación mejorada */}
-            {totalPages > 1 && (
-              <div style={{
-                padding: '20px 25px',
-                borderTop: '1px solid #e5e7eb',
-                display: 'flex',
-                justifyContent: 'center',
-                gap: '8px'
-              }}>
-                {Array.from({ length: totalPages }, (_, i) => (
-                  <button
-                    key={i + 1}
-                    onClick={() => paginate(i + 1)}
-                    style={{
-                      padding: '8px 16px',
-                      border: currentPage === i + 1 ? '2px solid #6366f1' : '2px solid #e5e7eb',
-                      borderRadius: '8px',
-                      background: currentPage === i + 1 ? '#6366f1' : 'white',
-                      color: currentPage === i + 1 ? 'white' : '#4b5563',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease'
-                    }}
-                    onMouseEnter={(e) => {
-                      if (currentPage !== i + 1) {
-                        e.target.style.borderColor = '#6366f1';
-                        e.target.style.color = '#6366f1';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (currentPage !== i + 1) {
-                        e.target.style.borderColor = '#e5e7eb';
-                        e.target.style.color = '#4b5563';
-                      }
-                    }}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
-            )}
+
+              {/* Paginación mejorada */}
+              {totalPages > 1 && (
+                <div style={{
+                  padding: '20px 25px',
+                  borderTop: '1px solid #e5e7eb',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  gap: '8px'
+                }}>
+                  {Array.from({ length: totalPages }, (_, i) => (
+                    <button
+                      key={i + 1}
+                      onClick={() => paginate(i + 1)}
+                      style={{
+                        padding: '8px 16px',
+                        border: currentPage === i + 1 ? '2px solid #6366f1' : '2px solid #e5e7eb',
+                        borderRadius: '8px',
+                        background: currentPage === i + 1 ? '#6366f1' : 'white',
+                        color: currentPage === i + 1 ? 'white' : '#4b5563',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (currentPage !== i + 1) {
+                          e.target.style.borderColor = '#6366f1';
+                          e.target.style.color = '#6366f1';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (currentPage !== i + 1) {
+                          e.target.style.borderColor = '#e5e7eb';
+                          e.target.style.color = '#4b5563';
+                        }
+                      }}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+
           </div>
-          
-          
         </div>
-            
+
+
         <EditarUsuario usuario={usuarioEditando} fetchUsuarios={fetchUsuarios} />
         <AgregarUsuario />
 
-         
+
       </div>
       <div className="custom-footer">
-          <p className="custom-footer-text">
-            © 2025 <span className="custom-highlight">PANGEA</span>. Todos los derechos reservados.
-          </p>
-        </div>
+        <p className="custom-footer-text">
+          © 2025 <span className="custom-highlight">PANGEA</span>. Todos los derechos reservados.
+        </p>
+      </div>
     </div>
   );
 }

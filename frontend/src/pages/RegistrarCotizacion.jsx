@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { Editor } from "@tinymce/tinymce-react";
 import { useRef, useState, useEffect } from 'react';
 import api from '../api/axiosConfig';
+import '../styles/RegistrarCotizacion.css';
 
 // Move small pure helpers to module scope to avoid re-creating them on each render
 function obtenerFechaLocal(inputDate) {
@@ -114,7 +115,7 @@ export default function RegistrarCotizacion() {
             if (!existente.esCliente && c.esCliente) dedupMap.set(key, c);
           }
         }
-        const resultado = Array.from(dedupMap.values()).sort((a,b) => (a.nombre || '').localeCompare(b.nombre || ''));
+        const resultado = Array.from(dedupMap.values()).sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
         setClientes(resultado);
       } catch (err) {
         console.error('Error al cargar clientes y prospectos:', err);
@@ -133,7 +134,7 @@ export default function RegistrarCotizacion() {
 
   const agregarProducto = () => {
     // create a lightweight stable id for React keys so re-orders/removals don't rely on index
-    const uid = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2,9)}`;
+    const uid = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`;
     setProductosSeleccionados([...productosSeleccionados, {
       uid,
       producto: '', descripcion: '', cantidad: '', valorUnitario: '', descuento: '', valorTotal: ''
@@ -220,9 +221,9 @@ export default function RegistrarCotizacion() {
         // limpiar estado controlado de cliente
         setClienteNombre('');
         setClienteCiudad('');
-  setClienteDireccion('');
-  setClienteTelefono('');
-  setClienteCorreo('');
+        setClienteDireccion('');
+        setClienteTelefono('');
+        setClienteCorreo('');
         setFilteredClientes([]);
         setShowDropdown(false);
 
@@ -236,7 +237,7 @@ export default function RegistrarCotizacion() {
     });
   };
 
-  
+
   // Helpers to reduce cognitive complexity of guardar flow
   const validarClienteYProductos = () => {
     const inputs = document.querySelectorAll('.cuadroTexto');
@@ -382,82 +383,34 @@ export default function RegistrarCotizacion() {
       <Fijo />
       <div className="content">
         <NavVentas />
-        <div className="contenido-modulo">
-          <div className='encabezado-modulo'>
-            <h3 className='titulo-profesional'>Registrar cotizacion</h3>
-          </div>
-          <br /><br />
-
-          {/* FORMULARIO ORIGINAL A INSERTAR AQUÍ */}
-          {/* ... tu formulario completo sigue aquí como ya está construido */}
+        <div className="contenido-modulo registrar-cotizacion-modulo">
           <div className="max-width">
+            <div className='encabezado-modulo'>
+              <h3 className='titulo-profesional'>Registrar cotizacion</h3>
+            </div>
             
-            {/* Formulario moderno con diseño mejorado */}
-            <div style={{
-              background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
-              borderRadius: '16px',
-              padding: '2rem',
-              boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-              border: '1px solid #e2e8f0',
-              marginBottom: '2rem'
-            }}>
-              {/* Header del formulario */}
-              <div style={{
-                borderBottom: '2px solid #e2e8f0',
-                paddingBottom: '1rem',
-                marginBottom: '2rem'
-              }}>
-                <h4 style={{
-                  margin: 0,
-                  color: '#1e293b',
-                  fontSize: '1.3rem',
-                  fontWeight: '600',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.75rem'
-                }}>
-                  <div style={{
-                    width: '40px',
-                    height: '40px',
-                    borderRadius: '10px',
-                    background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'white'
-                  }}>
-                    <i className="fa-solid fa-user" style={{ fontSize: '1.2rem' }}></i>
-                  </div>
-                  Información del Cliente
-                </h4>
+            {/* Sección Información del Cliente */}
+            <div className="seccion-compacta">
+              <div className="seccion-header-compacto">
+                <div className="seccion-icono-compacto" style={{background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)'}}>
+                  <i className="fa-solid fa-user"></i>
+                </div>
+                <h4 className="seccion-titulo-compacto">Información del Cliente</h4>
               </div>
 
-              {/* Grid del formulario */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-                gap: '1.5rem',
-                marginBottom: '2rem'
-              }}>
+              <div className="grid-formulario-compacto">
                 {/* Campo Cliente */}
-                <div style={{ gridColumn: 'span 2' }}>
-                  <label htmlFor="cliente" style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    marginBottom: '0.5rem',
-                    fontWeight: '600',
-                    color: '#374151',
-                    fontSize: '0.95rem'
-                  }}>
-                    <i className="fa-solid fa-building" style={{ color: '#3b82f6', fontSize: '0.9rem' }}></i><span>Nombre o Razón Social</span>
-                    <span style={{ color: '#ef4444' }}>*</span>
+                <div className="grupo-campo-compacto campo-full-width">
+                  <label htmlFor="cliente" className="label-campo-compacto">
+                    <i className="fa-solid fa-building" style={{ color: '#3b82f6' }}></i>
+                    <span>Nombre o Razón Social</span>
+                    <span className="texto-requerido">*</span>
                   </label>
                   <div style={{ position: 'relative' }}>
                     <input
                       id='cliente'
                       type="text"
-                      className="cuadroTexto"
+                      className="cuadroTexto input-compacto"
                       placeholder="Ingrese el nombre completo o razón social"
                       value={clienteNombre}
                       onChange={(e) => {
@@ -475,46 +428,17 @@ export default function RegistrarCotizacion() {
                           setShowDropdown(false);
                         }
                       }}
-                      style={{
-                        width: '100%',
-                        padding: '0.875rem 1rem',
-                        border: '2px solid #e5e7eb',
-                        borderRadius: '10px',
-                        fontSize: '1rem',
-                        transition: 'all 0.3s ease',
-                        backgroundColor: '#ffffff',
-                        fontFamily: 'inherit',
-                        boxSizing: 'border-box'
-                      }}
                       onFocus={(e) => {
                         e.target.style.borderColor = '#3b82f6';
-                        e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
                         if (filteredClientes.length > 0) setShowDropdown(true);
                       }}
                       onBlur={(e) => {
                         e.target.style.borderColor = '#e5e7eb';
-                        e.target.style.boxShadow = 'none';
-                        // pequeño retraso para permitir click en dropdown
                         setTimeout(() => setShowDropdown(false), 150);
                       }}
                     />
                     {showDropdown && filteredClientes.length > 0 && (
-                      <div
-                        style={{
-                          position: 'absolute',
-                          top: '100%',
-                          left: 0,
-                          right: 0,
-                          zIndex: 50,
-                          background: 'white',
-                          border: '1px solid #e5e7eb',
-                          borderTop: 'none',
-                          borderRadius: '0 0 10px 10px',
-                          maxHeight: '240px',
-                          overflowY: 'auto',
-                          boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)'
-                        }}
-                      >
+                      <div className="dropdown-clientes-compacto">
                         {filteredClientes.map((c) => (
                           <button
                             type="button"
@@ -540,43 +464,15 @@ export default function RegistrarCotizacion() {
                               if (emailEl) emailEl.value = correo;
                               setShowDropdown(false);
                             }}
-                            style={{
-                              padding: '10px 12px',
-                              cursor: 'pointer',
-                              display: 'flex',
-                              flexDirection: 'column',
-                              gap: '4px',
-                              borderTop: '1px solid #f1f5f9',
-                              border: 'none',
-                              background: 'white',
-                              textAlign: 'left',
-                              width: '100%'
-                            }}
-                            onMouseEnter={(ev) => {
-                              ev.currentTarget.style.background = '#f8fafc';
-                            }}
-                            onMouseLeave={(ev) => {
-                              ev.currentTarget.style.background = 'white';
-                            }}
-                            aria-label={`Seleccionar cliente ${c.nombre || ''}`}
+                            className="item-dropdown-compacto"
                           >
-                            <span style={{ fontWeight: 600, color: '#111827' }}>
+                            <span className="nombre-dropdown">
                               {c.nombre}
                               {!c.esCliente && (
-                                <span
-                                  style={{
-                                    marginLeft: '6px',
-                                    background: '#6366f1',
-                                    color: '#ffffff',
-                                    fontSize: '10px',
-                                    padding: '2px 6px',
-                                    borderRadius: '12px',
-                                    fontWeight: 600
-                                  }}
-                                >PROSPECTO</span>
+                                <span className="badge-prospecto-compacto">PROSPECTO</span>
                               )}
                             </span>
-                            <span style={{ fontSize: '12px', color: '#6b7280' }}>
+                            <span className="ciudad-dropdown">
                               {c.ciudad || 'Ciudad no especificada'}
                             </span>
                           </button>
@@ -587,247 +483,100 @@ export default function RegistrarCotizacion() {
                 </div>
 
                 {/* Campo Ciudad */}
-                <div>
-                  <label htmlFor="ciudad" style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    marginBottom: '0.5rem',
-                    fontWeight: '600',
-                    color: '#374151',
-                    fontSize: '0.95rem'
-                  }}>
-                    <i className="fa-solid fa-location-dot" style={{ color: '#10b981', fontSize: '0.9rem' }}></i><span>Ciudad</span>
+                <div className="grupo-campo-compacto">
+                  <label htmlFor="ciudad" className="label-campo-compacto">
+                    <i className="fa-solid fa-location-dot" style={{ color: '#10b981' }}></i>
+                    <span>Ciudad</span>
                   </label>
                   <input
                     id='ciudad'
                     type="text"
-                    className="cuadroTexto"
+                    className="cuadroTexto input-compacto"
                     placeholder="Ciudad de residencia"
                     value={clienteCiudad}
                     onChange={(e) => setClienteCiudad(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '0.875rem 1rem',
-                      border: '2px solid #e5e7eb',
-                      borderRadius: '10px',
-                      fontSize: '1rem',
-                      transition: 'all 0.3s ease',
-                      backgroundColor: '#ffffff',
-                      fontFamily: 'inherit',
-                      boxSizing: 'border-box'
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = '#3b82f6';
-                      e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = '#e5e7eb';
-                      e.target.style.boxShadow = 'none';
-                    }}
                   />
                 </div>
 
                 {/* Campo Dirección */}
-                <div>
-                  <label htmlFor="direccion" style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    marginBottom: '0.5rem',
-                    fontWeight: '600',
-                    color: '#374151',
-                    fontSize: '0.95rem'
-                  }}>
-                    <i className="fa-solid fa-map-marker-alt" style={{ color: '#f59e0b', fontSize: '0.9rem' }}></i><span>Dirección</span>
+                <div className="grupo-campo-compacto">
+                  <label htmlFor="direccion" className="label-campo-compacto">
+                    <i className="fa-solid fa-map-marker-alt" style={{ color: '#f59e0b' }}></i>
+                    <span>Dirección</span>
                   </label>
                   <input
                     id='direccion'
                     type="text"
-                    className="cuadroTexto"
+                    className="cuadroTexto input-compacto"
                     placeholder="Dirección completa"
                     value={clienteDireccion}
                     onChange={(e) => setClienteDireccion(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '0.875rem 1rem',
-                      border: '2px solid #e5e7eb',
-                      borderRadius: '10px',
-                      fontSize: '1rem',
-                      transition: 'all 0.3s ease',
-                      backgroundColor: '#ffffff',
-                      fontFamily: 'inherit',
-                      boxSizing: 'border-box'
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = '#3b82f6';
-                      e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = '#e5e7eb';
-                      e.target.style.boxShadow = 'none';
-                    }}
                   />
                 </div>
 
                 {/* Campo Teléfono */}
-                <div>
-                  <label htmlFor="telefono" style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    marginBottom: '0.5rem',
-                    fontWeight: '600',
-                    color: '#374151',
-                    fontSize: '0.95rem'
-                  }}>
-                    <i className="fa-solid fa-phone" style={{ color: '#8b5cf6', fontSize: '0.9rem' }}></i><span>Teléfono</span>
-                    <span style={{ color: '#ef4444' }}>*</span>
+                <div className="grupo-campo-compacto">
+                  <label htmlFor="telefono" className="label-campo-compacto">
+                    <i className="fa-solid fa-phone" style={{ color: '#8b5cf6' }}></i>
+                    <span>Teléfono</span>
+                    <span className="texto-requerido">*</span>
                   </label>
                   <input
                     id='telefono'
                     type="tel"
-                    className="cuadroTexto"
+                    className="cuadroTexto input-compacto"
                     placeholder="+51 999 888 777"
                     value={clienteTelefono}
                     onChange={(e) => setClienteTelefono(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '0.875rem 1rem',
-                      border: '2px solid #e5e7eb',
-                      borderRadius: '10px',
-                      fontSize: '1rem',
-                      transition: 'all 0.3s ease',
-                      backgroundColor: '#ffffff',
-                      fontFamily: 'inherit',
-                      boxSizing: 'border-box'
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = '#3b82f6';
-                      e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = '#e5e7eb';
-                      e.target.style.boxShadow = 'none';
-                    }}
                   />
                 </div>
 
                 {/* Campo Email */}
-                <div>
-                  <label htmlFor="email" style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    marginBottom: '0.5rem',
-                    fontWeight: '600',
-                    color: '#374151',
-                    fontSize: '0.95rem'
-                  }}>
-                    <i className="fa-solid fa-envelope" style={{ color: '#ef4444', fontSize: '0.9rem' }}></i><span>Correo Electrónico</span>
-                    <span style={{ color: '#ef4444' }}>*</span>
+                <div className="grupo-campo-compacto">
+                  <label htmlFor="email" className="label-campo-compacto">
+                    <i className="fa-solid fa-envelope" style={{ color: '#ef4444' }}></i>
+                    <span>Correo Electrónico</span>
+                    <span className="texto-requerido">*</span>
                   </label>
                   <input
                     id='email'
                     type="email"
-                    className="cuadroTexto"
+                    className="cuadroTexto input-compacto"
                     placeholder="cliente@ejemplo.com"
                     value={clienteCorreo}
                     onChange={(e) => setClienteCorreo(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '0.875rem 1rem',
-                      border: '2px solid #e5e7eb',
-                      borderRadius: '10px',
-                      fontSize: '1rem',
-                      transition: 'all 0.3s ease',
-                      backgroundColor: '#ffffff',
-                      fontFamily: 'inherit',
-                      boxSizing: 'border-box'
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = '#3b82f6';
-                      e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = '#e5e7eb';
-                      e.target.style.boxShadow = 'none';
-                    }}
                   />
                 </div>
 
                 {/* Campo Responsable */}
-                <div>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    marginBottom: '0.5rem',
-                    fontWeight: '600',
-                    color: '#374151',
-                    fontSize: '0.95rem'
-                  }}>
-                    <i className="fa-solid fa-user-tie" style={{ color: '#06b6d4', fontSize: '0.9rem' }}></i><span>Responsable</span>
-                  </div>
-                  <div style={{
-                    padding: '0.875rem 1rem',
-                    border: '2px solid #e5e7eb',
-                    borderRadius: '10px',
-                    backgroundColor: '#f8fafc',
-                    color: '#64748b',
-                    fontSize: '1rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem'
-                  }}>
-                    <i className="fa-solid fa-badge-check" style={{ color: '#10b981' }}></i>
+                <div className="grupo-campo-compacto">
+                  <label className="label-campo-compacto">
+                    <i className="fa-solid fa-user-tie" style={{ color: '#06b6d4' }}></i>
+                    <span>Responsable</span>
+                  </label>
+                  <div className="input-compacto input-solo-lectura">
+                    <i className="fa-solid fa-badge-check" style={{ color: '#10b981', marginRight: '0.5rem' }}></i>
                     <span id='vendedor'>{user ? user.firstName : ''} {user ? user.surname : ''}</span>
                   </div>
                 </div>
 
                 {/* Campo Fecha */}
-                <div>
-                  <label htmlFor="fecha" style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    marginBottom: '0.5rem',
-                    fontWeight: '600',
-                    color: '#374151',
-                    fontSize: '0.95rem'
-                  }}>
-                    <i className="fa-solid fa-calendar" style={{ color: '#f59e0b', fontSize: '0.9rem' }}></i>
+                <div className="grupo-campo-compacto">
+                  <label htmlFor="fecha" className="label-campo-compacto">
+                    <i className="fa-solid fa-calendar" style={{ color: '#f59e0b' }}></i>
                     <span>Fecha de Cotización</span>
-                    <span style={{ color: '#ef4444' }}>*</span>
+                    <span className="texto-requerido">*</span>
                   </label>
                   <input
                     id='fecha'
                     type="date"
-                    className="cuadroTexto"
-                    style={{
-                      width: '100%',
-                      padding: '0.875rem 1rem',
-                      border: '2px solid #e5e7eb',
-                      borderRadius: '10px',
-                      fontSize: '1rem',
-                      transition: 'all 0.3s ease',
-                      backgroundColor: '#ffffff',
-                      fontFamily: 'inherit',
-                      boxSizing: 'border-box'
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = '#3b82f6';
-                      e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = '#e5e7eb';
-                      e.target.style.boxShadow = 'none';
-                    }}
+                    className="cuadroTexto input-compacto"
                   />
                 </div>
               </div>
             </div>
 
+            {/* Tablas ocultas (se mantienen igual) */}
             <div className="table-container" style={{ display: 'none' }}>
               <table>
                 <thead>
@@ -851,222 +600,76 @@ export default function RegistrarCotizacion() {
                     <td><span id='vendedor-hidden' style={{ display: 'none' }}>{user ? user.firstName : ''} {user ? user.surname : ''}</span></td>
                     <td><input id='fecha-hidden' type="date" className="cuadroTexto" style={{ display: 'none' }} /></td>
                   </tr>
-
                 </tbody>
               </table>
             </div>
 
-            <br />
-            
-            {/* Sección de descripción mejorada */}
-            <div style={{
-              background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
-              borderRadius: '16px',
-              padding: '2rem',
-              boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-              border: '1px solid #e2e8f0',
-              marginBottom: '2rem'
-            }}>
-              <div style={{
-                borderBottom: '2px solid #e2e8f0',
-                paddingBottom: '1rem',
-                marginBottom: '1.5rem'
-              }}>
-                <h4 style={{
-                  margin: 0,
-                  color: '#1e293b',
-                  fontSize: '1.3rem',
-                  fontWeight: '600',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.75rem'
-                }}>
-                  <div style={{
-                    width: '40px',
-                    height: '40px',
-                    borderRadius: '10px',
-                    background: 'linear-gradient(135deg, #10b981, #059669)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'white'
-                  }}>
-                    <i className="fa-solid fa-edit" style={{ fontSize: '1.2rem' }}></i>
-                  </div>
-                  Descripción de la Cotización
-                </h4>
+            {/* Sección Descripción */}
+            <div className="seccion-compacta">
+              <div className="seccion-header-compacto">
+                <div className="seccion-icono-compacto" style={{background: 'linear-gradient(135deg, #10b981, #059669)'}}>
+                  <i className="fa-solid fa-edit"></i>
+                </div>
+                <h4 className="seccion-titulo-compacto">Descripción de la Cotización</h4>
               </div>
-              
-              <div style={{
-                background: 'white',
-                borderRadius: '10px',
-                padding: '1rem',
-                border: '2px solid #e5e7eb'
-              }}>
-                <Editor id='descripcion-cotizacion'
+              <div className="contenedor-editor-compacto">
+                <Editor 
+                  id='descripcion-cotizacion'
                   onInit={(evt, editor) => (descripcionRef.current = editor)}
                   apiKey="bjhw7gemroy70lt4bgmfvl29zid7pmrwyrtx944dmm4jq39w"
                   textareaName="Descripcion"
-                  init={{ height: 250, menubar: false }}
+                  init={{ height: 200, menubar: false }}
                 />
               </div>
             </div>
 
-            {/* Sección de productos mejorada */}
-            <div style={{
-              background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
-              borderRadius: '16px',
-              padding: '2rem',
-              boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-              border: '1px solid #e2e8f0',
-              marginBottom: '2rem'
-            }}>
-              {/* Header de productos */}
-              <div style={{
-                borderBottom: '2px solid #e2e8f0',
-                paddingBottom: '1rem',
-                marginBottom: '1.5rem'
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <h4 style={{
-                      margin: 0,
-                      color: '#1e293b',
-                      fontSize: '1.3rem',
-                      fontWeight: '600',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.75rem'
-                    }}>
-                      <div style={{
-                        width: '40px',
-                        height: '40px',
-                        borderRadius: '10px',
-                        background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: 'white'
-                      }}>
-                        <i className="fa-solid fa-box" style={{ fontSize: '1.2rem' }}></i>
-                      </div>
-                      Productos a cotizar
-                    </h4>
-                  </div>
-                  
-                  {/* Botones de acción */}
-                  <div style={{ display: 'flex', gap: '0.75rem' }}>
-                    <button
-                      onClick={agregarProducto}
-                      style={{
-                        padding: '0.75rem 1.25rem',
-                        border: 'none',
-                        borderRadius: '10px',
-                        background: 'linear-gradient(135deg, #10b981, #059669)',
-                        color: 'white',
-                        cursor: 'pointer',
-                        fontWeight: '600',
-                        fontSize: '0.9rem',
-                        transition: 'all 0.3s ease',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem',
-                        boxShadow: '0 4px 6px -1px rgba(16, 185, 129, 0.3)'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.target.style.transform = 'translateY(-2px)';
-                        e.target.style.boxShadow = '0 6px 12px -1px rgba(16, 185, 129, 0.4)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.target.style.transform = 'translateY(0)';
-                        e.target.style.boxShadow = '0 4px 6px -1px rgba(16, 185, 129, 0.3)';
-                      }}
-                    >
-                      <i className="fa-solid fa-plus"></i>
-                      <span>Agregar Producto</span>
-                    </button>
-                    
-                    {productosSeleccionados.length > 0 && (
-                      <button
-                        onClick={eliminarTodosLosProductos}
-                        style={{
-                          padding: '0.75rem 1.25rem',
-                          border: '2px solid #ef4444',
-                          borderRadius: '10px',
-                          background: 'white',
-                          color: '#ef4444',
-                          cursor: 'pointer',
-                          fontWeight: '600',
-                          fontSize: '0.9rem',
-                          transition: 'all 0.3s ease',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.5rem'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.target.style.background = '#ef4444';
-                          e.target.style.color = 'white';
-                          e.target.style.transform = 'translateY(-2px)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.target.style.background = 'white';
-                          e.target.style.color = '#ef4444';
-                          e.target.style.transform = 'translateY(0)';
-                        }}
-                      >
-                        <i className="fa-solid fa-trash-can"></i>
-                        <span>Limpiar Todo</span>
-                      </button>
-                    )}
-                  </div>
+            {/* Sección Productos */}
+            <div className="seccion-compacta">
+              <div className="seccion-header-compacto">
+                <div className="seccion-icono-compacto" style={{background: 'linear-gradient(135deg, #f59e0b, #d97706)'}}>
+                  <i className="fa-solid fa-box"></i>
                 </div>
+                <h4 className="seccion-titulo-compacto">Productos a Cotizar</h4>
               </div>
 
-              {/* Tabla de productos mejorada */}
-              <div style={{
-                background: 'white',
-                borderRadius: '12px',
-                overflow: 'hidden',
-                border: '1px solid #e2e8f0',
-                boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)'
-              }}>
-                <div style={{
-                  overflowX: 'auto',
-                  maxHeight: '400px'
-                }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <div className="botones-accion-compactos">
+                <button onClick={agregarProducto} className="btn-agregar-compacto">
+                  <i className="fa-solid fa-plus"></i>
+                  <span>Agregar Producto</span>
+                </button>
+                
+                {productosSeleccionados.length > 0 && (
+                  <button onClick={eliminarTodosLosProductos} className="btn-limpiar-compacto">
+                    <i className="fa-solid fa-trash-can"></i>
+                    <span>Limpiar Todo</span>
+                  </button>
+                )}
+              </div>
+
+              <div className="contenedor-tabla-productos">
+                <div className="tabla-scroll-compacto">
+                  <table className="tabla-productos-compacta">
                     <thead>
-                      <tr style={{ background: 'linear-gradient(135deg, #f8fafc, #e2e8f0)' }}>
-                        <th style={{ padding: '1rem 0.75rem', textAlign: 'left', fontWeight: '600', color: '#374151', fontSize: '0.9rem', borderBottom: '2px solid #e2e8f0' }}>#</th>
-                        <th style={{ padding: '1rem 0.75rem', textAlign: 'left', fontWeight: '600', color: '#374151', fontSize: '0.9rem', borderBottom: '2px solid #e2e8f0', minWidth: '200px' }}>Producto</th>
-                        <th style={{ padding: '1rem 0.75rem', textAlign: 'left', fontWeight: '600', color: '#374151', fontSize: '0.9rem', borderBottom: '2px solid #e2e8f0', minWidth: '150px' }}>Descripción</th>
-                        <th style={{ padding: '1rem 0.75rem', textAlign: 'center', fontWeight: '600', color: '#374151', fontSize: '0.9rem', borderBottom: '2px solid #e2e8f0' }}>Cantidad</th>
-                        <th style={{ padding: '1rem 0.75rem', textAlign: 'center', fontWeight: '600', color: '#374151', fontSize: '0.9rem', borderBottom: '2px solid #e2e8f0' }}>Valor Unit.</th>
-                        <th style={{ padding: '1rem 0.75rem', textAlign: 'center', fontWeight: '600', color: '#374151', fontSize: '0.9rem', borderBottom: '2px solid #e2e8f0' }}>% Desc.</th>
-                        <th style={{ padding: '1rem 0.75rem', textAlign: 'center', fontWeight: '600', color: '#374151', fontSize: '0.9rem', borderBottom: '2px solid #e2e8f0' }}>Subtotal</th>
-                        <th style={{ padding: '1rem 0.75rem', textAlign: 'center', fontWeight: '600', color: '#374151', fontSize: '0.9rem', borderBottom: '2px solid #e2e8f0' }}>Acciones</th>
+                      <tr>
+                        <th>#</th>
+                        <th>Producto</th>
+                        <th>Descripción</th>
+                        <th>Cantidad</th>
+                        <th>Valor Unit.</th>
+                        <th>% Desc.</th>
+                        <th>Subtotal</th>
+                        <th>Acciones</th>
                       </tr>
                     </thead>
                     <tbody>
                       {productosSeleccionados.map((prod, index) => (
-                        <tr key={prod.uid || prod.producto || index} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                          <td style={{ padding: '1rem 0.75rem', color: '#64748b', fontWeight: '500' }}>{index + 1}</td>
-                          <td style={{ padding: '0.5rem 0.75rem' }}>
+                        <tr key={prod.uid || prod.producto || index}>
+                          <td>{index + 1}</td>
+                          <td>
                             <select
                               className="cuadroTexto"
                               value={prod.producto}
                               onChange={(e) => handleProductoChange(index, e.target.value)}
-                              style={{
-                                width: '100%',
-                                padding: '0.5rem',
-                                border: '2px solid #e5e7eb',
-                                borderRadius: '6px',
-                                fontSize: '0.9rem',
-                                backgroundColor: 'white',
-                                transition: 'border-color 0.3s ease'
-                              }}
-                              onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
-                              onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
                             >
                               <option value="">Seleccione un producto</option>
                               {productos.filter(p => p.activo !== false && p.activo !== 'false').map(p => (
@@ -1076,186 +679,83 @@ export default function RegistrarCotizacion() {
                               ))}
                             </select>
                           </td>
-                          <td style={{ padding: '0.5rem 0.75rem' }}>
+                          <td>
                             <input 
                               type="text" 
                               name="descripcion" 
                               className='cuadroTexto' 
                               value={prod.descripcion} 
                               onChange={(e) => handleChange(index, e)}
-                              style={{
-                                width: '100%',
-                                padding: '0.5rem',
-                                border: '2px solid #e5e7eb',
-                                borderRadius: '6px',
-                                fontSize: '0.9rem',
-                                transition: 'border-color 0.3s ease'
-                              }}
-                              onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
-                              onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
                             />
                           </td>
-                          <td style={{ padding: '0.5rem 0.75rem' }}>
+                          <td>
                             <input 
                               type="number" 
                               name="cantidad" 
-                              className='cuadroTexto' 
+                              className='cuadroTexto input-cantidad-compacto' 
                               value={prod.cantidad} 
                               onChange={(e) => handleChange(index, e)}
-                              style={{
-                                width: '100%',
-                                padding: '0.5rem',
-                                border: '2px solid #e5e7eb',
-                                borderRadius: '6px',
-                                fontSize: '0.9rem',
-                                textAlign: 'center',
-                                transition: 'border-color 0.3s ease'
-                              }}
-                              onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
-                              onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
                             />
-                              <span style={{ color: '#ef4444', marginLeft: '0.5rem', fontSize: '0.85rem' }}>
-                                {prod.cantidad && prod.stock !== undefined && Number(prod.cantidad) > Number(prod.stock) ? 'cantidad no disponible' : ''}
-                              </span>
+                            {prod.cantidad && prod.stock !== undefined && Number(prod.cantidad) > Number(prod.stock) && (
+                              <span className="alerta-stock-compacto">cantidad no disponible</span>
+                            )}
                           </td>
-                          <td style={{ padding: '0.5rem 0.75rem' }}>
+                          <td>
                             <input 
                               type="number" 
                               name="valorUnitario" 
-                              className='cuadroTexto' 
+                              className='cuadroTexto input-precio-compacto' 
                               value={prod.valorUnitario} 
                               onChange={(e) => handleChange(index, e)} 
                               readOnly
-                              style={{
-                                width: '100%',
-                                padding: '0.5rem',
-                                border: '2px solid #e5e7eb',
-                                borderRadius: '6px',
-                                fontSize: '0.9rem',
-                                textAlign: 'center',
-                                backgroundColor: '#f8fafc'
-                              }}
                             />
                           </td>
-                          <td style={{ padding: '0.5rem 0.75rem' }}>
+                          <td>
                             <input 
                               type="number" 
                               name="descuento" 
-                              className='cuadroTexto' 
+                              className='cuadroTexto input-descuento-compacto' 
                               value={prod.descuento} 
                               onChange={(e) => handleChange(index, e)}
-                              style={{
-                                width: '100%',
-                                padding: '0.5rem',
-                                border: '2px solid #e5e7eb',
-                                borderRadius: '6px',
-                                fontSize: '0.9rem',
-                                textAlign: 'center',
-                                transition: 'border-color 0.3s ease'
-                              }}
-                              onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
-                              onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
                             />
                           </td>
-                          <td style={{ padding: '0.5rem 0.75rem' }}>
+                          <td>
                             <input 
                               type="number" 
                               name="subtotal" 
-                              className='cuadroTexto' 
+                              className='cuadroTexto input-subtotal-compacto' 
                               value={prod.subtotal} 
                               readOnly
-                              style={{
-                                width: '100%',
-                                padding: '0.5rem',
-                                border: '2px solid #e5e7eb',
-                                borderRadius: '6px',
-                                fontSize: '0.9rem',
-                                textAlign: 'center',
-                                backgroundColor: '#f8fafc',
-                                fontWeight: '600',
-                                color: '#059669'
-                              }}
                             />
                           </td>
-                          <td style={{ padding: '0.5rem 0.75rem', textAlign: 'center' }}>
-                            <button 
-                              onClick={() => eliminarProducto(index)}
-                              style={{
-                                padding: '0.5rem',
-                                border: 'none',
-                                borderRadius: '6px',
-                                background: '#ef4444',
-                                color: 'white',
-                                cursor: 'pointer',
-                                fontSize: '0.8rem',
-                                transition: 'all 0.3s ease',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                width: '2rem',
-                                height: '2rem'
-                              }}
-                              onMouseEnter={(e) => {
-                                e.target.style.background = '#dc2626';
-                                e.target.style.transform = 'scale(1.1)';
-                              }}
-                              onMouseLeave={(e) => {
-                                e.target.style.background = '#ef4444';
-                                e.target.style.transform = 'scale(1)';
-                              }}
-                            >
+                          <td>
+                            <button onClick={() => eliminarProducto(index)} className="btn-eliminar-compacto">
                               <i className="fa-solid fa-trash"></i>
                             </button>
                           </td>
                         </tr>
                       ))}
                       
-                      {/* Mensaje cuando no hay productos */}
                       {productosSeleccionados.length === 0 && (
                         <tr>
-                          <td colSpan={8} style={{ 
-                            padding: '2rem', 
-                            textAlign: 'center',
-                            color: '#64748b',
-                            fontStyle: 'italic'
-                          }}>
-                            <div style={{
-                              display: 'flex',
-                              flexDirection: 'column',
-                              alignItems: 'center',
-                              gap: '0.5rem'
-                            }}>
-                              <i className="fa-solid fa-box-open" style={{ fontSize: '2rem', color: '#cbd5e1' }}></i>
-                              <span>No hay productos agregados. Haga clic en "Agregar Producto" para comenzar.</span>
-                            </div>
+                          <td colSpan={8} className="estado-vacio-compacto">
+                            <i className="fa-solid fa-box-open"></i>
+                            <div>No hay productos agregados</div>
                           </td>
                         </tr>
                       )}
                       
-                      {/* Fila de total */}
                       {productosSeleccionados.length > 0 && (
-                        <tr style={{ background: 'linear-gradient(135deg, #f8fafc, #e2e8f0)', borderTop: '2px solid #e2e8f0' }}>
-                          <td colSpan={6} style={{ 
-                            padding: '1rem 0.75rem', 
-                            fontWeight: '700', 
-                            textAlign: 'right',
-                            color: '#1e293b',
-                            fontSize: '1.1rem'
-                          }}>
+                        <tr className="fila-total-compacta">
+                          <td colSpan={6} style={{textAlign: 'right', fontWeight: '700'}}>
                             Total General:
                           </td>
-                          <td style={{ 
-                            padding: '1rem 0.75rem', 
-                            fontWeight: '700',
-                            textAlign: 'center',
-                            color: '#059669',
-                            fontSize: '1.2rem'
-                          }}>
+                          <td className="valor-total-compacto">
                             S/. {productosSeleccionados
                               .reduce((acc, prod) => acc + (Number.parseFloat(prod.subtotal) || 0), 0)
                               .toLocaleString('es-ES', { minimumFractionDigits: 2 })}
                           </td>
-                          <td style={{ padding: '1rem 0.75rem' }}></td>
+                          <td></td>
                         </tr>
                       )}
                     </tbody>
@@ -1264,6 +764,7 @@ export default function RegistrarCotizacion() {
               </div>
             </div>
 
+            {/* Tabla oculta de productos */}
             <div className="table-container" style={{ display: 'none' }}>
               <table>
                 <thead>
@@ -1307,217 +808,69 @@ export default function RegistrarCotizacion() {
                       <td><button className="btn btn-danger" onClick={() => eliminarProducto(index)}>Eliminar</button></td>
                     </tr>
                   ))}
-                  {/* Fila de total */}
-                  {productosSeleccionados.length > 0 && (
-                    <tr>
-                      <td colSpan={5}></td>
-                      <td style={{ fontWeight: 'bold', textAlign: 'right' }}>Total</td>
-                      <td style={{ fontWeight: 'bold' }}>
-                        {productosSeleccionados
-                          .reduce((acc, prod) => acc + (Number.parseFloat(prod.subtotal) || 0), 0)
-                          .toFixed(2)}
-                      </td>
-                      <td></td>
-                    </tr>
-                  )}
                 </tbody>
               </table>
-              <br />
-
             </div>
-            
+
+            {/* Botones ocultos */}
             <button className="btn" onClick={agregarProducto} style={{ display: 'none' }}>Agregar Producto</button>
             {productosSeleccionados.length > 0 && (
               <button className="btn btn-danger" onClick={eliminarTodosLosProductos} style={{ marginLeft: '10px', display: 'none' }}>
                 Eliminar Todos
               </button>
             )}
-            
-            {/* Sección de condiciones de pago mejorada */}
-            <div style={{
-              background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
-              borderRadius: '16px',
-              padding: '2rem',
-              boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-              border: '1px solid #e2e8f0',
-              marginBottom: '2rem'
-            }}>
-              <div style={{
-                borderBottom: '2px solid #e2e8f0',
-                paddingBottom: '1rem',
-                marginBottom: '1.5rem'
-              }}>
-                <h4 style={{
-                  margin: 0,
-                  color: '#1e293b',
-                  fontSize: '1.3rem',
-                  fontWeight: '600',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.75rem'
-                }}>
-                  <div style={{
-                    width: '40px',
-                    height: '40px',
-                    borderRadius: '10px',
-                    background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'white'
-                  }}>
-                    <i className="fa-solid fa-credit-card" style={{ fontSize: '1.2rem' }}></i>
-                  </div>
-                  Condiciones de Pago
-                </h4>
-                <p style={{
-                  margin: '0.5rem 0 0 3.25rem',
-                  color: '#64748b',
-                  fontSize: '0.9rem'
-                }}>
-                  Especifique las condiciones comerciales y términos de pago
-                </p>
+
+            {/* Sección Condiciones de Pago */}
+            <div className="seccion-compacta">
+              <div className="seccion-header-compacto">
+                <div className="seccion-icono-compacto" style={{background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)'}}>
+                  <i className="fa-solid fa-credit-card"></i>
+                </div>
+                <div>
+                  <h4 className="seccion-titulo-compacto">Condiciones de Pago</h4>
+                  <p style={{margin: '0.25rem 0 0 0', color: '#64748b', fontSize: '0.8rem'}}>
+                    Especifique las condiciones comerciales y términos de pago
+                  </p>
+                </div>
               </div>
-              
-              <div style={{
-                background: 'white',
-                borderRadius: '10px',
-                padding: '1rem',
-                border: '2px solid #e5e7eb'
-              }}>
-                <Editor id='condiciones-pago'
+              <div className="contenedor-editor-compacto">
+                <Editor 
+                  id='condiciones-pago'
                   onInit={(evt, editor) => (condicionesPagoRef.current = editor)}
                   apiKey="bjhw7gemroy70lt4bgmfvl29zid7pmrwyrtx944dmm4jq39w"
                   textareaName="Condiciones"
-                  init={{ height: 300, menubar: false }}
+                  init={{ height: 200, menubar: false }}
                 />
               </div>
             </div>
 
-            {/* Botones de acción mejorados */}
-            <div style={{
-              background: 'white',
-              borderRadius: '16px',
-              padding: '2rem',
-              boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-              border: '1px solid #e2e8f0',
-              marginBottom: '2rem'
-            }}>
-              <div style={{
-                display: 'flex',
-                justifyContent: 'flex-end',
-                gap: '1rem',
-                flexWrap: 'wrap'
-              }}>
-                <button 
-                  onClick={handleCancelado}
-                  style={{
-                    padding: '0.875rem 2rem',
-                    border: '2px solid #e5e7eb',
-                    borderRadius: '12px',
-                    backgroundColor: 'white',
-                    color: '#374151',
-                    cursor: 'pointer',
-                    fontWeight: '600',
-                    fontSize: '1rem',
-                    transition: 'all 0.3s ease',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    minWidth: '140px',
-                    justifyContent: 'center'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.target.style.backgroundColor = '#f3f4f6';
-                    e.target.style.borderColor = '#d1d5db';
-                    e.target.style.transform = 'translateY(-2px)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.backgroundColor = 'white';
-                    e.target.style.borderColor = '#e5e7eb';
-                    e.target.style.transform = 'translateY(0)';
-                  }}
-                >
+            {/* Botones Finales */}
+            <div className="seccion-compacta">
+              <div className="botones-finales-compactos">
+                <button onClick={handleCancelado} className="btn-cancelar-compacto">
                   <i className="fa-solid fa-times"></i>
                   <span>Cancelar</span>
                 </button>
                 
-                <button 
-                  onClick={() => handleGuardarCotizacion(false, true)}
-                  style={{
-                    padding: '0.875rem 2rem',
-                    border: 'none',
-                    borderRadius: '12px',
-                    background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-                    color: 'white',
-                    cursor: 'pointer',
-                    fontWeight: '600',
-                    fontSize: '1rem',
-                    transition: 'all 0.3s ease',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    boxShadow: '0 4px 6px -1px rgba(59, 130, 246, 0.3)',
-                    minWidth: '140px',
-                    justifyContent: 'center'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.target.style.transform = 'translateY(-2px)';
-                    e.target.style.boxShadow = '0 6px 12px -1px rgba(59, 130, 246, 0.4)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.transform = 'translateY(0)';
-                    e.target.style.boxShadow = '0 4px 6px -1px rgba(59, 130, 246, 0.3)';
-                  }}
-                >
+                <button onClick={() => handleGuardarCotizacion(false, true)} className="btn-guardar-compacto">
                   <i className="fa-solid fa-save"></i>
                   <span>Guardar</span>
                 </button>
                 
-                <button 
-                  onClick={() => handleGuardarCotizacion(true, true)}
-                  style={{
-                    padding: '0.875rem 2rem',
-                    border: 'none',
-                    borderRadius: '12px',
-                    background: 'linear-gradient(135deg, #10b981, #059669)',
-                    color: 'white',
-                    cursor: 'pointer',
-                    fontWeight: '600',
-                    fontSize: '1rem',
-                    transition: 'all 0.3s ease',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    boxShadow: '0 4px 6px -1px rgba(16, 185, 129, 0.3)',
-                    minWidth: '180px',
-                    justifyContent: 'center'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.target.style.transform = 'translateY(-2px)';
-                    e.target.style.boxShadow = '0 6px 12px -1px rgba(16, 185, 129, 0.4)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.transform = 'translateY(0)';
-                    e.target.style.boxShadow = '0 4px 6px -1px rgba(16, 185, 129, 0.3)';
-                  }}
-                >
+                <button onClick={() => handleGuardarCotizacion(true, true)} className="btn-enviar-compacto">
                   <i className="fa-solid fa-paper-plane"></i>
                   <span>Guardar y Enviar</span>
                 </button>
               </div>
             </div>
-            
-
-            
           </div>
-        </div >
+        </div>
         <div className="custom-footer">
           <p className="custom-footer-text">
             © 2025 <span className="custom-highlight">PANGEA</span>. Todos los derechos reservados.
           </p>
         </div>
-      </div >
+      </div>
     </div>
   );
 }

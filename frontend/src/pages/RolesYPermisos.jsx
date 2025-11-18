@@ -147,7 +147,7 @@ export default function RolesYPermisos() {
   const [roles, setRoles] = useState([]);
   const [puedeCrearRol, setPuedeCrearRol] = useState(false);
   const [puedeEditarRol, setPuedeEditarRol] = useState(false);
-  const [puedeInhabilitarRol, setpuedeInhabilitarRol] = useState(false);
+  const [puedeinhabilitarRol, setpuedeinhabilitarRol] = useState(false);
   const navigate = useNavigate();
   const [rolSeleccionado, setRolSeleccionado] = useState(null);
 
@@ -165,10 +165,10 @@ export default function RolesYPermisos() {
 
 
 
-  const toggleEstadoRol = async (id, nuevoEstado) => {
+  const toggleEstadoRol = async (id, nuevoEstado, roleName) => {
     const confirmResult = await Swal.fire({
-      title: nuevoEstado ? '¿Habilitar rol?' : '¿Inhabilitar rol?',
-      text: `¿Estás seguro de que deseas ${nuevoEstado ? 'habilitar' : 'inhabilitar'} este rol?`,
+      title: nuevoEstado ? `¿Habilitar rol "${roleName || ''}"?` : `¿Deshabilitar rol "${roleName || ''}?`,
+      text: "Esta accion le impidirá el ingreso al sistema a los usuarios con este rol.",
       icon: 'warning',
       showCancelButton: true,
       confirmButtonText: 'Sí, confirmar',
@@ -187,7 +187,7 @@ export default function RolesYPermisos() {
       Swal.fire({
         icon: 'success',
         title: 'Estado actualizado',
-        text: `El rol ha sido ${nuevoEstado ? 'habilitado' : 'inhabilitado'} correctamente.`,
+        text: `El rol "${roleName || ''}" ha sido ${nuevoEstado ? 'habilitado' : 'inhabilitado'} correctamente.`,
         timer: 2000,
         showConfirmButton: false
       });
@@ -217,13 +217,13 @@ export default function RolesYPermisos() {
       console.log('🔑 Permisos del usuario:', usuario?.permissions);
       if (usuario?.permissions) {
         const tieneEditarRol = usuario.permissions.includes('roles.editar');
-        const tieneInhabilitarRol = usuario.permissions.includes('roles.inhabilitar');
+        const tieneinhabilitarRol = usuario.permissions.includes('roles.inhabilitar');
         const tieneCrearRol = usuario.permissions.includes('roles.crear');
         console.log('✅ Puede editar rol:', tieneEditarRol);
-        console.log('✅ Puede inhabilitar rol:', tieneInhabilitarRol);
+        console.log('✅ Puede inhabilitar rol:', tieneinhabilitarRol);
         console.log('✅ Puede crear rol:', tieneCrearRol);
         setPuedeEditarRol(tieneEditarRol);
-        setpuedeInhabilitarRol(tieneInhabilitarRol);
+        setpuedeinhabilitarRol(tieneinhabilitarRol);
         setPuedeCrearRol(tieneCrearRol);
       }
 
@@ -257,7 +257,8 @@ export default function RolesYPermisos() {
       <Fijo />
       <div className="content">
         <NavUsuarios />
-        <div className="contenido-modulo">
+        <div className="max-width">
+          <div className="contenido-modulo">
           <SharedListHeaderCard
             title="Roles y Permisos"
             subtitle="Gestiona roles de usuario y permisos del sistema"
@@ -457,8 +458,8 @@ export default function RolesYPermisos() {
                             checked={rol.enabled}
                             aria-label={`Estado del rol ${rol.name || rol._id}`}
                             onChange={() => {
-                              if (puedeInhabilitarRol) {
-                                toggleEstadoRol(rol._id, !rol.enabled);
+                              if (puedeinhabilitarRol) {
+                                toggleEstadoRol(rol._id, !rol.enabled, rol.name);
                               } else {
                                 Swal.fire({
                                   icon: 'error',
@@ -616,6 +617,8 @@ export default function RolesYPermisos() {
           </div>
 
         </div>
+        </div>
+        
       </div>
       <AgregarRol />
       <EditarRol rol={rolSeleccionado} />

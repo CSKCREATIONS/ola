@@ -23,19 +23,51 @@ export function mostrarMenu(){
     const menuLateral = document.querySelector('#menu')
     const companyName = document.querySelector('.empresa-nombre')
     const contenido = document.querySelector('.content')
-    menuLateral.classList.toggle('mostrar-menu')
+    const body = document.body
+    
+    const isShowing = menuLateral.classList.toggle('mostrar-menu')
 
     if (window.innerWidth > 768) {
-        // En computadoras de escritorio, el contenido se mueve hacia la derecha
-        contenido.style.marginLeft = '250px'
-        companyName.style.marginLeft = '200px'
-        menuLateral.style.boxShadow= '0 0 5px 5px  rgba(0,0,0,.5)';
-    } else{
-        // En dispositivos moviles, el contenido se sombrea
-        menuLateral.style.boxShadow= '0 0 0 200vmax rgba(0,0,0,.5)';
+        // Modo escritorio
+        if (isShowing) {
+            contenido.style.marginLeft = '280px'
+            companyName.style.marginLeft = '200px'
+            menuLateral.style.boxShadow = '0 0 5px 5px rgba(0,0,0,.5)'
+        } else {
+            contenido.style.marginLeft = '0'
+            companyName.style.marginLeft = '0'
+            menuLateral.style.boxShadow = 'none'
+        }
+    } else {
+        // Modo móvil
+        if (isShowing) {
+            menuLateral.style.left = '0'
+            menuLateral.style.boxShadow= '0 0 0 200vmax rgba(0,0,0,.5)';
+            // Prevenir scroll del body cuando el menú está abierto
+            body.style.overflow = 'hidden'
+        } else {
+            menuLateral.style.left = '-100%'
+            menuLateral.style.boxShadow = 'none'
+            body.style.overflow = ''
+        }
     }
-
 }
+
+// Función para cerrar el menú al hacer clic fuera de él (opcional)
+export function cerrarMenuAlClicExterno(event) {
+    const menuLateral = document.querySelector('#menu')
+    const btnMenu = document.querySelector('#btn-menu')
+    
+    if (window.innerWidth <= 768 && 
+        menuLateral.classList.contains('mostrar-menu') &&
+        !menuLateral.contains(event.target) && 
+        !btnMenu.contains(event.target)) {
+        mostrarMenu()
+    }
+}
+
+// Agregar event listener para cerrar al hacer clic fuera (opcional)
+document.addEventListener('click', cerrarMenuAlClicExterno)
 
 export function cerrarMenu(){
     const menuLateral = document.querySelector('#menu')

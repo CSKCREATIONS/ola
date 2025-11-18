@@ -276,7 +276,7 @@ export default function PedidosCancelados() {
 
     const tabla = document.getElementById("tabla_cancelados");
     const workbook = XLSX.utils.table_to_book(tabla, { sheet: "Pedidos Cancelados" });
-  workbook.Sheets["Pedidos Cancelados"]["!cols"] = new Array(7).fill({ width: 20 });
+    workbook.Sheets["Pedidos Cancelados"]["!cols"] = new Array(7).fill({ width: 20 });
 
     XLSX.writeFile(workbook, 'pedidos_cancelados.xlsx');
     for (const el of elementosNoExport) { el.style.display = ''; }
@@ -301,250 +301,253 @@ export default function PedidosCancelados() {
       <Fijo />
       <div className="content">
         <NavVentas />
-        <div className="contenido-modulo">
-          {/* Encabezado profesional */}
-          <div className="cancelados-professional-header">
-            <div className="cancelados-header-decoration"></div>
-            <div style={{ position: 'relative', zIndex: 2 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                <div className="cancelados-icon-container">
-                  <i className="fa-solid fa-times-circle" style={{ fontSize: '2.5rem', color: 'white' }}></i>
-                </div>
-                <div>
-                  <h2 style={{ margin: '0 0 8px 0', fontSize: '2rem', fontWeight: '700' }}>
-                    Pedidos Cancelados
-                  </h2>
-                  <p style={{ margin: 0, fontSize: '1.1rem', opacity: 0.9 }}>
-                    Gestión de pedidos cancelados y motivos de cancelación
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Estadísticas avanzadas */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-            gap: '20px',
-            marginBottom: '30px'
-          }}>
-            <div className="cancelados-stats-card">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <div style={{
-                  background: 'linear-gradient(135deg, #ef4444, #dc2626)',
-                  borderRadius: '12px',
-                  padding: '15px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <i className="fa-solid fa-times-circle" style={{ color: 'white', fontSize: '1.5rem' }}></i>
-                </div>
-                <div>
-                  <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                    {pedidosCancelados.length}
-                  </h3>
-                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
-                    Pedidos Cancelados
-                  </p>
+        <div className="max-width">
+          <div className="contenido-modulo">
+            {/* Encabezado profesional */}
+            <div className="cancelados-professional-header">
+              <div className="cancelados-header-decoration"></div>
+              <div style={{ position: 'relative', zIndex: 2 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                  <div className="cancelados-icon-container">
+                    <i className="fa-solid fa-times-circle" style={{ fontSize: '2.5rem', color: 'white' }}></i>
+                  </div>
+                  <div>
+                    <h2 style={{ margin: '0 0 8px 0', fontSize: '2rem', fontWeight: '700' }}>
+                      Pedidos Cancelados
+                    </h2>
+                    <p style={{ margin: 0, fontSize: '1.1rem', opacity: 0.9 }}>
+                      Gestión de pedidos cancelados y motivos de cancelación
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="cancelados-stats-card">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <div style={{
-                  background: 'linear-gradient(135deg, #f59e0b, #ea580c)',
-                  borderRadius: '12px',
-                  padding: '15px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <i className="fa-solid fa-dollar-sign" style={{ color: 'white', fontSize: '1.5rem' }}></i>
-                </div>
-                <div>
-                  <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                    ${pedidosCancelados.reduce((sum, p) => sum + (p.total || 0), 0).toLocaleString('es-CO')}
-                  </h3>
-                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
-                    Valor Perdido
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="cancelados-stats-card">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <div style={{
-                  background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                  borderRadius: '12px',
-                  padding: '15px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <i className="fa-solid fa-calendar-alt" style={{ color: 'white', fontSize: '1.5rem' }}></i>
-                </div>
-                <div>
-                  <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                    {pedidosCancelados.filter(p => {
-                      const fechaCancelacion = new Date(p.updatedAt);
-                      const hoy = new Date();
-                      const diferencia = hoy.getTime() - fechaCancelacion.getTime();
-                      const diasDiferencia = Math.ceil(diferencia / (1000 * 3600 * 24));
-                      return diasDiferencia <= 30;
-                    }).length}
-                  </h3>
-                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
-                    Este Mes
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Controles de exportación */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'flex-start',
-            alignItems: 'center',
-            marginBottom: '20px',
-            flexWrap: 'wrap',
-            gap: '10px'
-          }}>
-            <button className="cancelados-export-btn" onClick={exportarExcel}>
-              <i className="fa-solid fa-file-excel"></i>
-              <span>Exportar a Excel</span>
-            </button>
-            <button className="cancelados-export-btn" onClick={exportarPDF}>
-              <i className="fa-solid fa-file-pdf"></i>
-              <span>Exportar a PDF</span>
-            </button>
-          </div>
-
-          {/* Tabla principal con diseño moderno */}
-          <div className="cancelados-table-modern">
-            <div className="cancelados-table-wrapper">
-              <table className="cancelados-table" id="tabla_cancelados">
-                <thead>
-                  <tr>
-                    <th>No</th>
-                    <th>Identificador de Pedido</th>
-                    <th>F. Cancelación</th>
-                    <th>Cliente</th>
-                    <th>Ciudad</th>
-                    <th>Total</th>
-                    <th>Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentItems.map((pedido, index) => (
-                    <tr key={pedido._id}>
-                      <td style={{ fontWeight: '500', color: '#6b7280' }}>
-                        {indexOfFirstItem + index + 1}
-                      </td>
-                      <td style={{ fontWeight: '600', color: '#1f2937' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <div style={{
-                            background: 'linear-gradient(135deg, #ef4444, #dc2626)',
-                            borderRadius: '8px',
-                            padding: '8px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            minWidth: '35px'
-                          }}>
-                            <i className="fa-solid fa-file-invoice" style={{ color: 'white', fontSize: '12px' }}></i>
-                          </div>
-                          <span>{pedido.numeroPedido || '---'}</span>
-                        </div>
-                      </td>
-                      <td style={{ color: '#6b7280' }}>
-                        {new Date(pedido.updatedAt).toLocaleDateString()}
-                      </td>
-                      <td style={{ fontWeight: '500', color: '#1f2937' }}>
-                        {pedido.cliente?.nombre}
-                      </td>
-                      <td style={{ color: '#6b7280' }}>
-                        {pedido.cliente?.ciudad}
-                      </td>
-                      <td style={{ fontWeight: '600', color: '#ef4444', fontSize: '14px' }}>
-                        ${(pedido.total || 0).toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </td>
-                      <td className="no-export">
-                        <div style={{ display: 'flex', gap: '5px' }}>
-                          <button
-                            className='cancelados-action-btn info'
-                            onClick={() => verDetallesCancelado(pedido._id)}
-                            title="Ver detalles"
-                          >
-                            <i className="fas fa-eye"></i>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                  {pedidosCancelados.length === 0 && (
-                    <tr>
-                      <td 
-                        colSpan={7} 
-                        style={{
-                          padding: '40px',
-                          textAlign: 'center',
-                          color: '#9ca3af',
-                          fontStyle: 'italic',
-                          fontSize: '16px'
-                        }}
-                      >
-                        No hay pedidos cancelados disponibles
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Paginación */}
-          {totalPages > 1 && (
-            <div className="pagination" style={{ 
-              display: 'flex', 
-              justifyContent: 'center', 
-              marginTop: '20px',
-              gap: '5px'
+            {/* Estadísticas avanzadas */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+              gap: '20px',
+              marginBottom: '30px'
             }}>
-              {Array.from({ length: totalPages }, (_, i) => (
-                <button
-                  key={i + 1}
-                  onClick={() => setCurrentPage(i + 1)}
-                  style={{
-                    padding: '8px 12px',
-                    border: 'none',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    background: currentPage === i + 1 ? 
-                      'linear-gradient(135deg, #ef4444, #dc2626)' : 
-                      '#f3f4f6',
-                    color: currentPage === i + 1 ? 'white' : '#374151',
-                    fontWeight: '500'
-                  }}
-                >
-                  {i + 1}
-                </button>
-              ))}
-            </div>
-          )}
+              <div className="cancelados-stats-card">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                  <div style={{
+                    background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+                    borderRadius: '12px',
+                    padding: '15px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <i className="fa-solid fa-times-circle" style={{ color: 'white', fontSize: '1.5rem' }}></i>
+                  </div>
+                  <div>
+                    <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
+                      {pedidosCancelados.length}
+                    </h3>
+                    <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
+                      Pedidos Cancelados
+                    </p>
+                  </div>
+                </div>
+              </div>
 
-          {/* Modal de vista previa de pedido cancelado */}
-          {mostrarCancelado && datosCancelado && (
-            <PedidoCanceladoPreview
-              datos={datosCancelado}
-              onClose={() => setMostrarCancelado(false)}
-            />
-          )}
+              <div className="cancelados-stats-card">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                  <div style={{
+                    background: 'linear-gradient(135deg, #f59e0b, #ea580c)',
+                    borderRadius: '12px',
+                    padding: '15px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <i className="fa-solid fa-dollar-sign" style={{ color: 'white', fontSize: '1.5rem' }}></i>
+                  </div>
+                  <div>
+                    <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
+                      ${pedidosCancelados.reduce((sum, p) => sum + (p.total || 0), 0).toLocaleString('es-CO')}
+                    </h3>
+                    <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
+                      Valor Perdido
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="cancelados-stats-card">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                  <div style={{
+                    background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                    borderRadius: '12px',
+                    padding: '15px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <i className="fa-solid fa-calendar-alt" style={{ color: 'white', fontSize: '1.5rem' }}></i>
+                  </div>
+                  <div>
+                    <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
+                      {pedidosCancelados.filter(p => {
+                        const fechaCancelacion = new Date(p.updatedAt);
+                        const hoy = new Date();
+                        const diferencia = hoy.getTime() - fechaCancelacion.getTime();
+                        const diasDiferencia = Math.ceil(diferencia / (1000 * 3600 * 24));
+                        return diasDiferencia <= 30;
+                      }).length}
+                    </h3>
+                    <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
+                      Este Mes
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Controles de exportación */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'flex-start',
+              alignItems: 'center',
+              marginBottom: '20px',
+              flexWrap: 'wrap',
+              gap: '10px'
+            }}>
+              <button className="cancelados-export-btn" onClick={exportarExcel}>
+                <i className="fa-solid fa-file-excel"></i>
+                <span>Exportar a Excel</span>
+              </button>
+              <button className="cancelados-export-btn" onClick={exportarPDF}>
+                <i className="fa-solid fa-file-pdf"></i>
+                <span>Exportar a PDF</span>
+              </button>
+            </div>
+
+            {/* Tabla principal con diseño moderno */}
+            <div className="cancelados-table-modern">
+              <div className="cancelados-table-wrapper">
+                <table className="cancelados-table" id="tabla_cancelados">
+                  <thead>
+                    <tr>
+                      <th>No</th>
+                      <th>Identificador de Pedido</th>
+                      <th>F. Cancelación</th>
+                      <th>Cliente</th>
+                      <th>Ciudad</th>
+                      <th>Total</th>
+                      <th>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {currentItems.map((pedido, index) => (
+                      <tr key={pedido._id}>
+                        <td style={{ fontWeight: '500', color: '#6b7280' }}>
+                          {indexOfFirstItem + index + 1}
+                        </td>
+                        <td style={{ fontWeight: '600', color: '#1f2937' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <div style={{
+                              background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+                              borderRadius: '8px',
+                              padding: '8px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              minWidth: '35px'
+                            }}>
+                              <i className="fa-solid fa-file-invoice" style={{ color: 'white', fontSize: '12px' }}></i>
+                            </div>
+                            <span>{pedido.numeroPedido || '---'}</span>
+                          </div>
+                        </td>
+                        <td style={{ color: '#6b7280' }}>
+                          {new Date(pedido.updatedAt).toLocaleDateString()}
+                        </td>
+                        <td style={{ fontWeight: '500', color: '#1f2937' }}>
+                          {pedido.cliente?.nombre}
+                        </td>
+                        <td style={{ color: '#6b7280' }}>
+                          {pedido.cliente?.ciudad}
+                        </td>
+                        <td style={{ fontWeight: '600', color: '#ef4444', fontSize: '14px' }}>
+                          ${(pedido.total || 0).toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </td>
+                        <td className="no-export">
+                          <div style={{ display: 'flex', gap: '5px' }}>
+                            <button
+                              className='cancelados-action-btn info'
+                              onClick={() => verDetallesCancelado(pedido._id)}
+                              title="Ver detalles"
+                            >
+                              <i className="fas fa-eye"></i>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    {pedidosCancelados.length === 0 && (
+                      <tr>
+                        <td
+                          colSpan={7}
+                          style={{
+                            padding: '40px',
+                            textAlign: 'center',
+                            color: '#9ca3af',
+                            fontStyle: 'italic',
+                            fontSize: '16px'
+                          }}
+                        >
+                          No hay pedidos cancelados disponibles
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Paginación */}
+            {totalPages > 1 && (
+              <div className="pagination" style={{
+                display: 'flex',
+                justifyContent: 'center',
+                marginTop: '20px',
+                gap: '5px'
+              }}>
+                {Array.from({ length: totalPages }, (_, i) => (
+                  <button
+                    key={i + 1}
+                    onClick={() => setCurrentPage(i + 1)}
+                    style={{
+                      padding: '8px 12px',
+                      border: 'none',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      background: currentPage === i + 1 ?
+                        'linear-gradient(135deg, #ef4444, #dc2626)' :
+                        '#f3f4f6',
+                      color: currentPage === i + 1 ? 'white' : '#374151',
+                      fontWeight: '500'
+                    }}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Modal de vista previa de pedido cancelado */}
+            {mostrarCancelado && datosCancelado && (
+              <PedidoCanceladoPreview
+                datos={datosCancelado}
+                onClose={() => setMostrarCancelado(false)}
+              />
+            )}
+          </div>
         </div>
+
       </div>
       <div className="custom-footer">
         <p className="custom-footer-text">

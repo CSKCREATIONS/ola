@@ -67,7 +67,7 @@ const usePermisos = () => {
         reportesVentas: has('reportesVentas.ver'),
         remisiones: has('remisiones.ver')
       });
-    } catch {}
+    } catch { }
   }, []);
 
   return perm;
@@ -303,38 +303,41 @@ export default function Home() {
     <div>
       <Fijo />
 
-      <div className="content home-wrapper">
-        <header className="home-hero">
-          <h1>Hola{usuario?.firstName ? `, ${usuario.firstName}` : ''} 👋</h1>
-          <p>
-            Bienvenid@ al sistema. Estos son sus módulos disponibles.
-          </p>
-        </header>
+      <div className="content ">
+        <div className="max-width">
+          <header className="home-hero">
+            <h1>Hola{usuario?.firstName ? `, ${usuario.firstName}` : ''} </h1>
+            <p>
+              Bienvenid@ al sistema. Estos son sus módulos disponibles.
+            </p>
+          </header>
 
-        {/* Masonry Grid */}
-        <div className="masonry-grid">
-          {modulos.map((mod) => (
-            <div key={mod.id} className={`module-card mod-${mod.id} ${mod.heightClass}`}>
-              <div className="module-header">
-                <div className="module-icon">{mod.icon}</div>
+          {/* Masonry Grid */}
+          <div className="masonry-grid">
+            {modulos.map((mod) => (
+              <div key={mod.id} className={`module-card mod-${mod.id} ${mod.heightClass}`}>
+                <div className="module-header">
+                  <div className="module-icon">{mod.icon}</div>
 
-                <h2 className="module-title">
-                  {mod.titulo}
-                  <small>{mod.subtitulo}</small>
-                </h2>
+                  <h2 className="module-title">
+                    {mod.titulo}
+                    <small>{mod.subtitulo}</small>
+                  </h2>
+                </div>
+
+                {mod.componente}
               </div>
+            ))}
 
-              {mod.componente}
-            </div>
-          ))}
-
-          {modulos.length === 0 && (
-            <div className="module-card tall no-permissions">
-              <p>Solicita a un administrador que te asigne permisos para comenzar.</p>
-            </div>
-          )}
+            {modulos.length === 0 && (
+              <div className="module-card tall no-permissions">
+                <p>Solicita a un administrador que te asigne permisos para comenzar.</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
+
 
       {/* Footer ya manejado desde App.css */}
       <div className="custom-footer">

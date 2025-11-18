@@ -6,14 +6,14 @@
 - `usuarios.ver` - Ver lista de usuarios
 - `usuarios.crear` - Crear nuevos usuarios  
 - `usuarios.editar` - Editar información de usuarios
-- `usuarios.inhabilitar` - Habilitar/Inhabilitar usuarios
+- `usuarios.inhabilitar` - Habilitar/inhabilitar usuarios
 - `usuarios.eliminar` - Eliminar usuarios del sistema
 
 ### 🔐 MÓDULO ROLES (4 permisos)
 - `roles.ver` - Ver roles y permisos
 - `roles.crear` - Crear nuevos roles
 - `roles.editar` - Editar roles existentes
-- `roles.inhabilitar` - Habilitar/Inhabilitar roles
+- `roles.inhabilitar` - Habilitar/inhabilitar roles
 
 ### 📦 MÓDULO PRODUCTOS (4 permisos)
 - `productos.ver` - Ver catálogo de productos

@@ -1,9 +1,5 @@
 /* Estilos Masonry Layout para el Dashboard */
-.home-wrapper {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
-  padding: 20px;
-}
+
 
 .home-hero {
   text-align: center;

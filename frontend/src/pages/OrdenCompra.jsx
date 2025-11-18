@@ -147,14 +147,14 @@ const handleProveedorChangeHelper = async (e, proveedores, setNuevaOrden, setPro
   const proveedor = proveedores.find(p => p._id === id) || {};
   setNuevaOrden(prev => ({ ...prev, proveedor: proveedor.nombre || '', proveedorId: id }));
   setProductoTemp({ producto: '', descripcion: '', cantidad: 1, valorUnitario: 0, descuento: 0, productoId: '' });
-  if (id) await fetchProductosPorProveedor(id, setProductosProveedor, () => {});
+  if (id) await fetchProductosPorProveedor(id, setProductosProveedor, () => { });
 };
 
 const handleProveedorChangeEditarHelper = async (e, proveedores, setOrdenEditando, fetchProductosPorProveedor, setProductosProveedor) => {
   const id = e.target.value;
   const proveedor = proveedores.find(p => p._id === id) || {};
   setOrdenEditando(prev => ({ ...prev, proveedor: proveedor.nombre || '', proveedorId: id }));
-  if (id) await fetchProductosPorProveedor(id, setProductosProveedor, () => {});
+  if (id) await fetchProductosPorProveedor(id, setProductosProveedor, () => { });
 };
 
 const handleProductoChangeHelper = (e, productosProveedor, setProductoTemp) => {
@@ -203,7 +203,7 @@ if (!document.getElementById('orden-compra-advanced-styles')) {
   styleEl.innerText = advancedStyles;
   document.head.appendChild(styleEl);
 }
- 
+
 // Top-level helpers for printing to keep `imprimirOrdenHelper` simple
 const buildProductRowsOrden = (items) => {
   if (!items || items.length === 0) return '<tr><td colspan="5" style="text-align:center;padding:20px;">No hay productos</td></tr>';
@@ -781,10 +781,10 @@ export default function OrdenCompra() {
     const updated = {
       producto: productoEditando.producto || nuevos[idx].producto,
       descripcion: productoEditando.descripcion || nuevos[idx].descripcion || '',
-        cantidad: Number(productoEditando.cantidad) || 1,
-        valorUnitario: roundMoney(productoEditando.valorUnitario || nuevos[idx].valorUnitario || 0),
-        descuento: roundMoney(productoEditando.descuento || nuevos[idx].descuento || 0),
-        valorTotal: roundMoney((Number(productoEditando.cantidad) || 1) * (roundMoney(productoEditando.valorUnitario || nuevos[idx].valorUnitario || 0)) - (roundMoney(productoEditando.descuento || nuevos[idx].descuento || 0))),
+      cantidad: Number(productoEditando.cantidad) || 1,
+      valorUnitario: roundMoney(productoEditando.valorUnitario || nuevos[idx].valorUnitario || 0),
+      descuento: roundMoney(productoEditando.descuento || nuevos[idx].descuento || 0),
+      valorTotal: roundMoney((Number(productoEditando.cantidad) || 1) * (roundMoney(productoEditando.valorUnitario || nuevos[idx].valorUnitario || 0)) - (roundMoney(productoEditando.descuento || nuevos[idx].descuento || 0))),
       productoId: productoEditando.productoId || nuevos[idx].productoId
     };
 
@@ -1046,228 +1046,269 @@ export default function OrdenCompra() {
       <Fijo />
       <div className="content">
         <NavCompras />
-        <div className="contenido-modulo">
-          {/* Encabezado profesional (reutilizable) */}
-          <SharedListHeaderCard
-            title="Órdenes de Compra"
-            subtitle="Gestiona y supervisa las órdenes de compra a proveedores"
-            iconClass="fa-solid fa-file-invoice-dollar"
-          >
-            <PrimaryButton onClick={abrirModalAgregar} title="Agregar Orden de Compra">
-              <i className="fa-solid fa-plus" aria-hidden={true}></i>
-              <span>Agregar Orden de Compra</span>
-            </PrimaryButton>
-          </SharedListHeaderCard>
+        <div className="max-width">
+          <div className="contenido-modulo">
+            {/* Encabezado profesional (reutilizable) */}
+            <SharedListHeaderCard
+              title="Órdenes de Compra"
+              subtitle="Gestiona y supervisa las órdenes de compra a proveedores"
+              iconClass="fa-solid fa-file-invoice-dollar"
+            >
+              <PrimaryButton onClick={abrirModalAgregar} title="Agregar Orden de Compra">
+                <i className="fa-solid fa-plus" aria-hidden={true}></i>
+                <span>Agregar Orden de Compra</span>
+              </PrimaryButton>
+            </SharedListHeaderCard>
 
-          <AdvancedStats cards={statsCards} />
+            <AdvancedStats cards={statsCards} />
 
-          {/* Tabla de órdenes mejorada */}
-          <div style={{
-            background: 'white',
-            borderRadius: '16px',
-            overflow: 'hidden',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-            border: '1px solid #e5e7eb'
-          }}>
+            {/* Tabla de órdenes mejorada */}
             <div style={{
-              background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)',
-              padding: '20px 25px',
-              borderBottom: '1px solid #e5e7eb',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center'
+              background: 'white',
+              borderRadius: '16px',
+              overflow: 'hidden',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+              border: '1px solid #e5e7eb'
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{
-                  background: 'linear-gradient(135deg, #667eea, #764ba2)',
-                  borderRadius: '12px',
-                  padding: '10px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <i className="fa-solid fa-table" style={{ color: 'white', fontSize: '16px' }}></i>
-                </div>
-                <div>
-                  <h4 style={{ margin: '0 0 4px 0', color: '#1f2937', fontSize: '1.3rem', fontWeight: '600' }}>
-                    Lista de Órdenes de Compra
-                  </h4>
-                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px' }}>
-                    Mostrando {ordenesPendientes.length} órdenes pendientes
-                  </p>
+              <div style={{
+                background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)',
+                padding: '20px 25px',
+                borderBottom: '1px solid #e5e7eb',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{
+                    background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                    borderRadius: '12px',
+                    padding: '10px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <i className="fa-solid fa-table" style={{ color: 'white', fontSize: '16px' }}></i>
+                  </div>
+                  <div>
+                    <h4 style={{ margin: '0 0 4px 0', color: '#1f2937', fontSize: '1.3rem', fontWeight: '600' }}>
+                      Lista de Órdenes de Compra
+                    </h4>
+                    <p style={{ margin: 0, color: '#6b7280', fontSize: '14px' }}>
+                      Mostrando {ordenesPendientes.length} órdenes pendientes
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div style={{ overflow: 'auto' }}>
-              <table style={{
-                width: '100%',
-                borderCollapse: 'collapse',
-                fontSize: '14px'
-              }}>
-                <thead>
-                  <tr style={{
-                    background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)',
-                    borderBottom: '2px solid #e5e7eb'
-                  }}>
-                    <th style={{
-                      padding: '16px 12px',
-                      textAlign: 'left',
-                      fontWeight: '600',
-                      color: 'white',
-                      fontSize: '13px',
-                      letterSpacing: '0.5px'
-                    }}>#</th>
-                    <th style={{
-                      padding: '16px 12px',
-                      textAlign: 'left',
-                      fontWeight: '600',
-                      color: 'white',
-                      fontSize: '13px',
-                      letterSpacing: '0.5px'
-                    }}>IDENTIFICADOR</th>
-                    <th style={{
-                      padding: '16px 12px',
-                      textAlign: 'left',
-                      fontWeight: '600',
-                      color: 'white',
-                      fontSize: '13px',
-                      letterSpacing: '0.5px'
-                    }}>PROVEEDOR</th>
-                    <th style={{
-                      padding: '16px 12px',
-                      textAlign: 'left',
-                      fontWeight: '600',
-                      color: 'white',
-                      fontSize: '13px',
-                      letterSpacing: '0.5px'
-                    }}>TOTAL</th>
-                    <th style={{
-                      padding: '16px 12px',
-                      textAlign: 'left',
-                      fontWeight: '600',
-                      color: 'white',
-                      fontSize: '13px',
-                      letterSpacing: '0.5px'
-                    }}>FECHA</th>
-                    <th style={{
-                      padding: '16px 12px',
-                      textAlign: 'left',
-                      fontWeight: '600',
-                      color: '#374151',
-                      fontSize: '13px',
-                      letterSpacing: '0.5px'
+              <div style={{ overflow: 'auto' }}>
+                <table style={{
+                  width: '100%',
+                  borderCollapse: 'collapse',
+                  fontSize: '14px'
+                }}>
+                  <thead>
+                    <tr style={{
+                      background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)',
+                      borderBottom: '2px solid #e5e7eb'
                     }}>
-                      
-                      SOLICITADO POR
-                    </th>
-                    <th style={{
-                      padding: '16px 12px',
-                      textAlign: 'center',
-                      fontWeight: '600',
-                      color: 'white',
-                      fontSize: '13px',
-                      letterSpacing: '0.5px'
-                    }}>
-                      ESTADO
-                    </th>
-                    <th style={{
-                      padding: '16px 12px',
-                      textAlign: 'center',
-                      fontWeight: '600',
-                      color: 'white',
-                      fontSize: '13px',
-                      letterSpacing: '0.5px'
-                    }}>
-                      ENVIADO
-                    </th>
-                    <th style={{
-                      padding: '16px 12px',
-                      textAlign: 'center',
-                      fontWeight: '600',
-                      color: 'white',
-                      fontSize: '13px',
-                      letterSpacing: '0.5px'
-                    }}>
-                      
-                      ACCIONES
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentOrdenes.map((orden, index) => (
-                    <tr key={orden._id}
-                      style={{
-                        borderBottom: '1px solid #f3f4f6',
-                        transition: 'all 0.2s ease'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = '#f8fafc';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = 'transparent';
-                      }}
-                    >
-                      <td style={{ padding: '16px 12px', fontWeight: '600', color: '#6366f1' }}>
-                        {indexOfFirstItem + index + 1}
-                      </td>
-                      <td style={{ padding: '16px 12px' }}>
-                        <button
-                          onClick={() => verDetallesOrden(orden)}
-                          className="orden-numero-link"
-                          style={{
-                            background: 'none',
-                            border: 'none',
-                            color: '#6366f1',
-                            textDecoration: 'none',
-                            padding: '4px 8px',
-                            borderRadius: '6px',
-                            transition: 'all 0.2s ease',
-                            fontWeight: '600',
-                            display: 'inline-block',
-                            cursor: 'pointer'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.target.style.background = 'rgba(99, 102, 241, 0.1)';
-                            e.target.style.textDecoration = 'underline';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.target.style.background = 'none';
-                            e.target.style.textDecoration = 'none';
-                          }}
-                        >
-                          {orden.numeroOrden}
-                        </button>
-                      </td>
-                      <td style={{ padding: '16px 12px' }}>
-                        <span style={{
-                          background: '#fef3c7',
-                          color: '#d97706',
-                          padding: '6px 12px',
-                          borderRadius: '20px',
-                          fontSize: '12px',
-                          fontWeight: '600',
-                          display: 'inline-block'
-                        }}>
-                          {orden.proveedor || 'No especificado'}
-                        </span>
-                      </td>
-                      <td style={{ padding: '16px 12px', fontWeight: '600', color: '#1f2937' }}>
-                        ${orden.total?.toLocaleString()}
-                      </td>
-                      <td style={{ padding: '16px 12px', color: '#4b5563', fontWeight: '500' }}>
-                        {new Date(orden.fechaOrden).toLocaleDateString()}
-                      </td>
-                      <td style={{ padding: '16px 12px', color: '#4b5563', fontWeight: '500' }}>
-                        {orden.solicitadoPor || 'No especificado'}
-                      </td>
-                      <td style={{ padding: '16px 12px', textAlign: 'center' }}>
-                        {orden.estado === 'Pendiente' ? (
+                      <th style={{
+                        padding: '16px 12px',
+                        textAlign: 'left',
+                        fontWeight: '600',
+                        color: 'white',
+                        fontSize: '13px',
+                        letterSpacing: '0.5px'
+                      }}>#</th>
+                      <th style={{
+                        padding: '16px 12px',
+                        textAlign: 'left',
+                        fontWeight: '600',
+                        color: 'white',
+                        fontSize: '13px',
+                        letterSpacing: '0.5px'
+                      }}>IDENTIFICADOR</th>
+                      <th style={{
+                        padding: '16px 12px',
+                        textAlign: 'left',
+                        fontWeight: '600',
+                        color: 'white',
+                        fontSize: '13px',
+                        letterSpacing: '0.5px'
+                      }}>PROVEEDOR</th>
+                      <th style={{
+                        padding: '16px 12px',
+                        textAlign: 'left',
+                        fontWeight: '600',
+                        color: 'white',
+                        fontSize: '13px',
+                        letterSpacing: '0.5px'
+                      }}>TOTAL</th>
+                      <th style={{
+                        padding: '16px 12px',
+                        textAlign: 'left',
+                        fontWeight: '600',
+                        color: 'white',
+                        fontSize: '13px',
+                        letterSpacing: '0.5px'
+                      }}>FECHA</th>
+                      <th style={{
+                        padding: '16px 12px',
+                        textAlign: 'left',
+                        fontWeight: '600',
+                        color: '#374151',
+                        fontSize: '13px',
+                        letterSpacing: '0.5px'
+                      }}>
+
+                        SOLICITADO POR
+                      </th>
+                      <th style={{
+                        padding: '16px 12px',
+                        textAlign: 'center',
+                        fontWeight: '600',
+                        color: 'white',
+                        fontSize: '13px',
+                        letterSpacing: '0.5px'
+                      }}>
+                        ESTADO
+                      </th>
+                      <th style={{
+                        padding: '16px 12px',
+                        textAlign: 'center',
+                        fontWeight: '600',
+                        color: 'white',
+                        fontSize: '13px',
+                        letterSpacing: '0.5px'
+                      }}>
+                        ENVIADO
+                      </th>
+                      <th style={{
+                        padding: '16px 12px',
+                        textAlign: 'center',
+                        fontWeight: '600',
+                        color: 'white',
+                        fontSize: '13px',
+                        letterSpacing: '0.5px'
+                      }}>
+
+                        ACCIONES
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {currentOrdenes.map((orden, index) => (
+                      <tr key={orden._id}
+                        style={{
+                          borderBottom: '1px solid #f3f4f6',
+                          transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = '#f8fafc';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'transparent';
+                        }}
+                      >
+                        <td style={{ padding: '16px 12px', fontWeight: '600', color: '#6366f1' }}>
+                          {indexOfFirstItem + index + 1}
+                        </td>
+                        <td style={{ padding: '16px 12px' }}>
                           <button
-                            onClick={() => abrirModalConfirmacion(orden)}
+                            onClick={() => verDetallesOrden(orden)}
+                            className="orden-numero-link"
                             style={{
-                              background: 'linear-gradient(135deg, #fef3c7, #fde68a)',
-                              color: '#d97706',
+                              background: 'none',
+                              border: 'none',
+                              color: '#6366f1',
+                              textDecoration: 'none',
+                              padding: '4px 8px',
+                              borderRadius: '6px',
+                              transition: 'all 0.2s ease',
+                              fontWeight: '600',
+                              display: 'inline-block',
+                              cursor: 'pointer'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.target.style.background = 'rgba(99, 102, 241, 0.1)';
+                              e.target.style.textDecoration = 'underline';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.target.style.background = 'none';
+                              e.target.style.textDecoration = 'none';
+                            }}
+                          >
+                            {orden.numeroOrden}
+                          </button>
+                        </td>
+                        <td style={{ padding: '16px 12px' }}>
+                          <span style={{
+                            background: '#fef3c7',
+                            color: '#d97706',
+                            padding: '6px 12px',
+                            borderRadius: '20px',
+                            fontSize: '12px',
+                            fontWeight: '600',
+                            display: 'inline-block'
+                          }}>
+                            {orden.proveedor || 'No especificado'}
+                          </span>
+                        </td>
+                        <td style={{ padding: '16px 12px', fontWeight: '600', color: '#1f2937' }}>
+                          ${orden.total?.toLocaleString()}
+                        </td>
+                        <td style={{ padding: '16px 12px', color: '#4b5563', fontWeight: '500' }}>
+                          {new Date(orden.fechaOrden).toLocaleDateString()}
+                        </td>
+                        <td style={{ padding: '16px 12px', color: '#4b5563', fontWeight: '500' }}>
+                          {orden.solicitadoPor || 'No especificado'}
+                        </td>
+                        <td style={{ padding: '16px 12px', textAlign: 'center' }}>
+                          {orden.estado === 'Pendiente' ? (
+                            <button
+                              onClick={() => abrirModalConfirmacion(orden)}
+                              style={{
+                                background: 'linear-gradient(135deg, #fef3c7, #fde68a)',
+                                color: '#d97706',
+                                border: 'none',
+                                borderRadius: '8px',
+                                padding: '6px 12px',
+                                cursor: 'pointer',
+                                fontSize: '12px',
+                                fontWeight: '600',
+                                transition: 'all 0.2s ease',
+                                boxShadow: '0 2px 4px rgba(217, 119, 6, 0.2)'
+                              }}
+                              onMouseEnter={(e) => {
+                                e.target.style.transform = 'translateY(-2px)';
+                                e.target.style.boxShadow = '0 4px 8px rgba(217, 119, 6, 0.3)';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.target.style.transform = 'translateY(0)';
+                                e.target.style.boxShadow = '0 2px 4px rgba(217, 119, 6, 0.2)';
+                              }}
+                            >
+                              Pendiente
+                            </button>
+                          ) : (
+                            <span style={{
+                              background: orden.estado === 'Completada' ? '#dcfce7' : '#fee2e2',
+                              color: orden.estado === 'Completada' ? '#16a34a' : '#dc2626',
+                              padding: '6px 12px',
+                              borderRadius: '20px',
+                              fontSize: '12px',
+                              fontWeight: '600',
+                              display: 'inline-block'
+                            }}>
+                              {orden.estado}
+                            </span>
+                          )}
+                        </td>
+                        <td style={{ padding: '16px 12px', textAlign: 'center' }}>
+                          <button
+                            onClick={() => toggleEnviado(orden._id, orden.enviado)}
+                            style={{
+                              background: orden.enviado ? 'linear-gradient(135deg, #dcfce7, #bbf7d0)' : 'linear-gradient(135deg, #fee2e2, #fecaca)',
+                              color: orden.enviado ? '#16a34a' : '#dc2626',
                               border: 'none',
                               borderRadius: '8px',
                               padding: '6px 12px',
@@ -1275,573 +1316,537 @@ export default function OrdenCompra() {
                               fontSize: '12px',
                               fontWeight: '600',
                               transition: 'all 0.2s ease',
-                              boxShadow: '0 2px 4px rgba(217, 119, 6, 0.2)'
+                              boxShadow: orden.enviado ? '0 2px 4px rgba(22, 163, 74, 0.2)' : '0 2px 4px rgba(220, 38, 38, 0.2)',
+                              minWidth: '50px'
                             }}
                             onMouseEnter={(e) => {
                               e.target.style.transform = 'translateY(-2px)';
-                              e.target.style.boxShadow = '0 4px 8px rgba(217, 119, 6, 0.3)';
+                              e.target.style.boxShadow = orden.enviado ? '0 4px 8px rgba(22, 163, 74, 0.3)' : '0 4px 8px rgba(220, 38, 38, 0.3)';
                             }}
                             onMouseLeave={(e) => {
                               e.target.style.transform = 'translateY(0)';
-                              e.target.style.boxShadow = '0 2px 4px rgba(217, 119, 6, 0.2)';
+                              e.target.style.boxShadow = orden.enviado ? '0 2px 4px rgba(22, 163, 74, 0.2)' : '0 2px 4px rgba(220, 38, 38, 0.2)';
                             }}
                           >
-                            Pendiente
+                            {orden.enviado ? 'Sí' : 'No'}
                           </button>
-                        ) : (
-                          <span style={{
-                            background: orden.estado === 'Completada' ? '#dcfce7' : '#fee2e2',
-                            color: orden.estado === 'Completada' ? '#16a34a' : '#dc2626',
-                            padding: '6px 12px',
-                            borderRadius: '20px',
-                            fontSize: '12px',
-                            fontWeight: '600',
-                            display: 'inline-block'
-                          }}>
-                            {orden.estado}
-                          </span>
-                        )}
-                      </td>
-                      <td style={{ padding: '16px 12px', textAlign: 'center' }}>
-                        <button
-                          onClick={() => toggleEnviado(orden._id, orden.enviado)}
-                          style={{
-                            background: orden.enviado ? 'linear-gradient(135deg, #dcfce7, #bbf7d0)' : 'linear-gradient(135deg, #fee2e2, #fecaca)',
-                            color: orden.enviado ? '#16a34a' : '#dc2626',
-                            border: 'none',
-                            borderRadius: '8px',
-                            padding: '6px 12px',
-                            cursor: 'pointer',
-                            fontSize: '12px',
-                            fontWeight: '600',
-                            transition: 'all 0.2s ease',
-                            boxShadow: orden.enviado ? '0 2px 4px rgba(22, 163, 74, 0.2)' : '0 2px 4px rgba(220, 38, 38, 0.2)',
-                            minWidth: '50px'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.target.style.transform = 'translateY(-2px)';
-                            e.target.style.boxShadow = orden.enviado ? '0 4px 8px rgba(22, 163, 74, 0.3)' : '0 4px 8px rgba(220, 38, 38, 0.3)';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.target.style.transform = 'translateY(0)';
-                            e.target.style.boxShadow = orden.enviado ? '0 2px 4px rgba(22, 163, 74, 0.2)' : '0 2px 4px rgba(220, 38, 38, 0.2)';
-                          }}
-                        >
-                          {orden.enviado ? 'Sí' : 'No'}
-                        </button>
-                      </td>
-                      <td style={{ padding: '16px 12px', textAlign: 'center' }}>
-                        <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
-                          <button
-                            onClick={() => abrirModalEditar(orden)}
-                            title="Editar orden"
-                            style={{
-                              background: 'linear-gradient(135deg, #dbeafe, #bfdbfe)',
-                              color: '#1e40af',
-                              border: 'none',
-                              borderRadius: '8px',
-                              padding: '8px 10px',
-                              cursor: 'pointer',
-                              fontSize: '12px',
-                              fontWeight: '600',
-                              transition: 'all 0.2s ease',
-                              boxShadow: '0 2px 4px rgba(30, 64, 175, 0.2)'
-                            }}
-                            onMouseEnter={(e) => {
-                              e.target.style.transform = 'translateY(-2px)';
-                              e.target.style.boxShadow = '0 4px 8px rgba(30, 64, 175, 0.3)';
-                            }}
-                            onMouseLeave={(e) => {
-                              e.target.style.transform = 'translateY(0)';
-                              e.target.style.boxShadow = '0 2px 4px rgba(30, 64, 175, 0.2)';
-                            }}
-                          >
-                            <i className="fa-solid fa-pen-to-square"></i>
-                          </button>
-                          {!orden.enviado && (
-                            <DeleteButton onClick={() => eliminarOrden(orden._id)} title="Eliminar orden" ariaLabel="Eliminar orden">
-                              <i className="fa-solid fa-trash"></i>
-                            </DeleteButton>
+                        </td>
+                        <td style={{ padding: '16px 12px', textAlign: 'center' }}>
+                          <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
+                            <button
+                              onClick={() => abrirModalEditar(orden)}
+                              title="Editar orden"
+                              style={{
+                                background: 'linear-gradient(135deg, #dbeafe, #bfdbfe)',
+                                color: '#1e40af',
+                                border: 'none',
+                                borderRadius: '8px',
+                                padding: '8px 10px',
+                                cursor: 'pointer',
+                                fontSize: '12px',
+                                fontWeight: '600',
+                                transition: 'all 0.2s ease',
+                                boxShadow: '0 2px 4px rgba(30, 64, 175, 0.2)'
+                              }}
+                              onMouseEnter={(e) => {
+                                e.target.style.transform = 'translateY(-2px)';
+                                e.target.style.boxShadow = '0 4px 8px rgba(30, 64, 175, 0.3)';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.target.style.transform = 'translateY(0)';
+                                e.target.style.boxShadow = '0 2px 4px rgba(30, 64, 175, 0.2)';
+                              }}
+                            >
+                              <i className="fa-solid fa-pen-to-square"></i>
+                            </button>
+                            {!orden.enviado && (
+                              <DeleteButton onClick={() => eliminarOrden(orden._id)} title="Eliminar orden" ariaLabel="Eliminar orden">
+                                <i className="fa-solid fa-trash"></i>
+                              </DeleteButton>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+
+                    {ordenesPendientes.length === 0 && (
+                      <tr>
+                        <td colSpan="9" style={{ textAlign: 'center', padding: '80px 20px' }}>
+                          <div style={{ display: 'flex', gap: '20px', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
+                            <div style={{ fontSize: '3.5rem', color: '#9ca3af' }}>
+                              <i className="fa-solid fa-file-invoice-dollar"></i>
+                            </div>
+                            <div style={{ textAlign: 'center' }}>
+                              <h5 style={{
+                                color: '#6b7280',
+                                margin: '0 0 12px 0',
+                                fontSize: '1.2rem',
+                                fontWeight: '600'
+                              }}>
+                                No hay órdenes pendientes
+                              </h5>
+                              <p style={{
+                                color: '#9ca3af',
+                                margin: 0,
+                                fontSize: '14px',
+                                lineHeight: '1.5'
+                              }}>
+                                No se encontraron órdenes de compra pendientes
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Paginación */}
+              {totalPages > 1 && (
+                <div style={{ padding: '12px 20px', display: 'flex', justifyContent: 'flex-end', gap: '8px', alignItems: 'center' }}>
+                  {Array.from({ length: totalPages }).map((_, i) => (
+                    <button
+                      key={i + 1}
+                      onClick={() => setCurrentPage(i + 1)}
+                      style={{
+                        padding: '8px 16px',
+                        border: currentPage === i + 1 ? '2px solid #6366f1' : '2px solid #e5e7eb',
+                        borderRadius: '8px',
+                        background: currentPage === i + 1 ? '#6366f1' : 'white',
+                        color: currentPage === i + 1 ? 'white' : '#4b5563',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (currentPage !== i + 1) {
+                          e.currentTarget.style.borderColor = '#6366f1';
+                          e.currentTarget.style.color = '#6366f1';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (currentPage !== i + 1) {
+                          e.currentTarget.style.borderColor = '#e5e7eb';
+                          e.currentTarget.style.color = '#4b5563';
+                        }
+                      }}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Modal para agregar nueva orden (estilo Proveedores - morado) */}
+            {modalAgregarVisible && (
+              <div className="modal-overlay">
+                <div className="modal-realista modal-lg" style={{ maxWidth: '1100px' }}>
+                  <div style={{ background: 'linear-gradient(135deg, #6a1b9a, #9b59b6)', color: 'white', padding: '1.25rem 1.5rem', borderTopLeftRadius: '10px', borderTopRightRadius: '10px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <i className="fa-solid fa-file-invoice-dollar" style={{ fontSize: '1.1rem' }}></i>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: '1.05rem', fontWeight: 700 }}>Nueva Orden de Compra</div>
+                          <div style={{ fontSize: '0.85rem', opacity: 0.95 }}>N° {nuevaOrden.numeroOrden || '—'}</div>
+                        </div>
+                      </div>
+                      <div>
+                        <button className="modal-close-realista" onClick={cerrarModalAgregar} style={{ background: 'transparent', border: 'none', color: 'white', fontSize: '1.25rem' }}>&times;</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '1rem', padding: '1rem', maxHeight: '75vh', overflow: 'hidden' }}>
+                    <div style={{ flex: 1, overflowY: 'auto', paddingRight: '0.5rem' }}>
+                      <div style={{ background: 'white', padding: '1rem', borderRadius: 10, border: '1px solid #e5e7eb', marginBottom: '1rem' }}>
+                        <h6 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}><i className="fa-solid fa-info-circle" style={{ color: '#6a1b9a' }}></i> Información de la Orden</h6>
+                        <div style={{ marginTop: '0.75rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                          <div>
+                            <label htmlFor="nueva-proveedor" className="form-label-profesional">Proveedor *</label>
+                            <select id="nueva-proveedor" value={nuevaOrden.proveedorId || ''} onChange={handleProveedorChange} className="form-input-profesional">
+                              <option value="">Seleccione un proveedor</option>
+                              {proveedores.filter(p => p.activo || p._id === ordenEditando.proveedorId).map(prov => (
+                                <option key={prov._id} value={prov._id}>{prov.nombre}</option>
+                              ))}
+                            </select>
+                            {errores.proveedor && <div style={{ color: '#e74c3c', fontSize: '0.85rem' }}>{errores.proveedor}</div>}
+                          </div>
+                          <div>
+                            <label htmlFor="nueva-solicitadoPor" className="form-label-profesional">Solicitado Por</label>
+                            <input id="nueva-solicitadoPor" className="form-input-profesional" value={nuevaOrden.solicitadoPor} disabled />
+                          </div>
+                          <div style={{ gridColumn: '1 / -1' }}>
+                            <label htmlFor="nueva-condicionesPago" className="form-label-profesional">Condiciones de Pago</label>
+                            <textarea id="nueva-condicionesPago" className="form-input-profesional" rows={3} value={nuevaOrden.condicionesPago} onChange={e => setNuevaOrden({ ...nuevaOrden, condicionesPago: e.target.value })} />
+                          </div>
+                          <div>
+                            <label htmlFor="nueva-iva" className="form-label-profesional">IVA (%)</label>
+                            <input id="nueva-iva" type="number" step="0.01" className="form-input-profesional" value={nuevaOrden.iva || 0} onChange={e => setNuevaOrden({ ...nuevaOrden, iva: Number(e.target.value) })} />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div style={{ background: 'white', padding: '1rem', borderRadius: 10, border: '1px solid #e5e7eb', marginBottom: '1rem' }}>
+                        <h6 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}><i className="fa-solid fa-cart-plus" style={{ color: '#6a1b9a' }}></i> Agregar Productos</h6>
+                        <div style={{ marginTop: '0.75rem' }}>
+                          {nuevaOrden.proveedorId ? (
+                            <>
+                              <select value={productoTemp.productoId || ''} onChange={handleProductoChange} className="form-input-profesional">
+                                <option value="">Seleccione un producto</option>
+                                {productosProveedor.length > 0 ? productosProveedor.map(prod => (
+                                  <option key={prod._id || prod.id || prod.productoId || JSON.stringify(prod)} value={prod._id || prod.id || prod.productoId || ''}>{prod.name || prod.nombre} - ${(prod.price || prod.precio)?.toLocaleString()}</option>
+                                )) : <option value="" disabled>{cargandoProductos ? 'Cargando...' : 'No hay productos'}</option>}
+                              </select>
+
+                              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginTop: '0.5rem' }}>
+                                <input className="form-input-profesional" value={productoTemp.descripcion} disabled placeholder="Descripción" />
+                                <input type="number" min="1" className="form-input-profesional" value={productoTemp.cantidad} onChange={e => setProductoTemp({ ...productoTemp, cantidad: Number(e.target.value) })} />
+                                <input className="form-input-profesional" value={productoTemp.valorUnitario} disabled />
+                                <input type="number" step="0.01" className="form-input-profesional" value={productoTemp.descuento} onChange={e => setProductoTemp({ ...productoTemp, descuento: Number(e.target.value) })} />
+                              </div>
+
+                              <div style={{ marginTop: '0.5rem' }}>
+                                <button className="btn-profesional btn-primary-profesional" onClick={agregarProductoDesdeLista} disabled={!productoTemp.productoId || productoTemp.cantidad < 1}><i className="fa-solid fa-plus"></i> Agregar Producto</button>
+                              </div>
+                            </>
+                          ) : (
+                            <div style={{ padding: '1rem', background: '#f8fafc', borderRadius: 8 }}>Seleccione un proveedor para ver productos</div>
                           )}
                         </div>
-                      </td>
-                    </tr>
-                  ))}
-
-                  {ordenesPendientes.length === 0 && (
-                    <tr>
-                      <td colSpan="9" style={{ textAlign: 'center', padding: '80px 20px' }}>
-                        <div style={{ display: 'flex', gap: '20px', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
-                          <div style={{ fontSize: '3.5rem', color: '#9ca3af' }}>
-                            <i className="fa-solid fa-file-invoice-dollar"></i>
-                          </div>
-                          <div style={{ textAlign: 'center' }}>
-                            <h5 style={{
-                              color: '#6b7280',
-                              margin: '0 0 12px 0',
-                              fontSize: '1.2rem',
-                              fontWeight: '600'
-                            }}>
-                              No hay órdenes pendientes
-                            </h5>
-                            <p style={{
-                              color: '#9ca3af',
-                              margin: 0,
-                              fontSize: '14px',
-                              lineHeight: '1.5'
-                            }}>
-                              No se encontraron órdenes de compra pendientes
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Paginación */}
-            {totalPages > 1 && (
-              <div style={{ padding: '12px 20px', display: 'flex', justifyContent: 'flex-end', gap: '8px', alignItems: 'center' }}>
-                {Array.from({ length: totalPages }).map((_, i) => (
-                  <button
-                    key={i + 1}
-                    onClick={() => setCurrentPage(i + 1)}
-                    style={{
-                      padding: '8px 16px',
-                      border: currentPage === i + 1 ? '2px solid #6366f1' : '2px solid #e5e7eb',
-                      borderRadius: '8px',
-                      background: currentPage === i + 1 ? '#6366f1' : 'white',
-                      color: currentPage === i + 1 ? 'white' : '#4b5563',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease'
-                    }}
-                    onMouseEnter={(e) => {
-                      if (currentPage !== i + 1) {
-                        e.currentTarget.style.borderColor = '#6366f1';
-                        e.currentTarget.style.color = '#6366f1';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (currentPage !== i + 1) {
-                        e.currentTarget.style.borderColor = '#e5e7eb';
-                        e.currentTarget.style.color = '#4b5563';
-                      }
-                    }}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Modal para agregar nueva orden (estilo Proveedores - morado) */}
-          {modalAgregarVisible && (
-            <div className="modal-overlay">
-              <div className="modal-realista modal-lg" style={{ maxWidth: '1100px' }}>
-                <div style={{ background: 'linear-gradient(135deg, #6a1b9a, #9b59b6)', color: 'white', padding: '1.25rem 1.5rem', borderTopLeftRadius: '10px', borderTopRightRadius: '10px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                      <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <i className="fa-solid fa-file-invoice-dollar" style={{ fontSize: '1.1rem' }}></i>
-                      </div>
-                      <div>
-                        <div style={{ fontSize: '1.05rem', fontWeight: 700 }}>Nueva Orden de Compra</div>
-                        <div style={{ fontSize: '0.85rem', opacity: 0.95 }}>N° {nuevaOrden.numeroOrden || '—'}</div>
-                      </div>
-                    </div>
-                    <div>
-                      <button className="modal-close-realista" onClick={cerrarModalAgregar} style={{ background: 'transparent', border: 'none', color: 'white', fontSize: '1.25rem' }}>&times;</button>
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{ display: 'flex', gap: '1rem', padding: '1rem', maxHeight: '75vh', overflow: 'hidden' }}>
-                  <div style={{ flex: 1, overflowY: 'auto', paddingRight: '0.5rem' }}>
-                    <div style={{ background: 'white', padding: '1rem', borderRadius: 10, border: '1px solid #e5e7eb', marginBottom: '1rem' }}>
-                      <h6 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}><i className="fa-solid fa-info-circle" style={{ color: '#6a1b9a' }}></i> Información de la Orden</h6>
-                      <div style={{ marginTop: '0.75rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                        <div>
-                          <label htmlFor="nueva-proveedor" className="form-label-profesional">Proveedor *</label>
-                          <select id="nueva-proveedor" value={nuevaOrden.proveedorId || ''} onChange={handleProveedorChange} className="form-input-profesional">
-                            <option value="">Seleccione un proveedor</option>
-                            {proveedores.filter(p => p.activo || p._id === ordenEditando.proveedorId).map(prov => (
-                              <option key={prov._id} value={prov._id}>{prov.nombre}</option>
-                            ))}
-                          </select>
-                          {errores.proveedor && <div style={{ color: '#e74c3c', fontSize: '0.85rem' }}>{errores.proveedor}</div>}
-                        </div>
-                        <div>
-                          <label htmlFor="nueva-solicitadoPor" className="form-label-profesional">Solicitado Por</label>
-                          <input id="nueva-solicitadoPor" className="form-input-profesional" value={nuevaOrden.solicitadoPor} disabled />
-                        </div>
-                        <div style={{ gridColumn: '1 / -1' }}>
-                          <label htmlFor="nueva-condicionesPago" className="form-label-profesional">Condiciones de Pago</label>
-                          <textarea id="nueva-condicionesPago" className="form-input-profesional" rows={3} value={nuevaOrden.condicionesPago} onChange={e => setNuevaOrden({ ...nuevaOrden, condicionesPago: e.target.value })} />
-                        </div>
-                        <div>
-                          <label htmlFor="nueva-iva" className="form-label-profesional">IVA (%)</label>
-                          <input id="nueva-iva" type="number" step="0.01" className="form-input-profesional" value={nuevaOrden.iva || 0} onChange={e => setNuevaOrden({ ...nuevaOrden, iva: Number(e.target.value) })} />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div style={{ background: 'white', padding: '1rem', borderRadius: 10, border: '1px solid #e5e7eb', marginBottom: '1rem' }}>
-                      <h6 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}><i className="fa-solid fa-cart-plus" style={{ color: '#6a1b9a' }}></i> Agregar Productos</h6>
-                        <div style={{ marginTop: '0.75rem' }}>
-                        {nuevaOrden.proveedorId ? (
-                          <>
-                            <select value={productoTemp.productoId || ''} onChange={handleProductoChange} className="form-input-profesional">
-                              <option value="">Seleccione un producto</option>
-                              {productosProveedor.length > 0 ? productosProveedor.map(prod => (
-                                <option key={prod._id || prod.id || prod.productoId || JSON.stringify(prod)} value={prod._id || prod.id || prod.productoId || ''}>{prod.name || prod.nombre} - ${(prod.price || prod.precio)?.toLocaleString()}</option>
-                              )) : <option value="" disabled>{cargandoProductos ? 'Cargando...' : 'No hay productos'}</option>}
-                            </select>
-
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginTop: '0.5rem' }}>
-                              <input className="form-input-profesional" value={productoTemp.descripcion} disabled placeholder="Descripción" />
-                              <input type="number" min="1" className="form-input-profesional" value={productoTemp.cantidad} onChange={e => setProductoTemp({ ...productoTemp, cantidad: Number(e.target.value) })} />
-                              <input className="form-input-profesional" value={productoTemp.valorUnitario} disabled />
-                              <input type="number" step="0.01" className="form-input-profesional" value={productoTemp.descuento} onChange={e => setProductoTemp({ ...productoTemp, descuento: Number(e.target.value) })} />
-                            </div>
-
-                            <div style={{ marginTop: '0.5rem' }}>
-                              <button className="btn-profesional btn-primary-profesional" onClick={agregarProductoDesdeLista} disabled={!productoTemp.productoId || productoTemp.cantidad < 1}><i className="fa-solid fa-plus"></i> Agregar Producto</button>
-                            </div>
-                          </>
-                        ) : (
-                          <div style={{ padding: '1rem', background: '#f8fafc', borderRadius: 8 }}>Seleccione un proveedor para ver productos</div>
-                        )}
-                      </div>
-                    </div>
-
-                    {nuevaOrden.productos.length > 0 && (
-                      <div style={{ background: 'white', padding: '0.75rem', borderRadius: 10, border: '1px solid #e5e7eb' }}>
-                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                          <thead>
-                            <tr style={{ background: '#f8fafc' }}>
-                              <th style={{ padding: '8px', textAlign: 'left' }}>Producto</th>
-                              <th style={{ padding: '8px', textAlign: 'left' }}>Descripción</th>
-                              <th style={{ padding: '8px', textAlign: 'center' }}>Cantidad</th>
-                              <th style={{ padding: '8px', textAlign: 'right' }}>Total</th>
-                              <th style={{ padding: '8px', textAlign: 'center' }}>Acción</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {nuevaOrden.productos.map((p, i) => (
-                              <tr key={p.productoId || p.id || i} style={{ borderBottom: '1px solid #eee' }}>
-                                <td style={{ padding: '8px' }}><strong>{p.producto}</strong></td>
-                                <td style={{ padding: '8px' }}>{p.descripcion}</td>
-                                <td style={{ padding: '8px', textAlign: 'center' }}>{p.cantidad}</td>
-                                <td style={{ padding: '8px', textAlign: 'right' }}>${p.valorTotal.toLocaleString()}</td>
-                                <td style={{ padding: '8px', textAlign: 'center' }}><button className="btn-profesional btn-danger-profesional" onClick={() => eliminarProducto(i)}>Eliminar</button></td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-
-                    <div style={{ marginTop: '0.75rem', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
-                      <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: '0.85rem', color: '#6c757d' }}>Subtotal</div>
-                        <div style={{ fontSize: '1.05rem', fontWeight: 700 }}>${calcularTotalesProductos(nuevaOrden.productos, nuevaOrden.iva || 0).subtotal.toLocaleString()}</div>
-                      </div>
-                      <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: '0.85rem', color: '#6c757d' }}>Impuestos ({nuevaOrden.iva || 0}%)</div>
-                        <div style={{ fontSize: '1.05rem', fontWeight: 700 }}>${calcularTotalesProductos(nuevaOrden.productos, nuevaOrden.iva || 0).impuestos.toLocaleString()}</div>
-                      </div>
-                      <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: '0.85rem', color: '#6c757d' }}>Total</div>
-                        <div style={{ fontSize: '1.15rem', fontWeight: 700, color: '#7b1fa2' }}>${calcularTotalesProductos(nuevaOrden.productos, nuevaOrden.iva || 0).total.toLocaleString()}</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div style={{ width: 340, padding: '1rem', background: '#f6f0fb', borderLeft: '1px solid #ebe3f6', overflowY: 'auto' }}>
-                    <div className="pdf-orden-compra" style={{ background: 'white', padding: '0.9rem', borderRadius: 8 }}>
-                      <div style={{ textAlign: 'center', background: 'linear-gradient(135deg,#6a1b9a,#9b59b6)', color: 'white', padding: '0.5rem', borderRadius: 6, marginBottom: '0.6rem', fontWeight: 700 }}>ORDEN DE COMPRA</div>
-                      <div style={{ fontSize: '0.9rem', marginBottom: '0.4rem' }}><strong>N°</strong> {nuevaOrden.numeroOrden || '—'}</div>
-                      <div style={{ fontSize: '0.9rem', marginBottom: '0.4rem' }}><strong>Proveedor:</strong> {nuevaOrden.proveedor || '-'}</div>
-                      <div style={{ fontSize: '0.9rem', marginBottom: '0.4rem' }}><strong>Solicitado por:</strong> {nuevaOrden.solicitadoPor || '-'}</div>
-                      <div style={{ fontSize: '0.9rem', marginBottom: '0.4rem' }}><strong>Fecha:</strong> {new Date(nuevaOrden.fechaOrden || Date.now()).toLocaleDateString('es-ES')}</div>
-                      <hr />
-                      <div>
-                        {nuevaOrden.productos.map((p, i) => (
-                          <div key={p.productoId || p.id || i} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.45rem' }}>
-                            <div style={{ fontSize: '0.9rem' }}>{p.producto}</div>
-                            <div style={{ fontSize: '0.9rem' }}>{p.cantidad} x ${(p.valorUnitario||0).toLocaleString()}</div>
-                          </div>
-                        ))}
-                      </div>
-                      <hr />
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700 }}>
-                        <div>Total</div>
-                        <div style={{ color: '#7b1fa2' }}>${calcularTotalesProductos(nuevaOrden.productos).total.toLocaleString()}</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{ padding: '1rem', borderTop: '1px solid #ececec', background: '#fff' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ color: '#7f8c8d' }}>{nuevaOrden.productos.length} producto(s)</div>
-                    <div style={{ display: 'flex', gap: '0.6rem' }}>
-                      <button className="btn-profesional" onClick={cerrarModalAgregar} style={{ background: '#95a5a6', color: 'white' }}><i className="fa-solid fa-times"></i> Cancelar</button>
-                      <button className="btn-profesional btn-success-profesional" onClick={guardarOrden} disabled={nuevaOrden.productos.length === 0}><i className="fa-solid fa-check"></i> Guardar Orden</button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Modal para editar orden (formato como Proveedores) */}
-          {modalEditarVisible && (
-            <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-              <form onSubmit={(e) => { e.preventDefault(); actualizarOrden(); }} style={{ backgroundColor: 'white', borderRadius: '20px', maxWidth: '900px', width: '95%', maxHeight: '90vh', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', display: 'flex', flexDirection: 'column' }}>
-                {/* Header */}
-                <div style={{ background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white', padding: '1.5rem 2rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                      <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <i className="fa-solid fa-file-invoice" style={{ fontSize: '1.1rem' }}></i>
-                        </div>
-                        Editar Orden de Compra
-                      </h3>
-                      <p style={{ margin: '6px 0 0 58px', opacity: 0.9, fontSize: '0.95rem' }}>Modifica los detalles de la orden</p>
-                    </div>
-                    <button type="button" onClick={cerrarModalEditar} style={{ background: 'rgba(255,255,255,0.18)', border: 'none', color: 'white', fontSize: '1.25rem', width: 36, height: 36, borderRadius: 18, cursor: 'pointer' }}>&times;</button>
-                  </div>
-                </div>
-
-                {/* Body */}
-                <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem', backgroundColor: '#f8fafc' }}>
-                  <div style={{ background: 'white', padding: '1.5rem', borderRadius: 12, marginBottom: '1rem', border: '1px solid #e2e8f0', borderLeft: '4px solid #10b981' }}>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                      <div>
-                        <label htmlFor="editar-proveedor" className="form-label-profesional">Proveedor *</label>
-                        <select id="editar-proveedor" value={ordenEditando.proveedorId} onChange={handleProveedorChangeEditar} className="form-input-profesional" required>
-                          <option value="">Seleccione un proveedor</option>
-                          {proveedores.filter(p => p.activo).map(proveedor => (
-                            <option key={proveedor._id} value={proveedor._id}>{proveedor.nombre}</option>
-                          ))}
-                        </select>
-                        {errores.proveedor && <div style={{ color: '#e74c3c', fontSize: '0.85rem' }}>{errores.proveedor}</div>}
                       </div>
 
-                      <div>
-                        <label htmlFor="editar-solicitadoPor" className="form-label-profesional">Solicitado Por</label>
-                        <input id="editar-solicitadoPor" disabled value={ordenEditando.solicitadoPor} className="form-input-profesional" style={{ backgroundColor: '#f3f4f6', cursor: 'not-allowed' }} />
-                        {errores.solicitadoPor && <div style={{ color: '#e74c3c', fontSize: '0.85rem' }}>{errores.solicitadoPor}</div>}
-                      </div>
-
-                      <div style={{ gridColumn: '1 / -1' }}>
-                        <label htmlFor="editar-condicionesPago" className="form-label-profesional">Condiciones de Pago</label>
-                        <textarea id="editar-condicionesPago" value={ordenEditando.condicionesPago} onChange={e => setOrdenEditando({ ...ordenEditando, condicionesPago: e.target.value })} className="form-input-profesional" rows={3} style={{ resize: 'vertical' }} />
-                      </div>
-
-                      <div>
-                        <label htmlFor="editar-iva" className="form-label-profesional">IVA (%)</label>
-                        <input id="editar-iva" type="number" step="0.01" className="form-input-profesional" value={ordenEditando.iva || 0} onChange={e => setOrdenEditando({ ...ordenEditando, iva: Number(e.target.value) })} />
-                      </div>
-
-                      <div>
-                        <div className="form-label-profesional">Estado</div>
-                        <div>
-                          <span className={`badge-profesional ${ordenEditando.estado === 'Pendiente' ? 'badge-pendiente' : 'badge-completada'}`}>{ordenEditando.estado}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Productos */}
-                  <div style={{ background: 'white', padding: '1rem', borderRadius: 12, border: '1px solid #e2e8f0' }}>
-                    <h6 style={{ marginTop: 0, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><i className="fa-solid fa-list-check"></i> Productos en la Orden ({ordenEditando.productos.length})</h6>
-
-                    {ordenEditando.productos.length > 0 ? (
-                      <>
-                        {productoEditando.index !== null && (
-                          <div style={{ background: '#fff7ed', border: '1px solid #ffe8cc', borderRadius: 8, padding: '0.75rem', marginBottom: '0.75rem' }}>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '0.5rem' }}>
-                              <div>
-                                <label htmlFor="editar-producto-select" className="form-label-profesional">Producto</label>
-                                <select id="editar-producto-select" className="form-input-profesional" value={productoEditando.productoId || ''} onChange={handleProductoEditSelectChange}>
-                                  <option value="">Seleccione un producto</option>
-                                  {productoEditando.productoId && !productosProveedor.some(p => p._id === productoEditando.productoId) && (
-                                    <option value={productoEditando.productoId}>{productoEditando.producto || 'Producto actual'}</option>
-                                  )}
-                                  {productosProveedor.map(prod => (
-                                    <option key={prod._id} value={prod._id}>{prod.name || prod.nombre} - ${(prod.price || prod.precio)?.toLocaleString()}</option>
-                                  ))}
-                                </select>
-                              </div>
-                              <div>
-                                <label htmlFor="editar-producto-descripcion" className="form-label-profesional">Descripción</label>
-                                <input id="editar-producto-descripcion" className="form-input-profesional" value={productoEditando.descripcion} disabled />
-                              </div>
-                              <div>
-                                <label htmlFor="editar-producto-cantidad" className="form-label-profesional">Cantidad</label>
-                                <input id="editar-producto-cantidad" type="number" min="1" className="form-input-profesional" value={productoEditando.cantidad} onChange={e => setProductoEditando({ ...productoEditando, cantidad: Number(e.target.value) })} />
-                              </div>
-                              <div>
-                                <label htmlFor="editar-producto-valorUnitario" className="form-label-profesional">Valor Unitario</label>
-                                <input id="editar-producto-valorUnitario" type="number" min="0" step="0.01" className="form-input-profesional" value={productoEditando.valorUnitario} disabled />
-                              </div>
-                              <div>
-                                <label htmlFor="editar-producto-descuento" className="form-label-profesional">Descuento</label>
-                                <input id="editar-producto-descuento" type="number" min="0" step="0.01" className="form-input-profesional" value={productoEditando.descuento} onChange={e => setProductoEditando({ ...productoEditando, descuento: Number(e.target.value) })} />
-                              </div>
-                            </div>
-                            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
-                              <button type="button" className="btn-profesional btn-success-profesional" onClick={guardarProductoEditado}><i className="fa-solid fa-check"></i> Guardar</button>
-                              <button type="button" className="btn-profesional" onClick={cancelarEdicionProducto} style={{ background: '#95a5a6', color: 'white' }}><i className="fa-solid fa-times"></i> Cancelar</button>
-                            </div>
-                          </div>
-                        )}
-
-                        <div className="table-responsive">
-                          <table className="table-profesional" style={{ width: '100%' }}>
+                      {nuevaOrden.productos.length > 0 && (
+                        <div style={{ background: 'white', padding: '0.75rem', borderRadius: 10, border: '1px solid #e5e7eb' }}>
+                          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                             <thead>
-                              <tr>
-                                <th>Producto</th>
-                                <th>Descripción</th>
-                                <th>Cantidad</th>
-                                <th>Valor Unit.</th>
-                                <th>Descuento</th>
-                                <th>Total</th>
-                                <th>Acciones</th>
+                              <tr style={{ background: '#f8fafc' }}>
+                                <th style={{ padding: '8px', textAlign: 'left' }}>Producto</th>
+                                <th style={{ padding: '8px', textAlign: 'left' }}>Descripción</th>
+                                <th style={{ padding: '8px', textAlign: 'center' }}>Cantidad</th>
+                                <th style={{ padding: '8px', textAlign: 'right' }}>Total</th>
+                                <th style={{ padding: '8px', textAlign: 'center' }}>Acción</th>
                               </tr>
                             </thead>
                             <tbody>
-                              {ordenEditando.productos.map((p, i) => (
-                                <tr key={p.productoId || p.id || i} className={productoEditando.index === i ? 'highlighted-row' : ''}>
-                                  <td><strong>{p.producto}</strong>{productoEditando.index === i && <span style={{ color: '#f39c12', marginLeft: 6, fontSize: '0.8rem' }}>(Editando)</span>}</td>
-                                  <td>{p.descripcion || 'N/A'}</td>
-                                  <td><span className="badge-profesional" style={{ background: '#e3f2fd', color: '#1976d2' }}>{p.cantidad}</span></td>
-                                  <td>${p.valorUnitario?.toLocaleString()}</td>
-                                  <td>{p.descuento > 0 ? <span style={{ color: '#e74c3c', fontWeight: 600 }}>-${p.descuento?.toLocaleString() || '0'}</span> : <span style={{ color: '#95a5a6' }}>$0</span>}</td>
-                                  <td><strong>${p.valorTotal?.toLocaleString()}</strong></td>
-                                  <td>
-                                    <div style={{ display: 'flex', gap: '0.3rem' }}>
-                                      <button type="button" className="btn-profesional btn-warning-profesional" onClick={() => editarProducto(i)} disabled={productoEditando.index !== null && productoEditando.index !== i}><i className="fa-solid fa-pen"></i></button>
-                                      <button type="button" className="btn-profesional btn-danger-profesional" onClick={() => eliminarProductoEdicion(i)} disabled={productoEditando.index !== null}><i className="fa-solid fa-trash"></i></button>
-                                    </div>
-                                  </td>
+                              {nuevaOrden.productos.map((p, i) => (
+                                <tr key={p.productoId || p.id || i} style={{ borderBottom: '1px solid #eee' }}>
+                                  <td style={{ padding: '8px' }}><strong>{p.producto}</strong></td>
+                                  <td style={{ padding: '8px' }}>{p.descripcion}</td>
+                                  <td style={{ padding: '8px', textAlign: 'center' }}>{p.cantidad}</td>
+                                  <td style={{ padding: '8px', textAlign: 'right' }}>${p.valorTotal.toLocaleString()}</td>
+                                  <td style={{ padding: '8px', textAlign: 'center' }}><button className="btn-profesional btn-danger-profesional" onClick={() => eliminarProducto(i)}>Eliminar</button></td>
                                 </tr>
                               ))}
                             </tbody>
                           </table>
                         </div>
-                      </>
-                    ) : (
-                      <div style={{ textAlign: 'center', padding: '1rem', color: '#7f8c8d' }}>
-                        <i className="fa-solid fa-cart-shopping" style={{ fontSize: '1.6rem', marginBottom: '0.5rem', display: 'block' }}></i>
-                        <p>No hay productos en esta orden. Agrega al menos un producto.</p>
+                      )}
+
+                      <div style={{ marginTop: '0.75rem', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontSize: '0.85rem', color: '#6c757d' }}>Subtotal</div>
+                          <div style={{ fontSize: '1.05rem', fontWeight: 700 }}>${calcularTotalesProductos(nuevaOrden.productos, nuevaOrden.iva || 0).subtotal.toLocaleString()}</div>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontSize: '0.85rem', color: '#6c757d' }}>Impuestos ({nuevaOrden.iva || 0}%)</div>
+                          <div style={{ fontSize: '1.05rem', fontWeight: 700 }}>${calcularTotalesProductos(nuevaOrden.productos, nuevaOrden.iva || 0).impuestos.toLocaleString()}</div>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontSize: '0.85rem', color: '#6c757d' }}>Total</div>
+                          <div style={{ fontSize: '1.15rem', fontWeight: 700, color: '#7b1fa2' }}>${calcularTotalesProductos(nuevaOrden.productos, nuevaOrden.iva || 0).total.toLocaleString()}</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ width: 340, padding: '1rem', background: '#f6f0fb', borderLeft: '1px solid #ebe3f6', overflowY: 'auto' }}>
+                      <div className="pdf-orden-compra" style={{ background: 'white', padding: '0.9rem', borderRadius: 8 }}>
+                        <div style={{ textAlign: 'center', background: 'linear-gradient(135deg,#6a1b9a,#9b59b6)', color: 'white', padding: '0.5rem', borderRadius: 6, marginBottom: '0.6rem', fontWeight: 700 }}>ORDEN DE COMPRA</div>
+                        <div style={{ fontSize: '0.9rem', marginBottom: '0.4rem' }}><strong>N°</strong> {nuevaOrden.numeroOrden || '—'}</div>
+                        <div style={{ fontSize: '0.9rem', marginBottom: '0.4rem' }}><strong>Proveedor:</strong> {nuevaOrden.proveedor || '-'}</div>
+                        <div style={{ fontSize: '0.9rem', marginBottom: '0.4rem' }}><strong>Solicitado por:</strong> {nuevaOrden.solicitadoPor || '-'}</div>
+                        <div style={{ fontSize: '0.9rem', marginBottom: '0.4rem' }}><strong>Fecha:</strong> {new Date(nuevaOrden.fechaOrden || Date.now()).toLocaleDateString('es-ES')}</div>
+                        <hr />
+                        <div>
+                          {nuevaOrden.productos.map((p, i) => (
+                            <div key={p.productoId || p.id || i} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.45rem' }}>
+                              <div style={{ fontSize: '0.9rem' }}>{p.producto}</div>
+                              <div style={{ fontSize: '0.9rem' }}>{p.cantidad} x ${(p.valorUnitario || 0).toLocaleString()}</div>
+                            </div>
+                          ))}
+                        </div>
+                        <hr />
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700 }}>
+                          <div>Total</div>
+                          <div style={{ color: '#7b1fa2' }}>${calcularTotalesProductos(nuevaOrden.productos).total.toLocaleString()}</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ padding: '1rem', borderTop: '1px solid #ececec', background: '#fff' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ color: '#7f8c8d' }}>{nuevaOrden.productos.length} producto(s)</div>
+                      <div style={{ display: 'flex', gap: '0.6rem' }}>
+                        <button className="btn-profesional" onClick={cerrarModalAgregar} style={{ background: '#95a5a6', color: 'white' }}><i className="fa-solid fa-times"></i> Cancelar</button>
+                        <button className="btn-profesional btn-success-profesional" onClick={guardarOrden} disabled={nuevaOrden.productos.length === 0}><i className="fa-solid fa-check"></i> Guardar Orden</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Modal para editar orden (formato como Proveedores) */}
+            {modalEditarVisible && (
+              <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+                <form onSubmit={(e) => { e.preventDefault(); actualizarOrden(); }} style={{ backgroundColor: 'white', borderRadius: '20px', maxWidth: '900px', width: '95%', maxHeight: '90vh', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', display: 'flex', flexDirection: 'column' }}>
+                  {/* Header */}
+                  <div style={{ background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white', padding: '1.5rem 2rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <i className="fa-solid fa-file-invoice" style={{ fontSize: '1.1rem' }}></i>
+                          </div>
+                          Editar Orden de Compra
+                        </h3>
+                        <p style={{ margin: '6px 0 0 58px', opacity: 0.9, fontSize: '0.95rem' }}>Modifica los detalles de la orden</p>
+                      </div>
+                      <button type="button" onClick={cerrarModalEditar} style={{ background: 'rgba(255,255,255,0.18)', border: 'none', color: 'white', fontSize: '1.25rem', width: 36, height: 36, borderRadius: 18, cursor: 'pointer' }}>&times;</button>
+                    </div>
+                  </div>
+
+                  {/* Body */}
+                  <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem', backgroundColor: '#f8fafc' }}>
+                    <div style={{ background: 'white', padding: '1.5rem', borderRadius: 12, marginBottom: '1rem', border: '1px solid #e2e8f0', borderLeft: '4px solid #10b981' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                        <div>
+                          <label htmlFor="editar-proveedor" className="form-label-profesional">Proveedor *</label>
+                          <select id="editar-proveedor" value={ordenEditando.proveedorId} onChange={handleProveedorChangeEditar} className="form-input-profesional" required>
+                            <option value="">Seleccione un proveedor</option>
+                            {proveedores.filter(p => p.activo).map(proveedor => (
+                              <option key={proveedor._id} value={proveedor._id}>{proveedor.nombre}</option>
+                            ))}
+                          </select>
+                          {errores.proveedor && <div style={{ color: '#e74c3c', fontSize: '0.85rem' }}>{errores.proveedor}</div>}
+                        </div>
+
+                        <div>
+                          <label htmlFor="editar-solicitadoPor" className="form-label-profesional">Solicitado Por</label>
+                          <input id="editar-solicitadoPor" disabled value={ordenEditando.solicitadoPor} className="form-input-profesional" style={{ backgroundColor: '#f3f4f6', cursor: 'not-allowed' }} />
+                          {errores.solicitadoPor && <div style={{ color: '#e74c3c', fontSize: '0.85rem' }}>{errores.solicitadoPor}</div>}
+                        </div>
+
+                        <div style={{ gridColumn: '1 / -1' }}>
+                          <label htmlFor="editar-condicionesPago" className="form-label-profesional">Condiciones de Pago</label>
+                          <textarea id="editar-condicionesPago" value={ordenEditando.condicionesPago} onChange={e => setOrdenEditando({ ...ordenEditando, condicionesPago: e.target.value })} className="form-input-profesional" rows={3} style={{ resize: 'vertical' }} />
+                        </div>
+
+                        <div>
+                          <label htmlFor="editar-iva" className="form-label-profesional">IVA (%)</label>
+                          <input id="editar-iva" type="number" step="0.01" className="form-input-profesional" value={ordenEditando.iva || 0} onChange={e => setOrdenEditando({ ...ordenEditando, iva: Number(e.target.value) })} />
+                        </div>
+
+                        <div>
+                          <div className="form-label-profesional">Estado</div>
+                          <div>
+                            <span className={`badge-profesional ${ordenEditando.estado === 'Pendiente' ? 'badge-pendiente' : 'badge-completada'}`}>{ordenEditando.estado}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Productos */}
+                    <div style={{ background: 'white', padding: '1rem', borderRadius: 12, border: '1px solid #e2e8f0' }}>
+                      <h6 style={{ marginTop: 0, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><i className="fa-solid fa-list-check"></i> Productos en la Orden ({ordenEditando.productos.length})</h6>
+
+                      {ordenEditando.productos.length > 0 ? (
+                        <>
+                          {productoEditando.index !== null && (
+                            <div style={{ background: '#fff7ed', border: '1px solid #ffe8cc', borderRadius: 8, padding: '0.75rem', marginBottom: '0.75rem' }}>
+                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '0.5rem' }}>
+                                <div>
+                                  <label htmlFor="editar-producto-select" className="form-label-profesional">Producto</label>
+                                  <select id="editar-producto-select" className="form-input-profesional" value={productoEditando.productoId || ''} onChange={handleProductoEditSelectChange}>
+                                    <option value="">Seleccione un producto</option>
+                                    {productoEditando.productoId && !productosProveedor.some(p => p._id === productoEditando.productoId) && (
+                                      <option value={productoEditando.productoId}>{productoEditando.producto || 'Producto actual'}</option>
+                                    )}
+                                    {productosProveedor.map(prod => (
+                                      <option key={prod._id} value={prod._id}>{prod.name || prod.nombre} - ${(prod.price || prod.precio)?.toLocaleString()}</option>
+                                    ))}
+                                  </select>
+                                </div>
+                                <div>
+                                  <label htmlFor="editar-producto-descripcion" className="form-label-profesional">Descripción</label>
+                                  <input id="editar-producto-descripcion" className="form-input-profesional" value={productoEditando.descripcion} disabled />
+                                </div>
+                                <div>
+                                  <label htmlFor="editar-producto-cantidad" className="form-label-profesional">Cantidad</label>
+                                  <input id="editar-producto-cantidad" type="number" min="1" className="form-input-profesional" value={productoEditando.cantidad} onChange={e => setProductoEditando({ ...productoEditando, cantidad: Number(e.target.value) })} />
+                                </div>
+                                <div>
+                                  <label htmlFor="editar-producto-valorUnitario" className="form-label-profesional">Valor Unitario</label>
+                                  <input id="editar-producto-valorUnitario" type="number" min="0" step="0.01" className="form-input-profesional" value={productoEditando.valorUnitario} disabled />
+                                </div>
+                                <div>
+                                  <label htmlFor="editar-producto-descuento" className="form-label-profesional">Descuento</label>
+                                  <input id="editar-producto-descuento" type="number" min="0" step="0.01" className="form-input-profesional" value={productoEditando.descuento} onChange={e => setProductoEditando({ ...productoEditando, descuento: Number(e.target.value) })} />
+                                </div>
+                              </div>
+                              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                                <button type="button" className="btn-profesional btn-success-profesional" onClick={guardarProductoEditado}><i className="fa-solid fa-check"></i> Guardar</button>
+                                <button type="button" className="btn-profesional" onClick={cancelarEdicionProducto} style={{ background: '#95a5a6', color: 'white' }}><i className="fa-solid fa-times"></i> Cancelar</button>
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="table-responsive">
+                            <table className="table-profesional" style={{ width: '100%' }}>
+                              <thead>
+                                <tr>
+                                  <th>Producto</th>
+                                  <th>Descripción</th>
+                                  <th>Cantidad</th>
+                                  <th>Valor Unit.</th>
+                                  <th>Descuento</th>
+                                  <th>Total</th>
+                                  <th>Acciones</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {ordenEditando.productos.map((p, i) => (
+                                  <tr key={p.productoId || p.id || i} className={productoEditando.index === i ? 'highlighted-row' : ''}>
+                                    <td><strong>{p.producto}</strong>{productoEditando.index === i && <span style={{ color: '#f39c12', marginLeft: 6, fontSize: '0.8rem' }}>(Editando)</span>}</td>
+                                    <td>{p.descripcion || 'N/A'}</td>
+                                    <td><span className="badge-profesional" style={{ background: '#e3f2fd', color: '#1976d2' }}>{p.cantidad}</span></td>
+                                    <td>${p.valorUnitario?.toLocaleString()}</td>
+                                    <td>{p.descuento > 0 ? <span style={{ color: '#e74c3c', fontWeight: 600 }}>-${p.descuento?.toLocaleString() || '0'}</span> : <span style={{ color: '#95a5a6' }}>$0</span>}</td>
+                                    <td><strong>${p.valorTotal?.toLocaleString()}</strong></td>
+                                    <td>
+                                      <div style={{ display: 'flex', gap: '0.3rem' }}>
+                                        <button type="button" className="btn-profesional btn-warning-profesional" onClick={() => editarProducto(i)} disabled={productoEditando.index !== null && productoEditando.index !== i}><i className="fa-solid fa-pen"></i></button>
+                                        <button type="button" className="btn-profesional btn-danger-profesional" onClick={() => eliminarProductoEdicion(i)} disabled={productoEditando.index !== null}><i className="fa-solid fa-trash"></i></button>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </>
+                      ) : (
+                        <div style={{ textAlign: 'center', padding: '1rem', color: '#7f8c8d' }}>
+                          <i className="fa-solid fa-cart-shopping" style={{ fontSize: '1.6rem', marginBottom: '0.5rem', display: 'block' }}></i>
+                          <p>No hay productos en esta orden. Agrega al menos un producto.</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Totales */}
+                    {ordenEditando.productos.length > 0 && (
+                      <div style={{ marginTop: '0.75rem', background: 'white', padding: '1rem', borderRadius: 12, border: '1px solid #e2e8f0' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+                          <div>
+                            <div style={{ fontSize: '0.9rem', opacity: 0.9 }}>Subtotal</div>
+                            <div style={{ fontSize: '1.1rem', fontWeight: '700' }}>${calcularTotalesProductos(ordenEditando.productos).subtotal.toLocaleString()}</div>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '0.9rem', opacity: 0.9 }}>Total</div>
+                            <div style={{ fontSize: '1.4rem', fontWeight: '700', color: '#f39c12' }}>${calcularTotalesProductos(ordenEditando.productos).total.toLocaleString()}</div>
+                          </div>
+                        </div>
                       </div>
                     )}
                   </div>
 
-                  {/* Totales */}
-                  {ordenEditando.productos.length > 0 && (
-                    <div style={{ marginTop: '0.75rem', background: 'white', padding: '1rem', borderRadius: 12, border: '1px solid #e2e8f0' }}>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-                        <div>
-                          <div style={{ fontSize: '0.9rem', opacity: 0.9 }}>Subtotal</div>
-                          <div style={{ fontSize: '1.1rem', fontWeight: '700' }}>${calcularTotalesProductos(ordenEditando.productos).subtotal.toLocaleString()}</div>
-                        </div>
-                        <div>
-                          <div style={{ fontSize: '0.9rem', opacity: 0.9 }}>Total</div>
-                          <div style={{ fontSize: '1.4rem', fontWeight: '700', color: '#f39c12' }}>${calcularTotalesProductos(ordenEditando.productos).total.toLocaleString()}</div>
-                        </div>
+                  {/* Footer */}
+                  <div style={{ padding: '1rem 1.25rem', borderTop: '1px solid #e6eef7', background: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ color: '#7f8c8d' }}>{ordenEditando.productos.length} producto(s) en la orden</div>
+                    <div style={{ display: 'flex', gap: '0.75rem' }}>
+                      <button type="button" onClick={cerrarModalEditar} className="btn-profesional" style={{ background: '#95a5a6', color: 'white' }}><i className="fa-solid fa-times"></i> Cancelar</button>
+                      <button type="submit" className="btn-profesional btn-success-profesional" disabled={ordenEditando.productos.length === 0 || cargando}>{cargando ? <><i className="fa-solid fa-spinner fa-spin"></i> Guardando...</> : <><i className="fa-solid fa-check"></i> Actualizar Orden</>}</button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            {/* Modal de Detalles */}
+            {modalDetallesVisible && ordenSeleccionada && (
+              <DetallesOrdenModal
+                visible={modalDetallesVisible}
+                orden={ordenSeleccionada}
+                onClose={cerrarModalDetalles}
+                onPrint={imprimirOrden}
+                onSendEmail={enviarOrdenPorCorreo}
+              />
+            )}
+
+            {/* Modal de Confirmación */}
+            {modalConfirmacionVisible && ordenAConfirmar && (
+              <div className="modal-overlay">
+                <div className="modal-realista modal-confirmacion" style={{ maxWidth: '500px', width: '90%', background: 'linear-gradient(135deg, #ffffff, #f8f9fa)' }}>
+
+                  <OrderDetailsHeader
+                    iconClass="fa-solid fa-file-invoice-dollar"
+                    title="Confirmar Orden"
+                    subtitle={`N° ${ordenAConfirmar.numeroOrden}`}
+                    onClose={cancelarConfirmacion}
+                  />
+
+                  <div className="modal-body" style={{ padding: '1.5rem' }}>
+                    <h6 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}><i className="fa-solid fa-file-lines icon-gap"></i> Vista Previa de la Orden</h6>
+
+                    <div style={{ display: 'grid', gap: '0.75rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ fontWeight: '600', color: '#666' }}>Número:</span>
+                        <span style={{ fontWeight: 'bold' }}>{ordenAConfirmar.numeroOrden}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ fontWeight: '600', color: '#666' }}>Proveedor:</span>
+                        <span>{ordenAConfirmar.proveedor || 'No especificado'}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ fontWeight: '600', color: '#666' }}>Total:</span>
+                        <span style={{ fontWeight: 'bold', color: '#e74c3c' }}>${ordenAConfirmar.total?.toLocaleString()}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ fontWeight: '600', color: '#666' }}>Solicitado por:</span>
+                        <span>{ordenAConfirmar.solicitadoPor || 'No especificado'}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ fontWeight: '600', color: '#666' }}>Fecha:</span>
+                        <span>{new Date(ordenAConfirmar.fechaOrden).toLocaleDateString()}</span>
                       </div>
                     </div>
-                  )}
-                </div>
 
-                {/* Footer */}
-                <div style={{ padding: '1rem 1.25rem', borderTop: '1px solid #e6eef7', background: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ color: '#7f8c8d' }}>{ordenEditando.productos.length} producto(s) en la orden</div>
-                  <div style={{ display: 'flex', gap: '0.75rem' }}>
-                    <button type="button" onClick={cerrarModalEditar} className="btn-profesional" style={{ background: '#95a5a6', color: 'white' }}><i className="fa-solid fa-times"></i> Cancelar</button>
-                    <button type="submit" className="btn-profesional btn-success-profesional" disabled={ordenEditando.productos.length === 0 || cargando}>{cargando ? <><i className="fa-solid fa-spinner fa-spin"></i> Guardando...</> : <><i className="fa-solid fa-check"></i> Actualizar Orden</>}</button>
-                  </div>
-                </div>
-              </form>
-            </div>
-          )}
-
-          {/* Modal de Detalles */}
-          <DetallesOrdenModal
-            visible={modalDetallesVisible}
-            orden={ordenSeleccionada}
-            onClose={cerrarModalDetalles}
-            onPrint={imprimirOrden}
-            onSendEmail={enviarOrdenPorCorreo}
-          />
-
-          {/* Modal de Confirmación */}
-          {modalConfirmacionVisible && ordenAConfirmar && (
-            <div className="modal-overlay">
-              <div className="modal-realista modal-confirmacion" style={{ maxWidth: '500px', width: '90%', background: 'linear-gradient(135deg, #ffffff, #f8f9fa)' }}>
-
-                <OrderDetailsHeader
-                  iconClass="fa-solid fa-file-invoice-dollar"
-                  title="Confirmar Orden"
-                  subtitle={`N° ${ordenAConfirmar.numeroOrden}`}
-                  onClose={cancelarConfirmacion}
-                />
-
-                <div className="modal-body" style={{ padding: '1.5rem' }}>
-                  <h6 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}><i className="fa-solid fa-file-lines icon-gap"></i> Vista Previa de la Orden</h6>
-
-                  <div style={{ display: 'grid', gap: '0.75rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ fontWeight: '600', color: '#666' }}>Número:</span>
-                      <span style={{ fontWeight: 'bold' }}>{ordenAConfirmar.numeroOrden}</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ fontWeight: '600', color: '#666' }}>Proveedor:</span>
-                      <span>{ordenAConfirmar.proveedor || 'No especificado'}</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ fontWeight: '600', color: '#666' }}>Total:</span>
-                      <span style={{ fontWeight: 'bold', color: '#e74c3c' }}>${ordenAConfirmar.total?.toLocaleString()}</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ fontWeight: '600', color: '#666' }}>Solicitado por:</span>
-                      <span>{ordenAConfirmar.solicitadoPor || 'No especificado'}</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ fontWeight: '600', color: '#666' }}>Fecha:</span>
-                      <span>{new Date(ordenAConfirmar.fechaOrden).toLocaleDateString()}</span>
+                    <div style={{ background: 'linear-gradient(135deg, rgba(106,27,154,0.06), rgba(155,89,182,0.04))', border: '1px solid rgba(155,89,182,0.12)', borderRadius: '6px', padding: '1rem', textAlign: 'center', marginTop: '1rem' }}>
+                      <i className="fa-solid fa-exclamation-triangle" style={{ color: '#6a1b9a', fontSize: '1.5rem', marginBottom: '0.5rem' }}></i>
+                      <p style={{ margin: '0', color: '#4b0082', fontWeight: '500' }}>¿Estás seguro de que deseas marcar esta orden como <strong>COMPLETADA</strong>?</p>
+                      <small style={{ color: '#6b4a86', display: 'block', marginTop: '0.5rem' }}>Esta acción no se puede deshacer</small>
                     </div>
                   </div>
 
-                  <div style={{ background: 'linear-gradient(135deg, rgba(106,27,154,0.06), rgba(155,89,182,0.04))', border: '1px solid rgba(155,89,182,0.12)', borderRadius: '6px', padding: '1rem', textAlign: 'center', marginTop: '1rem' }}>
-                    <i className="fa-solid fa-exclamation-triangle" style={{ color: '#6a1b9a', fontSize: '1.5rem', marginBottom: '0.5rem' }}></i>
-                    <p style={{ margin: '0', color: '#4b0082', fontWeight: '500' }}>¿Estás seguro de que deseas marcar esta orden como <strong>COMPLETADA</strong>?</p>
-                    <small style={{ color: '#6b4a86', display: 'block', marginTop: '0.5rem' }}>Esta acción no se puede deshacer</small>
+                  <div className="modal-footer" style={{ padding: '1.25rem', borderTop: '1px solid #e0e0e0', background: '#f8f9fa', display: 'flex', justifyContent: 'flex-end', gap: '1rem', borderBottomLeftRadius: '10px', borderBottomRightRadius: '10px' }}>
+                    <button onClick={cancelarConfirmacion} className="btn-profesional" style={{ background: '#95a5a6', color: 'white', padding: '0.5rem 1.25rem', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' }}>
+                      <i className="fa-solid fa-times icon-gap"></i> Cancelar
+                    </button>
+                    <button onClick={confirmarCompletada} className="btn-profesional btn-primary-profesional" style={{ background: 'linear-gradient(135deg, #6a1b9a, #9b59b6)', color: 'white', padding: '0.5rem 1.25rem', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer', boxShadow: '0 2px 8px rgba(155,89,182,0.25)' }}>
+                      <i className="fa-solid fa-check icon-gap"></i> Marcar como Completada
+                    </button>
                   </div>
-                </div>
-
-                <div className="modal-footer" style={{ padding: '1.25rem', borderTop: '1px solid #e0e0e0', background: '#f8f9fa', display: 'flex', justifyContent: 'flex-end', gap: '1rem', borderBottomLeftRadius: '10px', borderBottomRightRadius: '10px' }}>
-                  <button onClick={cancelarConfirmacion} className="btn-profesional" style={{ background: '#95a5a6', color: 'white', padding: '0.5rem 1.25rem', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' }}>
-                    <i className="fa-solid fa-times icon-gap"></i> Cancelar
-                  </button>
-                  <button onClick={confirmarCompletada} className="btn-profesional btn-primary-profesional" style={{ background: 'linear-gradient(135deg, #6a1b9a, #9b59b6)', color: 'white', padding: '0.5rem 1.25rem', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer', boxShadow: '0 2px 8px rgba(155,89,182,0.25)' }}>
-                    <i className="fa-solid fa-check icon-gap"></i> Marcar como Completada
-                  </button>
                 </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
+
       </div>
       <div className="custom-footer">
         <p className="custom-footer-text">

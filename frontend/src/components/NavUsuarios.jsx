@@ -18,7 +18,7 @@ export default function NavUsuarios() {
   }, []);
 
   return (
-    <div>
+    <div className='encabezado'>
       <h2>Usuarios</h2>
       <div className="nav-modulo-wrapper">
         <nav className="nav-modulo" id="usuarios-nav">

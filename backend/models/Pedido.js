@@ -10,6 +10,9 @@ const PedidoSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Cotizacion',
   },
+  descripcion: {
+    type: String, default: ''
+  },
   productos: [{
     product: {
       type: mongoose.Schema.Types.ObjectId,
@@ -22,6 +25,9 @@ const PedidoSchema = new mongoose.Schema({
       required: true
     }
   }],
+  condicionesPago: {
+    type: String, default: ''
+  },
   remisionGenerada: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Remision'

@@ -47,21 +47,23 @@ async function resolveClienteId(cliente) {
           telefono: cliente.telefono || '',
           direccion: cliente.direccion || '',
           ciudad: cliente.ciudad || '',
-          esCliente: false
+          esCliente: false,
+          operacion: cliente.operacion || undefined
         });
         clienteExistente = await nuevoCliente.save();
       }
       return clienteExistente._id;
     }
 
-    // Si no hay correo, crear cliente mínimo
+    // Si no hay correo, crear cliente mínimo (incluyendo operacion si viene)
     const nuevoCliente = new Cliente({
       nombre: cliente.nombre || '',
       correo: cliente.correo || '',
       telefono: cliente.telefono || '',
       direccion: cliente.direccion || '',
       ciudad: cliente.ciudad || '',
-      esCliente: false
+      esCliente: false,
+      operacion: cliente.operacion || undefined
     });
     const creado = await nuevoCliente.save();
     return creado._id;
@@ -274,7 +276,8 @@ exports.getPedidos = async (req, res) => {
 // Crear pedido (refactor: delegar pasos a helpers para bajar complejidad)
 exports.createPedido = async (req, res) => {
   try {
-    const { cliente, productos, fechaEntrega, observacion, cotizacionReferenciada, cotizacionCodigo } = req.body;
+    const { cliente, productos, fechaEntrega, observacion, cotizacionReferenciada, cotizacionCodigo, descripcion, condicionesPago } = req.body;
+    const clientePayload = req.body.cliente; // preserve original payload to detect operacion
 
     // Resolver / crear cliente
     let clienteId;
@@ -300,6 +303,8 @@ exports.createPedido = async (req, res) => {
       cliente: clienteId,
       productos: productosMapped,
       fechaEntrega,
+      descripcion: descripcion || '',
+      condicionesPago: condicionesPago || '',
       observacion,
       cotizacionReferenciada,
       cotizacionCodigo
@@ -311,8 +316,40 @@ exports.createPedido = async (req, res) => {
     // Si vino de una cotización, intentar marcar (no bloqueante)
     await safeMarkCotizacionAgendada(cotizacionReferenciada, pedidoGuardado._id, cotizacionCodigo);
 
-    // Actualizar cliente a esCliente: true (no bloqueante)
-    await safeSetClienteEsCliente(clienteId);
+    // Actualizar cliente según origen del pedido:
+    // - Si el pedido proviene de una cotización (cotizacionReferenciada):
+    //     -> Consultar el documento cliente. Si `esCliente` === true no hacemos nada.
+    //     -> Si `esCliente` === false (prospecto), NO cambiar `esCliente`, pero actualizar solamente `operacion: 'agenda'`.
+    // - En los demás casos (pedido normal): mantener comportamiento previo: marcar esCliente:true
+    //   a menos que el payload original explicitara `operacion: 'agenda'`.
+    try {
+      if (cotizacionReferenciada) {
+        try {
+          const clienteDoc = await Cliente.findById(clienteId).exec();
+          if (clienteDoc) {
+            const esClienteFlag = clienteDoc.esCliente === true || String(clienteDoc.esCliente).toLowerCase() === 'true';
+            if (!esClienteFlag) {
+              // No promovemos a cliente (esCliente sigue false). Solo registramos la operación 'agenda'
+              await Cliente.findByIdAndUpdate(clienteId, { operacion: 'agenda' }, { new: true }).exec();
+              console.log(`Cliente ${clienteId} es prospecto: establecido operacion='agenda' (no se cambia esCliente)`);
+            } else {
+              console.log(`Cliente ${clienteId} ya es cliente (esCliente:true): no se modificó nada`);
+            }
+          }
+        } catch (errClienteUpdate) {
+          console.warn('⚠️ No se pudo actualizar operacion del cliente tras agendar desde cotización:', errClienteUpdate?.message || errClienteUpdate);
+        }
+      } else {
+        // comportamiento legacy: si no viene de agenda explícita en payload, marcar como cliente activo
+        if (!(clientePayload && typeof clientePayload === 'object' && clientePayload.operacion === 'agenda')) {
+          await safeSetClienteEsCliente(clienteId);
+        } else {
+          console.log('Cliente creado desde agenda: se omite marcar esCliente:true');
+        }
+      }
+    } catch (errSet) {
+      console.warn('⚠️ Error aplicando reglas de cliente post-pedido (no bloqueante):', errSet?.message || errSet);
+    }
 
     return res.status(201).json(pedidoGuardado);
   } catch (err) {
@@ -514,6 +551,25 @@ exports.remisionarPedido = async (req, res) => {
 
     // Marcar cotización como remisionada (no bloqueante) - pasar ObjectId si está poblada
     safeMarkCotizacionRemisionada(pedido.cotizacionReferenciada?._id || pedido.cotizacionReferenciada);
+
+    // Actualizar cliente: si es prospecto (esCliente === false) -> promover a cliente y marcar operacion='compra'
+    try {
+      const clienteRef = pedido.cliente?._id || pedido.cliente;
+      if (clienteRef) {
+        const clienteDoc = await Cliente.findById(clienteRef).exec();
+        if (clienteDoc) {
+          const esClienteFlag = clienteDoc.esCliente === true || String(clienteDoc.esCliente).toLowerCase() === 'true';
+          if (!esClienteFlag) {
+            await Cliente.findByIdAndUpdate(clienteRef, { esCliente: true, operacion: 'compra' }, { new: true }).exec();
+            console.log(`Cliente ${clienteRef} actualizado: esCliente=true, operacion='compra'`);
+          } else {
+            console.log(`Cliente ${clienteRef} ya es cliente activo (esCliente:true) - no se realizaron cambios`);
+          }
+        }
+      }
+    } catch (errClientePromo) {
+      console.warn('⚠️ No se pudo actualizar el cliente tras remisionar (no bloqueante):', errClientePromo?.message || errClientePromo);
+    }
 
     return res.status(201).json({ message: 'Remisión creada exitosamente', remision: remisionCompleta, numeroRemision });
   } catch (error) {

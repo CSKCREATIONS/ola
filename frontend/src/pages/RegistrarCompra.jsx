@@ -296,7 +296,8 @@ export default function RegistrarCompra() {
       <Fijo />
       <div className="content">
         <NavCompras />
-        <div className="contenido-modulo">
+        <div className="max-width">
+          <div className="contenido-modulo">
           <h3 className='titulo-profesional'>Registrar Compra</h3>
           <br />
 
@@ -574,6 +575,8 @@ export default function RegistrarCompra() {
             </div>
           </div>
         </div>
+        </div>
+        
       </div>
       
       <div className="custom-footer">

@@ -126,8 +126,8 @@
   background: var(--gradient-secondary);
   position: fixed;
   top: 0;
-  left: -250px;
-  width: 250px;
+  left: -270px;
+  width: 270px;
   height: 100vh;
   z-index: 1001;
   display: flex;
@@ -146,6 +146,11 @@
 .mostrar-menu {
   left: 0;
 }
+
+
+
+
+
 
 /* ===== PREVIEW DEL USUARIO ===== */
 .preview-usuario {

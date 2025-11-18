@@ -32,7 +32,7 @@ h3 {
 
 /* ===== VARIABLES Y ESTILOS GLOBALES ===== */
 :root {
-  --gradient-primary: linear-gradient(135deg, #05083c 0%, #340e80 50%, #e3dffa 100%);
+  --gradient-primary: linear-gradient(135deg, #0a0d47 0%, #340e80 50%, #836ff7 100%);
   --gradient-secondary: linear-gradient(135deg, #05083c 0%, #272b79 50%, #461fb9 100%);
   --gradient-accent: linear-gradient(135deg, #340e80 0%, #3d19ac 50%, #5e35b1 100%);
   --text-white: #ffffff;
@@ -438,6 +438,7 @@ h3 {
   /* para que quede al final si usas layout flex */
 }
 
+
 .custom-footer-text {
   font-size: 0.7rem;
   /* letra pequeña */
@@ -445,6 +446,7 @@ h3 {
   /* gris suave */
   margin: 0;
 }
+
 
 .custom-highlight {
   color: #54a8c2;
@@ -472,10 +474,9 @@ h3 {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(-45deg, #001f54, #00337a, #004aad, #005bb5);
-  background-size: 400% 400%;
-  animation: gradientBG 12s ease infinite;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: var(--gradient-primary);
+  background-size: 300% 300%;
+  animation: gradientBG 16s ease infinite;
 }
 
 @keyframes gradientBG {
@@ -507,53 +508,98 @@ h3 {
 
 /* Caja principal */
 .login-box {
-  background: rgba(255, 255, 255, 0.9);
-  padding: 2rem;
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+  position: relative;
+  background: linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.08));
+  padding: 2.25rem;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.28);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.25);
+  backdrop-filter: blur(10px) saturate(160%);
+  -webkit-backdrop-filter: blur(10px) saturate(160%);
   text-align: center;
   width: 100%;
-  max-width: 400px;
-  color: #000;
-  animation: fadeInUp 1s ease forwards;
+  max-width: 420px;
+  animation: fadeInUp 0.8s ease forwards;
 }
 
 /* consolidated .login-title defined later; earlier duplicate removed */
 
-/* Inputs */
-.login-input-container {
-  margin-bottom: 1.2rem;
+.login-title {
+  text-align: center;
+  margin-bottom: 1.25rem;
+  color: #ffffff;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-shadow: 0 2px 18px rgba(0,0,0,0.4);
 }
+
+/* earlier .form-group/.form-input duplicates removed; consolidated at lines 2086+ */
+
+.login-button {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  background: linear-gradient(135deg, #5b5bd6, #7c5ce6);
+  color: #fff;
+  font-weight: 700;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.25s ease, filter 0.25s ease;
+  box-shadow: 0 8px 22px rgba(92, 99, 231, 0.35);
+}
+.login-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px rgba(92, 99, 231, 0.45);
+  filter: brightness(1.03);
+}
+
+
+
+
+.forgot-password {
+  color: #5a67d8;
+  text-decoration: none;
+}
+
+.forgot-password:hover {
+  text-decoration: underline;
+}
+
+
+
+
 
 .login-input-container input {
   width: 100%;
-  padding: 0.8rem;
-  border-radius: 10px;
-  border: 1px solid #ccc;
+  padding: 0.9rem 1rem;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.9);
+  border: 1px solid rgba(226, 232, 240, 0.9);
   outline: none;
-  background: #f9f9f9;
-  color: #000;
-  font-size: 1rem;
-  transition: all 0.3s ease;
+  color: #0f172a;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  margin-bottom: 1.1rem;
 }
-
 .login-input-container input::placeholder {
-  color: #666;
+  color: #64748b;
+}
+.login-input-container input:focus {
+  background: #ffffff;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
 }
 
-.login-input-container input:focus {
-  border: 1px solid #004aad;
-  box-shadow: 0 0 8px #87cefa;
-  /* azul clarito */
-  background: #fff;
-}
 
 /* Botón */
 /* earlier .login-button rules consolidated later; duplicate removed */
 
 /* Error */
 .login-error {
-  color: #d9534f;
+  color: #fecaca;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  padding: 8px 10px;
+  border-radius: 10px;
   font-size: 0.9rem;
   margin-bottom: 1rem;
 }
@@ -576,50 +622,6 @@ h3 {
 }
 
 
-/*****Estilos para la vista de /cambiar_contraseña al iniciar sesion por primera vez**********/
-.cambiar-contenedor {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  background-color: #e5e5e5;
-}
-
-.cambiar-formulario {
-  background: white;
-  padding: 2rem 2.5rem;
-  border-radius: 10px;
-  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
-  width: 100%;
-  max-width: 400px;
-}
-
-.cambiar-formulario h2 {
-  font-size: 1.2rem;
-  font-weight: 600;
-  margin-bottom: 0.6rem;
-}
-
-.cambiar-formulario h3 {
-  font-size: 1rem;
-  margin-bottom: 1.2rem;
-}
-
-
-
-
-.btn-cambiar {
-  width: 100%;
-  padding: 0.8rem;
-  background-color: #215f5b;
-  color: #fff;
-  /* darker color to ensure sufficient contrast */
-  border: none;
-  border-radius: 6px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
 
 
 
@@ -627,10 +629,10 @@ h3 {
 
 /***Contenedor universal, para ajustar el contenido al abrir el menu lateral****/
 .content {
-  padding: 1.5rem;
+  padding: 2rem 3rem 0;
   transition: 0.3s;
-  min-height: 100vh;
-  background-color: #dbdbdb;
+  min-height: 100dvh;
+  background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
 }
 
 
@@ -656,11 +658,10 @@ h3 {
 
 .contenido-modulo {
   padding: 1.5rem;
-  background-color: #cfcfcf;
 }
 
 .max-width {
-  max-width: 1350px;
+  max-width: 1400px;
   margin: 0 auto;
 }
 
@@ -864,6 +865,8 @@ td {
 /* Compact modal styles: slightly smaller fonts and inputs for modal-compact */
 .modal-compact {
   font-size: 13px;
+  max-height: 85vh;
+  overflow-y: auto;
 }
 
 .modal-compact .cuadroTexto,
@@ -1696,51 +1699,6 @@ select:focus {
   margin-bottom: 1rem;
 }
 
-.login-logo {
-  width: 80px;
-  height: auto;
-}
-
-.login-title {
-  text-align: center;
-  margin-bottom: 1.5rem;
-  color: #333;
-}
-
-/* earlier .form-group/.form-input duplicates removed; consolidated at lines 2086+ */
-
-.login-button {
-  width: 100%;
-  padding: 0.75rem;
-  background-color: #5a67d8;
-  color: white;
-  font-weight: bold;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background 0.3s ease;
-}
-
-.login-button:hover {
-  background-color: #434190;
-}
-
-.checkbox-remember {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.9rem;
-  margin-bottom: 1.2rem;
-}
-
-.forgot-password {
-  color: #5a67d8;
-  text-decoration: none;
-}
-
-.forgot-password:hover {
-  text-decoration: underline;
-}
 
 
 
@@ -1914,18 +1872,21 @@ select:focus {
 }
 
 /* Modal Footer */
-.modal-footer {
-  padding: 15px 20px;
-  background-color: white;
-  border-top: 1px solid #e9ecef;
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
+.login-footer {
+  margin-top: 1.2rem;
+  font-size: 0.9rem;
+  color: #e5e7eb;
 }
-
+.login-footer a {
+  color: #93c5fd;
+  font-weight: 600;
+  text-decoration: none;
+}
+.login-footer a:hover {
+  text-decoration: underline;
+}
 /* Reuse the global .btn definition declared earlier to avoid duplicate selector issues.
    (The global .btn already provides base padding, border-radius, cursor and transitions.) */
-
 .btn-cancel {
   background-color: #e2e8f0;
   color: #475569;

@@ -174,7 +174,7 @@ EnviarModal.propTypes = {
 };
 
 /* --- Main Component --- */
-const PedidoAgendadoPreview = ({ datos = {}, onClose = () => {}, onEmailSent, onRemisionar }) => {
+const PedidoAgendadoPreview = ({ datos = {}, onClose = () => { }, onEmailSent, onRemisionar }) => {
   const [showEnviarModal, setShowEnviarModal] = useState(false);
   const [correo, setCorreo] = useState('');
   const [asunto, setAsunto] = useState('');
@@ -300,7 +300,6 @@ const PedidoAgendadoPreview = ({ datos = {}, onClose = () => {}, onEmailSent, on
                 <div style={{ lineHeight: '1.8' }}>
                   <p><strong>Cliente:</strong> {datos?.cliente?.nombre}</p>
                   <p><strong>Teléfono:</strong> {datos?.cliente?.telefono}</p>
-                  <p><strong>Email:</strong> {datos?.cliente?.correo}</p>
                   <p><strong>Dirección:</strong> {datos?.cliente?.direccion}</p>
                   <p><strong>Ciudad:</strong> {datos?.cliente?.ciudad}</p>
                 </div>
@@ -314,6 +313,24 @@ const PedidoAgendadoPreview = ({ datos = {}, onClose = () => {}, onEmailSent, on
                 </div>
               </div>
             </div>
+
+
+            {datos?.descripcion && (
+              <div style={{ marginBottom: '2rem' }}>
+                <h3 style={{ borderBottom: '3px solid #fd7e14', paddingBottom: '0.5rem', color: '#fd7e14', fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '1rem' }}>Descripción</h3>
+                <div style={{ background: '#eff6ff', padding: '1rem', borderRadius: '8px', borderLeft: '4px solid #fd7e14', lineHeight: '1.6' }}>
+                  {(() => {
+                    const desc = datos.descripcion;
+                    const looksLikeHtml = typeof desc === 'string' && /<[^>]+>/.test(desc);
+                    if (looksLikeHtml) {
+                      const safeHtml = sanitizeHtml(desc);
+                      return <div dangerouslySetInnerHTML={{ __html: safeHtml }} />;
+                    }
+                    return <div style={{ whiteSpace: 'pre-wrap' }}>{desc}</div>;
+                  })()}
+                </div>
+              </div>
+            )}
 
             <div style={{ marginBottom: '2rem' }}>
               <h3 style={{ borderBottom: '3px solid #fd7e14', paddingBottom: '0.5rem', color: '#fd7e14', fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '1rem' }}>Productos Solicitados</h3>
@@ -355,12 +372,17 @@ const PedidoAgendadoPreview = ({ datos = {}, onClose = () => {}, onEmailSent, on
               </table>
             </div>
 
-            {datos?.observacion && (
+            {datos?.condicionesPago && (
               <div style={{ marginBottom: '2rem' }}>
-                <h3 style={{ borderBottom: '3px solid #fd7e14', paddingBottom: '0.5rem', color: '#fd7e14', fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '1rem' }}>Observaciones</h3>
-                <div style={{ background: '#fef7ed', padding: '1rem', borderRadius: '8px', borderLeft: '4px solid #fd7e14', lineHeight: '1.6' }}>
-                  {datos.observacion}
-                </div>
+                <h3 style={{ borderBottom: '3px solid #fd7e14', paddingBottom: '0.5rem', color: '#fd7e14', fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '1rem' }}>Condiciones de Pago</h3>
+                <div style={{ background: '#eff6ff', padding: '1rem', borderRadius: '8px', borderLeft: '4px solid #fd7e14', lineHeight: '1.6' }}>{datos.condicionesPago}</div>
+              </div>
+            )}
+
+            {datos?.observacion && (
+              <div>
+
+                {datos.observacion}
               </div>
             )}
 
@@ -401,7 +423,7 @@ PedidoAgendadoPreview.propTypes = {
 };
 
 PedidoAgendadoPreview.defaultProps = {
-  datos: {}, onClose: () => {}, onEmailSent: undefined, onRemisionar: undefined
+  datos: {}, onClose: () => { }, onEmailSent: undefined, onRemisionar: undefined
 };
 
 export default PedidoAgendadoPreview;

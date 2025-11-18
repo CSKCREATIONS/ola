@@ -107,7 +107,7 @@ export default function NavVentas() {
   }, [filteredLinks, showDropdown]);
 
   return (
-    <div>
+    <div className='encabezado'>
       <h2>Ventas</h2>
       <div className="nav-modulo-wrapper">
         <nav className="nav-modulo" ref={containerRef}>

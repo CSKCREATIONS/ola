@@ -421,7 +421,7 @@ export default function EditarRol({ rol }) {
                                     const label = ({
                                        'usuarios.crear': 'Crear usuarios',
                                        'usuarios.editar': 'Editar usuarios',
-                                       'usuarios.inhabilitar': 'Habilitar / Inhabilitar',
+                                       'usuarios.inhabilitar': 'Habilitar / inhabilitar',
                                        'usuarios.eliminar': 'Eliminar usuarios'
                                     })[key] || key;
                                     return <InputCheck key={key} checked={permisos.includes(key)} onChange={() => togglePermiso(key)} label={label} />;
@@ -442,7 +442,7 @@ export default function EditarRol({ rol }) {
                                     const label = ({
                                        'roles.crear': 'Crear roles',
                                        'roles.editar': 'Editar roles',
-                                       'roles.inhabilitar': 'Habilitar / Inhabilitar'
+                                       'roles.inhabilitar': 'Habilitar / inhabilitar'
                                     })[key] || key;
                                     return <InputCheck key={key} checked={permisos.includes(key)} onChange={() => togglePermiso(key)} label={label} />;
                                  })}
@@ -482,7 +482,7 @@ export default function EditarRol({ rol }) {
                               ]}
                               permisos={permisos}
                               togglePermiso={togglePermiso}
-                              groupButton={<GroupRadio permsList={MODULE_PERMISSIONS.compras} color="#10b981" />}
+                              groupButton={<GroupRadio permsList={MODULE_PERMISSIONS.compras} color="#10b981" toggleGrupoPermisos={toggleGrupoPermisos} permisos={permisos} />}
                            />
                         </div>
                      </div>
@@ -532,7 +532,7 @@ export default function EditarRol({ rol }) {
                               items={ventasList}
                               permisos={permisos}
                               togglePermiso={togglePermiso}
-                              groupButton={<GroupRadio permsList={MODULE_PERMISSIONS.ventas} color="#ec4899" />}
+                              groupButton={<GroupRadio permsList={MODULE_PERMISSIONS.ventas} color="#ec4899" toggleGrupoPermisos={toggleGrupoPermisos} permisos={permisos} />}
                            />
                         </div>
                      </div>

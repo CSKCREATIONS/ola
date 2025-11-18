@@ -40,7 +40,7 @@ export default function RecuperarContraseña() {
         <h1 className="login-title">Portal JLA Global Company</h1>
 
         <form onSubmit={handleRecuperar}>
-          <p style={{ color: "#333", marginBottom: "1rem" }}>
+          <p style={{ color: "#000000ff", marginBottom: "1rem" }}>
             Escribe tu correo electrónico. Allí te será enviada una contraseña provisional
           </p>
 
