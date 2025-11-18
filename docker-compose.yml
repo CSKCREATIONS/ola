@@ -1,0 +1,46 @@
+version: '3.9'
+services:
+  mongo:
+    image: mongo:6.0
+    container_name: pangea-mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_DATABASE: pangea
+    volumes:
+      - mongo_data:/data/db
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "27017:27017"
+
+  backend:
+    build: ./backend
+    image: cskcreations/pangea-backend:latest
+    container_name: pangea-backend
+    restart: unless-stopped
+    depends_on:
+      - mongo
+    environment:
+      PORT: 5000
+      MONGO_URL: mongodb://mongo:27017/pangea
+      CORS_ORIGINS: http://localhost,http://localhost:8080
+      SENDGRID_API_KEY: ${SENDGRID_API_KEY:-}
+      USE_GMAIL: ${USE_GMAIL:-false}
+      GMAIL_USER: ${GMAIL_USER:-}
+      GMAIL_PASS: ${GMAIL_PASS:-}
+    ports:
+      - "5000:5000"
+
+  frontend:
+    build: ./frontend
+    image: cskcreations/pangea-frontend:latest
+    container_name: pangea-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      REACT_APP_API_URL: http://backend:5000/api
+    ports:
+      - "3000:80"
+
+volumes:
+  mongo_data:

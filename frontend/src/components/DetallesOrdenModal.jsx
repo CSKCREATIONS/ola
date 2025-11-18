@@ -50,6 +50,7 @@ export default function DetallesOrdenModal({ visible, orden = {}, onClose = () =
   const modalRef = useRef(null);
   useDraggable(modalRef, visible);
 
+
   const styles = useMemo(() => ({
     modalWrapper: { maxWidth: '700px', width: '90%', position: 'fixed', cursor: 'move' },
     body: { padding: 0, maxHeight: '70vh', overflowY: 'auto' },
@@ -62,6 +63,8 @@ export default function DetallesOrdenModal({ visible, orden = {}, onClose = () =
     btnGhost: { background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: '8px', padding: '0.6rem 0.8rem', color: 'white', cursor: 'pointer' }
   }), []);
 
+  const o = orden || {};
+
   const handleOpenPrintWindow = useCallback((sourceSelector = '.pdf-orden-compra .header') => {
     const printContent = document.querySelector(sourceSelector) || modalRef.current?.querySelector(sourceSelector);
     if (!printContent) return;
@@ -72,7 +75,7 @@ export default function DetallesOrdenModal({ visible, orden = {}, onClose = () =
     const html = `
       <html>
         <head>
-          <title>Orden de Compra - ${orden.numeroOrden || ''}</title>
+          <title>Orden de Compra - ${o.numeroOrden || ''}</title>
           <style>
             body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
             .header { text-align: center; margin-bottom: 30px; padding: 20px; background: linear-gradient(135deg, #6a1b9a, #9b59b6); color: white; border-radius: 10px; }
@@ -96,9 +99,9 @@ export default function DetallesOrdenModal({ visible, orden = {}, onClose = () =
     newWindow.focus();
     newWindow.print();
     newWindow.close();
-  }, [orden.numeroOrden]);
+  }, [o?.numeroOrden]);
 
-  const o = orden || {};
+  if (!visible) return null;
 
   return (
     <div className="modal-overlay">
