@@ -1124,8 +1124,8 @@ exports.remisionarCotizacion = async (req, res) => {
     // Al crear una remisión, la operación del cliente pasa a 'compra'
     try {
       await Cliente.findByIdAndUpdate(clienteId, { operacion: 'compra' });
-    } catch (opErr) {
-      console.warn('No se pudo actualizar operacion a compra tras remisión:', opErr?.message || opErr);
+    } catch (error_) {
+      console.warn('No se pudo actualizar operacion a compra tras remisión:', error_?.message || error_);
     }
 
     await Cotizacion.findByIdAndUpdate(cotizacionId, {
