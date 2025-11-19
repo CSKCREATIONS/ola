@@ -486,8 +486,8 @@ export default function RegistrarCompra() {
                     <i className="fa-solid fa-list-check icon-gap"></i>
                     <span>Productos en la Compra ({nuevaCompra.productos.length})</span>
                   </h6>
-                  <div className="table-responsive">
-                    <table className="table-profesional">
+                  <div>
+                    <table >
                       <thead>
                         <tr>
                           <th>Producto</th>

@@ -38,13 +38,35 @@ function randomBytesUint8(len) {
 
 export function randomInt(max) {
   if (!Number.isFinite(max) || max <= 0) return 0;
-  const range = max;
-  const maxValid = 256 - (256 % range);
+  const range = Math.floor(max);
+
+  // If range fits within a single byte, use the fast path.
+  if (range <= 256) {
+    const maxValid = 256 - (256 % range) || 256;
+    let rnd = 0;
+    // draw until we get a value in [0, maxValid)
+    do {
+      rnd = randomBytesUint8(1)[0];
+    } while (rnd >= maxValid && maxValid !== 256);
+    return rnd % range;
+  }
+
+  // For larger ranges, use multiple bytes and rejection sampling.
+  // Determine how many bytes are needed to cover the range.
+  const bits = Math.ceil(Math.log2(range));
+  const bytes = Math.max(1, Math.ceil(bits / 8));
+  const maxRange = 2 ** (bytes * 8);
+  const maxValid = maxRange - (maxRange % range);
+
   let rnd = 0;
-  // draw until we get a value in [0, maxValid)
   do {
-    rnd = randomBytesUint8(1)[0];
+    const buf = randomBytesUint8(bytes);
+    rnd = 0;
+    for (let i = 0; i < bytes; i++) {
+      rnd = (rnd << 8) + buf[i];
+    }
   } while (rnd >= maxValid);
+
   return rnd % range;
 }
 

@@ -1706,8 +1706,8 @@ export default function OrdenCompra() {
                             </div>
                           )}
 
-                          <div className="table-responsive">
-                            <table className="table-profesional" style={{ width: '100%' }}>
+                          <div >
+                            <table >
                               <thead>
                                 <tr>
                                   <th>Producto</th>
