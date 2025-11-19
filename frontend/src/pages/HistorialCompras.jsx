@@ -1192,15 +1192,8 @@ JLA Global Company</textarea>
           <span>DETALLE DE PRODUCTOS ({compraSeleccionada.productos?.length || 0})</span>
         </h6>
 
-                <div className="table-responsive" style={{
-                    border: '1px solid #e0e0e0',
-                    borderRadius: '8px',
-                    overflow: 'hidden'
-                }}>
-                    <table className="table-profesional" style={{ 
-                        width: '100%',
-                        minWidth: '700px'
-                    }}>
+                <div >
+                    <table>
                         <thead>
                             <tr style={{ 
                                   background: 'linear-gradient(135deg, #6a1b9a, #9b59b6)',

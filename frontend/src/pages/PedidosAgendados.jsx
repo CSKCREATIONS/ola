@@ -945,7 +945,7 @@ export default function PedidosAgendados() {
             {/** Modal: Agendar Pedido **/}
             {mostrarModalAgendar && (
               <div className="modal-overlay">
-                <div className="modal-compact modal-lg">
+                <div className=" modal-lg">
                   <div className="modal-header">
                     <h5 className="modal-title">Agendar Pedido</h5>
                     <button

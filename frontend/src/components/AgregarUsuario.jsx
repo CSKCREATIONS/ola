@@ -165,6 +165,7 @@ export default function AgregarUsuario() {
   const [rolesDisponibles, setRolesDisponibles] = useState([]);
   const [cargandoRoles, setCargandoRoles] = useState(true);
   const [rolesForbidden, setRolesForbidden] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const closeModal = useCallback(() => setIsVisible(false), []);
 
@@ -283,31 +284,40 @@ export default function AgregarUsuario() {
 
   const handleSubmit = useCallback(async (e) => {
     if (e?.preventDefault) e.preventDefault();
+    if (submitting) return;
+
     const usuarioNombre = generarUsername();
     const nuevaPassword = generarPassword();
     const usuario = {
-      firstName, secondName, surname, secondSurname, email, username: usuarioNombre, password: nuevaPassword, role
+      firstName,
+      secondName,
+      surname,
+      secondSurname,
+      email,
+      username: usuarioNombre,
+      password: nuevaPassword,
+      role // must be role name string (backend expects a string)
     };
 
+    setSubmitting(true);
     try {
       const res = await api.post('/api/users', usuario);
-      if (res.status >= 200 && res.status < 300) {
-        Swal.fire({
-          title: 'Usuario creado correctamente',
-          html: `<p><strong>Nombre de usuario:</strong> ${usuarioNombre}</p>
-                 <p><strong>Contraseña:</strong> ${nuevaPassword}</p>`,
-          icon: 'success', confirmButtonText: 'Aceptar'
-        });
-        closeModal();
-      } else {
-        const data = res.data || res;
-        Swal.fire({ text: data.message || 'Error al crear usuario', icon: 'error' });
-      }
+      // axios resolves only for 2xx; treat as success
+      Swal.fire({
+        title: 'Usuario creado correctamente',
+        html: `<p><strong>Nombre de usuario:</strong> ${usuarioNombre}</p>
+               <p><strong>Contraseña:</strong> ${nuevaPassword}</p>`,
+        icon: 'success', confirmButtonText: 'Aceptar'
+      });
+      closeModal();
     } catch (err) {
       console.error('Error al enviar usuario:', err);
-      Swal.fire({ text: 'Error del servidor', icon: 'error' });
+      const serverMessage = err?.response?.data?.message || err?.message || 'Error del servidor';
+      Swal.fire({ text: serverMessage, icon: 'error' });
+    } finally {
+      setSubmitting(false);
     }
-  }, [firstName, secondName, surname, secondSurname, email, role, generarUsername, generarPassword, closeModal]);
+  }, [firstName, secondName, surname, secondSurname, email, role, generarUsername, generarPassword, closeModal, submitting]);
 
   if (!isVisible) return null;
 
@@ -401,16 +411,27 @@ export default function AgregarUsuario() {
             <span>Cancelar</span>
           </button>
 
-          <button type="submit" style={{
-            padding: '0.875rem 1.5rem', border: 'none', borderRadius: '10px',
-            background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', color: 'white', cursor: 'pointer',
-            fontWeight: '600', fontSize: '0.95rem', transition: 'all 0.3s ease', display: 'flex',
-            alignItems: 'center', gap: '0.5rem', boxShadow: '0 4px 6px -1px rgba(59, 130, 246, 0.3)'
-          }}
-          onMouseEnter={(e) => { e.target.style.transform = 'translateY(-1px)'; e.target.style.boxShadow = '0 6px 12px -1px rgba(59, 130, 246, 0.4)'; }}
-          onMouseLeave={(e) => { e.target.style.transform = 'translateY(0)'; e.target.style.boxShadow = '0 4px 6px -1px rgba(59, 130, 246, 0.3)'; }}>
-            <i className="fa-solid fa-user-plus" aria-hidden={true}></i>
-            <span>Crear Usuario</span>
+          <button
+            type="submit"
+            
+            disabled={submitting || cargandoRoles}
+            style={{
+              padding: '0.875rem 1.5rem', border: 'none', borderRadius: '10px',
+              background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', color: 'white',
+              cursor: submitting || cargandoRoles ? 'not-allowed' : 'pointer',
+              opacity: submitting || cargandoRoles ? 0.7 : 1,
+              fontWeight: '600', fontSize: '0.95rem', transition: 'all 0.3s ease', display: 'flex',
+              alignItems: 'center', gap: '0.5rem', boxShadow: '0 4px 6px -1px rgba(59, 130, 246, 0.3)'
+            }}
+            onMouseEnter={(e) => { if (!(submitting || cargandoRoles)) { e.target.style.transform = 'translateY(-1px)'; e.target.style.boxShadow = '0 6px 12px -1px rgba(59, 130, 246, 0.4)'; } }}
+            onMouseLeave={(e) => { if (!(submitting || cargandoRoles)) { e.target.style.transform = 'translateY(0)'; e.target.style.boxShadow = '0 4px 6px -1px rgba(59, 130, 246, 0.3)'; } }}
+          >
+            {submitting ? (
+              <i className="fa-solid fa-spinner fa-spin" aria-hidden={true}></i>
+            ) : (
+              <i className="fa-solid fa-user-plus" aria-hidden={true}></i>
+            )}
+            <span>{submitting ? 'Creando...' : 'Crear Usuario'}</span>
           </button>
         </div>
       </form>

@@ -493,32 +493,10 @@ export default function RolesYPermisos() {
                                 openModal('edit-role-modal');
                               }}
                               title="Editar rol"
-                              style={{
-                                background: 'linear-gradient(135deg, #3b82f6, #1e40af)',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '8px',
-                                padding: '8px 12px',
-                                cursor: 'pointer',
-                                fontSize: '13px',
-                                fontWeight: '600',
-                                transition: 'all 0.2s ease',
-                                boxShadow: '0 2px 4px rgba(59, 130, 246, 0.3)',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '6px'
-                              }}
-                              onMouseEnter={(e) => {
-                                e.target.style.transform = 'translateY(-2px)';
-                                e.target.style.boxShadow = '0 4px 8px rgba(59, 130, 246, 0.4)';
-                              }}
-                              onMouseLeave={(e) => {
-                                e.target.style.transform = 'translateY(0)';
-                                e.target.style.boxShadow = '0 2px 4px rgba(59, 130, 246, 0.3)';
-                              }}
+                              className="action-btn edit"
                             >
                               <i className="fa-solid fa-pen-to-square"></i>
-                              <span>Editar</span>
+                              
                             </button>
                           )}
                         </div>
