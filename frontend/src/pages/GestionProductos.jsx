@@ -14,12 +14,7 @@ const API_PRODUCTS = '/api/products';
 
 // CSS inyectado para diseño avanzado
 const advancedStyles = `
-  .productos-advanced-table {
-    background: white;
-    border-radius: 16px;
-    overflow: hidden;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-  }
+  
 
   .productos-action-btn {
     border: none;
@@ -1100,7 +1095,6 @@ const GestionProductos = () => {
                 </select>
               </div>
             </div>
-            <div className="table-container">
               <table>
                 <thead>
                   <tr>
@@ -1149,7 +1143,7 @@ const GestionProductos = () => {
                 </tbody>
 
               </table>
-            </div>
+            
             {modalVisible && (
               <ProductoModal
                 producto={productoEditando}

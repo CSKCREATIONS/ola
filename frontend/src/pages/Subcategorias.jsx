@@ -64,9 +64,9 @@ const SubcategoriaModal = ({ subcategoria, categorias, onClose, onSave }) => {
           padding: '2rem',
           borderRadius: '20px 20px 0 0'
         }}>
-          <h3 style={{ 
-            margin: 0, 
-            fontSize: '1.5rem', 
+          <h3 style={{
+            margin: 0,
+            fontSize: '1.5rem',
             fontWeight: '600',
             display: 'flex',
             alignItems: 'center',
@@ -85,17 +85,17 @@ const SubcategoriaModal = ({ subcategoria, categorias, onClose, onSave }) => {
             </div>
             {subcategoria ? 'Editar Subcategoría' : 'Nueva Subcategoría'}
           </h3>
-          <p style={{ 
-            margin: '0.5rem 0 0 4rem', 
-            opacity: 0.9, 
-            fontSize: '0.95rem' 
+          <p style={{
+            margin: '0.5rem 0 0 4rem',
+            opacity: 0.9,
+            fontSize: '0.95rem'
           }}>
             {subcategoria ? 'Modifica la información de la subcategoría' : 'Crea una nueva subcategoría para organizar productos'}
           </p>
         </div>
 
         {/* Contenido scrolleable */}
-        <div style={{ 
+        <div style={{
           flex: 1,
           overflowY: 'auto',
           padding: '2.5rem',
@@ -261,9 +261,9 @@ const SubcategoriaModal = ({ subcategoria, categorias, onClose, onSave }) => {
         </div>
 
         {/* Botones de acción */}
-        <div style={{ 
-          display: 'flex', 
-          gap: '1.5rem', 
+        <div style={{
+          display: 'flex',
+          gap: '1.5rem',
           justifyContent: 'flex-end',
           padding: '2rem 2.5rem',
           borderTop: '2px solid #e5e7eb',
@@ -271,8 +271,8 @@ const SubcategoriaModal = ({ subcategoria, categorias, onClose, onSave }) => {
           borderRadius: '0 0 20px 20px',
           flexShrink: 0
         }}>
-          <button 
-            type="button" 
+          <button
+            type="button"
             onClick={onClose}
             style={{
               padding: '0.875rem 1.5rem',
@@ -300,8 +300,8 @@ const SubcategoriaModal = ({ subcategoria, categorias, onClose, onSave }) => {
             <i className="fa-solid fa-times"></i>
             <span>Cancelar</span>
           </button>
-          
-          <button 
+
+          <button
             type="submit"
             style={{
               padding: '0.875rem 1.5rem',
@@ -517,98 +517,98 @@ const GestionSubcategorias = () => {
           <AdvancedStats cards={statsCards} />
 
           {/* Botón agregar */}
-          <button 
-            className="categoria-add-btn" 
+          <button
+            className="categoria-add-btn"
             onClick={() => { setSubcategoriaEditando(null); setModalVisible(true); }}
           >
             <i className="fa-solid fa-plus"></i>
             <span>Nueva Subcategoría</span>
           </button>
           {/* Tabla principal con diseño moderno */}
-          <div className="subcategoria-table-modern">
-            <div className="subcategoria-table-wrapper">
-              <table className="subcategoria-table">
-                <thead>
-                  <tr>
-                    <th>Subcategoría</th>
-                    <th>Descripción</th>
-                    <th>Categoría Padre</th>
-                    <th>Estado</th>
-                    <th>Acciones</th>
+
+          <div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Subcategoría</th>
+                  <th>Descripción</th>
+                  <th>Categoría Padre</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {currentItems.map((subcat) => (
+                  <tr key={subcat._id}>
+                    <td style={{ fontWeight: '600', color: '#1f2937' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div style={{
+                          background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                          borderRadius: '8px',
+                          padding: '8px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          minWidth: '35px'
+                        }}>
+                          <i className="fa-solid fa-sitemap" style={{ color: 'white', fontSize: '12px' }}></i>
+                        </div>
+                        {subcat.name}
+                      </div>
+                    </td>
+                    <td style={{ color: '#6b7280', fontSize: '14px' }}>
+                      {subcat.description}
+                    </td>
+                    <td>
+                      <span className="categoria-category-badge">
+                        <i className="fa-solid fa-tag"></i>
+                        {subcat.category?.name || 'Sin categoría'}
+                      </span>
+                    </td>
+                    <td>
+                      <label className="switch">
+                        <input
+                          type="checkbox"
+                          checked={!!subcat.activo}
+                          aria-label={`Estado de la subcategoría ${subcat.name || subcat._id}`}
+                          onChange={(e) => handleToggleWithParentCheck(subcat._id, e.target.checked)}
+                        />
+                        <span className="slider"></span>
+                      </label>
+                    </td>
+                    <td>
+                      <div style={{ display: 'flex', gap: '5px' }}>
+                        <button
+                          className="categoria-action-btn"
+                          onClick={() => handleEdit(subcat)}
+                          title="Editar"
+                        >
+                          <i className="fa-solid fa-pen-to-square"></i>
+                        </button>
+                      </div>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {currentItems.map((subcat) => (
-                    <tr key={subcat._id}>
-                      <td style={{ fontWeight: '600', color: '#1f2937' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <div style={{
-                            background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                            borderRadius: '8px',
-                            padding: '8px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            minWidth: '35px'
-                          }}>
-                            <i className="fa-solid fa-sitemap" style={{ color: 'white', fontSize: '12px' }}></i>
-                          </div>
-                          {subcat.name}
-                        </div>
-                      </td>
-                      <td style={{ color: '#6b7280', fontSize: '14px' }}>
-                        {subcat.description}
-                      </td>
-                      <td>
-                        <span className="categoria-category-badge">
-                          <i className="fa-solid fa-tag"></i>
-                          {subcat.category?.name || 'Sin categoría'}
-                        </span>
-                      </td>
-                      <td>
-                        <label className="switch">
-                          <input
-                            type="checkbox"
-                            checked={!!subcat.activo}
-                            aria-label={`Estado de la subcategoría ${subcat.name || subcat._id}`}
-                            onChange={(e) => handleToggleWithParentCheck(subcat._id, e.target.checked)}
-                          />
-                          <span className="slider"></span>
-                        </label>
-                      </td>
-                      <td>
-                        <div style={{ display: 'flex', gap: '5px' }}>
-                          <button 
-                            className="categoria-action-btn"
-                            onClick={() => handleEdit(subcat)}
-                            title="Editar"
-                          >
-                            <i className="fa-solid fa-pen-to-square"></i>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                  {subcategorias.length === 0 && (
-                    <tr>
-                      <td 
-                        colSpan="5" 
-                        style={{
-                          padding: '40px',
-                          textAlign: 'center',
-                          color: '#9ca3af',
-                          fontStyle: 'italic',
-                          fontSize: '16px'
-                        }}
-                      >
-                        No hay subcategorías disponibles
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                ))}
+                {subcategorias.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan="5"
+                      style={{
+                        padding: '40px',
+                        textAlign: 'center',
+                        color: '#9ca3af',
+                        fontStyle: 'italic',
+                        fontSize: '16px'
+                      }}
+                    >
+                      No hay subcategorías disponibles
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
+
 
           {/* Paginación */}
           <div className="pagination">
@@ -632,13 +632,13 @@ const GestionSubcategorias = () => {
             />
           )}
         </div>
-        
+
       </div>
       <div className="custom-footer">
-          <p className="custom-footer-text">
-            © 2025 <span className="custom-highlight">PANGEA</span>. Todos los derechos reservados.
-          </p>
-        </div>
+        <p className="custom-footer-text">
+          © 2025 <span className="custom-highlight">PANGEA</span>. Todos los derechos reservados.
+        </p>
+      </div>
     </div>
   );
 };

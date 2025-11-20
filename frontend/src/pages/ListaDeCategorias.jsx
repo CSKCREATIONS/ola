@@ -77,58 +77,7 @@ const categoriasStyles = `
       justify-content: center;
     }
 
-    .categoria-table-modern {
-      background: linear-gradient(135deg, #ffffff, #f8fafc);
-      border-radius: 20px;
-      padding: 30px;
-      border: 1px solid #e5e7eb;
-      backdrop-filter: blur(10px);
-    }
-
-    .categoria-table-wrapper {
-      overflow-x: auto;
-      border-radius: 12px;
-      border: 1px solid #e5e7eb;
-    }
-
-    .categoria-table {
-      width: 100%;
-      border-collapse: collapse;
-      background: white;
-      border-radius: 12px;
-      overflow: hidden;
-    }
-
-    .categoria-table thead tr {
-      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-      color: white;
-    }
-
-    .categoria-table th {
-      padding: 20px 15px;
-      text-align: left;
-      font-size: 14px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .categoria-table tbody tr {
-      border-bottom: 1px solid #f3f4f6;
-      transition: all 0.3s ease;
-      cursor: pointer;
-    }
-
-    .categoria-table tbody tr:hover {
-      background: linear-gradient(135deg, #f8fafc, #f1f5f9);
-      transform: scale(1.01);
-    }
-
-    .categoria-table td {
-      padding: 20px 15px;
-      font-size: 14px;
-      color: #374151;
-    }
+    
 
     .categoria-action-btn {
       background: linear-gradient(135deg, #6366f1, #8b5cf6);
@@ -649,9 +598,8 @@ const ListaDeCategorias = () => {
             </button>
 
             {/* Tabla principal con diseño moderno */}
-            <div className="categoria-table-modern">
-              <div className="categoria-table-wrapper">
-                <table className="categoria-table">
+              <div >
+                <table>
                   <thead>
                     <tr>
                       <th>#</th>
@@ -732,7 +680,7 @@ const ListaDeCategorias = () => {
               </div>
 
 
-            </div>
+            
             {/* Paginación de la tabla*/}
             <div className="pagination">
               {Array.from({ length: totalPages }, (_, i) => (

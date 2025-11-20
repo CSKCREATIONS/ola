@@ -74,59 +74,6 @@ const pedidosEntregadosStyles = `
       justify-content: center;
     }
 
-    .entregados-table-modern {
-      background: linear-gradient(135deg, #ffffff, #f8fafc);
-      border-radius: 20px;
-      padding: 30px;
-      border: 1px solid #e5e7eb;
-      backdrop-filter: blur(10px);
-    }
-
-    .entregados-table-wrapper {
-      overflow-x: auto;
-      border-radius: 12px;
-      border: 1px solid #e5e7eb;
-    }
-
-    .entregados-table {
-      width: 100%;
-      border-collapse: collapse;
-      background: white;
-      border-radius: 12px;
-      overflow: hidden;
-    }
-
-    .entregados-table thead tr {
-      background: linear-gradient(135deg, #10b981 0%, #047857 100%);
-      color: white;
-    }
-
-    .entregados-table th {
-      padding: 20px 15px;
-      text-align: left;
-      font-size: 14px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .entregados-table tbody tr {
-      border-bottom: 1px solid #f3f4f6;
-      transition: all 0.3s ease;
-      cursor: pointer;
-    }
-
-    .entregados-table tbody tr:hover {
-      background: linear-gradient(135deg, #d1fae5, #a7f3d0);
-      transform: scale(1.01);
-    }
-
-    .entregados-table td {
-      padding: 20px 15px;
-      font-size: 14px;
-      color: #374151;
-    }
-
     .entregados-action-btn {
       background: linear-gradient(135deg, #10b981, #059669);
       color: white;
@@ -432,9 +379,8 @@ export default function PedidosEntregados() {
             </div>
 
             {/* Tabla principal con diseño moderno */}
-            <div className="entregados-table-modern">
-              <div className="entregados-table-wrapper">
-                <table className="entregados-table" id="tabla_entregados">
+              <div >
+                <table  id="tabla_entregados">
                   <thead>
                     <tr>
                       <th>No</th>
@@ -515,7 +461,7 @@ export default function PedidosEntregados() {
                   </tbody>
                 </table>
               </div>
-            </div>
+            
 
             {/* Paginación */}
             {totalPages > 1 && (

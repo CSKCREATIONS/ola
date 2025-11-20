@@ -1,0 +1,427 @@
+[{
+  "_id": {
+    "$oid": "685a2d1281b79670eea33097"
+  },
+  "name": "Administrador",
+  "permissions": [
+    "usuarios.ver",
+    "usuarios.crear",
+    "usuarios.editar",
+    "usuarios.inhabilitar",
+    "usuarios.eliminar",
+    "productos.ver",
+    "productos.crear",
+    "productos.editar",
+    "productos.inactivar",
+    "reportesProductos.ver",
+    "categorias.ver",
+    "categorias.crear",
+    "categorias.editar",
+    "categorias.inactivar",
+    "subcategorias.ver",
+    "subcategorias.crear",
+    "subcategorias.editar",
+    "subcategorias.inactivar",
+    "proveedores.ver",
+    "proveedores.crear",
+    "proveedores.editar",
+    "proveedores.inactivar",
+    "proveedores.activar",
+    "hcompras.ver",
+    "compras.crear",
+    "reportesCompras.ver",
+    "ordenesCompra.ver",
+    "ordenes.generar",
+    "ordenes.editar",
+    "ordenes.eliminar",
+    "ordenes.aprobar",
+    "ventas.crear",
+    "pedidos.ver",
+    "listaDeVentas.ver",
+    "pedidosAgendados.ver",
+    "pedidosDespachados.ver",
+    "pedidosEntregados.ver",
+    "pedidosCancelados.ver",
+    "pedidosDevueltos.ver",
+    "reportesVentas.ver",
+    "pedidos.remisionar",
+    "pedidos.enviar",
+    "cotizaciones.ver",
+    "cotizaciones.crear",
+    "cotizaciones.editar",
+    "cotizaciones.eliminar",
+    "cotizaciones.enviar",
+    "cotizaciones.remisionar",
+    "remisiones.ver",
+    "remisiones.crear",
+    "remisiones.editar",
+    "remisiones.eliminar",
+    "remisiones.enviar",
+    "clientes.ver",
+    "clientes.crear",
+    "clientes.editar",
+    "clientes.inactivar",
+    "prospectos.ver",
+    "roles.ver",
+    "roles.editar",
+    "roles.crear",
+    "roles.inhabilitar"
+  ],
+  "enabled": true,
+  "createdAt": {
+    "$date": "2025-06-24T04:44:02.345Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-04T01:04:56.034Z"
+  },
+  "__v": 2,
+  "description": "Acceso completo a todo el sistema"
+},
+{
+  "_id": {
+    "$oid": "686abf02946339bb938cb1b7"
+  },
+  "name": "vendedor",
+  "permissions": [
+    "listaDeVentas.ver",
+    "ventas.crear",
+    "pedidosAgendados.ver",
+    "pedidosDespachados.ver",
+    "pedidosEntregados.ver",
+    "pedidosCancelados.ver",
+    "pedidosDevueltos.ver",
+    "cotizaciones.ver",
+    "cotizaciones.crear",
+    "cotizaciones.editar",
+    "cotizaciones.eliminar",
+    "clientes.ver",
+    "clientes.crear",
+    "clientes.editar",
+    "prospectos.ver",
+    "reportesVentas.ver",
+    "pedidos.ver",
+    "remisiones.ver",
+    "remisiones.crear",
+    "pedidos.remisionar",
+    "pedidos.enviar",
+    "cotizaciones.enviar",
+    "cotizaciones.remisionar",
+    "remisiones.editar",
+    "remisiones.eliminar",
+    "remisiones.enviar",
+    "clientes.inactivar"
+  ],
+  "enabled": false,
+  "createdAt": {
+    "$date": "2025-07-06T18:22:58.609Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-03T15:58:04.286Z"
+  },
+  "__v": 1
+},
+{
+  "_id": {
+    "$oid": "686b20b83ad85ce60578d025"
+  },
+  "name": "jefe de compras",
+  "permissions": [
+    "hcompras.ver",
+    "compras.crear",
+    "proveedores.ver",
+    "reportesCompras.ver",
+    "proveedores.crear",
+    "proveedores.editar",
+    "proveedores.inactivar",
+    "remisiones.ver",
+    "ordenesCompra.ver",
+    "ordenes.generar",
+    "ordenes.editar",
+    "ordenes.eliminar",
+    "ordenes.aprobar",
+    "proveedores.activar"
+  ],
+  "enabled": false,
+  "createdAt": {
+    "$date": "2025-07-07T01:19:52.210Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-03T16:02:47.504Z"
+  },
+  "__v": 1
+},
+{
+  "_id": {
+    "$oid": "686c9685b3039a5ddd570c51"
+  },
+  "name": "encargado de inventario",
+  "permissions": [
+    "hcompras.ver",
+    "proveedores.ver",
+    "productos.ver",
+    "productos.crear",
+    "productos.editar",
+    "productos.inactivar",
+    "categorias.ver",
+    "categorias.crear",
+    "categorias.editar",
+    "categorias.inactivar",
+    "subcategorias.ver",
+    "subcategorias.crear",
+    "subcategorias.editar",
+    "subcategorias.inactivar",
+    "reportesProductos.ver",
+    "remisiones.ver"
+  ],
+  "enabled": true,
+  "createdAt": {
+    "$date": "2025-07-08T03:54:45.863Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-03T15:59:35.194Z"
+  },
+  "__v": 1
+},
+{
+  "_id": {
+    "$oid": "686cb74a8cd5670555cab9d2"
+  },
+  "name": "gerente",
+  "permissions": [
+    "usuarios.ver",
+    "categorias.ver",
+    "subcategorias.ver",
+    "productos.ver",
+    "clientes.ver",
+    "proveedores.ver",
+    "ventas.ver",
+    "compras.ver",
+    "cotizaciones.ver",
+    "pedidos.ver",
+    "reportesProductos.ver",
+    "reportesVentas.ver",
+    "reportesCompras.ver",
+    "usuarios.crear",
+    "usuarios.editar",
+    "usuarios.inhabilitar",
+    "usuarios.eliminar",
+    "ventas.crear",
+    "listaDeVentas.ver",
+    "pedidos.remisionar",
+    "pedidos.enviar",
+    "pedidosAgendados.ver",
+    "pedidosDespachados.ver",
+    "pedidosEntregados.ver",
+    "pedidosCancelados.ver",
+    "pedidosDevueltos.ver",
+    "cotizaciones.crear",
+    "cotizaciones.editar",
+    "cotizaciones.eliminar",
+    "cotizaciones.enviar",
+    "cotizaciones.remisionar",
+    "remisiones.ver",
+    "remisiones.crear",
+    "remisiones.editar",
+    "remisiones.eliminar",
+    "remisiones.enviar",
+    "clientes.crear",
+    "clientes.editar",
+    "clientes.inactivar",
+    "prospectos.ver"
+  ],
+  "enabled": true,
+  "createdAt": {
+    "$date": "2025-07-08T06:14:34.728Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-04T01:03:23.464Z"
+  },
+  "__v": 1,
+  "description": "Acceso de solo lectura a todos los módulos"
+},
+{
+  "_id": {
+    "$oid": "686cd6a6bc43cb477329a029"
+  },
+  "name": "Venta",
+  "permissions": [
+    "productos.ver",
+    "categorias.ver",
+    "subcategorias.ver",
+    "clientes.ver",
+    "clientes.crear",
+    "ventas.ver",
+    "ventas.crear",
+    "cotizaciones.ver",
+    "cotizaciones.crear",
+    "pedidos.ver",
+    "pedidos.crear"
+  ],
+  "enabled": true,
+  "createdAt": {
+    "$date": "2025-07-08T08:28:22.350Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-03T17:32:33.814Z"
+  },
+  "__v": 1,
+  "description": "Acceso básico a ventas"
+},
+{
+  "_id": {
+    "$oid": "68df6ac81fb0b8900538d3a5"
+  },
+  "name": "Vendedor",
+  "permissions": [
+    "productos.ver",
+    "categorias.ver",
+    "subcategorias.ver",
+    "clientes.ver",
+    "clientes.crear",
+    "clientes.editar",
+    "ventas.ver",
+    "ventas.crear",
+    "ventas.editar",
+    "cotizaciones.ver",
+    "cotizaciones.crear",
+    "cotizaciones.editar",
+    "pedidos.ver",
+    "pedidos.crear",
+    "pedidos.editar",
+    "reportes.ver",
+    "reportes.ventas"
+  ],
+  "enabled": true,
+  "createdAt": {
+    "$date": "2025-10-03T06:18:48.546Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-03T17:32:33.792Z"
+  },
+  "__v": 0,
+  "description": "Acceso a ventas y gestión de clientes"
+},
+{
+  "_id": {
+    "$oid": "68dff2d5bdbc26ab8ccf5c18"
+  },
+  "name": "Gerente",
+  "permissions": [
+    "usuarios.ver",
+    "categorias.ver",
+    "subcategorias.ver",
+    "productos.ver",
+    "clientes.ver",
+    "proveedores.ver",
+    "ventas.ver",
+    "compras.ver",
+    "cotizaciones.ver",
+    "pedidos.ver",
+    "reportesProductos.ver",
+    "reportesVentas.ver",
+    "reportesCompras.ver",
+    "roles.ver"
+  ],
+  "enabled": true,
+  "createdAt": {
+    "$date": "2025-10-03T15:59:17.979Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-03T00:50:23.862Z"
+  },
+  "__v": 1,
+  "description": "Acceso de solo lectura a todos los módulos"
+},
+{
+  "_id": {
+    "$oid": "68dff361bdbc26ab8ccf5c2c"
+  },
+  "name": "Encargado de inventario",
+  "permissions": [
+    "productos.ver",
+    "productos.crear",
+    "productos.editar",
+    "categorias.ver",
+    "categorias.crear",
+    "categorias.editar",
+    "subcategorias.ver",
+    "subcategorias.crear",
+    "subcategorias.editar",
+    "proveedores.ver",
+    "proveedores.crear",
+    "proveedores.editar",
+    "compras.ver",
+    "compras.crear",
+    "compras.editar",
+    "ventas.ver",
+    "pedidos.ver",
+    "reportes.ver",
+    "reportes.productos",
+    "reportes.compras"
+  ],
+  "enabled": true,
+  "createdAt": {
+    "$date": "2025-10-03T16:01:37.038Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-03T17:32:33.799Z"
+  },
+  "__v": 0,
+  "description": "Gestión de productos e inventario"
+},
+{
+  "_id": {
+    "$oid": "68dff39bbdbc26ab8ccf5c40"
+  },
+  "name": "Jefe de compras",
+  "permissions": [
+    "productos.ver",
+    "categorias.ver",
+    "subcategorias.ver",
+    "proveedores.ver",
+    "proveedores.crear",
+    "proveedores.editar",
+    "compras.ver",
+    "compras.crear",
+    "compras.editar",
+    "ventas.ver",
+    "pedidos.ver",
+    "reportes.ver",
+    "reportes.productos",
+    "reportes.compras"
+  ],
+  "enabled": true,
+  "createdAt": {
+    "$date": "2025-10-03T16:02:35.260Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-03T17:32:33.806Z"
+  },
+  "__v": 0,
+  "description": "Gestión de compras y proveedores"
+},
+{
+  "_id": {
+    "$oid": "690958cfb54a591ee7c6dc9b"
+  },
+  "name": "queso",
+  "permissions": [
+    "roles.ver",
+    "roles.crear",
+    "roles.editar",
+    "roles.inhabilitar",
+    "usuarios.ver",
+    "usuarios.crear",
+    "usuarios.editar",
+    "usuarios.inhabilitar",
+    "usuarios.eliminar"
+  ],
+  "enabled": true,
+  "createdAt": {
+    "$date": "2025-11-04T01:37:19.505Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-04T01:37:19.505Z"
+  },
+  "__v": 0
+}]
