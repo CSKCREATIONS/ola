@@ -26,9 +26,9 @@ export default function NavCompras() {
   }, []);
 
   const allLinks = useMemo(() => [
-    { path: '/OrdenCompra', label: 'Orden de compras', visible: puedeVerOrdenes },
-    { path: '/HistorialCompras', label: 'Historial de Compras', visible: puedeVerHCompras },
-    { path: '/Proveedores', label: 'Lista de Proveedores', visible: puedeVerProveedores },
+    { path: '/OrdenCompra', label: 'Órdenes de compra', visible: puedeVerOrdenes },
+    { path: '/HistorialCompras', label: 'Historial de compras', visible: puedeVerHCompras },
+    { path: '/Proveedores', label: 'Proveedores', visible: puedeVerProveedores },
     { path: '/ReporteProveedores', label: 'Reportes', visible: puedeVerReportesCompras }
   ], [puedeVerOrdenes, puedeVerHCompras, puedeVerProveedores, puedeVerReportesCompras]);
 

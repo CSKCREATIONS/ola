@@ -644,6 +644,7 @@ export default function ListaDeClientes() {
                       borderBottom: '2px solid #e5e7eb'
                     }}>
                       <th>#</th>
+                      <th>SOPORTE</th>
                       <th style={{
                         padding: '16px 12px',
                         textAlign: 'left',
@@ -653,7 +654,7 @@ export default function ListaDeClientes() {
                         letterSpacing: '0.5px'
                       }}>
                         <i className="fa-solid fa-user icon-gap" style={{ color: '#6366f1' }} aria-hidden={true}></i>
-                        <span>CLIENTES</span>
+                        <span>CLIENTE</span>
                       </th>
                       <th style={{
                         padding: '16px 12px',
@@ -718,6 +719,7 @@ export default function ListaDeClientes() {
                         <td style={{ padding: '16px 12px', fontWeight: '700', color: '#374151', textAlign: 'left' }}>
                           {index + 1 + (currentPage - 1) * itemsPerPage}
                         </td>
+                        <td></td>
                         <td style={{ padding: '16px 12px' }}>
                           <div style={{ fontWeight: '600', color: '#1f2937', fontSize: '14px' }}>
                             {cliente.nombre || cliente.clienteInfo?.nombre || 'Sin nombre'}

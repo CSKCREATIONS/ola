@@ -40,24 +40,13 @@ const ReportessVentas = () => {
       setError(null);
 
       try {
-        console.log("🚀 Iniciando fetch de todos los datos...");
-        console.log("🌐 URL base proporcionada por api client");
-
-        // Test de conexión básico
-        console.log("🔍 Probando conexión...");
-        const testResponse = await api.get('/api/reportes/estadisticas');
-        console.log("✅ Test de conexión exitoso:", testResponse.status);
-        console.log("📦 Datos de prueba:", testResponse.data);
-
         const fetchEstadisticas = async () => {
           try {
-            console.log("📊 Fetching estadísticas...");
+            
             const res = await api.get('/api/reportes/estadisticas');
-            console.log("📊 Estadísticas - Status:", res.status);
-            console.log("📊 Estadísticas - Data:", res.data);
-
+           
             if (res.data?.success && res.data?.data) {
-              console.log("✅ Estableciendo estadísticas:", res.data.data);
+              
               setEstadisticas(res.data.data);
             } else {
               console.warn("⚠️ Formato de respuesta inválido para estadísticas:", res.data);
@@ -72,13 +61,10 @@ const ReportessVentas = () => {
 
         const fetchClientes = async () => {
           try {
-            console.log("👥 Fetching clientes...");
             const res = await api.get('/api/reportes/clientes');
-            console.log("👥 Clientes - Status:", res.status);
-            console.log("👥 Clientes - Data:", res.data);
 
             if (res.data?.success && res.data?.data) {
-              console.log("✅ Estableciendo clientes:", res.data.data);
+              
               setClientes(res.data.data);
             } else {
               console.warn("⚠️ Formato de respuesta inválido para clientes:", res.data);
@@ -93,13 +79,10 @@ const ReportessVentas = () => {
 
         const fetchProductos = async () => {
           try {
-            console.log("🛍️ Fetching productos...");
             const res = await api.get('/api/reportes/productos');
-            console.log("🛍️ Productos - Status:", res.status);
-            console.log("🛍️ Productos - Data:", res.data);
 
             if (res.data?.success && res.data?.data) {
-              console.log("✅ Estableciendo productos:", res.data.data);
+              
               setProductos(res.data.data);
             } else {
               console.warn("⚠️ Formato de respuesta inválido para productos:", res.data);
@@ -114,13 +97,11 @@ const ReportessVentas = () => {
 
         const fetchEstados = async () => {
           try {
-            console.log("📋 Fetching estados...");
             const res = await api.get('/api/reportes/estados');
-            console.log("📋 Estados - Status:", res.status);
-            console.log("📋 Estados - Data:", res.data);
 
             if (res.data?.success && res.data?.data) {
-              console.log("✅ Estableciendo estados:", res.data.data);
+              
+              
               setEstadosChartData(res.data.data);
             } else {
               console.warn("⚠️ Formato de respuesta inválido para estados:", res.data);
@@ -141,11 +122,6 @@ const ReportessVentas = () => {
           fetchEstados()
         ]);
 
-        console.log("✅ Todos los datos cargados exitosamente");
-        console.log("📊 Estado final - estadisticas:", estadisticas);
-        console.log("👥 Estado final - clientes:", clientes);
-        console.log("🛍️ Estado final - productos:", productos);
-        console.log("📋 Estado final - estados:", estadosChartData);
 
       } catch (error) {
         console.error("❌ Error general al cargar datos:", error);
