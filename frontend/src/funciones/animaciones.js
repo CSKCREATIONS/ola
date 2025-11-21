@@ -57,11 +57,17 @@ export function mostrarMenu(){
 export function cerrarMenuAlClicExterno(event) {
     const menuLateral = document.querySelector('#menu')
     const btnMenu = document.querySelector('#btn-menu')
-    
+
+    // Si no existe el menú en el DOM, no hay nada que cerrar.
+    if (!menuLateral) return
+
+    // Comprueba la existencia de btnMenu antes de usar .contains
+    const clickDentroDelBotonMenu = btnMenu ? btnMenu.contains(event.target) : false
+
     if (window.innerWidth <= 768 && 
         menuLateral.classList.contains('mostrar-menu') &&
         !menuLateral.contains(event.target) && 
-        !btnMenu.contains(event.target)) {
+        !clickDentroDelBotonMenu) {
         mostrarMenu()
     }
 }
