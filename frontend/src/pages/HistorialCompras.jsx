@@ -692,78 +692,17 @@ JLA Global Company</textarea>
             { iconClass: 'fa-solid fa-chart-bar', gradient: 'linear-gradient(135deg, #10b981, #059669)', value: compras.length > 0 ? (sumarProp(compras, 'total') / compras.length).toLocaleString() : 0, label: 'Promedio por Compra' }
           ]} />
           {/* Tabla principal con diseño moderno */}
-          <div style={{
-            background: 'linear-gradient(135deg, #ffffff, #f8fafc)',
-            borderRadius: '20px',
-            padding: '30px',
-            border: '1px solid #e5e7eb',
-            backdropFilter: 'blur(10px)'
-          }}>
-            <div style={{
-              overflowX: 'auto',
-              borderRadius: '12px',
-              border: '1px solid #e5e7eb'
-            }}>
-              <table style={{
-                width: '100%',
-                borderCollapse: 'collapse',
-                background: 'white',
-                borderRadius: '12px',
-                overflow: 'hidden'
-              }}>
+          
+            <div>
+              <table>
                 <thead>
-                  <tr style={{
-                    background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-                    color: 'white'
-                  }}>
-                    <th style={{
-                      padding: '20px 15px',
-                      textAlign: 'left',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px'
-                    }}>#</th>
-                    <th style={{
-                      padding: '20px 15px',
-                      textAlign: 'left',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px'
-                    }}>Identificador</th>
-                    <th style={{
-                      padding: '20px 15px',
-                      textAlign: 'left',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px'
-                    }}>Proveedor</th>
-                    <th style={{
-                      padding: '20px 15px',
-                      textAlign: 'left',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px'
-                    }}>Total</th>
-                    <th style={{
-                      padding: '20px 15px',
-                      textAlign: 'left',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px'
-                    }}>Fecha</th>
-                    <th style={{
-                      padding: '20px 15px',
-                      textAlign: 'left',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px'
-                    }}>Solicitado Por</th>
+                  <tr >
+                    <th>#</th>
+                    <th>Identificador</th>
+                    <th>Proveedor</th>
+                    <th>Total</th>
+                    <th>Fecha</th>
+                    <th>Solicitado Por</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -874,7 +813,7 @@ JLA Global Company</textarea>
                 </tbody>
               </table>
             </div>
-          </div>
+          
 
           {/* Paginación moderna */}
           {compras.length > 0 && (

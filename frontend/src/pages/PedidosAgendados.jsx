@@ -77,58 +77,7 @@ const pedidosAgendadosStyles = `
       justify-content: center;
     }
 
-    .pedidos-table-modern {
-      background: linear-gradient(135deg, #ffffff, #f8fafc);
-      border-radius: 20px;
-      padding: 30px;
-      border: 1px solid #e5e7eb;
-      backdrop-filter: blur(10px);
-    }
-
-    .pedidos-table-wrapper {
-      overflow-x: auto;
-      border-radius: 12px;
-      border: 1px solid #e5e7eb;
-    }
-
-    .pedidos-table {
-      width: 100%;
-      border-collapse: collapse;
-      background: white;
-      border-radius: 12px;
-      overflow: hidden;
-    }
-
-    .pedidos-table thead tr {
-      background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
-      color: white;
-    }
-
-    .pedidos-table th {
-      padding: 20px 15px;
-      text-align: left;
-      font-size: 14px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .pedidos-table tbody tr {
-      border-bottom: 1px solid #f3f4f6;
-      transition: all 0.3s ease;
-      cursor: pointer;
-    }
-
-    .pedidos-table tbody tr:hover {
-      background: linear-gradient(135deg, #fef3c7, #fde68a);
-      transform: scale(1.01);
-    }
-
-    .pedidos-table td {
-      padding: 20px 15px;
-      font-size: 14px;
-      color: #374151;
-    }
+    
 
     .pedidos-action-btn {
       background: linear-gradient(135deg, #f59e0b, #ea580c);
@@ -666,8 +615,39 @@ export default function PedidosAgendados() {
                       Control y gestión de pedidos programados para entrega
                     </p>
                   </div>
+                  {/* Controles de exportación y acciones */}
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '20px',
+                    flexWrap: 'wrap',
+                    gap: '10px'
+                  }}>
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                      <button className="pedidos-export-btn" onClick={exportarExcel}>
+                        <i className="fa-solid fa-file-excel"></i>
+                        <span>Exportar a Excel</span>
+                      </button>
+                      <button className="pedidos-export-btn" onClick={exportarPDF}>
+                        <i className="fa-solid fa-file-pdf"></i>
+                        <span>Exportar a PDF</span>
+                      </button>
+                    </div>
+                    <div>
+                      <button
+                        className='pedidos-add-btn'
+                        onClick={() => setMostrarModalAgendar(true)}
+                      >
+                        <i className="fa-solid fa-plus"></i>
+                        <span>Agendar Pedido</span>
+                      </button>
+                    </div>
+                  </div>
                 </div>
+
               </div>
+
             </div>
 
             {/* Estadísticas avanzadas */}
@@ -747,40 +727,11 @@ export default function PedidosAgendados() {
               </div>
             </div>
 
-            {/* Controles de exportación y acciones */}
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '20px',
-              flexWrap: 'wrap',
-              gap: '10px'
-            }}>
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <button className="pedidos-export-btn" onClick={exportarExcel}>
-                  <i className="fa-solid fa-file-excel"></i>
-                  <span>Exportar a Excel</span>
-                </button>
-                <button className="pedidos-export-btn" onClick={exportarPDF}>
-                  <i className="fa-solid fa-file-pdf"></i>
-                  <span>Exportar a PDF</span>
-                </button>
-              </div>
-              <div>
-                <button
-                  className='pedidos-add-btn'
-                  onClick={() => setMostrarModalAgendar(true)}
-                >
-                  <i className="fa-solid fa-plus"></i>
-                  <span>Agendar Pedido</span>
-                </button>
-              </div>
-            </div>
+
 
             {/* Tabla principal con diseño moderno */}
-            <div className="pedidos-table-modern">
-              <div className="pedidos-table-wrapper">
-                <table className="pedidos-table" id="tabla_despachos">
+              <div>
+                <table  id="tabla_despachos">
                   <thead>
                     <tr>
                       <th>No</th>
@@ -898,7 +849,7 @@ export default function PedidosAgendados() {
                   </tbody>
                 </table>
               </div>
-            </div>
+            
 
             {/* Paginación */}
             {totalPages > 1 && (

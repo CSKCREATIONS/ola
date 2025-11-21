@@ -77,58 +77,7 @@ const proveedoresStyles = `
       justify-content: center;
     }
 
-    .proveedor-table-modern {
-      background: linear-gradient(135deg, #ffffff, #f8fafc);
-      border-radius: 20px;
-      padding: 30px;
-      border: 1px solid #e5e7eb;
-      backdrop-filter: blur(10px);
-    }
-
-    .proveedor-table-wrapper {
-      overflow-x: auto;
-      border-radius: 12px;
-      border: 1px solid #e5e7eb;
-    }
-
-    .proveedor-table {
-      width: 100%;
-      border-collapse: collapse;
-      background: white;
-      border-radius: 12px;
-      overflow: hidden;
-    }
-
-    .proveedor-table thead tr {
-      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-      color: white;
-    }
-
-    .proveedor-table th {
-      padding: 20px 15px;
-      text-align: left;
-      font-size: 14px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .proveedor-table tbody tr {
-      border-bottom: 1px solid #f3f4f6;
-      transition: all 0.3s ease;
-      cursor: pointer;
-    }
-
-    .proveedor-table tbody tr:hover {
-      background: linear-gradient(135deg, #f8fafc, #f1f5f9);
-      transform: scale(1.01);
-    }
-
-    .proveedor-table td {
-      padding: 20px 15px;
-      font-size: 14px;
-      color: #374151;
-    }
+    
 
     .proveedor-action-btn {
       background: linear-gradient(135deg, #6366f1, #8b5cf6);
@@ -933,9 +882,9 @@ const GestionProveedores = () => {
             <span>Nuevo Proveedor</span>
           </button>
           {/* Tabla principal con diseño moderno */}
-          <div className="proveedor-table-modern">
-            <div className="proveedor-table-wrapper">
-              <table className="proveedor-table">
+          <div >
+            <div >
+              <table >
                 <thead>
                   <tr>
                     <th>#</th>
