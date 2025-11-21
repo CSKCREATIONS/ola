@@ -33,86 +33,6 @@ function ensureSendGridForRecovery() {
 
 
 
-
-// 1. Registro de usuarios (SOLO ADMIN)
-exports.signup = async (req, res) => {
-  try {
-    // Validación manual adicional
-    if (!req.body.username || req.body.username.trim() === '') {
-      return res.status(400).json({
-        success: false,
-        message: "El nombre de usuario es requerido",
-        field: "username"
-      });
-    }
-
-    // Crear instancia de usuario
-    const user = new User({
-      firstName: req.body.firstName.trim(),
-      secondName: req.body.secondName.trim(),
-      surname: req.body.surname.trim(),
-      secondSurname: req.body.secondSurname.trim(),
-      username: req.body.username.trim(),
-      email: req.body.email.toLowerCase().trim(),
-      password: req.body.password,
-      role: req.body.role
-    });
-
-    // Guardar usuario en la base de datos
-    const savedUser = await user.save();
-
-    // Generar token JWT
-    const token = jwt.sign(
-      {
-        id: savedUser._id,
-        role: savedUser.role
-      },
-      config.secret,
-      { expiresIn: config.jwtExpiration }
-    );
-
-    // Preparar respuesta sin datos sensibles
-    const userData = savedUser.toObject();
-    delete userData.password;
-
-    res.status(201).json({
-      success: true,
-      message: "Usuario registrado exitosamente",
-      token: token,
-      user: userData
-    });
-
-  } catch (error) {
-    console.error('[AuthController] Error en registro:', error);
-
-    // Manejo especial de errores de MongoDB
-    if (error.code === 11000) {
-      const field = Object.keys(error.keyPattern)[0];
-      return res.status(400).json({
-        success: false,
-        message: `El ${field} ya está en uso`,
-        field: field
-      });
-    }
-
-    // Manejo de otros errores de validación
-    if (error.name === 'ValidationError') {
-      const messages = Object.values(error.errors).map(val => val.message);
-      return res.status(400).json({
-        success: false,
-        message: messages.join(', '),
-        errors: error.errors
-      });
-    }
-
-    res.status(500).json({
-      success: false,
-      message: "Error al registrar usuario",
-      error: error.message
-    });
-  }
-};
-
 exports.signin = async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -162,19 +82,19 @@ exports.signin = async (req, res) => {
 
     // valida si en usuario esta inhabilitado 
     if (!user.enabled) {
-      console.log('[AuthController] Usuario inhabilitado');
+      console.log('[AuthController] Usuario deshabilitado');
       return res.status(403).json({
         success: false,
-        message: "Usuario inhabilitado"
+        message: "Usuario deshabilitado"
       });
     }
 
-    // valida si el rol del usuario está inhabilitado
+    // valida si el rol del usuario está deshabilitado
     if (!user.role.enabled) {
-      console.log('[AuthController] Rol inhabilitado');
+      console.log('[AuthController] Rol deshabilitado');
       return res.status(403).json({
         success: false,
-        message: "Rol inhabilitado"
+        message: "Rol deshabilitado"
       });
     }
 

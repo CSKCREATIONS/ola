@@ -32,17 +32,7 @@ router.use((req,res,next) =>{
 //Rutas de login(sin proteccion)
 router.post('/signin', authController.signin);
 
-//Ruta de registro
 
-router.post('/signup',
-    (req,res,next) =>{
-        console.log('[AuthRoutes] Middleware de verificacion de registro');
-        next();
-    },
-    verifySignUp.checkDuplicateUsernameOrEmail,
-    verifySignUp.checkRolesExisted,
-    authController.signup
-);
 
 router.post('/recover-password', authController.recoverPassword);
 
