@@ -27,11 +27,32 @@ export default function Login() {
           navigate('/Home');
         }
       } else {
-        setMensajeError(data.message || 'Credenciales inválidas');
+        // Si el backend responde con éxito false (caso raro), mostrar su mensaje
+        // o un mensaje genérico para credenciales inválidas
+        const msg = data.message || 'Usuario o contraseña incorrectos';
+        setMensajeError(msg);
       }
     } catch (error) {
       console.error('Login error:', error);
-      setMensajeError('Error en el servidor');
+
+      // Si axios devolvió una respuesta del servidor, extraer el mensaje y el status
+      const resp = error?.response;
+      const serverMsg = resp?.data?.message;
+      const status = resp?.status;
+
+      // Mapear distintos estados/mensajes del backend a mensajes amigables:
+      // - Si el rol está deshabilitado, mostrar exactamente ese mensaje.
+      // - Para 400/401/404 (credenciales/usuario inválido) mostrar
+      //   'Usuario o contraseña incorrectos' tal como pide el backend.
+      if (serverMsg === 'Rol deshabilitado' || serverMsg === 'Usuario deshabilitado') {
+        setMensajeError(serverMsg);
+      } else if (status === 400 || status === 401 || status === 404) {
+        setMensajeError('Usuario o contraseña incorrectos');
+      } else if (serverMsg) {
+        setMensajeError(serverMsg);
+      } else {
+        setMensajeError('Error en el servidor');
+      }
     }
   };
 
