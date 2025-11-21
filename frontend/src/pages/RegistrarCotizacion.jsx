@@ -533,7 +533,24 @@ export default function RegistrarCotizacion() {
                     className="cuadroTexto input-compacto"
                     placeholder="+51 999 888 777"
                     value={clienteTelefono}
-                    onChange={(e) => setClienteTelefono(e.target.value)}
+                    onChange={(e) => {
+                      // Solo permitir números y caracteres válidos para teléfonos: +, espacios, guiones, paréntesis
+                      const valor = e.target.value;
+                      const valorFiltrado = valor.replace(/[^0-9+\-() ]/g, '');
+                      setClienteTelefono(valorFiltrado);
+                    }}
+                    onKeyDown={(e) => {
+                      // Prevenir entrada de letras en tiempo real usando onKeyDown (reemplazo de onKeyPress deprecado)
+                      const char = e.key;
+                      // Permitir teclas de control como Backspace, Delete, Tab, Escape, Enter, flechas
+                      if (
+                        char.length === 1 && 
+                        !/[0-9+\-() ]/.test(char) &&
+                        !['Backspace', 'Delete', 'Tab', 'Escape', 'Enter', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(char)
+                      ) {
+                        e.preventDefault();
+                      }
+                    }}
                   />
                 </div>
 
@@ -562,7 +579,8 @@ export default function RegistrarCotizacion() {
                   </label>
                   <div className="input-compacto input-solo-lectura">
                     <i className="fa-solid fa-badge-check" style={{ color: '#10b981', marginRight: '0.5rem' }}></i>
-                    <span id='vendedor'>{user ? user.firstName : ''} {user ? user.surname : ''}</span>
+                    <span id='vendedor'>
+                      {user ? user.firstName : ''} {user ? user.surname : ''}</span>
                   </div>
                 </div>
 

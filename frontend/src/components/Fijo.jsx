@@ -301,13 +301,13 @@ export default function Fijo() {
               </button>
               <ul id="submenuCompras" className="dropdown" >
                 {puedeGenerarOrden && (
-                  <Link as={Link} to="/OrdenCompra" className="dropdown-link"><li><i className="fas fa-history" aria-hidden={true}></i> <span>Ordenes de compra</span></li></Link>
+                  <Link as={Link} to="/OrdenCompra" className="dropdown-link"><li><i className="fas fa-history" aria-hidden={true}></i> <span>Órdenes de compra</span></li></Link>
                 )}
                 {puedeVerHCompras && (
                   <Link as={Link} to="/HistorialCompras" className="dropdown-link"><li><i className="fas fa-history" aria-hidden={true}></i> <span>Historial de compras</span></li></Link>
                 )}
                 {puedeVerProveedores && (
-                  <Link as={Link} to="/Proveedores" className="dropdown-link"><li><i className="fas fa-truck" aria-hidden={true}></i> <span>Lista de proveedores</span></li></Link>
+                  <Link as={Link} to="/Proveedores" className="dropdown-link"><li><i className="fas fa-truck" aria-hidden={true}></i> <span>Proveedores</span></li></Link>
                 )}
                 {puedeVerReportesCompras && (
                   <Link as={Link} to="/ReporteProveedores" className="dropdown-link"><li> <i className="fas fa-chart-bar" aria-hidden={true}></i> <span>Reportes</span></li></Link>
@@ -383,11 +383,8 @@ export default function Fijo() {
                 {puedeVerPedidosCancelados && (
                   <Link as={Link} to="/PedidosCancelados" className="dropdown-link"><li><i className="fas fa-times-circle" aria-hidden={true}></i> <span>Pedidos cancelados</span></li></Link>
                 )}
-                {puedeVerPedidosDevueltos && (
-                  <Link as={Link} to="/PedidosDevueltos" className="dropdown-link"><li><i className="fas fa-undo-alt" aria-hidden={true}></i> <span>Pedidos devueltos</span></li></Link>
-                )}
                 {puedeVerListaDeClientes && (
-                  <Link as={Link} to="/ListaDeClientes" className="dropdown-link"><li> <i className="fas fa-address-book" aria-hidden={true}></i> <span>Lista de clientes</span></li></Link>
+                  <Link as={Link} to="/ListaDeClientes" className="dropdown-link"><li> <i className="fas fa-address-book" aria-hidden={true}></i> <span>Clientes</span></li></Link>
                 )}
                 {puedeVerProspectos && (
                   <Link as={Link} to="/ProspectosDeClientes" className="dropdown-link"><li><i className="fas fa-user-plus" aria-hidden={true}></i> <span>Prospectos de cliente</span></li></Link>
@@ -398,11 +395,11 @@ export default function Fijo() {
               </ul>
             </nav>
           )}
-          <button className="logout-btn" onClick={handleClick}>
-            Cerrar sesión
-          </button>
-        </div>
 
+        </div>
+        <button className="logout-btn" onClick={handleClick}>
+          Cerrar sesión
+        </button>
 
 
       </div>

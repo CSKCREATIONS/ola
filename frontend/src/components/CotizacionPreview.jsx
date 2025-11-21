@@ -33,9 +33,7 @@ function applyHoverHandlers() {
 }
 
 async function openRemisionSwal(datos) {
-  // Extracted the large SweetAlert2 configuration to a helper that returns the same structure used in the component.
   const fechaDefault = new Date().toISOString().split('T')[0];
-
   const swalConfig = {
     title: '<i class="fa-solid fa-file-invoice" style="color: #2563eb; margin-right: 12px;"></i>Remisionar Cotización',
     html: `
@@ -93,7 +91,6 @@ async function openRemisionSwal(datos) {
       const obsEl = popup ? popup.querySelector('#observaciones') : document.getElementById('observaciones');
       const fechaEntrega = fechaEl ? fechaEl.value : '';
       const observaciones = obsEl ? obsEl.value : '';
-
       if (!fechaEntrega) {
         Swal.showValidationMessage(`<div style="text-align:left;color:#dc2626;"><i class="fa-solid fa-exclamation-circle"></i> <strong>La fecha de entrega es requerida</strong><br><small>Por favor seleccione una fecha para continuar</small></div>`);
         return { valid: false };
@@ -107,23 +104,14 @@ async function openRemisionSwal(datos) {
       return { valid: true, fechaEntrega, observaciones: (observaciones || '').trim() };
     }
   };
-
   const { value: formValues } = await Swal.fire(swalConfig);
   return formValues?.valid ? formValues : null;
 }
 
 function SendEmailModal({ correo, setCorreo, asunto, setAsunto, mensaje, setMensaje, onClose, onSend }) {
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0, left: 0, right: 0, bottom: 0,
-      backgroundColor: 'rgba(0,0,0,0.5)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
-    }}>
-      <div style={{
-        backgroundColor: 'white', padding: '2rem', borderRadius: '10px',
-        maxWidth: '600px', width: '90%', maxHeight: '80vh', overflow: 'auto'
-      }}>
+    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+      <div style={{ backgroundColor: 'white', padding: '2rem', borderRadius: '10px', maxWidth: '600px', width: '90%', maxHeight: '80vh', overflow: 'auto' }}>
         <h3 style={{ marginBottom: '1rem', color: '#2563eb' }}>
           <i className="fa-solid fa-envelope icon-gap" aria-hidden={true}></i>
           <span>Enviar Cotización por Correo</span>
@@ -270,57 +258,49 @@ export default function CotizacionPreview({ datos, onClose, onEmailSent, onRemis
   };
 
   const handlePrint = () => {
-    const printContent = document.querySelector('.pdf-cotizacion');
-    if (!printContent) {
+    const source = document.getElementById('pdf-cotizacion-block');
+    if (!source) {
       Swal.fire('Error', 'No se encontró el contenido para imprimir', 'error');
       return;
     }
-
-    const html = `<!doctype html><html><head><meta charset="utf-8" /><title>Cotización - ${datos.codigo || ''}</title><style>
-      body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
-      .header { text-align: center; margin-bottom: 30px; padding: 20px; background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; border-radius: 10px; }
-      .info-section { margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; }
-      table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-      th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-      th { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; font-weight: bold; }
-      .total-row { background: #dbeafe; font-weight: bold; }
-      .status-badge { background: #2563eb; color: white; padding: 8px 16px; border-radius: 20px; display: inline-block; }
-    </style></head><body>${printContent.innerHTML}</body></html>`;
-
-    try {
-      const blob = new Blob([html], { type: 'text/html' });
-      const url = URL.createObjectURL(blob);
-      const win = window.open(url, '_blank');
-      if (!win) {
-        const fallback = window.open('', '_blank');
-        if (fallback) {
-          fallback.document.open();
-          fallback.document.documentElement.innerHTML = html;
-          fallback.document.close();
-          fallback.focus();
-          setTimeout(() => { try { fallback.print(); fallback.close(); } catch (e) { console.error(e); } }, 500);
-        } else {
-          Swal.fire('Error', 'No se pudo abrir la ventana para imprimir', 'error');
-        }
-        return;
+    const clone = source.cloneNode(true);
+    clone.style.padding = '8mm';
+    clone.style.margin = '0';
+    clone.style.boxShadow = 'none';
+    clone.style.background = '#fff';
+    clone.style.width = '100%';
+    clone.style.fontSize = '12px';
+    const printRoot = document.createElement('div');
+    printRoot.id = 'print-root';
+    printRoot.appendChild(clone);
+    document.body.appendChild(printRoot);
+    const style = document.createElement('style');
+    style.type = 'text/css';
+    style.textContent = `@page { size: A4 portrait; margin: 8mm; }
+      @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      body * { visibility: hidden !important; }
+      #print-root, #print-root * { visibility: visible !important; }
+      #print-root { position: fixed; inset: 0; margin:0; padding:0; background:#fff; }
+      table { page-break-inside: avoid; } }`;
+    document.head.appendChild(style);
+    const A4_HEIGHT_PX = 1122;
+    requestAnimationFrame(() => {
+      const h = printRoot.scrollHeight;
+      if (h > A4_HEIGHT_PX) {
+        const scale = Math.max(0.75, A4_HEIGHT_PX / h);
+        clone.style.transform = `scale(${scale})`;
+        clone.style.transformOrigin = 'top left';
+        clone.style.width = `${(100/scale).toFixed(2)}%`;
       }
-
-      const interval = setInterval(() => {
-        try {
-          if (win?.document?.readyState === 'complete') {
-            clearInterval(interval);
-            try { win.focus(); win.print(); } catch (err) { console.error('Error focusing/printing window:', err); }
-            setTimeout(() => URL.revokeObjectURL(url), 1000);
-            setTimeout(() => { try { win.close(); } catch (err) { console.error(err); } }, 1500);
-          }
-        } catch (err) {
-          console.debug('Window document access error (expected if closed):', err.message);
+      setTimeout(() => {
+        try { window.print(); } catch (e) {
+          console.error('Error al imprimir', e);
+          Swal.fire('Error', 'No se pudo iniciar la impresión', 'error');
+        } finally {
+          setTimeout(() => { printRoot.remove(); style.remove(); }, 400);
         }
-      }, 200);
-    } catch (err) {
-      console.error('Error creating print window:', err);
-      Swal.fire('Error', 'Ocurrió un error al preparar la impresión', 'error');
-    }
+      }, 40);
+    });
   };
 
   const hoverHandlers = applyHoverHandlers();
@@ -372,7 +352,7 @@ export default function CotizacionPreview({ datos, onClose, onEmailSent, onRemis
         </div>
 
         <div style={{ flex: 1, overflow: 'auto', padding: '2rem', backgroundColor: '#f8f9fa' }}>
-          <div className="pdf-cotizacion" id="pdf-cotizacion-block" style={{ display: 'flex', flexDirection: 'column', background: '#fff', padding: '2rem', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', marginTop: '1rem', userSelect: 'none' }} onCopy={(e) => e.preventDefault()}>
+          <div className="pdf-cotizacion" id="pdf-cotizacion-block" style={{ display: 'flex', flexDirection: 'column', background: '#fff', padding: '1rem', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', marginTop: '1rem', userSelect: 'none' }} onCopy={(e) => e.preventDefault()}>
             <div className="header" style={{ textAlign: 'center', color: 'white', marginBottom: '2rem', padding: '1.5rem', background: 'linear-gradient(135deg, #2563eb, #1d4ed8)', borderRadius: '8px', fontSize: '1.8rem', fontWeight: 'bold' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem' }}>
                 <i className="fa-solid fa-file-lines" style={{ fontSize: '2rem' }} aria-hidden={true}></i>
