@@ -412,7 +412,7 @@ export default function ListaDeUsuarios() {
                           {usuario.username}
                         </td>
                         <td style={{ textAlign: 'center' }}>
-                          <label className="switch" style={{ position: 'relative', display: 'inline-block', width: '50px', height: '24px' }}>
+                          <label className="switch">
                             <input
                               type="checkbox"
                               checked={usuario.enabled}
@@ -432,15 +432,7 @@ export default function ListaDeUsuarios() {
                               style={{ opacity: 0, width: 0, height: 0 }}
                             />
                             <span className="slider" style={{
-                              position: 'absolute',
-                              cursor: 'pointer',
-                              top: 0,
-                              left: 0,
-                              right: 0,
-                              bottom: 0,
-                              backgroundColor: usuario.enabled ? '#10b981' : '#ef4444',
-                              transition: '0.4s',
-                              borderRadius: '24px'
+                              backgroundColor: usuario.enabled ? '#10b981' : '#ef4444'
                             }}></span>
                           </label>
                         </td>

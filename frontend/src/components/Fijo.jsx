@@ -396,13 +396,13 @@ export default function Fijo() {
             </nav>
           )}
 
+          <button className="logout-btn" onClick={handleClick}>
+            Cerrar sesión
+          </button>
         </div>
-        <button className="logout-btn" onClick={handleClick}>
-          Cerrar sesión
-        </button>
-
-
+        <img src="/pangea.png" alt="PANGEA" className="pangea-logo" />
       </div>
+
     </div>
   )
 }

@@ -213,29 +213,20 @@ export default function RolesYPermisos() {
   useEffect(() => {
     const init = async () => {
       const usuario = JSON.parse(localStorage.getItem('user'));
-      console.log('👤 Usuario en localStorage:', usuario);
-      console.log('🔑 Permisos del usuario:', usuario?.permissions);
       if (usuario?.permissions) {
         const tieneEditarRol = usuario.permissions.includes('roles.editar');
         const tieneinhabilitarRol = usuario.permissions.includes('roles.inhabilitar');
         const tieneCrearRol = usuario.permissions.includes('roles.crear');
-        console.log('✅ Puede editar rol:', tieneEditarRol);
-        console.log('✅ Puede inhabilitar rol:', tieneinhabilitarRol);
-        console.log('✅ Puede crear rol:', tieneCrearRol);
         setPuedeEditarRol(tieneEditarRol);
         setpuedeinhabilitarRol(tieneinhabilitarRol);
         setPuedeCrearRol(tieneCrearRol);
       }
 
-      try {
-        console.log('🔍 RolesYPermisos: Iniciando carga de roles...');
+        try {
         const res = await api.get('/api/roles');
-        console.log('📋 RolesYPermisos: Respuesta del servidor:', res);
-        console.log('📋 RolesYPermisos: data.success =', res.data?.success, 'data.roles =', res.data?.roles);
         if (res.data?.success) {
           const rolesOrdenados = res.data.roles.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
           setRoles(rolesOrdenados);
-          console.log('✅ RolesYPermisos: Roles cargados correctamente:', res.data.roles.length);
         } else {
           console.error('❌ RolesYPermisos: Error cargando roles - data.success es false');
         }
