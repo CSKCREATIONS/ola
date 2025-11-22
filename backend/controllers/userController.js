@@ -26,7 +26,7 @@ exports.getAllUsers = async (req, res) => {
 //Obtener usuario especifico
 exports.getUserById = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id).select('-password');
+    const user = await User.findById(req.params.id).select('-password').populate('role');
 
     if (!user) {
       return res.status(404).json({
@@ -43,7 +43,7 @@ exports.getUserById = async (req, res) => {
       });
     }
 
-    if (req.userRole === 'coordinador' && user.role === 'admin') {
+    if (req.userRole === 'coordinador' && user.role && user.role.name === 'admin') {
       return res.status(403).json({
         success: false,
         message: 'NO puedes ver usuarios admin'

@@ -10,63 +10,68 @@
 export const formatDate = (fechaOrObj) => {
   if (!fechaOrObj) return 'Fecha no disponible';
 
-  try {
-    // Si recibe un objeto, preferir `fechaString`, luego `fecha`.
-    if (typeof fechaOrObj === 'object' && fechaOrObj !== null) {
-      // Preferir fechaString (YYYY-MM-DD) — preserva exactamente la selección del usuario
-      if (fechaOrObj.fechaString) {
-        const parts = String(fechaOrObj.fechaString).split('-').map(n => Number.parseInt(n, 10));
-        const [y, m, d] = parts;
-        const date = new Date(Date.UTC(y, m - 1, d, 0, 0, 0));
-        // Ajuste por zona horaria del cliente: sumar 1 día para corregir desplazo en UI
-        date.setUTCDate(date.getUTCDate() + 1);
-        if (Number.isNaN(date.getTime())) return 'Fecha inválida';
-        return date.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+  // Helpers to keep the main flow simple
+  const isValidDate = (d) => d instanceof Date && !Number.isNaN(d.getTime());
+  const toLocale = (d) => d.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+  const buildUTCDateFromParts = (y, m, d) => {
+    const date = new Date(Date.UTC(y, m - 1, d, 0, 0, 0));
+    // Ajuste por zona horaria del cliente: sumar 1 día para corregir desplazo en UI
+    date.setUTCDate(date.getUTCDate() + 1);
+    return date;
+  };
+  const parseYYYYMMDDString = (str) => {
+    if (typeof str !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(str)) return null;
+    const [y, m, d] = str.split('-').map(n => Number.parseInt(n, 10));
+    const date = buildUTCDateFromParts(y, m, d);
+    return isValidDate(date) ? date : null;
+  };
+  const parseObjectDate = (obj) => {
+    // Siempre devuelve un objeto con la misma forma:
+    // { date: Date|null, invalid: boolean }
+    if (obj == null || typeof obj !== 'object') return { date: null, invalid: false };
+    if (obj.fechaString) {
+      // Preferir fechaString tal cual (YYYY-MM-DD)
+      const date = parseYYYYMMDDString(String(obj.fechaString));
+      return date === null ? { date: null, invalid: true } : { date, invalid: false };
+    }
+    if (obj.fecha) {
+      const raw = obj.fecha;
+      if (typeof raw === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+        const date = parseYYYYMMDDString(raw);
+        return date === null ? { date: null, invalid: true } : { date, invalid: false };
       }
-
-      // Si tiene `fecha`, puede ser ISO; parsear usando componentes UTC para evitar shifts
-      if (fechaOrObj.fecha) {
-        const raw = fechaOrObj.fecha;
-        if (typeof raw === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(raw)) {
-          const [y, m, d] = raw.split('-').map(n => Number.parseInt(n, 10));
-          const date = new Date(Date.UTC(y, m - 1, d, 0, 0, 0));
-          // Ajuste por zona horaria del cliente: sumar 1 día para corregir desplazo en UI
-          date.setUTCDate(date.getUTCDate() + 1);
-          if (Number.isNaN(date.getTime())) return 'Fecha inválida';
-          return date.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
-        }
-        const tmp = new Date(raw);
-        if (!Number.isNaN(tmp.getTime())) {
-          const y = tmp.getUTCFullYear();
-          const m = tmp.getUTCMonth() + 1;
-          const d = tmp.getUTCDate();
-          const date = new Date(Date.UTC(y, m - 1, d, 0, 0, 0));
-          // Ajuste por zona horaria del cliente: sumar 1 día para corregir desplazo en UI
-          date.setUTCDate(date.getUTCDate() + 1);
-          return date.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
-        }
+      const tmp = new Date(raw);
+      if (isValidDate(tmp)) {
+        const y = tmp.getUTCFullYear();
+        const m = tmp.getUTCMonth() + 1;
+        const d = tmp.getUTCDate();
+        return { date: buildUTCDateFromParts(y, m, d), invalid: false };
       }
     }
+    return { date: null, invalid: false };
+  };
 
-    // Si recibe un string en formato YYYY-MM-DD, parsearlo como UTC midnight
+  try {
+    // Caso objeto: delegar a helper y respetar decisiones previas
+    if (typeof fechaOrObj === 'object' && fechaOrObj !== null) {
+      const parsed = parseObjectDate(fechaOrObj);
+      if (parsed.invalid) return 'Fecha inválida';
+      if (parsed.date instanceof Date) return toLocale(parsed.date);
+      // si el objeto no proporcionó fecha válida, continuar con otros intentos
+    }
+
+    // Si es string YYYY-MM-DD, parseo seguro como UTC
     if (typeof fechaOrObj === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(fechaOrObj)) {
-      const [y, m, d] = fechaOrObj.split('-').map(n => Number.parseInt(n, 10));
-      const date = new Date(Date.UTC(y, m - 1, d, 0, 0, 0));
-      // Ajuste por zona horaria del cliente: sumar 1 día para corregir desplazo en UI
-      date.setUTCDate(date.getUTCDate() + 1);
-      if (Number.isNaN(date.getTime())) return 'Fecha inválida';
-      return date.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+      const date = parseYYYYMMDDString(fechaOrObj);
+      if (date === null) return 'Fecha inválida';
+      return toLocale(date);
     }
 
     // Fallback: intentar construir Date normal
     const date = new Date(fechaOrObj);
-    if (Number.isNaN(date.getTime())) return 'Fecha inválida';
+    if (!isValidDate(date)) return 'Fecha inválida';
 
-    return date.toLocaleDateString('es-ES', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+    return toLocale(date);
   } catch (error) {
     console.warn('Error formateando fecha:', error);
     return 'Fecha inválida';

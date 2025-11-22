@@ -286,7 +286,7 @@ export default function CotizacionPreview({ datos, onClose, onEmailSent, onRemis
     const A4_HEIGHT_PX = 1122;
     const doPrintAndCleanup = () => {
       try {
-        const printFn = window?.print;
+        const printFn = globalThis?.print;
 
 
 

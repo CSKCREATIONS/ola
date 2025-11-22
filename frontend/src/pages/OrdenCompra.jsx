@@ -5,7 +5,6 @@ import '../App.css';
 import Fijo from '../components/Fijo';
 import NavCompras from '../components/NavCompras';
 import DetallesOrdenModal from '../components/DetallesOrdenModal';
-import OrderDetailsHeader from '../components/OrderDetailsHeader';
 import DeleteButton from '../components/DeleteButton';
 import SharedListHeaderCard from '../components/SharedListHeaderCard';
 import PrimaryButton from '../components/PrimaryButton';

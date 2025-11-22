@@ -166,6 +166,94 @@ async function mapProductosConNombre(productos = []) {
 }
 
 // Crear cotización
+// Helper: parse various incoming fecha formats into a UTC date at midnight and its YYYY-MM-DD string
+function parseFechaCotizacion(fecha) {
+  let fechaStringVal;
+  let fechaCotizacion;
+
+  // Prioritize Date instance
+  if (fecha instanceof Date) {
+    fechaStringVal = fecha.toISOString().slice(0, 10);
+  } else {
+    // Normalize incoming value to string for simple checks
+    const asStr = (typeof fecha === 'string') ? fecha : (fecha == null ? '' : String(fecha));
+
+    // Exact match YYYY-MM-DD
+    if (/^\d{4}-\d{2}-\d{2}$/.test(asStr)) {
+      fechaStringVal = asStr;
+    } else if (asStr.length >= 10) {
+      // Try first 10 chars (handles ISO-like strings)
+      const maybe = asStr.slice(0, 10);
+      if (/^\d{4}-\d{2}-\d{2}$/.test(maybe)) {
+        fechaStringVal = maybe;
+      }
+    }
+  }
+
+  if (fechaStringVal) {
+    const [y, m, d] = fechaStringVal.split('-').map(n => parseInt(n, 10));
+    fechaCotizacion = new Date(Date.UTC(y, m - 1, d, 0, 0, 0));
+  } else {
+    // Fallback to today's UTC date at midnight
+    const now = new Date();
+    fechaCotizacion = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0));
+    fechaStringVal = fechaCotizacion.toISOString().slice(0, 10);
+  }
+
+  return { fechaCotizacion, fechaStringVal };
+}
+
+// Helper: validate that fechaCotizacion is not older than allowed window (24h tolerance)
+function isFechaAllowed(fechaCotizacion) {
+  const now = new Date();
+  const todayUtcStart = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0);
+  const allowedStart = todayUtcStart - (24 * 60 * 60 * 1000); // 24h atrás
+  return fechaCotizacion.getTime() >= allowedStart;
+}
+
+// Helper: build payload for Cotizacion document
+function buildCotizacionPayload({
+  clienteExistente,
+  cliente,
+  responsable,
+  fechaCotizacion,
+  fechaStringVal,
+  descripcion,
+  condicionesPago,
+  productosConNombre,
+  enviadoCorreo,
+  empresa,
+  clientePotencial
+}) {
+  return {
+    codigo: generarCodigoCotizacion(),
+    cliente: {
+      referencia: clienteExistente ? clienteExistente._id : undefined,
+      nombre: cliente.nombre,
+      ciudad: cliente.ciudad,
+      direccion: cliente.direccion,
+      telefono: cliente.telefono,
+      correo: cliente.correo,
+      esCliente: cliente.esCliente
+    },
+    responsable: {
+      id: responsable.id,
+      firstName: responsable.firstName,
+      secondName: responsable.secondName,
+      surname: responsable.surname,
+      secondSurname: responsable.secondSurname
+    },
+    fecha: fechaCotizacion,
+    fechaString: fechaStringVal,
+    descripcion,
+    condicionesPago,
+    productos: productosConNombre,
+    empresa: empresa || undefined,
+    clientePotencial,
+    enviadoCorreo
+  };
+}
+
 exports.createCotizacion = async (req, res) => {
   try {
     const {
@@ -192,80 +280,34 @@ exports.createCotizacion = async (req, res) => {
     // Resolve or create cliente document
     const clienteExistente = await findOrCreateClienteByCorreo(correoSanitizado, cliente);
 
-    // Fecha de cotización: extraer robustamente YYYY-MM-DD desde cualquier formato entrante
-    let fechaCotizacion;
-    let fechaStringVal;
-
-    if (fecha) {
-      // Si es string exacto YYYY-MM-DD
-      if (typeof fecha === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
-        fechaStringVal = fecha;
-      } else if (typeof fecha === 'string' && fecha.length >= 10) {
-        // Puede venir como 'YYYY-MM-DDTHH:MM:SS...' — tomar primeros 10 caracteres
-        const maybe = fecha.slice(0, 10);
-        if (/^\d{4}-\d{2}-\d{2}$/.test(maybe)) fechaStringVal = maybe;
-      } else if (fecha instanceof Date) {
-        fechaStringVal = fecha.toISOString().slice(0, 10);
-      } else {
-        // Intentar forzar string y extraer
-        const asStr = String(fecha || '');
-        const maybe = asStr.slice(0, 10);
-        if (/^\d{4}-\d{2}-\d{2}$/.test(maybe)) fechaStringVal = maybe;
-      }
-    }
-
-    if (fechaStringVal) {
-      const [y, m, d] = fechaStringVal.split('-').map(n => parseInt(n, 10));
-      fechaCotizacion = new Date(Date.UTC(y, m - 1, d, 0, 0, 0));
-    } else {
-      const now = new Date();
-      fechaCotizacion = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0));
-      fechaStringVal = fechaCotizacion.toISOString().slice(0, 10);
-    }
+    // Parse and normalize fecha
+    const { fechaCotizacion, fechaStringVal } = parseFechaCotizacion(fecha);
 
     // DEBUG: valores calculados
     console.log('DEBUG createCotizacion - fechaStringVal:', fechaStringVal, 'fechaCotizacion:', fechaCotizacion.toISOString());
 
-    // Validación server-side: permitir la fecha de 'hoy' del usuario aunque el servidor esté en UTC+ (ventana de tolerancia)
-    // Calculamos el inicio del día UTC actual y permitimos fechas desde 24h antes (para cubrir zonas horarias retrasadas)
-    const now = new Date();
-    const todayUtcStart = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0);
-    const allowedStart = todayUtcStart - (24 * 60 * 60 * 1000); // 24h atrás
-    if (fechaCotizacion.getTime() < allowedStart) {
+    // Validate date allowed
+    if (!isFechaAllowed(fechaCotizacion)) {
       return res.status(400).json({ message: 'La fecha de la cotización no puede ser anterior a la fecha de hoy.' });
     }
 
-    // Map productos
+    // Map productos (fetch names if available)
     const productosConNombre = await mapProductosConNombre(productos);
 
-    // Build cotizacion payload (embed request-provided fields)
-    const cotizacionPayload = {
-      codigo: generarCodigoCotizacion(),
-      cliente: {
-        referencia: clienteExistente ? clienteExistente._id : undefined,
-        nombre: cliente.nombre,
-        ciudad: cliente.ciudad,
-        direccion: cliente.direccion,
-        telefono: cliente.telefono,
-        correo: cliente.correo,
-        esCliente: cliente.esCliente
-      },
-      responsable: {
-        id: responsable.id,
-        firstName: responsable.firstName,
-        secondName: responsable.secondName,
-        surname: responsable.surname,
-        secondSurname: responsable.secondSurname
-      },
-      fecha: fechaCotizacion,
-      fechaString: fechaStringVal,
+    // Build and save cotización
+    const cotizacionPayload = buildCotizacionPayload({
+      clienteExistente,
+      cliente,
+      responsable,
+      fechaCotizacion,
+      fechaStringVal,
       descripcion,
       condicionesPago,
-      productos: productosConNombre,
-      empresa: req.body.empresa || undefined,
-      clientePotencial,
-      enviadoCorreo
-    };
+      productosConNombre,
+      enviadoCorreo,
+      empresa: req.body.empresa,
+      clientePotencial
+    });
 
     const cotizacion = new Cotizacion(cotizacionPayload);
     await cotizacion.save();

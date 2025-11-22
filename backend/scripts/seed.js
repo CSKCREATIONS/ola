@@ -4,16 +4,16 @@
     - Local:    node backend/scripts/seed.js
     - Docker:   docker compose run --rm backend node scripts/seed.js
 */
-require('dotenv').config({ path: process.env.DOTENV_PATH || '.env' });
-const mongoose = require('mongoose');
-const path = require('node:path');
+import dotenv from 'dotenv';
+dotenv.config({ path: process.env.DOTENV_PATH || '.env' });
+import mongoose from 'mongoose';
 
 // Models
-const Role = require('../models/Role');
-const User = require('../models/User');
+import Role from '../models/Role';
+import User from '../models/User';
 
 // Permissions
-const PERM = require('../config/permissions.config');
+import PERM from '../config/permissions.config';
 
 const flattenPerms = (obj) => {
   const out = [];
@@ -60,7 +60,9 @@ async function main() {
   const adminPassword = process.env.SEED_ADMIN_PASSWORD || 'Admin123!';
 
   let admin = await User.findOne({ email: adminEmail }).select('+password');
-  if (!admin) {
+  if (admin) {
+    console.log(`[seed] Admin user already exists: ${adminEmail}`);
+  } else {
     admin = new User({
       firstName: 'Admin',
       secondName: '',
@@ -76,15 +78,15 @@ async function main() {
     });
     await admin.save();
     console.log(`[seed] Admin user created: ${adminEmail}`);
-  } else {
-    console.log(`[seed] Admin user already exists: ${adminEmail}`);
   }
 
   await mongoose.disconnect();
   console.log('[seed] Done.');
 }
-
-main().catch((err) => {
+try {
+  await main();
+} catch (err) {
   console.error('[seed] Error:', err);
   process.exit(1);
-});
+}
+

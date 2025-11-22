@@ -102,26 +102,73 @@ class PDFService {
 
   // Generar HTML para cotización
   generarHTMLCotizacion(cotizacion) {
-  let fechaCotizacion = 'N/A';
-  if (cotizacion.fechaString) {
-    try {
-      const [y, m, d] = String(cotizacion.fechaString).split('-').map(n => parseInt(n, 10));
-      fechaCotizacion = new Date(Date.UTC(y, m - 1, d, 0, 0, 0)).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
-    } catch (e) {
-      fechaCotizacion = cotizacion.fecha ? new Date(cotizacion.fecha).toLocaleDateString('es-ES') : 'N/A';
-    }
-  } else if (cotizacion.fecha) {
-    fechaCotizacion = new Date(cotizacion.fecha).toLocaleDateString('es-ES');
-  }
-  // fechaVencimiento was previously computed but not used in the template; removed to avoid dead code
-    
+    // Helper: format date (accepts YYYY-MM-DD or any Date-parsable input)
+    const formatDate = (input) => {
+      if (!input) return 'N/A';
+      const str = String(input);
+      // fast path for YYYY-MM-DD
+      const isoMatch = /^\d{4}-\d{2}-\d{2}$/.test(str);
+      if (isoMatch) {
+        const [y, m, d] = str.split('-').map(s => Number.parseInt(s, 10));
+        if (!Number.isNaN(y) && !Number.isNaN(m) && !Number.isNaN(d)) {
+          return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+        }
+      }
+      const dt = new Date(input);
+      return Number.isNaN(dt.getTime()) ? 'N/A' : dt.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+    };
+
+    // Helper: parse numeric-like values safely
+    const parseNumber = (v) => Number.parseFloat(v) || 0;
+
+    // Compute fechaCotizacion using formatDate helper
+    const fechaCotizacion = cotizacion.fechaString ? formatDate(cotizacion.fechaString) : (cotizacion.fecha ? formatDate(cotizacion.fecha) : 'N/A');
+
     // Calcular total si no existe
-    const total = cotizacion.total || cotizacion.productos?.reduce((sum, prod) => {
-      const cantidad = Number.parseFloat(prod.cantidad) || 0;
-      const valorUnitario = Number.parseFloat(prod.precioUnitario || prod.valorUnitario) || 0;
-      const descuento = Number.parseFloat(prod.descuento) || 0;
-      return sum + (cantidad * valorUnitario * (1 - descuento / 100));
-    }, 0) || 0;
+    const calcTotal = () => {
+      if (cotizacion.total) return Number(cotizacion.total) || 0;
+      if (!Array.isArray(cotizacion.productos)) return 0;
+      return cotizacion.productos.reduce((sum, prod) => {
+        const cantidad = parseNumber(prod.cantidad);
+        const valorUnitario = parseNumber(prod.precioUnitario ?? prod.valorUnitario);
+        const descuento = parseNumber(prod.descuento);
+        return sum + (cantidad * valorUnitario * (1 - descuento / 100));
+      }, 0);
+    };
+
+    const total = calcTotal();
+
+    // Render product rows with a small helper to lower complexity
+    const renderProductsRows = () => {
+      if (!Array.isArray(cotizacion.productos) || cotizacion.productos.length === 0) {
+        return `
+              <tr>
+                <td colspan="6" style="padding: 16px; text-align: center; font-size: 13px; color: #6b7280;">
+                  No hay productos disponibles
+                </td>
+              </tr>
+            `;
+      }
+
+      return cotizacion.productos.map(p => {
+        const cantidad = parseNumber(p.cantidad);
+        const nombre = p.producto?.name || p.producto?.nombre || p.nombre || 'Producto sin nombre';
+        const descripcion = p.producto?.description || p.producto?.descripcion || p.descripcion || 'Sin descripción';
+        const valorUnitario = parseNumber(p.precioUnitario ?? p.valorUnitario);
+        const descuento = parseNumber(p.descuento);
+        const subtotal = cantidad * valorUnitario * (1 - descuento / 100);
+        return `
+              <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="font-weight: bold;">${cantidad || 0}</td>
+                <td>${nombre}</td>
+                <td style="color: #6b7280;">${descripcion}</td>
+                <td style="text-align: right;">$${valorUnitario.toLocaleString('es-CO')}</td>
+                <td style="text-align: right;">${descuento || 0}%</td>
+                <td style="text-align: right; font-weight: bold;">$${subtotal.toLocaleString('es-CO')}</td>
+              </tr>
+            `;
+      }).join('');
+    };
 
     return `
     <!DOCTYPE html>
@@ -259,17 +306,7 @@ class PDFService {
                 padding: 12px; 
                 background-color: #f8fafc; 
                 border-radius: 6px; 
-                border: 1px solid #e2e8f0; 
-                text-align: center; 
-                font-style: italic; 
-                color: #6b7280; 
-                font-size: 12px; 
-            }
-        </style>
-    </head>
-    <body>
-      <div class="pdf-cotizacion">
-        <div class="cotizacion-encabezado">
+                border: 1pxencabezado">
           <h2>COTIZACIÓN</h2>
         </div>
 
@@ -319,28 +356,7 @@ class PDFService {
             </tr>
           </thead>
           <tbody>
-            ${cotizacion.productos && cotizacion.productos.length > 0 ? cotizacion.productos.map(p => `
-              <tr style="border-bottom: 1px solid #e5e7eb;">
-                <td style="font-weight: bold;">${p.cantidad || 0}</td>
-                <td>${p.producto?.name || p.producto?.nombre || p.nombre || 'Producto sin nombre'}</td>
-                <td style="color: #6b7280;">${p.producto?.description || p.producto?.descripcion || p.descripcion || 'Sin descripción'}</td>
-                <td style="text-align: right;">$${(p.precioUnitario || p.valorUnitario || 0).toLocaleString('es-CO')}</td>
-                <td style="text-align: right;">${p.descuento || 0}%</td>
-                <td style="text-align: right; font-weight: bold;">$${(() => {
-                  const cantidad = Number.parseFloat(p.cantidad) || 0;
-                  const valorUnitario = Number.parseFloat(p.precioUnitario || p.valorUnitario) || 0;
-                  const descuento = Number.parseFloat(p.descuento) || 0;
-                  const subtotal = cantidad * valorUnitario * (1 - descuento / 100);
-                  return subtotal.toLocaleString('es-CO');
-                })()}</td>
-              </tr>
-            `).join('') : `
-              <tr>
-                <td colspan="6" style="padding: 16px; text-align: center; font-size: 13px; color: #6b7280;">
-                  No hay productos disponibles
-                </td>
-              </tr>
-            `}
+            ${renderProductsRows()}
           </tbody>
           <tfoot>
             <tr>

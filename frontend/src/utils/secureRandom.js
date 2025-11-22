@@ -47,7 +47,7 @@ export function randomInt(max) {
     // draw until we get a value in [0, maxValid)
     do {
       rnd = randomBytesUint8(1)[0];
-    } while (rnd >= maxValid && maxValid !== 256);
+    } while (rnd >= maxValid);
     return rnd % range;
   }
 
