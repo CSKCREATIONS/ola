@@ -75,7 +75,7 @@ const Reportes = () => {
             <Title level={2}>Reportes de Productos</Title>
 
             <Row gutter={16}>
-              <Col span={6}>
+              <Col xs={24} sm={12} md={12} lg={6}>
                 <Card style={{ marginBottom: "20px" }}>
                   <Statistic
                     title="Total Productos"
@@ -84,7 +84,7 @@ const Reportes = () => {
                   />
                 </Card>
               </Col>
-              <Col span={6}>
+              <Col xs={24} sm={12} md={12} lg={6}>
                 <Card style={{ marginBottom: "20px" }}>
                   <Statistic
                     title="Productos Activos"
@@ -93,7 +93,7 @@ const Reportes = () => {
                   />
                 </Card>
               </Col>
-              <Col span={6}>
+              <Col xs={24} sm={12} md={12} lg={6}>
                 <Card style={{ marginBottom: "20px" }}>
                   <Statistic
                     title="Productos Inactivos"
@@ -102,7 +102,7 @@ const Reportes = () => {
                   />
                 </Card>
               </Col>
-              <Col span={6}>
+              <Col xs={24} sm={12} md={12} lg={6}>
                 <Card style={{ marginBottom: "20px" }}>
                   <Statistic
                     title="Stock Bajo"
@@ -114,7 +114,7 @@ const Reportes = () => {
             </Row>
 
             <Row gutter={16}>
-              <Col span={12}>
+              <Col xs={24} sm={24} md={12} lg={12}>
                 <Card style={{ marginBottom: "20px" }}>
                   <Title level={4}>Productos por Categoría</Title>
                   <Table
@@ -128,7 +128,7 @@ const Reportes = () => {
                   />
                 </Card>
               </Col>
-              <Col span={12}>
+              <Col xs={24} sm={24} md={12} lg={12}>
                 <Card style={{ marginBottom: "20px" }}>
                   <Title level={4}>Estado de Productos</Title>
                   <ResponsiveContainer width="100%" height={300}>

@@ -172,7 +172,7 @@ const ReportessVentas = () => {
           </div>*/}
 
             <Row gutter={16}>
-              <Col span={6}>
+              <Col xs={24} sm={12} md={12} lg={6}>
                 <Card style={{ marginBottom: "20px" }}>
                   <Statistic
                     title="Ventas Totales ($)"
@@ -183,7 +183,7 @@ const ReportessVentas = () => {
                   />
                 </Card>
               </Col>
-              <Col span={6}>
+              <Col xs={24} sm={12} md={12} lg={6}>
                 <Card style={{ marginBottom: "20px" }}>
                   <Statistic
                     title="Total Pedidos"
@@ -192,7 +192,7 @@ const ReportessVentas = () => {
                   />
                 </Card>
               </Col>
-              <Col span={6}>
+              <Col xs={24} sm={12} md={12} lg={6}>
                 <Card style={{ marginBottom: "20px" }}>
                   <Statistic
                     title="Clientes Activos"
@@ -201,7 +201,7 @@ const ReportessVentas = () => {
                   />
                 </Card>
               </Col>
-              <Col span={6}>
+              <Col xs={24} sm={12} md={12} lg={6}>
                 <Card style={{ marginBottom: "20px" }}>
                   <Statistic
                     title="Crecimiento"
@@ -217,7 +217,7 @@ const ReportessVentas = () => {
             </Row>
 
             <Row gutter={16}>
-              <Col span={12}>
+              <Col xs={24} sm={24} md={12} lg={12}>
                 <Card style={{ marginBottom: "20px" }}>
                   <Title level={4}>Top Clientes</Title>
                   <Table
@@ -242,7 +242,7 @@ const ReportessVentas = () => {
                   />
                 </Card>
               </Col>
-              <Col span={12}>
+              <Col xs={24} sm={24} md={12} lg={12}>
                 <Card style={{ marginBottom: "20px" }}>
                   <Title level={4}>Top Productos</Title>
                   <Table
@@ -270,7 +270,7 @@ const ReportessVentas = () => {
             </Row>
 
             <Row gutter={16}>
-              <Col span={12}>
+              <Col xs={24} sm={24} md={12} lg={12}>
                 <Card style={{ marginBottom: "20px" }}>
                   <Title level={4}>Distribución por Estado de Pedidos</Title>
                   <ResponsiveContainer width="100%" height={300}>
@@ -294,7 +294,7 @@ const ReportessVentas = () => {
                   </ResponsiveContainer>
                 </Card>
               </Col>
-              <Col span={12}>
+              <Col xs={24} sm={24} md={12} lg={12}>
                 <Card style={{ marginBottom: "20px" }}>
                   <Title level={4}>Ventas Mensuales</Title>
                   <ResponsiveContainer width="100%" height={300}>

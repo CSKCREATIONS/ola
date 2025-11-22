@@ -46,7 +46,7 @@
 
 .graficos-container {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 20px;
   margin-bottom: 30px;
 }
@@ -127,5 +127,27 @@
   .custom-table {
     display: block;
     overflow-x: auto;
+  }
+}
+
+/* Extra small screens adjustments */
+@media (max-width: 480px) {
+  .reportes-container {
+    padding: 12px;
+  }
+
+  .estadistica-card,
+  .grafico-card,
+  .tabla-card {
+    padding: 12px;
+  }
+
+  .titulo-reportes {
+    font-size: 20px;
+    margin-bottom: 18px;
+  }
+
+  .descripcion {
+    font-size: 11px;
   }
 }
