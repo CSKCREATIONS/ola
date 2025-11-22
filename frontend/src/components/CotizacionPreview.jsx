@@ -377,7 +377,7 @@ export default function CotizacionPreview({ datos, onClose, onEmailSent, onRemis
               <div>
                 <h3 style={{ borderBottom: '3px solid #2563eb', paddingBottom: '0.5rem', color: '#2563eb', fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '1rem' }}>Información Empresa</h3>
                 <div style={{ lineHeight: '1.8' }}>
-                  <p><strong>Fecha de cotización:</strong> {formatDate(datos?.fecha)}</p>
+                  <p><strong>Fecha de cotización:</strong> {formatDate(datos)}</p>
                   <p><strong>Empresa:</strong> {COMPANY_NAME || (process.env.REACT_APP_COMPANY_NAME || process.env.COMPANY_NAME || '')}</p>
                   <p><strong>Teléfono:</strong> {COMPANY_PHONE}</p>
                 </div>
