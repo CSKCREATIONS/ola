@@ -492,6 +492,13 @@ exports.remisionarPedido = async (req, res) => {
       .exec();
     if (!pedido) return res.status(404).json({ message: 'Pedido no encontrado' });
 
+    // Antes de crear la remisión, verificar y descontar stock de los productos
+    // Esto reutiliza el helper existente que valida y actualiza el stock por cada item
+    const stockResult = await updateStockIfEntregado(pedido);
+    if (!stockResult.ok) {
+      return res.status(stockResult.status || 400).json({ message: stockResult.message || 'Stock insuficiente' });
+    }
+
     // Generar número de remisión secuencial
     const counter = await Counter.findByIdAndUpdate('remision', { $inc: { seq: 1 } }, { new: true, upsert: true });
     const numeroRemision = `REM-${String(counter.seq).padStart(5, '0')}`;

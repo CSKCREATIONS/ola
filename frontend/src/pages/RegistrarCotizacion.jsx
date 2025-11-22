@@ -138,6 +138,21 @@ export default function RegistrarCotizacion() {
     }
   }, []);
 
+  // Establecer valor mínimo y default del input fecha al cargar la página
+  useEffect(() => {
+    try {
+      const hoy = new Date();
+      const minStr = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
+      const fechaEl = document.getElementById('fecha');
+      if (fechaEl) {
+        fechaEl.min = minStr;
+        if (!fechaEl.value) fechaEl.value = minStr;
+      }
+    } catch (err) {
+      console.warn('No se pudo establecer fecha mínima por defecto:', err);
+    }
+  }, []);
+
   const agregarProducto = () => {
     // create a lightweight stable id for React keys so re-orders/removals don't rely on index
     const uid = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`;
@@ -252,7 +267,7 @@ export default function RegistrarCotizacion() {
     const direccion = inputs[2]?.value.trim();
     const telefono = inputs[3]?.value.trim();
     const correo = inputs[4]?.value.trim();
-    const fecha = inputs[5]?.value;
+    const fecha = inputs[5]?.value; // YYYY-MM-DD from input[type=date]
 
     if (!nombre || !ciudad || !direccion || !telefono || !correo || !fecha) {
       Swal.fire('Error', 'Todos los campos del cliente y la fecha son obligatorios.', 'warning');
@@ -268,6 +283,18 @@ export default function RegistrarCotizacion() {
     if (productosSeleccionados.length === 0) {
       Swal.fire('Error', 'Debes agregar al menos un producto a la cotización.', 'warning');
       return null;
+    }
+
+    // Validación client-side: fecha no puede ser anterior a hoy (comparación por YYYY-MM-DD)
+    try {
+      const hoy = new Date();
+      const hoyStr = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
+      if (fecha < hoyStr) {
+        Swal.fire('Error', 'La fecha de la cotización no puede ser anterior a la fecha actual.', 'warning');
+        return null;
+      }
+    } catch (err) {
+      console.warn('Error validando fecha localmente:', err);
     }
 
     for (const prod of productosSeleccionados) {
@@ -293,7 +320,8 @@ export default function RegistrarCotizacion() {
         surname: user?.surname,
         secondSurname: user?.secondSurname
       },
-      fecha: obtenerFechaLocal(fecha),
+      // Enviar la fecha en formato YYYY-MM-DD (fechaString). El backend parseará y creará Date UTC.
+      fecha: fecha,
       descripcion: descripcionRef.current?.getContent({ format: 'html' }) || '',
       condicionesPago: condicionesPagoRef.current?.getContent({ format: 'html' }) || '',
       productos: productosSeleccionados.map(p => {

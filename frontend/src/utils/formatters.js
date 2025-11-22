@@ -7,13 +7,61 @@
  * @param {Date|string|number} fecha - Fecha a formatear
  * @returns {string} Fecha formateada (ej: "15 de noviembre de 2025")
  */
-export const formatDate = (fecha) => {
-  if (!fecha) return 'Fecha no disponible';
-  
+export const formatDate = (fechaOrObj) => {
+  if (!fechaOrObj) return 'Fecha no disponible';
+
   try {
-    const date = new Date(fecha);
+    // Si recibe un objeto, preferir `fechaString`, luego `fecha`.
+    if (typeof fechaOrObj === 'object' && fechaOrObj !== null) {
+      // Preferir fechaString (YYYY-MM-DD) — preserva exactamente la selección del usuario
+      if (fechaOrObj.fechaString) {
+        const parts = String(fechaOrObj.fechaString).split('-').map(n => Number.parseInt(n, 10));
+        const [y, m, d] = parts;
+        const date = new Date(Date.UTC(y, m - 1, d, 0, 0, 0));
+        // Ajuste por zona horaria del cliente: sumar 1 día para corregir desplazo en UI
+        date.setUTCDate(date.getUTCDate() + 1);
+        if (Number.isNaN(date.getTime())) return 'Fecha inválida';
+        return date.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+      }
+
+      // Si tiene `fecha`, puede ser ISO; parsear usando componentes UTC para evitar shifts
+      if (fechaOrObj.fecha) {
+        const raw = fechaOrObj.fecha;
+        if (typeof raw === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+          const [y, m, d] = raw.split('-').map(n => Number.parseInt(n, 10));
+          const date = new Date(Date.UTC(y, m - 1, d, 0, 0, 0));
+          // Ajuste por zona horaria del cliente: sumar 1 día para corregir desplazo en UI
+          date.setUTCDate(date.getUTCDate() + 1);
+          if (Number.isNaN(date.getTime())) return 'Fecha inválida';
+          return date.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+        }
+        const tmp = new Date(raw);
+        if (!Number.isNaN(tmp.getTime())) {
+          const y = tmp.getUTCFullYear();
+          const m = tmp.getUTCMonth() + 1;
+          const d = tmp.getUTCDate();
+          const date = new Date(Date.UTC(y, m - 1, d, 0, 0, 0));
+          // Ajuste por zona horaria del cliente: sumar 1 día para corregir desplazo en UI
+          date.setUTCDate(date.getUTCDate() + 1);
+          return date.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+        }
+      }
+    }
+
+    // Si recibe un string en formato YYYY-MM-DD, parsearlo como UTC midnight
+    if (typeof fechaOrObj === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(fechaOrObj)) {
+      const [y, m, d] = fechaOrObj.split('-').map(n => Number.parseInt(n, 10));
+      const date = new Date(Date.UTC(y, m - 1, d, 0, 0, 0));
+      // Ajuste por zona horaria del cliente: sumar 1 día para corregir desplazo en UI
+      date.setUTCDate(date.getUTCDate() + 1);
+      if (Number.isNaN(date.getTime())) return 'Fecha inválida';
+      return date.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+    }
+
+    // Fallback: intentar construir Date normal
+    const date = new Date(fechaOrObj);
     if (Number.isNaN(date.getTime())) return 'Fecha inválida';
-    
+
     return date.toLocaleDateString('es-ES', {
       year: 'numeric',
       month: 'long',

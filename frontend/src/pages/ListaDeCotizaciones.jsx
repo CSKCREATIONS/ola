@@ -12,7 +12,7 @@ import { saveAs } from 'file-saver';
 import CotizacionPreview from '../components/CotizacionPreview';
 import Modal from '../components/Modal';
 import { calcularSubtotalProducto, calcularTotales } from '../utils/calculations';
-import { formatCurrency } from '../utils/formatters';
+import { formatCurrency, formatDate } from '../utils/formatters';
 import DeleteButton from '../components/DeleteButton';
 
 export default function ListaDeCotizaciones() {
@@ -58,6 +58,13 @@ export default function ListaDeCotizaciones() {
       try {
         const cotRes = await api.get('/api/cotizaciones');
         const cotData = cotRes.data || [];
+
+        // DEBUG: inspeccionar primeros elementos que llegan desde la API
+        try {
+          console.log('DEBUG fetchData - cotizaciones raw sample:', Array.isArray(cotData) ? cotData.slice(0,3).map(c => ({ _id: c._id, fecha: c.fecha, fechaString: c.fechaString, createdAt: c.createdAt })) : cotData);
+        } catch (e) {
+          console.warn('DEBUG fetchData - error logging cotizaciones sample', e);
+        }
 
         const prodRes = await api.get('/api/products');
         const prodData = prodRes.data?.data || prodRes.data || [];
@@ -107,6 +114,24 @@ export default function ListaDeCotizaciones() {
     return parseBoolLike(valOrCot);
   };
 
+  // Helper: parsear fechas que vienen desde la API evitando shifts de zona horaria.
+  // Acepta: fechaString 'YYYY-MM-DD', ISO date string, Date object.
+  const parseApiDate = (raw) => {
+    if (!raw) return null;
+    try {
+      if (typeof raw === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+        const [y, m, d] = raw.split('-').map(n => parseInt(n, 10));
+        return new Date(Date.UTC(y, m - 1, d, 0, 0, 0));
+      }
+      const tmp = new Date(raw);
+      if (Number.isNaN(tmp.getTime())) return null;
+      // Usar los componentes UTC para evitar shifts por zona horaria
+      return new Date(Date.UTC(tmp.getUTCFullYear(), tmp.getUTCMonth(), tmp.getUTCDate(), 0, 0, 0));
+    } catch (e) {
+      return null;
+    }
+  };
+
   // Helper para detectar si una cotización ya fue remisionada
   const isRemisionada = (cot) => {
     if (!cot) return false;
@@ -120,9 +145,10 @@ export default function ListaDeCotizaciones() {
   // Helper para determinar si han pasado al menos 15 días desde la creación/fecha
   const isDeletable = (cot) => {
     try {
-      const fechaBase = cot?.createdAt || cot?.fecha;
+      const fechaBaseRaw = cot?.createdAt || cot?.fechaString || cot?.fecha;
+      const fechaBase = parseApiDate(fechaBaseRaw) || (fechaBaseRaw ? new Date(fechaBaseRaw) : null);
       if (!fechaBase) return false;
-      const ageMs = Date.now() - new Date(fechaBase).getTime();
+      const ageMs = Date.now() - fechaBase.getTime();
       const daysOld = Math.floor(ageMs / (24 * 60 * 60 * 1000));
       return daysOld >= 15;
     } catch (err) {
@@ -232,9 +258,10 @@ export default function ListaDeCotizaciones() {
       }
 
       // Pedir al usuario la fecha de entrega y campos opcionales (descripcion, condiciones de pago)
-      const baseDate = cotizacion.createdAt ? new Date(cotizacion.createdAt) : (cotizacion.fecha ? new Date(cotizacion.fecha) : new Date());
+      const baseRaw = cotizacion.createdAt ? cotizacion.createdAt : (cotizacion.fechaString ? cotizacion.fechaString : (cotizacion.fecha ? cotizacion.fecha : new Date()));
+      const baseDate = parseApiDate(baseRaw) || new Date(baseRaw);
       const minDateStr = baseDate.toISOString().slice(0, 10);
-      const defaultDate = (cotizacion.fecha ? new Date(cotizacion.fecha) : baseDate).toISOString().slice(0, 10); // YYYY-MM-DD
+      const defaultDate = cotizacion.fechaString ? cotizacion.fechaString : (cotizacion.fecha ? parseApiDate(cotizacion.fecha)?.toISOString().slice(0,10) || minDateStr : minDateStr); // YYYY-MM-DD
 
       const { value: formValues } = await Swal.fire({
         title: 'Agendar como pedido',
@@ -469,7 +496,8 @@ export default function ListaDeCotizaciones() {
   const [filtroEnviado, setFiltroEnviado] = useState('');
 
   const cotizacionesFiltradas = cotizaciones.filter(cot => {
-    const coincideFecha = !filtroFecha || new Date(cot.fecha).toISOString().slice(0, 10) === filtroFecha;
+    const fechaCompare = cot.fechaString ? cot.fechaString : (cot.fecha ? parseApiDate(cot.fecha)?.toISOString().slice(0, 10) : null);
+    const coincideFecha = !filtroFecha || fechaCompare === filtroFecha;
     const coincideCliente = !filtroCliente || cot.cliente?.nombre?.toLowerCase().includes(filtroCliente.toLowerCase());
     const coincideEnviado = !filtroEnviado ||
       (filtroEnviado === 'Si' && cot.enviadoCorreo) ||
@@ -1118,7 +1146,7 @@ export default function ListaDeCotizaciones() {
                             </button>
                           </td>
                           <td style={{ padding: '16px 12px', color: '#4b5563', fontWeight: '500' }}>
-                            {new Date(cot.fecha).toLocaleDateString('es-ES')}
+                            {formatDate(cot)}
                           </td>
                           <td style={{ padding: '16px 12px' }}>
                             <div style={{ fontWeight: '600', color: '#1f2937' }}>
@@ -1346,7 +1374,7 @@ export default function ListaDeCotizaciones() {
               <span className="cotizacion-codigo">#{cotizacionSeleccionada.codigo}</span>
               <span className="fecha-cotizacion" style={{ marginLeft: '12px' }}>
                 <i aria-hidden={true} className="fa-solid fa-calendar"></i>
-                <span style={{ marginLeft: '6px' }}>{new Date(cotizacionSeleccionada.fecha).toLocaleDateString()}</span>
+                  <span style={{ marginLeft: '6px' }}>{formatDate(cotizacionSeleccionada)}</span>
               </span>
             </div>
           </div>

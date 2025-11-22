@@ -48,7 +48,7 @@ export default function HistorialCompras() {
       });
       const data = await res.json();
       if (data.success) {
-        const comprasOrdenadas = (data.data || data).sort((a, b) => 
+        const comprasOrdenadas = (data.data || data).sort((a, b) =>
           new Date(b.createdAt || b.fecha) - new Date(a.createdAt || a.fecha)
         );
         setCompras(comprasOrdenadas);
@@ -89,7 +89,7 @@ export default function HistorialCompras() {
       const usuario = JSON.parse(storedUser);
       nombreCompleto = `${usuario.firstName || ''} ${usuario.surname || ''}`.trim();
     }
-    
+
     setNuevaCompra({
       proveedor: '',
       productos: [],
@@ -226,12 +226,12 @@ export default function HistorialCompras() {
 
   // Productos filtrados por el proveedor seleccionado en la nueva compra
   const productosFiltrados = nuevaCompra.proveedor
-      ? productos.filter(p => {
-        // Prefer optional chaining for clarity and safety
-        let prov = p.proveedor?._id ?? p.proveedorId ?? p.proveedor;
-        if (typeof prov === 'object') prov = prov._id ?? prov.id;
-        return String(prov) === String(nuevaCompra.proveedor);
-      })
+    ? productos.filter(p => {
+      // Prefer optional chaining for clarity and safety
+      let prov = p.proveedor?._id ?? p.proveedorId ?? p.proveedor;
+      if (typeof prov === 'object') prov = prov._id ?? prov.id;
+      return String(prov) === String(nuevaCompra.proveedor);
+    })
     : productos;
 
   const verDetallesCompra = (compra) => {
@@ -252,10 +252,10 @@ export default function HistorialCompras() {
     const impuestosFinal = Number(compraSeleccionada.impuestos) || 0;
 
     const fechaCompra = compraSeleccionada.fecha || compraSeleccionada.fechaCompra;
-    const fechaFormateada = fechaCompra ? new Date(fechaCompra).toLocaleDateString('es-ES', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+    const fechaFormateada = fechaCompra ? new Date(fechaCompra).toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
     }) : 'N/A';
 
     const productosHTML = compraSeleccionada.productos?.map((p, index) => {
@@ -502,21 +502,21 @@ export default function HistorialCompras() {
     `;
 
     // Inject HTML into the opened window without using document.write (deprecated)
-        const parsed = new DOMParser().parseFromString(html, 'text/html');
-        // create doctype and import the parsed <html> element
-        const doctype = win.document.implementation.createDocumentType('html', '', '');
-        const importedHtml = win.document.importNode(parsed.documentElement, true);
-        // clear any existing children and append doctype + html
-        while (win.document.firstChild) {
-          // Prefer calling remove() on the child node instead of parent.removeChild(child)
-          win.document.firstChild.remove();
-        }
-        win.document.appendChild(doctype);
-        win.document.appendChild(importedHtml);
-        win.document.close();
-        win.focus();
-        win.print();
-        win.close();
+    const parsed = new DOMParser().parseFromString(html, 'text/html');
+    // create doctype and import the parsed <html> element
+    const doctype = win.document.implementation.createDocumentType('html', '', '');
+    const importedHtml = win.document.importNode(parsed.documentElement, true);
+    // clear any existing children and append doctype + html
+    while (win.document.firstChild) {
+      // Prefer calling remove() on the child node instead of parent.removeChild(child)
+      win.document.firstChild.remove();
+    }
+    win.document.appendChild(doctype);
+    win.document.appendChild(importedHtml);
+    win.document.close();
+    win.focus();
+    win.print();
+    win.close();
   };
 
   const enviarCompraPorCorreo = async () => {
@@ -627,7 +627,7 @@ JLA Global Company</textarea>
           asunto: formValues.asunto,
           mensaje: formValues.mensaje || 'Compra adjunta'
         });
-        
+
         Swal.fire({
           icon: 'success',
           title: '¡Enviado!',
@@ -648,786 +648,765 @@ JLA Global Company</textarea>
         <NavCompras />
         <div className="max-width">
           <div className="contenido-modulo">
-          {/* Encabezado profesional (reused component) */}
-          <SharedListHeaderCard
-            iconClass="fa-solid fa-history"
-            title="Historial de Compras"
-            subtitle="Compras realizadas a partir de órdenes de compra"
-          >
-            <button
-              onClick={abrirModalNuevaCompra}
-              style={{
-                background: 'linear-gradient(135deg, #10b981, #059669)',
-                color: 'white',
-                border: 'none',
-                padding: '12px 24px',
-                borderRadius: '12px',
-                fontSize: '14px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                transition: 'all 0.3s ease',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 6px 20px rgba(16, 185, 129, 0.4)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.3)';
-              }}
+            {/* Encabezado profesional (reused component) */}
+            <SharedListHeaderCard
+              iconClass="fa-solid fa-history"
+              title="Historial de Compras"
+              subtitle="Compras realizadas a partir de órdenes de compra"
             >
-              <i className="fa-solid fa-plus" aria-hidden={true}></i>
-              <span>Nueva Compra</span>
-            </button>
-          </SharedListHeaderCard>
+              <button
+                onClick={abrirModalNuevaCompra}
+                style={{
+                  background: 'linear-gradient(135deg, #10b981, #059669)',
+                  color: 'white',
+                  border: 'none',
+                  padding: '12px 24px',
+                  borderRadius: '12px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(16, 185, 129, 0.4)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.3)';
+                }}
+              >
+                <i className="fa-solid fa-plus" aria-hidden={true}></i>
+                <span>Nueva Compra</span>
+              </button>
+            </SharedListHeaderCard>
 
-          {/* Estadísticas avanzadas */}
-          <AdvancedStats cards={[
-            { iconClass: 'fa-solid fa-shopping-cart', gradient: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', value: compras.length, label: 'Total Compras' },
-            { iconClass: 'fa-solid fa-dollar-sign', gradient: 'linear-gradient(135deg, #8b5cf6, #7c3aed)', value: `$${sumarProp(compras, 'total').toLocaleString()}`, label: 'Valor Total Compras' },
-            { iconClass: 'fa-solid fa-chart-bar', gradient: 'linear-gradient(135deg, #10b981, #059669)', value: compras.length > 0 ? (sumarProp(compras, 'total') / compras.length).toLocaleString() : 0, label: 'Promedio por Compra' }
-          ]} />
-          {/* Tabla principal con diseño moderno */}
-          
-            <div>
-              <table>
-                <thead>
-                  <tr >
-                    <th>#</th>
-                    <th>Identificador</th>
-                    <th>Proveedor</th>
-                    <th>Total</th>
-                    <th>Fecha</th>
-                    <th>Solicitado Por</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentItems.map((compra, index) => (
-                    <tr 
-                      key={compra._id} 
-                      style={{
-                        borderBottom: '1px solid #f3f4f6',
-                        transition: 'all 0.3s ease',
-                        cursor: 'pointer'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = 'linear-gradient(135deg, #f8fafc, #f1f5f9)';
-                        e.currentTarget.style.transform = 'scale(1.01)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'white';
-                        e.currentTarget.style.transform = 'scale(1)';
-                      }}
-                    >
-                      <td style={{
-                        padding: '20px 15px',
-                        fontSize: '14px',
-                        fontWeight: '500',
-                        color: '#6b7280'
-                      }}>
-                        {indexOfFirstItem + index + 1}
-                      </td>
-                      <td style={{
-                        padding: '20px 15px',
-                        fontSize: '14px',
-                        fontWeight: '600',
-                        color: '#1f2937'
-                      }}>
-                        <button
-                          onClick={() => verDetallesCompra(compra)}
-                          style={{
-                            background: 'none',
-                            color: '#6366f1',
-                            border: 'none',
-                            padding: '0',
-                            fontSize: '14px',
-                            fontWeight: '600',
-                            cursor: 'pointer',
-                            textDecoration: 'underline',
-                            transition: 'all 0.2s ease'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.target.style.color = '#8b5cf6';
-                            e.target.style.textDecoration = 'none';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.target.style.color = '#6366f1';
-                            e.target.style.textDecoration = 'underline';
-                          }}
-                        >
-                          {compra.numeroOrden || 'N/A'}
-                        </button>
-                      </td>
-                      <td style={{
-                        padding: '20px 15px',
-                        fontSize: '14px',
-                        fontWeight: '500',
-                        color: '#374151'
-                      }}>
-                        {compra.proveedor?.nombre || compra.proveedor || 'Proveedor no especificado'}
-                      </td>
-                      <td style={{
-                        padding: '20px 15px',
-                        fontSize: '14px',
-                        fontWeight: '600',
-                        color: '#059669'
-                      }}>
-                        ${compra.total?.toLocaleString()}
-                      </td>
-                      <td style={{
-                        padding: '20px 15px',
-                        fontSize: '14px',
-                        color: '#6b7280'
-                      }}>
-                        {new Date(compra.fecha || compra.fechaCompra).toLocaleDateString()}
-                      </td>
-                      <td style={{
-                        padding: '20px 15px',
-                        fontSize: '14px',
-                        color: '#374151'
-                      }}>
-                        {compra.solicitadoPor || compra.responsable || 'No especificado'}
-                      </td>
-                    </tr>
-                  ))}
-                  {compras.length === 0 && (
+            {/* Estadísticas avanzadas */}
+            <AdvancedStats cards={[
+              { iconClass: 'fa-solid fa-shopping-cart', gradient: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', value: compras.length, label: 'Total Compras' },
+              { iconClass: 'fa-solid fa-dollar-sign', gradient: 'linear-gradient(135deg, #8b5cf6, #7c3aed)', value: `$${sumarProp(compras, 'total').toLocaleString()}`, label: 'Valor Total Compras' },
+              { iconClass: 'fa-solid fa-chart-bar', gradient: 'linear-gradient(135deg, #10b981, #059669)', value: compras.length > 0 ? (sumarProp(compras, 'total') / compras.length).toLocaleString() : 0, label: 'Promedio por Compra' }
+            ]} />
+
+            {/* Tabla principal con clases reutilizables - SOLO CLASES */}
+            <div className="table-container">
+              <div className="table-header">
+                <div className="table-header-content">
+                  <div className="table-header-icon">
+                    <i className="fa-solid fa-table"></i>
+                  </div>
+                  <div>
+                    <h4 className="table-title">
+                      Compras realizadas
+                    </h4>
+                    <p className="table-subtitle">
+                      Mostrando {compras.length} compras en el historial
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ overflow: 'auto' }}>
+                <table className="data-table">
+                  <thead>
                     <tr>
-                      <td 
-                        colSpan="6" 
+                      <th>#</th>
+                      <th>Identificador</th>
+                      <th>Proveedor</th>
+                      <th>Total</th>
+                      <th>Fecha</th>
+                      <th>Solicitado Por</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {currentItems.map((compra, index) => (
+                      <tr
+                        key={compra._id}
                         style={{
-                          padding: '40px',
-                          textAlign: 'center',
-                          color: '#9ca3af',
-                          fontStyle: 'italic',
-                          fontSize: '16px'
+                          borderBottom: '1px solid #f3f4f6',
                         }}
                       >
-                        No hay compras registradas en el historial
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          
+                        <td style={{
+                          padding: '20px 15px',
+                          fontSize: '14px',
+                          fontWeight: '500',
+                          color: '#6b7280'
+                        }}>
+                          {indexOfFirstItem + index + 1}
+                        </td>
+                        <td style={{
+                          padding: '20px 15px',
+                          fontSize: '14px',
+                          fontWeight: '600',
+                          color: '#1f2937'
+                        }}>
+                          <button
+                            onClick={() => verDetallesCompra(compra)}
+                            style={{
+                              background: 'none',
+                              color: '#6366f1',
+                              border: 'none',
+                              padding: '0',
+                              fontSize: '14px',
+                              fontWeight: '600',
+                              cursor: 'pointer',
+                              textDecoration: 'underline',
+                              transition: 'all 0.2s ease'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.target.style.color = '#8b5cf6';
+                              e.target.style.textDecoration = 'none';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.target.style.color = '#6366f1';
+                              e.target.style.textDecoration = 'underline';
+                            }}
+                          >
+                            {compra.numeroOrden || 'N/A'}
+                          </button>
+                        </td>
+                        <td style={{
+                          padding: '20px 15px',
+                          fontSize: '14px',
+                          fontWeight: '500',
+                          color: '#374151'
+                        }}>
+                          {compra.proveedor?.nombre || compra.proveedor || 'Proveedor no especificado'}
+                        </td>
+                        <td style={{
+                          padding: '20px 15px',
+                          fontSize: '14px',
+                          fontWeight: '600',
+                          color: '#059669'
+                        }}>
+                          ${compra.total?.toLocaleString()}
+                        </td>
+                        <td style={{
+                          padding: '20px 15px',
+                          fontSize: '14px',
+                          color: '#6b7280'
+                        }}>
+                          {new Date(compra.fecha || compra.fechaCompra).toLocaleDateString()}
+                        </td>
+                        <td style={{
+                          padding: '20px 15px',
+                          fontSize: '14px',
+                          color: '#374151'
+                        }}>
+                          {compra.solicitadoPor || compra.responsable || 'No especificado'}
+                        </td>
+                      </tr>
+                    ))}
+                    {compras.length === 0 && (
+                      <tr>
+                        <td colSpan="6">
+                          <div className="table-empty-state">
+                            <div className="table-empty-icon">
+                              <i className="fa-solid fa-shopping-cart"></i>
+                            </div>
+                            <div>
+                              <h5 className="table-empty-title">
+                                No hay compras registradas
+                              </h5>
+                              <p className="table-empty-text">
+                                No se encontraron compras en el historial
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
 
-          {/* Paginación moderna */}
-          {compras.length > 0 && (
-            <div style={{
-              display: 'flex',
-              justifyContent: 'center',
-              gap: '8px',
-              marginTop: '30px',
-              padding: '20px'
-            }}>
-              {Array.from({ length: totalPages }, (_, i) => (
-                <button
-                  key={i + 1}
-                  onClick={() => paginate(i + 1)}
-                  style={{
-                    padding: '8px 16px',
-                    border: currentPage === i + 1 ? '2px solid #6366f1' : '2px solid #e5e7eb',
-                    borderRadius: '8px',
-                    background: currentPage === i + 1 ? '#6366f1' : 'white',
-                    color: currentPage === i + 1 ? 'white' : '#4b5563',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (currentPage !== i + 1) {
-                      e.target.style.borderColor = '#6366f1';
-                      e.target.style.color = '#6366f1';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (currentPage !== i + 1) {
-                      e.target.style.borderColor = '#e5e7eb';
-                      e.target.style.color = '#4b5563';
-                    }
-                  }}
-                >
-                  {i + 1}
-                </button>
-              ))}
+              {/* Paginación con clases reutilizables - SOLO CLASES */}
+              {compras.length > 0 && (
+                <div className="table-pagination">
+                  {Array.from({ length: totalPages }, (_, i) => (
+                    <button
+                      key={i + 1}
+                      onClick={() => paginate(i + 1)}
+                      className={`pagination-btn ${currentPage === i + 1 ? 'active' : ''}`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
-          )}
 
             {/* Modal de detalles de la compra */}
             {modalDetallesVisible && compraSeleccionada && (
-        <div className="modal-overlay">
-          <div className="modal-realista modal-lg" style={{ 
-            maxWidth: '900px', 
-            width: '95%',
-            cursor: 'move'
-          }} id="modalCompraMovible">
-            
-            {/* Header mejorado (shared) */}
-            <OrderDetailsHeader
-              iconClass="fa-solid fa-receipt"
-              title="COMPRA CONFIRMADA"
-              subtitle={<>N°: <strong>{compraSeleccionada.numeroOrden}</strong></>}
-              onClose={() => setModalDetallesVisible(false)}
-            />
+              <div className="modal-overlay">
+                <div className="modal-realista modal-lg" style={{
+                  maxWidth: '900px',
+                  width: '95%',
+                  cursor: 'move'
+                }} id="modalCompraMovible">
 
-            {/* Body con diseño mejorado */}
-            <div className="modal-body" style={{ padding: '2rem', maxHeight: '70vh', overflowY: 'auto' }}>
-                
-                {/* Información principal en cards */}
-                <div style={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
-                    gap: '1.5rem',
-                    marginBottom: '2rem'
-                }}>
-                    {/* Card Proveedor */}
+                  {/* Header mejorado (shared) */}
+                  <OrderDetailsHeader
+                    iconClass="fa-solid fa-receipt"
+                    title="COMPRA CONFIRMADA"
+                    subtitle={<>N°: <strong>{compraSeleccionada.numeroOrden}</strong></>}
+                    onClose={() => setModalDetallesVisible(false)}
+                  />
+
+                  {/* Body con diseño mejorado */}
+                  <div className="modal-body" style={{ padding: '2rem', maxHeight: '70vh', overflowY: 'auto' }}>
+
+                    {/* Información principal en cards */}
                     <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+                      gap: '1.5rem',
+                      marginBottom: '2rem'
+                    }}>
+                      {/* Card Proveedor */}
+                      <div style={{
                         background: 'linear-gradient(135deg, #f8f9fa, #e9ecef)',
                         padding: '1.5rem',
                         borderRadius: '10px',
                         border: '1px solid #e0e0e0'
-                    }}>
-                        <h6 style={{ 
-                            color: '#2c3e50', 
-                            marginBottom: '1rem',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem'
+                      }}>
+                        <h6 style={{
+                          color: '#2c3e50',
+                          marginBottom: '1rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem'
                         }}>
-                <i className="fa-solid fa-truck" style={{ color: '#e74c3c' }} aria-hidden={true}></i>
-                  <span>PROVEEDOR</span>
+                          <i className="fa-solid fa-truck" style={{ color: '#e74c3c' }} aria-hidden={true}></i>
+                          <span>PROVEEDOR</span>
                         </h6>
                         <p style={{ margin: 0, fontWeight: 'bold', fontSize: '1.1rem' }}>
-                            {compraSeleccionada.proveedor?.nombre || compraSeleccionada.proveedor || 'No especificado'}
+                          {compraSeleccionada.proveedor?.nombre || compraSeleccionada.proveedor || 'No especificado'}
                         </p>
-                    </div>
+                      </div>
 
-                    {/* Card Fecha y Responsable */}
-                    <div style={{
+                      {/* Card Fecha y Responsable */}
+                      <div style={{
                         background: 'linear-gradient(135deg, #f8f9fa, #e9ecef)',
                         padding: '1.5rem',
                         borderRadius: '10px',
                         border: '1px solid #e0e0e0'
-                    }}>
-                        <h6 style={{ 
-                            color: '#2c3e50', 
-                            marginBottom: '1rem',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem'
+                      }}>
+                        <h6 style={{
+                          color: '#2c3e50',
+                          marginBottom: '1rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem'
                         }}>
-              <i className="fa-solid fa-calendar-alt" style={{ color: '#3498db' }} aria-hidden={true}></i>
-              <span>INFORMACIÓN</span>
+                          <i className="fa-solid fa-calendar-alt" style={{ color: '#3498db' }} aria-hidden={true}></i>
+                          <span>INFORMACIÓN</span>
                         </h6>
                         <div style={{ display: 'grid', gap: '0.5rem' }}>
-                            <div>
-                                <span style={{ color: '#666' }}>Fecha: </span>
-                                <strong>{new Date(compraSeleccionada.fecha || compraSeleccionada.fechaCompra).toLocaleDateString('es-ES', {
-                                    year: 'numeric',
-                                    month: 'long',
-                                    day: 'numeric'
-                                })}</strong>
-                            </div>
-                            <div>
-                                <span style={{ color: '#666' }}>Responsable: </span>
-                                <strong>{compraSeleccionada.solicitadoPor || compraSeleccionada.responsable || 'No especificado'}</strong>
-                            </div>
+                          <div>
+                            <span style={{ color: '#666' }}>Fecha: </span>
+                            <strong>{new Date(compraSeleccionada.fecha || compraSeleccionada.fechaCompra).toLocaleDateString('es-ES', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
+                            })}</strong>
+                          </div>
+                          <div>
+                            <span style={{ color: '#666' }}>Responsable: </span>
+                            <strong>{compraSeleccionada.solicitadoPor || compraSeleccionada.responsable || 'No especificado'}</strong>
+                          </div>
                         </div>
+                      </div>
                     </div>
-                </div>
 
-                {/* Resumen financiero */}
-                <div style={{
-                  background: 'linear-gradient(135deg, #6a1b9a, #9b59b6)',
-                  color: 'white',
-                  padding: '1.5rem',
-                  borderRadius: '10px',
-                  marginBottom: '2rem'
-                }}>
-                    <h6 style={{ 
+                    {/* Resumen financiero */}
+                    <div style={{
+                      background: 'linear-gradient(135deg, #6a1b9a, #9b59b6)',
+                      color: 'white',
+                      padding: '1.5rem',
+                      borderRadius: '10px',
+                      marginBottom: '2rem'
+                    }}>
+                      <h6 style={{
                         marginBottom: '1rem',
                         display: 'flex',
                         alignItems: 'center',
                         gap: '0.5rem'
-                    }}>
-            <i className="fa-solid fa-chart-bar" aria-hidden={true}></i>
-            <span>RESUMEN FINANCIERO</span>
-                    </h6>
-                    <div style={{ 
-                        display: 'grid', 
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+                      }}>
+                        <i className="fa-solid fa-chart-bar" aria-hidden={true}></i>
+                        <span>RESUMEN FINANCIERO</span>
+                      </h6>
+                      <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
                         gap: '1rem',
                         textAlign: 'center'
-                    }}>
+                      }}>
                         <div>
-                            <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.9rem', opacity: 0.8 }}>SUBTOTAL</p>
-                            <p style={{ margin: 0, fontSize: '1.3rem', fontWeight: 'bold' }}>
-                                ${compraSeleccionada.subtotal?.toLocaleString() || '0'}
-                            </p>
+                          <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.9rem', opacity: 0.8 }}>SUBTOTAL</p>
+                          <p style={{ margin: 0, fontSize: '1.3rem', fontWeight: 'bold' }}>
+                            ${compraSeleccionada.subtotal?.toLocaleString() || '0'}
+                          </p>
                         </div>
                         <div>
-                            <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.9rem', opacity: 0.8 }}>IVA (19%)</p>
-                            <p style={{ margin: 0, fontSize: '1.3rem', fontWeight: 'bold' }}>
-                                ${compraSeleccionada.impuestos?.toLocaleString() || '0'}
-                            </p>
+                          <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.9rem', opacity: 0.8 }}>IVA (19%)</p>
+                          <p style={{ margin: 0, fontSize: '1.3rem', fontWeight: 'bold' }}>
+                            ${compraSeleccionada.impuestos?.toLocaleString() || '0'}
+                          </p>
                         </div>
                         <div>
-                            <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.9rem', opacity: 0.8 }}>TOTAL</p>
-                            <p style={{ margin: 0, fontSize: '1.5rem', fontWeight: 'bold', color: '#f39c12' }}>
-                                ${compraSeleccionada.total?.toLocaleString() || '0'}
-                            </p>
+                          <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.9rem', opacity: 0.8 }}>TOTAL</p>
+                          <p style={{ margin: 0, fontSize: '1.5rem', fontWeight: 'bold', color: '#f39c12' }}>
+                            ${compraSeleccionada.total?.toLocaleString() || '0'}
+                          </p>
                         </div>
+                      </div>
                     </div>
-                </div>
 
-                {/* Observaciones */}
-                {compraSeleccionada.observaciones && (
-                    <div style={{
+                    {/* Observaciones */}
+                    {compraSeleccionada.observaciones && (
+                      <div style={{
                         background: '#fffbf0',
                         border: '1px solid #ffeaa7',
                         borderRadius: '8px',
                         padding: '1.5rem',
                         marginBottom: '2rem'
-                    }}>
-                        <h6 style={{ 
-                            color: '#f39c12',
-                            marginBottom: '1rem',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem'
-                        }}>
-              <i className="fa-solid fa-sticky-note" aria-hidden={true}></i>
-              <span>OBSERVACIONES</span>
-                        </h6>
-                        <p style={{ margin: 0, color: '#856404', lineHeight: '1.5' }}>
-                            {compraSeleccionada.observaciones}
-                        </p>
-                    </div>
-                )}
-
-                {/* Tabla de productos mejorada */}
-        <h6 style={{ 
-          color: '#2c3e50',
-          marginBottom: '1rem',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.5rem'
-        }}>
-          <i className="fa-solid fa-boxes" aria-hidden={true}></i>
-          <span>DETALLE DE PRODUCTOS ({compraSeleccionada.productos?.length || 0})</span>
-        </h6>
-
-                <div >
-                    <table>
-                        <thead>
-                            <tr style={{ 
-                                  background: 'linear-gradient(135deg, #6a1b9a, #9b59b6)',
-                                  color: 'white'
-                                }}>
-                                <th style={{ padding: '1rem', fontWeight: '600', width: '5%' }}>#</th>
-                                <th style={{ padding: '1rem', fontWeight: '600', width: '25%' }}>PRODUCTO</th>
-                                <th style={{ padding: '1rem', fontWeight: '600', width: '30%' }}>DESCRIPCIÓN</th>
-                                <th style={{ padding: '1rem', fontWeight: '600', width: '10%', textAlign: 'center' }}>CANTIDAD</th>
-                                <th style={{ padding: '1rem', fontWeight: '600', width: '15%', textAlign: 'right' }}>PRECIO UNIT.</th>
-                                <th style={{ padding: '1rem', fontWeight: '600', width: '15%', textAlign: 'right' }}>SUBTOTAL</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-          {compraSeleccionada.productos?.map((p, i) => (
-            <tr key={p._id || p.id || p.productoId || p.producto?._id || p.producto?.id || JSON.stringify(p)} style={{ borderBottom: '1px solid #e9ecef' }}>
-                                    <td style={{ padding: '1rem', color: '#666' }}>{i + 1}</td>
-                                    <td style={{ padding: '1rem', fontWeight: '500' }}>
-                                        {p.producto?.name || p.producto || 'Producto no especificado'}
-                                    </td>
-                                    <td style={{ padding: '1rem', color: '#666' }}>
-                                        {p.descripcion || p.producto?.description || 'N/A'}
-                                    </td>
-                                    <td style={{ padding: '1rem', textAlign: 'center' }}>
-                                        <span style={{ 
-                                            background: '#e3f2fd', 
-                                            color: '#1976d2',
-                                            padding: '0.3rem 0.6rem',
-                                            borderRadius: '15px',
-                                            fontWeight: '600',
-                                            fontSize: '0.8rem'
-                                        }}>
-                                            {p.cantidad}
-                                        </span>
-                                    </td>
-                                    <td style={{ padding: '1rem', textAlign: 'right', fontWeight: '500' }}>
-                                        ${p.precioUnitario?.toLocaleString()}
-                                    </td>
-                                    <td style={{ padding: '1rem', textAlign: 'right', fontWeight: '600', color: '#2c3e50' }}>
-                                        ${((p.cantidad || 0) * (p.precioUnitario || 0))?.toLocaleString()}
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-
-                {(!compraSeleccionada.productos || compraSeleccionada.productos.length === 0) && (
-                    <div style={{ 
-                        textAlign: 'center', 
-                        padding: '2rem',
-                        color: '#666',
-                        fontStyle: 'italic'
-                    }}>
-            <i className="fa-solid fa-inbox" style={{ fontSize: '2rem', marginBottom: '1rem', display: 'block' }} aria-hidden={true}></i>
-            <span>No hay productos registrados en esta compra</span>
-                    </div>
-                )}
-            </div>
-
-            {/* Footer mejorado */}
-            <div className="modal-footer" style={{
-                padding: '1.5rem 2rem',
-                borderTop: '1px solid #e0e0e0',
-                background: '#f8f9fa',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                borderBottomLeftRadius: '12px',
-                borderBottomRightRadius: '12px'
-            }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#666' }}>
-          <i className="fa-solid fa-circle-check" style={{ color: '#6a1b9a' }} aria-hidden={true}></i>
-          <span>Compra confirmada y procesada</span>
-                </div>
-                <div style={{ display: 'flex', gap: '1rem' }}>
-              <button
-                className="btn-profesional btn-primary-profesional"
-                onClick={imprimirCompra}
-                style={{ background: 'linear-gradient(135deg, #6a1b9a, #9b59b6)', color: 'white' }}
-              >
-          <i className="fa-solid fa-print" aria-hidden={true}></i>
-          <span>Imprimir PDF</span>
-              </button>
-              <button
-                className="btn-profesional"
-                onClick={enviarCompraPorCorreo}
-                style={{ 
-                  background: 'linear-gradient(135deg, #6a1b9a, #9b59b6)', 
-                  color: 'white',
-                  padding: '0.5rem 1.5rem'
-                }}
-              >
-          <i className="fa-solid fa-envelope" aria-hidden={true}></i>
-          <span>Enviar por correo</span>
-              </button>
-                    <button
-                        className="btn-profesional"
-                        onClick={() => setModalDetallesVisible(false)}
-                        style={{ 
-                            background: '#95a5a6', 
-                            color: 'white',
-                            padding: '0.5rem 1.5rem'
-                        }}
-                    >
-            <i className="fa-solid fa-times" aria-hidden={true}></i>
-            <span>Cerrar</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-)}
-
-          {/* Modal Nueva Compra */}
-          {modalNuevaCompraVisible && (
-            <div className="modal-overlay">
-              <div className="modal-realista modal-lg" style={{ maxWidth: '900px', width: '95%' }}>
-                <OrderDetailsHeader
-                  iconClass="fa-solid fa-plus-circle"
-                  title="NUEVA COMPRA"
-                  subtitle="Registrar compra sin orden de compra previa"
-                  onClose={() => setModalNuevaCompraVisible(false)}
-                />
-
-                <div className="modal-body" style={{ padding: '2rem', maxHeight: '70vh', overflowY: 'auto' }}>
-                  {/* Información General */}
-                  <div style={{ marginBottom: '2rem' }}>
-                    <h6 style={{ marginBottom: '1rem', color: '#2c3e50', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <i className="fa-solid fa-info-circle" style={{ color: '#10b981' }} aria-hidden={true}></i>
-                      <span>Información General</span>
-                    </h6>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
-                      <div>
-                        <label htmlFor="nuevaCompra-proveedor" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#374151' }}>
-                          Proveedor *
-                        </label>
-                        <select
-                          id="nuevaCompra-proveedor"
-                          value={nuevaCompra.proveedor}
-                          onChange={(e) => setNuevaCompra({ ...nuevaCompra, proveedor: e.target.value, productos: [] })}
-                          style={{
-                            width: '100%',
-                            padding: '0.75rem',
-                            border: '2px solid #e5e7eb',
-                            borderRadius: '8px',
-                            fontSize: '14px'
-                          }}
-                        >
-                          <option value="">Seleccione un proveedor</option>
-                          {proveedores.filter(p => p.activo).map(p => (
-                            <option key={p._id || p.id} value={p._id || p.id}>{p.nombre || p.name}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label htmlFor="nuevaCompra-solicitadoPor" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#374151' }}>
-                          Solicitado Por
-                        </label>
-                        <input
-                          id="nuevaCompra-solicitadoPor"
-                          type="text"
-                          value={nuevaCompra.solicitadoPor}
-                          disabled
-                          style={{
-                            width: '100%',
-                            padding: '0.75rem',
-                            border: '2px solid #e5e7eb',
-                            borderRadius: '8px',
-                            fontSize: '14px',
-                            backgroundColor: '#f3f4f6',
-                            cursor: 'not-allowed'
-                          }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Productos */}
-                  <div style={{ marginBottom: '2rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                      <h6 style={{ margin: 0, color: '#2c3e50', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <i className="fa-solid fa-boxes" style={{ color: '#10b981' }} aria-hidden={true}></i>
-                        <span>Productos ({nuevaCompra.productos.length})</span>
-                      </h6>
-                      <button
-                        onClick={agregarProductoNuevaCompra}
-                        style={{
-                          background: 'linear-gradient(135deg, #10b981, #059669)',
-                          color: 'white',
-                          border: 'none',
-                          padding: '0.5rem 1rem',
-                          borderRadius: '8px',
-                          fontSize: '12px',
-                          fontWeight: '600',
-                          cursor: 'pointer',
+                      }}>
+                        <h6 style={{
+                          color: '#f39c12',
+                          marginBottom: '1rem',
                           display: 'flex',
                           alignItems: 'center',
                           gap: '0.5rem'
-                        }}
-                      >
-                        <i className="fa-solid fa-plus" aria-hidden={true}></i>
-                        <span>Agregar Producto</span>
-                      </button>
+                        }}>
+                          <i className="fa-solid fa-sticky-note" aria-hidden={true}></i>
+                          <span>OBSERVACIONES</span>
+                        </h6>
+                        <p style={{ margin: 0, color: '#856404', lineHeight: '1.5' }}>
+                          {compraSeleccionada.observaciones}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Tabla de productos mejorada */}
+                    <h6 style={{
+                      color: '#2c3e50',
+                      marginBottom: '1rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem'
+                    }}>
+                      <i className="fa-solid fa-boxes" aria-hidden={true}></i>
+                      <span>DETALLE DE PRODUCTOS ({compraSeleccionada.productos?.length || 0})</span>
+                    </h6>
+
+                    <div >
+                      <table>
+                        <thead>
+                          <tr style={{
+                            background: 'linear-gradient(135deg, #6a1b9a, #9b59b6)',
+                            color: 'white'
+                          }}>
+                            <th style={{ padding: '1rem', fontWeight: '600', width: '5%' }}>#</th>
+                            <th style={{ padding: '1rem', fontWeight: '600', width: '25%' }}>PRODUCTO</th>
+                            <th style={{ padding: '1rem', fontWeight: '600', width: '30%' }}>DESCRIPCIÓN</th>
+                            <th style={{ padding: '1rem', fontWeight: '600', width: '10%', textAlign: 'center' }}>CANTIDAD</th>
+                            <th style={{ padding: '1rem', fontWeight: '600', width: '15%', textAlign: 'right' }}>PRECIO UNIT.</th>
+                            <th style={{ padding: '1rem', fontWeight: '600', width: '15%', textAlign: 'right' }}>SUBTOTAL</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {compraSeleccionada.productos?.map((p, i) => (
+                            <tr key={p._id || p.id || p.productoId || p.producto?._id || p.producto?.id || JSON.stringify(p)} style={{ borderBottom: '1px solid #e9ecef' }}>
+                              <td style={{ padding: '1rem', color: '#666' }}>{i + 1}</td>
+                              <td style={{ padding: '1rem', fontWeight: '500' }}>
+                                {p.producto?.name || p.producto || 'Producto no especificado'}
+                              </td>
+                              <td style={{ padding: '1rem', color: '#666' }}>
+                                {p.descripcion || p.producto?.description || 'N/A'}
+                              </td>
+                              <td style={{ padding: '1rem', textAlign: 'center' }}>
+                                <span style={{
+                                  background: '#e3f2fd',
+                                  color: '#1976d2',
+                                  padding: '0.3rem 0.6rem',
+                                  borderRadius: '15px',
+                                  fontWeight: '600',
+                                  fontSize: '0.8rem'
+                                }}>
+                                  {p.cantidad}
+                                </span>
+                              </td>
+                              <td style={{ padding: '1rem', textAlign: 'right', fontWeight: '500' }}>
+                                ${p.precioUnitario?.toLocaleString()}
+                              </td>
+                              <td style={{ padding: '1rem', textAlign: 'right', fontWeight: '600', color: '#2c3e50' }}>
+                                ${((p.cantidad || 0) * (p.precioUnitario || 0))?.toLocaleString()}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
                     </div>
 
-                    {nuevaCompra.productos.map((prod, index) => (
-                      <div key={prod._tmpId || prod._id || prod.id || prod.productoId || prod.producto || JSON.stringify(prod)} style={{
-                        background: '#f8f9fa',
-                        padding: '1rem',
-                        borderRadius: '8px',
-                        marginBottom: '1rem',
-                        border: '1px solid #e5e7eb'
+                    {(!compraSeleccionada.productos || compraSeleccionada.productos.length === 0) && (
+                      <div style={{
+                        textAlign: 'center',
+                        padding: '2rem',
+                        color: '#666',
+                        fontStyle: 'italic'
                       }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                          <strong style={{ color: '#2c3e50' }}>Producto #{index + 1}</strong>
-                          <DeleteButton onClick={() => eliminarProductoNuevaCompra(index)} title="Eliminar producto" ariaLabel={`Eliminar producto ${index + 1}`} style={{ padding: '0.25rem 0.5rem', fontSize: '12px', background: '#ef4444', color: 'white' }}>
-                            <i className="fa-solid fa-trash" aria-hidden={true}></i>
-                          </DeleteButton>
-                        </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '1rem' }}>
-                          <div>
-                            <label htmlFor={`nuevaCompra-producto-${index}`} style={{ display: 'block', marginBottom: '0.5rem', fontSize: '12px', fontWeight: '600' }}>
-                              Producto
-                            </label>
-                            <select
-                              id={`nuevaCompra-producto-${index}`}
-                              value={prod.producto}
-                              onChange={(e) => actualizarProductoNuevaCompra(index, 'producto', e.target.value)}
-                              style={{
-                                width: '100%',
-                                padding: '0.5rem',
-                                border: '1px solid #d1d5db',
-                                borderRadius: '6px',
-                                fontSize: '13px'
-                              }}
-                            >
-                              <option value="">Seleccione</option>
-                              {productosFiltrados.map(p => (
-                                <option key={p._id || p.id || p.productoId} value={p._id || p.id || p.productoId}>{p.name || p.nombre || p.title}</option>
-                              ))}
-                            </select>
-                          </div>
-                          <div>
-                            <label htmlFor={`nuevaCompra-cantidad-${index}`} style={{ display: 'block', marginBottom: '0.5rem', fontSize: '12px', fontWeight: '600' }}>
-                              Cantidad
-                            </label>
-                            <input
-                              id={`nuevaCompra-cantidad-${index}`}
-                              type="number"
-                              value={prod.cantidad}
-                              onChange={(e) => actualizarProductoNuevaCompra(index, 'cantidad', Number.parseInt(e.target.value) || 0)}
-                              min="1"
-                              style={{
-                                width: '100%',
-                                padding: '0.5rem',
-                                border: '1px solid #d1d5db',
-                                borderRadius: '6px',
-                                fontSize: '13px'
-                              }}
-                            />
-                          </div>
-                          <div>
-                            <label htmlFor={`nuevaCompra-precio-${index}`} style={{ display: 'block', marginBottom: '0.5rem', fontSize: '12px', fontWeight: '600' }}>
-                              Precio Unit.
-                            </label>
-                            <input
-                              id={`nuevaCompra-precio-${index}`}
-                              type="number"
-                              value={prod.precioUnitario}
-                              onChange={(e) => actualizarProductoNuevaCompra(index, 'precioUnitario', Number.parseFloat(e.target.value) || 0)}
-                              min="0"
-                              step="0.01"
-                              style={{
-                                width: '100%',
-                                padding: '0.5rem',
-                                border: '1px solid #d1d5db',
-                                borderRadius: '6px',
-                                fontSize: '13px'
-                              }}
-                            />
-                          </div>
-                        </div>
-                        <div style={{ marginTop: '0.5rem', textAlign: 'right', fontSize: '14px', fontWeight: '600', color: '#059669' }}>
-                          Subtotal: ${(prod.cantidad * prod.precioUnitario).toLocaleString()}
-                        </div>
-                      </div>
-                    ))}
-
-                    {nuevaCompra.productos.length === 0 && (
-                      <div style={{ textAlign: 'center', padding: '2rem', color: '#9ca3af', fontStyle: 'italic' }}>
-                        No hay productos agregados. Haz clic en "Agregar Producto" para comenzar.
+                        <i className="fa-solid fa-inbox" style={{ fontSize: '2rem', marginBottom: '1rem', display: 'block' }} aria-hidden={true}></i>
+                        <span>No hay productos registrados en esta compra</span>
                       </div>
                     )}
                   </div>
 
-                  {/* Observaciones */}
-                  <div style={{ marginBottom: '2rem' }}>
-                    <label htmlFor="nuevaCompra-observaciones" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#374151' }}>
-                      Observaciones
-                    </label>
-                    <textarea
-                      id="nuevaCompra-observaciones"
-                      value={nuevaCompra.observaciones}
-                      onChange={(e) => setNuevaCompra({ ...nuevaCompra, observaciones: e.target.value })}
-                      rows="3"
-                      placeholder="Notas adicionales sobre la compra..."
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        border: '2px solid #e5e7eb',
-                        borderRadius: '8px',
-                        fontSize: '14px',
-                        resize: 'vertical'
-                      }}
-                    />
+                  {/* Footer mejorado */}
+                  <div className="modal-footer" style={{
+                    padding: '1.5rem 2rem',
+                    borderTop: '1px solid #e0e0e0',
+                    background: '#f8f9fa',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    borderBottomLeftRadius: '12px',
+                    borderBottomRightRadius: '12px'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#666' }}>
+                      <i className="fa-solid fa-circle-check" style={{ color: '#6a1b9a' }} aria-hidden={true}></i>
+                      <span>Compra confirmada y procesada</span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '1rem' }}>
+                      <button
+                        className="btn-profesional btn-primary-profesional"
+                        onClick={imprimirCompra}
+                        style={{ background: 'linear-gradient(135deg, #6a1b9a, #9b59b6)', color: 'white' }}
+                      >
+                        <i className="fa-solid fa-print" aria-hidden={true}></i>
+                        <span>Imprimir PDF</span>
+                      </button>
+                      <button
+                        className="btn-profesional"
+                        onClick={enviarCompraPorCorreo}
+                        style={{
+                          background: 'linear-gradient(135deg, #6a1b9a, #9b59b6)',
+                          color: 'white',
+                          padding: '0.5rem 1.5rem'
+                        }}
+                      >
+                        <i className="fa-solid fa-envelope" aria-hidden={true}></i>
+                        <span>Enviar por correo</span>
+                      </button>
+                      <button
+                        className="btn-profesional"
+                        onClick={() => setModalDetallesVisible(false)}
+                        style={{
+                          background: '#95a5a6',
+                          color: 'white',
+                          padding: '0.5rem 1.5rem'
+                        }}
+                      >
+                        <i className="fa-solid fa-times" aria-hidden={true}></i>
+                        <span>Cerrar</span>
+                      </button>
+                    </div>
                   </div>
+                </div>
+              </div>
+            )}
 
-                  {/* Resumen */}
-                  {nuevaCompra.productos.length > 0 && (
-                    <div style={{
-                      background: 'linear-gradient(135deg, #f0fdf4, #dcfce7)',
-                      padding: '1.5rem',
-                      borderRadius: '10px',
-                      border: '2px solid #10b981'
-                    }}>
-                      <h6 style={{ marginBottom: '1rem', color: '#059669', fontWeight: '700' }}>Resumen de la Compra</h6>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', textAlign: 'center' }}>
+            {modalNuevaCompraVisible && (
+              <div className="modal-overlay">
+                <div className="modal-realista modal-lg" style={{ maxWidth: '900px', width: '95%' }}>
+                  <OrderDetailsHeader
+                    iconClass="fa-solid fa-plus-circle"
+                    title="NUEVA COMPRA"
+                    subtitle="Registrar compra sin orden de compra previa"
+                    onClose={() => setModalNuevaCompraVisible(false)}
+                  />
+
+                  <div className="modal-body" style={{ padding: '2rem', maxHeight: '70vh', overflowY: 'auto' }}>
+                    {/* Información General */}
+                    <div style={{ marginBottom: '2rem' }}>
+                      <h6 style={{ marginBottom: '1rem', color: '#2c3e50', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <i className="fa-solid fa-info-circle" style={{ color: '#10b981' }} aria-hidden={true}></i>
+                        <span>Información General</span>
+                      </h6>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
                         <div>
-                          <div style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.25rem' }}>Subtotal</div>
-                          <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#2c3e50' }}>
-                            ${calcularTotalesShared(nuevaCompra.productos || []).subtotal.toLocaleString()}
-                          </div>
+                          <label htmlFor="nuevaCompra-proveedor" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#374151' }}>
+                            Proveedor *
+                          </label>
+                          <select
+                            id="nuevaCompra-proveedor"
+                            value={nuevaCompra.proveedor}
+                            onChange={(e) => setNuevaCompra({ ...nuevaCompra, proveedor: e.target.value, productos: [] })}
+                            style={{
+                              width: '100%',
+                              padding: '0.75rem',
+                              border: '2px solid #e5e7eb',
+                              borderRadius: '8px',
+                              fontSize: '14px'
+                            }}
+                          >
+                            <option value="">Seleccione un proveedor</option>
+                            {proveedores.filter(p => p.activo).map(p => (
+                              <option key={p._id || p.id} value={p._id || p.id}>{p.nombre || p.name}</option>
+                            ))}
+                          </select>
                         </div>
                         <div>
-                          <div style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.25rem' }}>IVA (19%)</div>
-                          <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#2c3e50' }}>
-                            ${Number((calcularTotalesShared(nuevaCompra.productos || []).subtotal * 0.19).toFixed(2)).toLocaleString()}
-                          </div>
-                        </div>
-                        <div>
-                          <div style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.25rem' }}>TOTAL</div>
-                          <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#10b981' }}>
-                            ${Number((calcularTotalesShared(nuevaCompra.productos || []).subtotal * 1.19).toFixed(2)).toLocaleString()}
-                          </div>
+                          <label htmlFor="nuevaCompra-solicitadoPor" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#374151' }}>
+                            Solicitado Por
+                          </label>
+                          <input
+                            id="nuevaCompra-solicitadoPor"
+                            type="text"
+                            value={nuevaCompra.solicitadoPor}
+                            disabled
+                            style={{
+                              width: '100%',
+                              padding: '0.75rem',
+                              border: '2px solid #e5e7eb',
+                              borderRadius: '8px',
+                              fontSize: '14px',
+                              backgroundColor: '#f3f4f6',
+                              cursor: 'not-allowed'
+                            }}
+                          />
                         </div>
                       </div>
                     </div>
-                  )}
-                </div>
 
-                <div className="modal-footer" style={{
-                  padding: '1.5rem 2rem',
-                  borderTop: '1px solid #e0e0e0',
-                  background: '#f8f9fa',
-                  display: 'flex',
-                  justifyContent: 'flex-end',
-                  gap: '1rem'
-                }}>
-                  <button
-                    onClick={() => setModalNuevaCompraVisible(false)}
-                    style={{
-                      background: '#95a5a6',
-                      color: 'white',
-                      border: 'none',
-                      padding: '0.75rem 1.5rem',
-                      borderRadius: '8px',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    <i className="fa-solid fa-times"></i> Cancelar
-                  </button>
-                  <button
-                    onClick={guardarNuevaCompra}
-                    style={{
-                      background: 'linear-gradient(135deg, #10b981, #059669)',
-                      color: 'white',
-                      border: 'none',
-                      padding: '0.75rem 1.5rem',
-                      borderRadius: '8px',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      cursor: 'pointer',
-                      boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)'
-                    }}
-                  >
-                    <i className="fa-solid fa-save"></i> Guardar Compra
-                  </button>
+                    {/* Productos */}
+                    <div style={{ marginBottom: '2rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                        <h6 style={{ margin: 0, color: '#2c3e50', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <i className="fa-solid fa-boxes" style={{ color: '#10b981' }} aria-hidden={true}></i>
+                          <span>Productos ({nuevaCompra.productos.length})</span>
+                        </h6>
+                        <button
+                          onClick={agregarProductoNuevaCompra}
+                          style={{
+                            background: 'linear-gradient(135deg, #10b981, #059669)',
+                            color: 'white',
+                            border: 'none',
+                            padding: '0.5rem 1rem',
+                            borderRadius: '8px',
+                            fontSize: '12px',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem'
+                          }}
+                        >
+                          <i className="fa-solid fa-plus" aria-hidden={true}></i>
+                          <span>Agregar Producto</span>
+                        </button>
+                      </div>
+
+                      {nuevaCompra.productos.map((prod, index) => (
+                        <div key={prod._tmpId || prod._id || prod.id || prod.productoId || prod.producto || JSON.stringify(prod)} style={{
+                          background: '#f8f9fa',
+                          padding: '1rem',
+                          borderRadius: '8px',
+                          marginBottom: '1rem',
+                          border: '1px solid #e5e7eb'
+                        }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                            <strong style={{ color: '#2c3e50' }}>Producto #{index + 1}</strong>
+                            <DeleteButton onClick={() => eliminarProductoNuevaCompra(index)} title="Eliminar producto" ariaLabel={`Eliminar producto ${index + 1}`} style={{ padding: '0.25rem 0.5rem', fontSize: '12px', background: '#ef4444', color: 'white' }}>
+                              <i className="fa-solid fa-trash" aria-hidden={true}></i>
+                            </DeleteButton>
+                          </div>
+                          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '1rem' }}>
+                            <div>
+                              <label htmlFor={`nuevaCompra-producto-${index}`} style={{ display: 'block', marginBottom: '0.5rem', fontSize: '12px', fontWeight: '600' }}>
+                                Producto
+                              </label>
+                              <select
+                                id={`nuevaCompra-producto-${index}`}
+                                value={prod.producto}
+                                onChange={(e) => actualizarProductoNuevaCompra(index, 'producto', e.target.value)}
+                                style={{
+                                  width: '100%',
+                                  padding: '0.5rem',
+                                  border: '1px solid #d1d5db',
+                                  borderRadius: '6px',
+                                  fontSize: '13px'
+                                }}
+                              >
+                                <option value="">Seleccione</option>
+                                {productosFiltrados.map(p => (
+                                  <option key={p._id || p.id || p.productoId} value={p._id || p.id || p.productoId}>{p.name || p.nombre || p.title}</option>
+                                ))}
+                              </select>
+                            </div>
+                            <div>
+                              <label htmlFor={`nuevaCompra-cantidad-${index}`} style={{ display: 'block', marginBottom: '0.5rem', fontSize: '12px', fontWeight: '600' }}>
+                                Cantidad
+                              </label>
+                              <input
+                                id={`nuevaCompra-cantidad-${index}`}
+                                type="number"
+                                value={prod.cantidad}
+                                onChange={(e) => actualizarProductoNuevaCompra(index, 'cantidad', Number.parseInt(e.target.value) || 0)}
+                                min="1"
+                                style={{
+                                  width: '100%',
+                                  padding: '0.5rem',
+                                  border: '1px solid #d1d5db',
+                                  borderRadius: '6px',
+                                  fontSize: '13px'
+                                }}
+                              />
+                            </div>
+                            <div>
+                              <label htmlFor={`nuevaCompra-precio-${index}`} style={{ display: 'block', marginBottom: '0.5rem', fontSize: '12px', fontWeight: '600' }}>
+                                Precio Unit.
+                              </label>
+                              <input
+                                id={`nuevaCompra-precio-${index}`}
+                                type="number"
+                                value={prod.precioUnitario}
+                                onChange={(e) => actualizarProductoNuevaCompra(index, 'precioUnitario', Number.parseFloat(e.target.value) || 0)}
+                                min="0"
+                                step="0.01"
+                                style={{
+                                  width: '100%',
+                                  padding: '0.5rem',
+                                  border: '1px solid #d1d5db',
+                                  borderRadius: '6px',
+                                  fontSize: '13px'
+                                }}
+                              />
+                            </div>
+                          </div>
+                          <div style={{ marginTop: '0.5rem', textAlign: 'right', fontSize: '14px', fontWeight: '600', color: '#059669' }}>
+                            Subtotal: ${(prod.cantidad * prod.precioUnitario).toLocaleString()}
+                          </div>
+                        </div>
+                      ))}
+
+                      {nuevaCompra.productos.length === 0 && (
+                        <div style={{ textAlign: 'center', padding: '2rem', color: '#9ca3af', fontStyle: 'italic' }}>
+                          No hay productos agregados. Haz clic en "Agregar Producto" para comenzar.
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Observaciones */}
+                    <div style={{ marginBottom: '2rem' }}>
+                      <label htmlFor="nuevaCompra-observaciones" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#374151' }}>
+                        Observaciones
+                      </label>
+                      <textarea
+                        id="nuevaCompra-observaciones"
+                        value={nuevaCompra.observaciones}
+                        onChange={(e) => setNuevaCompra({ ...nuevaCompra, observaciones: e.target.value })}
+                        rows="3"
+                        placeholder="Notas adicionales sobre la compra..."
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '2px solid #e5e7eb',
+                          borderRadius: '8px',
+                          fontSize: '14px',
+                          resize: 'vertical'
+                        }}
+                      />
+                    </div>
+
+                    {/* Resumen */}
+                    {nuevaCompra.productos.length > 0 && (
+                      <div style={{
+                        background: 'linear-gradient(135deg, #f0fdf4, #dcfce7)',
+                        padding: '1.5rem',
+                        borderRadius: '10px',
+                        border: '2px solid #10b981'
+                      }}>
+                        <h6 style={{ marginBottom: '1rem', color: '#059669', fontWeight: '700' }}>Resumen de la Compra</h6>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', textAlign: 'center' }}>
+                          <div>
+                            <div style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.25rem' }}>Subtotal</div>
+                            <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#2c3e50' }}>
+                              ${calcularTotalesShared(nuevaCompra.productos || []).subtotal.toLocaleString()}
+                            </div>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.25rem' }}>IVA (19%)</div>
+                            <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#2c3e50' }}>
+                              ${Number((calcularTotalesShared(nuevaCompra.productos || []).subtotal * 0.19).toFixed(2)).toLocaleString()}
+                            </div>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.25rem' }}>TOTAL</div>
+                            <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#10b981' }}>
+                              ${Number((calcularTotalesShared(nuevaCompra.productos || []).subtotal * 1.19).toFixed(2)).toLocaleString()}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="modal-footer" style={{
+                    padding: '1.5rem 2rem',
+                    borderTop: '1px solid #e0e0e0',
+                    background: '#f8f9fa',
+                    display: 'flex',
+                    justifyContent: 'flex-end',
+                    gap: '1rem'
+                  }}>
+                    <button
+                      onClick={() => setModalNuevaCompraVisible(false)}
+                      style={{
+                        background: '#95a5a6',
+                        color: 'white',
+                        border: 'none',
+                        padding: '0.75rem 1.5rem',
+                        borderRadius: '8px',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <i className="fa-solid fa-times"></i> Cancelar
+                    </button>
+                    <button
+                      onClick={guardarNuevaCompra}
+                      style={{
+                        background: 'linear-gradient(135deg, #10b981, #059669)',
+                        color: 'white',
+                        border: 'none',
+                        padding: '0.75rem 1.5rem',
+                        borderRadius: '8px',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)'
+                      }}
+                    >
+                      <i className="fa-solid fa-save"></i> Guardar Compra
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
-          
+            )}
+          </div>
         </div>
-        </div>
-        
       </div>
       <div className="custom-footer">
-          <p className="custom-footer-text">
-            © 2025 <span className="custom-highlight">PANGEA</span>. Todos los derechos reservados.
-          </p>
-        </div>
+        <p className="custom-footer-text">
+          © 2025 <span className="custom-highlight">PANGEA</span>. Todos los derechos reservados.
+        </p>
+      </div>
     </div>
   );
 }

@@ -9,7 +9,9 @@ import jsPDF from 'jspdf';
 import * as XLSX from 'xlsx';
 import EditarPedido from '../components/EditarPedido';
 import PedidoAgendadoPreview from '../components/PedidoAgendadoPreview';
-import { Editor } from '@tinymce/tinymce-react';
+import SharedListHeaderCard from '../components/SharedListHeaderCard';
+import AdvancedStats from '../components/AdvancedStats';
+import * as TinyMCE from "@tinymce/tinymce-react";
 
 /* Estilos CSS avanzados para Pedidos Agendados */
 const pedidosAgendadosStyles = `
@@ -164,12 +166,65 @@ const pedidosAgendadosStyles = `
       align-items: center;
       gap: 5px;
     }
+      /* Modal adjustments: keep modal centered, limit size and enable scrolling */
+      .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+        padding: 1.25rem;
+        overflow: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .modal-lg {
+        background: white;
+        border-radius: 12px;
+        width: min(1100px, 100%);
+        max-width: 1100px;
+        max-height: calc(100vh - 80px);
+        box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .modal-header {
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+      }
+
+      .modal-body {
+        padding: 1rem 1.25rem;
+        overflow: auto;
+        max-height: calc(100vh - 240px);
+      }
+
+      .modal-close {
+        background: none;
+        border: none;
+        font-size: 1.4rem;
+        line-height: 1;
+        cursor: pointer;
+        color: #374151;
+      }
+
+      /* Make large tables inside modals scroll horizontally instead of expanding the modal */
+      .modal-body table { width: 100%; border-collapse: collapse; }
+      .modal-body .overflow-auto { overflow: auto; }
   </style>
 `;
 
 if (typeof document !== 'undefined') {
   const existingStyles = document.getElementById('pedidos-agendados-styles');
-  if (!existingStyles) {
+  if (existingStyles == null) {
     const styleElement = document.createElement('div');
     styleElement.id = 'pedidos-agendados-styles';
     styleElement.innerHTML = pedidosAgendadosStyles;
@@ -191,7 +246,7 @@ export default function PedidosAgendados() {
     try {
       const storedUser = localStorage.getItem('user');
       if (storedUser) setUser(JSON.parse(storedUser));
-    } catch (_) { }
+    } catch (err) { console.error('Error reading stored user from localStorage:', err); }
   }, []);
 
   // Estado del formulario de agendamiento (sólo UI)
@@ -277,6 +332,20 @@ export default function PedidosAgendados() {
   const [showDropdownAgendar, setShowDropdownAgendar] = useState(false);
 
   useEffect(() => {
+    const deduplicateClientes = (todos) => {
+      const dedupMap = new Map();
+      for (const c of todos) {
+        const key = ((c.correo || '').toLowerCase().trim()) || c._id;
+        if (dedupMap.has(key)) {
+          const existente = dedupMap.get(key);
+          if (existente.esCliente === false && c.esCliente) dedupMap.set(key, c);
+        } else {
+          dedupMap.set(key, c);
+        }
+      }
+      return Array.from(dedupMap.values()).sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
+    };
+
     const cargarClientesYProspectos = async () => {
       try {
         const [clientesRes, prospectosRes] = await Promise.all([
@@ -290,17 +359,7 @@ export default function PedidosAgendados() {
         const normalizar = (arr, esClienteFlag) => (Array.isArray(arr) ? arr.map(c => ({ ...c, esCliente: !!esClienteFlag })) : []);
         const todos = [...normalizar(listaClientes, true), ...normalizar(listaProspectos, false)];
 
-        const dedupMap = new Map();
-        for (const c of todos) {
-          const key = ((c.correo || '').toLowerCase().trim()) || c._id;
-          if (!dedupMap.has(key)) {
-            dedupMap.set(key, c);
-          } else {
-            const existente = dedupMap.get(key);
-            if (!existente.esCliente && c.esCliente) dedupMap.set(key, c);
-          }
-        }
-        const resultado = Array.from(dedupMap.values()).sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
+        const resultado = deduplicateClientes(todos);
         setClientesAgendar(resultado);
       } catch (err) {
         console.error('Error al cargar clientes/prospectos (agendar):', err);
@@ -308,6 +367,44 @@ export default function PedidosAgendados() {
     };
     cargarClientesYProspectos();
   }, []);
+
+  // Handlers extraídos para reducir anidamiento y mejorar legibilidad
+  const handleViewPedido = async (pedidoId) => {
+    try {
+      const res = await api.get(`/api/pedidos/${pedidoId}?populate=true`);
+      const data = res.data || res;
+      const pedidoCompleto = data.data || data;
+      setCotizacionPreview(pedidoCompleto);
+    } catch (error) {
+      console.error('Error loading pedido:', error);
+      Swal.fire('Error', 'No se pudo cargar la información del pedido.', 'error');
+    }
+  };
+
+  const handleDropdownSelectCliente = (c) => {
+    setAgendarCliente(c.nombre || '');
+    setAgendarCiudad(c.ciudad || '');
+    setAgendarDireccion(c.direccion || '');
+    setAgendarTelefono(c.telefono || '');
+    setAgendarCorreo(c.correo || '');
+    setShowDropdownAgendar(false);
+  };
+
+  const handleAgendarClienteChange = (e) => {
+    const q = e.target.value;
+    setAgendarCliente(q);
+    if (q && q.trim().length >= 1) {
+      const ql = q.trim().toLowerCase();
+      const matches = clientesAgendar
+        .filter(c => (c?.nombre || '').toLowerCase().includes(ql))
+        .slice(0, 10);
+      setFilteredClientesAgendar(matches);
+      setShowDropdownAgendar(matches.length > 0);
+    } else {
+      setFilteredClientesAgendar([]);
+      setShowDropdownAgendar(false);
+    }
+  };
 
   // Función para manejar cuando se envía un email
   const handleEmailSent = (pedidoId) => {
@@ -323,7 +420,7 @@ export default function PedidosAgendados() {
     const trimmed = email.trim();
     if (trimmed.length === 0 || trimmed.length > 254) return false;
     const at = trimmed.indexOf('@');
-    if (at <= 0 || trimmed.indexOf('@', at + 1) !== -1) return false;
+    if (at <= 0 || trimmed.includes('@', at + 1)) return false;
     const local = trimmed.slice(0, at);
     const domain = trimmed.slice(at + 1);
     if (!local || !domain) return false;
@@ -338,7 +435,7 @@ export default function PedidosAgendados() {
 
   const handleGuardarAgendar = async () => {
     try {
-      // Validaciones básicas
+      // Validaciones básicas (usar condición positiva para evitar negaciones inesperadas)
       if (!agendarCliente || !agendarCorreo || !agendarTelefono) {
         Swal.fire('Error', 'Nombre, correo y teléfono del cliente son obligatorios.', 'warning');
         return;
@@ -396,28 +493,7 @@ export default function PedidosAgendados() {
         // Normalizar forma de respuesta
         const data = res.data || res;
         const nuevoPedido = data.data || data;
-
-        // Cerrar modal y limpiar formulario
-        setMostrarModalAgendar(false);
-        setAgendarCliente(''); setAgendarCiudad(''); setAgendarDireccion(''); setAgendarTelefono(''); setAgendarCorreo(''); setAgendarFecha(''); setAgendarProductos([]);
-        if (descripcionRef.current) descripcionRef.current.setContent('');
-        if (condicionesRef.current) condicionesRef.current.setContent('');
-
-        // Refrescar lista y abrir preview del pedido creado inmediatamente
-        await fetchPedidosAgendados();
-        setCotizacionPreview(nuevoPedido);
-
-        // Mostrar toast de confirmación
-        Swal.fire({
-          toast: true,
-          position: 'top-end',
-          icon: 'success',
-          title: 'Pedido agendado',
-          showConfirmButton: false,
-          timer: 2000,
-          timerProgressBar: true,
-          didOpen: (toast) => { toast.addEventListener('mouseenter', Swal.stopTimer); toast.addEventListener('mouseleave', Swal.resumeTimer); }
-        });
+        await handlePostCreate(nuevoPedido);
       } else {
         Swal.fire('Error', res.data?.message || 'No se pudo crear el pedido.', 'error');
       }
@@ -425,6 +501,31 @@ export default function PedidosAgendados() {
       console.error('Error creando pedido agendado:', err);
       Swal.fire('Error', err?.response?.data?.message || 'Error de red al crear el pedido.', 'error');
     }
+  };
+
+  // Helper: handle UI updates after creating a pedido
+  const handlePostCreate = async (nuevoPedido) => {
+    setMostrarModalAgendar(false);
+    setAgendarCliente(''); setAgendarCiudad(''); setAgendarDireccion(''); setAgendarTelefono(''); setAgendarCorreo(''); setAgendarFecha(''); setAgendarProductos([]);
+    if (descripcionRef.current) descripcionRef.current.setContent('');
+    if (condicionesRef.current) condicionesRef.current.setContent('');
+
+    await fetchPedidosAgendados();
+    setCotizacionPreview(nuevoPedido);
+    showSuccessToast('Pedido agendado');
+  };
+
+  const showSuccessToast = (title) => {
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'success',
+      title,
+      showConfirmButton: false,
+      timer: 2000,
+      timerProgressBar: true,
+      didOpen: (toast) => { toast.addEventListener('mouseenter', Swal.stopTimer); toast.addEventListener('mouseleave', Swal.resumeTimer); }
+    });
   };
 
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -461,7 +562,7 @@ export default function PedidosAgendados() {
       return;
     }
 
-    html2canvas(input).then((canvas) => {
+    const generatePdfFromCanvas = (canvas) => {
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF('p', 'mm', 'a4');
       const imgWidth = 190;
@@ -484,12 +585,16 @@ export default function PedidosAgendados() {
       for (const el of elementosNoExport) {
         el.style.display = '';
       }
-    }).catch((err) => {
+    };
+
+    const handleExportError = (err) => {
       console.error('Error exporting PDF:', err);
       for (const el of elementosNoExport) {
         el.style.display = '';
       }
-    });
+    };
+
+    html2canvas(input).then(generatePdfFromCanvas).catch(handleExportError);
   };
 
   const exportarExcel = () => {
@@ -600,199 +705,126 @@ export default function PedidosAgendados() {
         <div className="max-width">
           <div className="contenido-modulo">
             {/* Encabezado profesional */}
-            <div className="pedidos-professional-header">
-              <div className="pedidos-header-decoration"></div>
-              <div style={{ position: 'relative', zIndex: 2 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                  <div className="pedidos-icon-container">
-                    <i className="fa-solid fa-calendar-check" style={{ fontSize: '2.5rem', color: 'white' }}></i>
-                  </div>
-                  <div>
-                    <h2 style={{ margin: '0 0 8px 0', fontSize: '2rem', fontWeight: '700' }}>
-                      Pedidos Agendados
-                    </h2>
-                    <p style={{ margin: 0, fontSize: '1.1rem', opacity: 0.9 }}>
-                      Control y gestión de pedidos programados para entrega
-                    </p>
-                  </div>
-                  {/* Controles de exportación y acciones */}
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: '20px',
-                    flexWrap: 'wrap',
-                    gap: '10px'
-                  }}>
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                      <button className="pedidos-export-btn" onClick={exportarExcel}>
-                        <i className="fa-solid fa-file-excel"></i>
-                        <span>Exportar a Excel</span>
-                      </button>
-                      <button className="pedidos-export-btn" onClick={exportarPDF}>
-                        <i className="fa-solid fa-file-pdf"></i>
-                        <span>Exportar a PDF</span>
-                      </button>
-                    </div>
-                    <div>
-                      <button
-                        className='pedidos-add-btn'
-                        onClick={() => setMostrarModalAgendar(true)}
-                      >
-                        <i className="fa-solid fa-plus"></i>
-                        <span>Agendar Pedido</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
+            <SharedListHeaderCard
+              title="Pedidos Agendados"
+              subtitle="Control y gestión de pedidos programados para entrega"
+              iconClass="fa-solid fa-calendar-check"
+            >
+              <div className="export-buttons">
+                <button
+                  onClick={exportarExcel}
+                  className="export-btn excel"
+                >
+                  <i className="fa-solid fa-file-excel"></i>{' '}<span>Exportar Excel</span>
+                </button>
+                <button
+                  onClick={exportarPDF}
+                  className="export-btn pdf"
+                >
+                  <i className="fa-solid fa-file-pdf"></i>{' '}<span>Exportar PDF</span>
+                </button>
+                <button
+                  onClick={() => setMostrarModalAgendar(true)}
+                  className="export-btn create"
+                >
+                  <i className="fa-solid fa-plus"></i>{' '}<span>Agendar Pedido</span>
+                </button>
               </div>
-
-            </div>
+            </SharedListHeaderCard>
 
             {/* Estadísticas avanzadas */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-              gap: '20px',
-              marginBottom: '30px'
-            }}>
-              <div className="pedidos-stats-card">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                  <div style={{
-                    background: 'linear-gradient(135deg, #f59e0b, #ea580c)',
-                    borderRadius: '12px',
-                    padding: '15px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
-                    <i className="fa-solid fa-calendar-check" style={{ color: 'white', fontSize: '1.5rem' }}></i>
-                  </div>
-                  <div>
-                    <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                      {pedidos.length}
-                    </h3>
-                    <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
-                      Pedidos Agendados
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="pedidos-stats-card">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                  <div style={{
-                    background: 'linear-gradient(135deg, #10b981, #059669)',
-                    borderRadius: '12px',
-                    padding: '15px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
-                    <i className="fa-solid fa-chart-line" style={{ color: 'white', fontSize: '1.5rem' }}></i>
-                  </div>
-                  <div>
-                    <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                      ${pedidos.reduce((sum, p) => sum + (p.total || 0), 0).toLocaleString('es-CO')}
-                    </h3>
-                    <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
-                      Total en Ventas
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="pedidos-stats-card">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                  <div style={{
-                    background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                    borderRadius: '12px',
-                    padding: '15px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
-                    <i className="fa-solid fa-clock" style={{ color: 'white', fontSize: '1.5rem' }}></i>
-                  </div>
-                  <div>
-                    <h3 style={{ margin: '0 0 5px 0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                      {pedidos.filter(p => new Date(p.fechaEntrega) <= new Date(Date.now() + 24 * 60 * 60 * 1000)).length}
-                    </h3>
-                    <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
-                      Entregas Próximas
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-
+            <AdvancedStats cards={[
+              {
+                iconClass: 'fa-solid fa-calendar-check',
+                gradient: 'linear-gradient(135deg, #f59e0b, #ea580c)',
+                value: pedidos.length,
+                label: 'Pedidos Agendados'
+              },
+              {
+                iconClass: 'fa-solid fa-chart-line',
+                gradient: 'linear-gradient(135deg, #10b981, #059669)',
+                value: `$${pedidos.reduce((sum, p) => sum + (p.total || 0), 0).toLocaleString('es-CO')}`,
+                label: 'Total en Ventas'
+              },
+              {
+                iconClass: 'fa-solid fa-clock',
+                gradient: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                value: pedidos.filter(p => new Date(p.fechaEntrega) <= new Date(Date.now() + 24 * 60 * 60 * 1000)).length,
+                label: 'Entregas Próximas'
+              }
+            ]} />
 
             {/* Tabla principal con diseño moderno */}
-              <div>
-                <table  id="tabla_despachos">
+            <div className="table-container">
+              <div className="table-header">
+                <div className="table-header-content">
+                  <div className="table-header-icon">
+                    <i className="fa-solid fa-table" style={{ color: 'white', fontSize: '16px' }}></i>
+                  </div>
+                  <div>
+                    <h4 className="table-title">
+                      Pedidos pendientes
+                    </h4>
+                    <p className="table-subtitle">
+                      Mostrando {currentItems.length} de {pedidos.length} pedidos
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ overflow: 'auto' }}>
+                <table className="data-table" id="tabla_despachos">
                   <thead>
                     <tr>
-                      <th>No</th>
-                      <th>Identificador de Pedido</th>
-                      <th>F. Agendamiento</th>
-                      <th>F. Entrega</th>
-                      <th>Cliente</th>
-                      <th>Ciudad</th>
-                      <th>Total</th>
-                      <th>Acciones</th>
+                      <th>
+                        <i className="fa-solid fa-hashtag icon-gap" style={{ color: '#6366f1' }}></i>{' '}<span>#</span>
+                      </th>
+                      <th>
+                        <i className="fa-solid fa-file-invoice icon-gap"></i>{' '}<span>IDENTIFICADOR DE PEDIDO</span>
+                      </th>
+                      <th>
+                        <i className="fa-solid fa-calendar-plus icon-gap" style={{ color: '#6366f1' }}></i>{' '}<span>F. AGENDAMIENTO</span>
+                      </th>
+                      <th>
+                        <i className="fa-solid fa-truck icon-gap"></i>{' '}<span>F. ENTREGA</span>
+                      </th>
+                      <th>
+                        <i className="fa-solid fa-user icon-gap" style={{ color: '#6366f1' }}></i>{' '}<span>CLIENTE</span>
+                      </th>
+                      <th>
+                        <i className="fa-solid fa-location-dot icon-gap"></i>{' '}<span>CIUDAD</span>
+                      </th>
+                      <th>
+                        <i className="fa-solid fa-dollar-sign icon-gap" style={{ color: '#6366f1' }}></i>{' '}<span>TOTAL</span>
+                      </th>
+                      <th style={{ textAlign: 'center' }}>
+                        <i className="fa-solid fa-cogs icon-gap" style={{ color: '#6366f1' }}></i>{' '}<span>ACCIONES</span>
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {currentItems.map((pedido, index) => (
                       <tr key={pedido._id}>
-                        <td style={{ fontWeight: '500', color: '#6b7280' }}>
+                        <td style={{ fontWeight: '600', color: '#6366f1' }}>
                           {indexOfFirstItem + index + 1}
                         </td>
-                        <td style={{ fontWeight: '600', color: '#1f2937' }}>
+                        <td>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <div style={{
-                              background: 'linear-gradient(135deg, #f59e0b, #ea580c)',
-                              borderRadius: '8px',
-                              padding: '8px',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              minWidth: '35px'
-                            }}>
+                            <div className="table-icon-small">
                               <i className="fa-solid fa-file-invoice" style={{ color: 'white', fontSize: '12px' }}></i>
                             </div>
                             {pedido.numeroPedido ? (
                               <button
                                 type="button"
-                                style={{
-                                  cursor: 'pointer',
-                                  color: '#f59e0b',
-                                  textDecoration: 'underline',
-                                  fontWeight: 'bold',
-                                  background: 'none',
-                                  border: 'none',
-                                  padding: 0,
-                                  font: 'inherit'
-                                }}
-                                onClick={async () => {
-                                  try {
-                                    const res = await api.get(`/api/pedidos/${pedido._id}?populate=true`);
-                                    // normalize response shape
-                                    const data = res.data || res;
-                                    const pedidoCompleto = data.data || data;
-                                    setCotizacionPreview(pedidoCompleto);
-                                  } catch (error) {
-                                    console.error('Error loading pedido:', error);
-                                    Swal.fire('Error', 'No se pudo cargar la información del pedido.', 'error');
-                                  }
-                                }}
+                                className="orden-numero-link"
+                                    onClick={() => handleViewPedido(pedido._id)}
                                 title="Clic para ver información del pedido"
                               >
                                 {pedido.numeroPedido}
                               </button>
-                            ) : '---'}
+                            ) : (
+                              <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>---</span>
+                            )}
                           </div>
                         </td>
                         <td style={{ color: '#6b7280' }}>
@@ -801,7 +833,7 @@ export default function PedidosAgendados() {
                         <td style={{ color: '#6b7280' }}>
                           {new Date(pedido.fechaEntrega).toLocaleDateString()}
                         </td>
-                        <td style={{ fontWeight: '500', color: '#1f2937' }}>
+                        <td style={{ fontWeight: '600', color: '#1f2937', fontSize: '14px' }}>
                           {pedido.cliente?.nombre}
                         </td>
                         <td style={{ color: '#6b7280' }}>
@@ -811,16 +843,16 @@ export default function PedidosAgendados() {
                           ${(pedido.total || 0).toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </td>
                         <td className="no-export">
-                          <div style={{ display: 'flex', gap: '5px' }}>
+                          <div className="action-buttons">
                             <button
-                              className='pedidos-action-btn success'
+                              className="action-btn success"
                               onClick={() => remisionarPedido(pedido._id)}
                               title="Marcar como entregado"
                             >
                               <i className="fas fa-check"></i>
                             </button>
                             <button
-                              className='pedidos-action-btn danger'
+                              className="action-btn danger"
                               onClick={() => cancelarPedido(pedido._id)}
                               title="Marcar como cancelado"
                             >
@@ -832,54 +864,42 @@ export default function PedidosAgendados() {
                     ))}
                     {pedidos.length === 0 && (
                       <tr>
-                        <td
-                          colSpan={8}
-                          style={{
-                            padding: '40px',
-                            textAlign: 'center',
-                            color: '#9ca3af',
-                            fontStyle: 'italic',
-                            fontSize: '16px'
-                          }}
-                        >
-                          No hay pedidos agendados disponibles
+                        <td colSpan="8">
+                          <div className="table-empty-state">
+                            <div className="table-empty-icon">
+                              <i className="fa-solid fa-calendar-check" style={{ fontSize: '3.5rem', color: '#9ca3af' }}></i>
+                            </div>
+                            <div>
+                              <h5 className="table-empty-title">
+                                No hay pedidos agendados disponibles
+                              </h5>
+                              <p className="table-empty-text">
+                                No se encontraron pedidos con los criterios de búsqueda
+                              </p>
+                            </div>
+                          </div>
                         </td>
                       </tr>
                     )}
                   </tbody>
                 </table>
               </div>
-            
 
-            {/* Paginación */}
-            {totalPages > 1 && (
-              <div className="pagination" style={{
-                display: 'flex',
-                justifyContent: 'center',
-                marginTop: '20px',
-                gap: '5px'
-              }}>
-                {Array.from({ length: totalPages }, (_, i) => (
-                  <button
-                    key={i + 1}
-                    onClick={() => setCurrentPage(i + 1)}
-                    style={{
-                      padding: '8px 12px',
-                      border: 'none',
-                      borderRadius: '6px',
-                      cursor: 'pointer',
-                      background: currentPage === i + 1 ?
-                        'linear-gradient(135deg, #f59e0b, #ea580c)' :
-                        '#f3f4f6',
-                      color: currentPage === i + 1 ? 'white' : '#374151',
-                      fontWeight: '500'
-                    }}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
-              </div>
-            )}
+              {/* Paginación */}
+              {totalPages > 1 && (
+                <div className="table-pagination">
+                  {Array.from({ length: totalPages }, (_, i) => (
+                    <button
+                      key={i + 1}
+                      onClick={() => setCurrentPage(i + 1)}
+                      className={`pagination-btn ${currentPage === i + 1 ? 'active' : ''}`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
 
             {/* Modal de vista previa de pedido agendado */}
             {cotizacionPreview && (
@@ -896,7 +916,7 @@ export default function PedidosAgendados() {
             {/** Modal: Agendar Pedido **/}
             {mostrarModalAgendar && (
               <div className="modal-overlay">
-                <div className=" modal-lg">
+                <div className="modal-lg">
                   <div className="modal-header">
                     <h5 className="modal-title">Agendar Pedido</h5>
                     <button
@@ -907,120 +927,50 @@ export default function PedidosAgendados() {
                     </button>
                   </div>
                   <div className="modal-body">
-                    {/* Sección: Información del Cliente (mismos inputs base) */}
-                    <div style={{
-                      background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
-                      borderRadius: '14px',
-                      padding: '1.25rem',
-                      border: '1px solid #e2e8f0',
-                      marginBottom: '1rem'
-                    }}>
-                      <div style={{
-                        borderBottom: '2px solid #e2e8f0',
-                        paddingBottom: '.75rem',
-                        marginBottom: '1rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '.75rem'
-                      }}>
-                        <div style={{
-                          width: 36, height: 36, borderRadius: 10,
-                          background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff'
-                        }}>
+                    {/* Sección: Información del Cliente */}
+                    <div className="modal-section">
+                      <div className="modal-section-header">
+                        <div className="modal-section-icon blue">
                           <i className="fa-solid fa-user"></i>
                         </div>
-                        <h4 style={{ margin: 0, fontWeight: 600, color: '#1e293b' }}>Información del Cliente</h4>
+                        <h4 className="modal-section-title">Información del Cliente</h4>
                       </div>
 
-                      <div style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-                        gap: '1rem'
-                      }}>
-                        <div style={{ gridColumn: 'span 2' }}>
-                          <label htmlFor="agendar-cliente" style={{ display: 'block', marginBottom: 6, fontWeight: 600, color: '#374151' }}>
-                            Nombre o Razón Social <span style={{ color: '#ef4444' }}>*</span>
+                      <div className="modal-grid">
+                        <div className="modal-grid-full">
+                          <label htmlFor="agendar-cliente" className="modal-label">
+                            Nombre o Razón Social <span className="required">*</span>
                           </label>
                           <div style={{ position: 'relative' }}>
                             <input
                               id="agendar-cliente"
                               type="text"
-                              className="cuadroTexto"
+                              className="modal-input"
                               placeholder="Ingrese el nombre completo o razón social"
                               value={agendarCliente}
-                              onChange={(e) => {
-                                const q = e.target.value;
-                                setAgendarCliente(q);
-                                if (q && q.trim().length >= 1) {
-                                  const ql = q.trim().toLowerCase();
-                                  const matches = clientesAgendar
-                                    .filter(c => (c?.nombre || '').toLowerCase().includes(ql))
-                                    .slice(0, 10);
-                                  setFilteredClientesAgendar(matches);
-                                  setShowDropdownAgendar(matches.length > 0);
-                                } else {
-                                  setFilteredClientesAgendar([]);
-                                  setShowDropdownAgendar(false);
-                                }
-                              }}
+                              onChange={handleAgendarClienteChange}
                               onFocus={(e) => {
                                 if (filteredClientesAgendar.length > 0) setShowDropdownAgendar(true);
                               }}
                               onBlur={() => setTimeout(() => setShowDropdownAgendar(false), 150)}
-                              style={{ border: '2px solid #e5e7eb', background: '#fff', borderRadius: 10 }}
                             />
                             {showDropdownAgendar && filteredClientesAgendar.length > 0 && (
-                              <div
-                                style={{
-                                  position: 'absolute',
-                                  top: '100%', left: 0, right: 0,
-                                  zIndex: 50,
-                                  background: 'white',
-                                  border: '1px solid #e5e7eb',
-                                  borderTop: 'none',
-                                  borderRadius: '0 0 10px 10px',
-                                  maxHeight: 240,
-                                  overflowY: 'auto',
-                                  boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)'
-                                }}
-                              >
+                              <div className="modal-dropdown">
                                 {filteredClientesAgendar.map((c) => (
                                   <button
                                     type="button"
                                     key={c._id}
                                     onMouseDown={(ev) => { ev.preventDefault(); }}
-                                    onClick={() => {
-                                      setAgendarCliente(c.nombre || '');
-                                      setAgendarCiudad(c.ciudad || '');
-                                      setAgendarDireccion(c.direccion || '');
-                                      setAgendarTelefono(c.telefono || '');
-                                      setAgendarCorreo(c.correo || '');
-                                      setShowDropdownAgendar(false);
-                                    }}
-                                    style={{
-                                      padding: '10px 12px',
-                                      cursor: 'pointer',
-                                      display: 'flex',
-                                      flexDirection: 'column',
-                                      gap: 4,
-                                      borderTop: '1px solid #f1f5f9',
-                                      border: 'none',
-                                      background: 'white',
-                                      textAlign: 'left',
-                                      width: '100%'
-                                    }}
-                                    onMouseEnter={(ev) => { ev.currentTarget.style.background = '#f8fafc'; }}
-                                    onMouseLeave={(ev) => { ev.currentTarget.style.background = 'white'; }}
-                                    aria-label={`Seleccionar cliente ${c.nombre || ''}`}
+                                    onClick={() => handleDropdownSelectCliente(c)}
+                                    className="modal-dropdown-item"
                                   >
-                                    <span style={{ fontWeight: 600, color: '#111827' }}>
+                                    <span className="dropdown-item-main">
                                       {c.nombre}
                                       {!c.esCliente && (
-                                        <span style={{ marginLeft: 6, background: '#6366f1', color: '#ffffff', fontSize: 10, padding: '2px 6px', borderRadius: 12, fontWeight: 600 }}>PROSPECTO</span>
+                                        <span className="prospect-badge">PROSPECTO</span>
                                       )}
                                     </span>
-                                    <span style={{ fontSize: 12, color: '#6b7280' }}>
+                                    <span className="dropdown-item-sub">
                                       {c.ciudad || 'Ciudad no especificada'}
                                     </span>
                                   </button>
@@ -1030,81 +980,74 @@ export default function PedidosAgendados() {
                           </div>
                         </div>
 
-                        <div>
-                          <label htmlFor="agendar-ciudad" style={{ display: 'block', marginBottom: 6, fontWeight: 600, color: '#374151' }}>Ciudad</label>
+                        <div className="modal-grid-item">
+                          <label htmlFor="agendar-ciudad" className="modal-label">Ciudad</label>
                           <input
                             id="agendar-ciudad"
                             type="text"
-                            className="cuadroTexto"
+                            className="modal-input"
                             placeholder="Ciudad de residencia"
                             value={agendarCiudad}
                             onChange={(e) => setAgendarCiudad(e.target.value)}
-                            style={{ border: '2px solid #e5e7eb', background: '#fff', borderRadius: 10 }}
                           />
                         </div>
 
-                        <div>
-                          <label htmlFor="agendar-direccion" style={{ display: 'block', marginBottom: 6, fontWeight: 600, color: '#374151' }}>Dirección</label>
+                        <div className="modal-grid-item">
+                          <label htmlFor="agendar-direccion" className="modal-label">Dirección</label>
                           <input
                             id="agendar-direccion"
                             type="text"
-                            className="cuadroTexto"
+                            className="modal-input"
                             placeholder="Dirección completa"
                             value={agendarDireccion}
                             onChange={(e) => setAgendarDireccion(e.target.value)}
-                            style={{ border: '2px solid #e5e7eb', background: '#fff', borderRadius: 10 }}
                           />
                         </div>
 
-                        <div>
-                          <label htmlFor="agendar-telefono" style={{ display: 'block', marginBottom: 6, fontWeight: 600, color: '#374151' }}>Teléfono <span style={{ color: '#ef4444' }}>*</span></label>
+                        <div className="modal-grid-item">
+                          <label htmlFor="agendar-telefono" className="modal-label">
+                            Teléfono <span className="required">*</span>
+                          </label>
                           <input
                             id="agendar-telefono"
                             type="tel"
-                            className="cuadroTexto"
+                            className="modal-input"
                             placeholder="+57 000 000 0000"
                             value={agendarTelefono}
                             onChange={(e) => setAgendarTelefono(e.target.value)}
-                            style={{ border: '2px solid #e5e7eb', background: '#fff', borderRadius: 10 }}
                           />
                         </div>
 
-                        <div>
-                          <label htmlFor="agendar-correo" style={{ display: 'block', marginBottom: 6, fontWeight: 600, color: '#374151' }}>Correo Electrónico <span style={{ color: '#ef4444' }}>*</span></label>
+                        <div className="modal-grid-item">
+                          <label htmlFor="agendar-correo" className="modal-label">
+                            Correo Electrónico <span className="required">*</span>
+                          </label>
                           <input
                             id="agendar-correo"
                             type="email"
-                            className="cuadroTexto"
+                            className="modal-input"
                             placeholder="cliente@ejemplo.com"
                             value={agendarCorreo}
                             onChange={(e) => setAgendarCorreo(e.target.value)}
-                            style={{ border: '2px solid #e5e7eb', background: '#fff', borderRadius: 10 }}
                           />
                         </div>
 
-                        <div>
-                          <div style={{ marginBottom: 6, fontWeight: 600, color: '#374151' }}>Responsable</div>
-                          <div style={{
-                            padding: '0.7rem 1rem',
-                            border: '2px solid #e5e7eb',
-                            borderRadius: 10,
-                            backgroundColor: '#f8fafc',
-                            color: '#64748b'
-                          }}>
-                            <i className="fa-solid fa-user-tie" style={{ color: '#06b6d4', marginRight: 8 }}></i>
+                        <div className="modal-grid-item">
+                          <div className="modal-label">Responsable</div>
+                          <div className="modal-readonly">
+                            <i className="fa-solid fa-user-tie"></i>
                             <span>{user ? `${user.firstName || ''} ${user.surname || ''}` : ''}</span>
                           </div>
                         </div>
 
-                        <div>
-                          <label htmlFor="agendar-fecha" style={{ display: 'block', marginBottom: 6, fontWeight: 600, color: '#374151' }}>Fecha</label>
+                        <div className="modal-grid-item">
+                          <label htmlFor="agendar-fecha" className="modal-label">Fecha</label>
                           <input
                             id="agendar-fecha"
                             type="date"
-                            className="cuadroTexto"
+                            className="modal-input"
                             value={agendarFecha}
                             onChange={(e) => setAgendarFecha(e.target.value)}
-                            style={{ border: '2px solid #e5e7eb', background: '#fff', borderRadius: 10 }}
                           />
                         </div>
                       </div>
@@ -1130,7 +1073,7 @@ export default function PedidosAgendados() {
                         <h4 style={{ margin: 0, fontWeight: 600, color: '#1e293b' }}>Descripción del Pedido</h4>
                       </div>
                       <div style={{ background: '#fff', borderRadius: 10, padding: '0.75rem', border: '2px solid #e5e7eb' }}>
-                        <Editor
+                        <TinyMCE.Editor
                           id="agendar-descripcion"
                           onInit={(evt, editor) => (descripcionRef.current = editor)}
                           apiKey="bjhw7gemroy70lt4bgmfvl29zid7pmrwyrtx944dmm4jq39w"
@@ -1175,7 +1118,7 @@ export default function PedidosAgendados() {
                               color: '#fff', fontWeight: 600, cursor: 'pointer'
                             }}
                           >
-                            <i className="fa-solid fa-plus" style={{ marginRight: 8 }}></i>
+                            <i className="fa-solid fa-plus" style={{ marginRight: 8 }}></i>{' '}
                             Agregar Producto
                           </button>
                           {agendarProductos.length > 0 && (
@@ -1189,7 +1132,7 @@ export default function PedidosAgendados() {
                                 background: '#fff', color: '#ef4444', fontWeight: 600, cursor: 'pointer'
                               }}
                             >
-                              <i className="fa-solid fa-trash" style={{ marginRight: 8 }}></i>
+                              <i className="fa-solid fa-trash" style={{ marginRight: 8 }}></i>{' '}
                               Limpiar Todo
                             </button>
                           )}
@@ -1332,7 +1275,7 @@ export default function PedidosAgendados() {
                         <h4 style={{ margin: 0, fontWeight: 600, color: '#1e293b' }}>Condiciones del Pedido</h4>
                       </div>
                       <div style={{ background: '#fff', borderRadius: 10, padding: '0.75rem', border: '2px solid #e5e7eb' }}>
-                        <Editor
+                        <TinyMCE.Editor
                           id="agendar-condiciones"
                           onInit={(evt, editor) => (condicionesRef.current = editor)}
                           apiKey="bjhw7gemroy70lt4bgmfvl29zid7pmrwyrtx944dmm4jq39w"
@@ -1405,7 +1348,6 @@ export default function PedidosAgendados() {
             )}
           </div>
         </div>
-
       </div>
       <div className="custom-footer">
         <p className="custom-footer-text">

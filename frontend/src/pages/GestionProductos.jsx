@@ -899,31 +899,19 @@ const GestionProductos = () => {
               subtitle="Administra el inventario y catálogo de productos"
               iconClass="fa-solid fa-boxes-stacked"
             >
-              <button
-                onClick={() => {
-                  setProductoEditando(null);
-                  setModalVisible(true);
-                }}
-                style={{
-                  background: 'linear-gradient(135deg, #10b981, #059669)',
-                  border: 'none',
-                  borderRadius: '12px',
-                  padding: '12px 24px',
-                  color: 'white',
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  boxShadow: '0 4px 15px rgba(16, 185, 129, 0.4)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px'
-                }}
-              >
-                <i className="fa-solid fa-plus" aria-hidden={true}></i>
-                <span>Agregar Producto</span>
-              </button>
+              <div className="export-buttons">
+                <button
+                  onClick={() => {
+                    setProductoEditando(null);
+                    setModalVisible(true);
+                  }}
+                  className="export-btn create"
+                >
+                  <i className="fa-solid fa-plus"></i><span>Agregar Producto</span>
+                </button>
+              </div>
             </SharedListHeaderCard>
+
             {/* Estadísticas avanzadas */}
             <AdvancedStats cards={[
               { iconClass: 'fa-solid fa-boxes-stacked', gradient: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', value: productos.length, label: 'Total Productos' },
@@ -933,36 +921,18 @@ const GestionProductos = () => {
             ]} />
 
             {/* Estadísticas adicionales del inventario */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-              gap: '20px',
-              marginBottom: '30px'
-            }}>
+            <div className="inventory-stats-grid">
               {/* Valor promedio por producto */}
-              <div style={{
-                background: 'linear-gradient(135deg, #e0f2fe, #b3e5fc)',
-                borderRadius: '16px',
-                padding: '20px',
-                border: '1px solid #81d4fa'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                  <div style={{
-                    background: 'linear-gradient(135deg, #0288d1, #0277bd)',
-                    width: '60px',
-                    height: '60px',
-                    borderRadius: '12px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
-                    <i className="fa-solid fa-calculator" style={{ color: 'white', fontSize: '1.5rem' }}></i>
+              <div className="inventory-stat-card blue-gradient">
+                <div className="stat-card-content">
+                  <div className="stat-card-icon blue-icon">
+                    <i className="fa-solid fa-calculator"></i>
                   </div>
                   <div>
-                    <h3 style={{ margin: '0 0 5px 0', fontSize: '1.8rem', fontWeight: '700', color: '#1f2937' }}>
+                    <h3 className="stat-card-value">
                       ${productos.length > 0 ? calcularInventario(productos).avgValuePerProduct.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) : '0'}
                     </h3>
-                    <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
+                    <p className="stat-card-label">
                       Valor Promedio por Producto
                     </p>
                   </div>
@@ -970,29 +940,16 @@ const GestionProductos = () => {
               </div>
 
               {/* Stock total */}
-              <div style={{
-                background: 'linear-gradient(135deg, #f3e8ff, #e9d5ff)',
-                borderRadius: '16px',
-                padding: '20px',
-                border: '1px solid #c4b5fd'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                  <div style={{
-                    background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
-                    width: '60px',
-                    height: '60px',
-                    borderRadius: '12px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
-                    <i className="fa-solid fa-boxes-stacked" style={{ color: 'white', fontSize: '1.5rem' }}></i>
+              <div className="inventory-stat-card purple-gradient">
+                <div className="stat-card-content">
+                  <div className="stat-card-icon purple-icon">
+                    <i className="fa-solid fa-boxes-stacked"></i>
                   </div>
                   <div>
-                    <h3 style={{ margin: '0 0 5px 0', fontSize: '1.8rem', fontWeight: '700', color: '#1f2937' }}>
+                    <h3 className="stat-card-value">
                       {calcularInventario(productos).totalStock.toLocaleString()}
                     </h3>
-                    <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
+                    <p className="stat-card-label">
                       Unidades en Stock Total
                     </p>
                   </div>
@@ -1000,32 +957,19 @@ const GestionProductos = () => {
               </div>
 
               {/* Productos con bajo stock */}
-              <div style={{
-                background: 'linear-gradient(135deg, #fef3c7, #fde68a)',
-                borderRadius: '16px',
-                padding: '20px',
-                border: '1px solid #f59e0b'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                  <div style={{
-                    background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-                    width: '60px',
-                    height: '60px',
-                    borderRadius: '12px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
-                    <i className="fa-solid fa-triangle-exclamation" style={{ color: 'white', fontSize: '1.5rem' }}></i>
+              <div className="inventory-stat-card yellow-gradient">
+                <div className="stat-card-content">
+                  <div className="stat-card-icon yellow-icon">
+                    <i className="fa-solid fa-triangle-exclamation"></i>
                   </div>
                   <div>
-                    <h3 style={{ margin: '0 0 5px 0', fontSize: '1.8rem', fontWeight: '700', color: '#1f2937' }}>
+                    <h3 className="stat-card-value">
                       {productos.filter(p => (Number.parseInt(p.stock) || 0) < 10).length}
                     </h3>
-                    <p style={{ margin: 0, color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
+                    <p className="stat-card-label">
                       Productos con Bajo Stock
                     </p>
-                    <p style={{ margin: '5px 0 0 0', color: '#9ca3af', fontSize: '12px' }}>
+                    <p className="stat-card-sublabel">
                       Menos de 10 unidades
                     </p>
                   </div>
@@ -1034,116 +978,180 @@ const GestionProductos = () => {
             </div>
 
             {/* Panel de filtros avanzado */}
-            <div style={{
-              background: 'linear-gradient(135deg, #f9fafb, #f3f4f6)',
-              borderRadius: '16px',
-              padding: '25px',
-              marginBottom: '30px',
-              border: '1px solid #e5e7eb'
-            }}>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                marginBottom: '20px'
-              }}>
-                <i className="fa-solid fa-filter" style={{ color: '#6366f1', fontSize: '1.2rem' }}></i>
-                <h4 style={{ margin: 0, color: '#374151', fontSize: '1.1rem', fontWeight: '600' }}>
+            <div className="filters-panel">
+              <div className="filters-header">
+                <i className="fa-solid fa-filter filter-header-icon"></i>
+                <h4 className="filters-title">
                   Filtros de Productos
                 </h4>
               </div>
 
-              <div style={{ position: 'relative', maxWidth: '300px' }}>
-                <label htmlFor="input-gestion-prod-1" style={{
-                  position: 'absolute',
-                  top: '-8px',
-                  left: '12px',
-                  background: '#f9fafb',
-                  padding: '0 8px',
-                  fontSize: '12px',
-                  fontWeight: '600',
-                  color: '#6366f1',
-                  zIndex: 1
-                }}>
-                  Estado del Producto
-                </label>
-                <select id="input-gestion-prod-1"
-                  value={filtroEstado}
-                  onChange={(e) => setFiltroEstado(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    border: '2px solid #e5e7eb',
-                    borderRadius: '10px',
-                    fontSize: '14px',
-                    transition: 'all 0.3s ease',
-                    background: 'white',
-                    cursor: 'pointer'
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = '#6366f1';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(99, 102, 241, 0.1)';
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = '#e5e7eb';
-                    e.target.style.boxShadow = 'none';
-                  }}
-                >
-                  <option value="todos">Todos los estados</option>
-                  <option value="activos">Productos Activos</option>
-                  <option value="inactivos">Productos Inactivos</option>
-                </select>
+              <div className="filters-grid">
+                <div className="filter-group">
+                  <label htmlFor="input-gestion-prod-1" className="filter-label">
+                    Estado del Producto
+                  </label>
+                  <select 
+                    id="input-gestion-prod-1"
+                    value={filtroEstado}
+                    onChange={(e) => setFiltroEstado(e.target.value)}
+                    className="filter-input"
+                  >
+                    <option value="todos">Todos los estados</option>
+                    <option value="activos">Productos Activos</option>
+                    <option value="inactivos">Productos Inactivos</option>
+                  </select>
+                </div>
               </div>
             </div>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Nombre</th>
-                    <th>Descripción</th>
-                    <th>Precio</th>
-                    <th>Stock</th>
-                    <th>Categoría</th>
-                    <th>Subcategoría</th>
-                    <th>Proveedor</th>
-                    <th>Estado</th>
-                    <th>Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {productosPaginados.map(prod => (
-                    <tr key={prod._id}>
-                      <td>{prod.name}</td>
-                      <td>{prod.description}</td>
-                      <td>{prod.price}</td>
-                      <td>{prod.stock}</td>
-                      <td>{prod.category?.name || '-'}</td>
-                      <td>{prod.subcategory?.name || '-'}</td>
-                      <td>{prod.proveedor?.nombre || '-'}</td>
-                      <td>
-                        <label className="switch">
-                          <input
-                            type="checkbox"
-                            checked={!!prod.activo}
-                            aria-label={`Estado del producto ${prod.name || prod._id}`}
-                            onChange={() => handleToggleEstado(prod, prod.activo)}
-                          />
-                          <span className="slider"></span>
-                        </label>
-                      </td>
-                      <td>
-                        <button className="btnTransparente" onClick={() => handleEdit(prod)}>
-                          <i className="fa-solid fa-pen-to-square"></i>
-                        </button>
 
+            {/* Tabla de productos */}
+            <div className="table-container">
+              <div className="table-header">
+                <div className="table-header-content">
+                  <div className="table-header-icon">
+                    <i className="fa-solid fa-table" style={{ color: 'white', fontSize: '16px' }}></i>
+                  </div>
+                  <div>
+                    <h4 className="table-title">
+                      Lista de Productos
+                    </h4>
+                    <p className="table-subtitle">
+                      Mostrando {productosPaginados.length} de {productos.length} productos
+                    </p>
+                  </div>
+                </div>
+              </div>
 
-                      </td>
+              <div style={{ overflow: 'auto' }}>
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>
+                        <i className="fa-solid fa-tag icon-gap" style={{ color: '#6366f1' }}></i><span>NOMBRE</span>
+                      </th>
+                      <th>
+                        <i className="fa-solid fa-align-left icon-gap"></i><span>DESCRIPCIÓN</span>
+                      </th>
+                      <th>
+                        <i className="fa-solid fa-dollar-sign icon-gap" style={{ color: '#6366f1' }}></i><span>PRECIO</span>
+                      </th>
+                      <th>
+                        <i className="fa-solid fa-boxes-stacked icon-gap"></i><span>STOCK</span>
+                      </th>
+                      <th>
+                        <i className="fa-solid fa-layer-group icon-gap" style={{ color: '#6366f1' }}></i><span>CATEGORÍA</span>
+                      </th>
+                      <th>
+                        <i className="fa-solid fa-sitemap icon-gap"></i><span>SUBCATEGORÍA</span>
+                      </th>
+                      <th>
+                        <i className="fa-solid fa-truck icon-gap" style={{ color: '#6366f1' }}></i><span>PROVEEDOR</span>
+                      </th>
+                      <th style={{ textAlign: 'center' }}>
+                        <i className="fa-solid fa-toggle-on icon-gap" style={{ color: '#6366f1' }}></i><span>ESTADO</span>
+                      </th>
+                      <th style={{ textAlign: 'center' }}>
+                        <i className="fa-solid fa-cogs icon-gap" style={{ color: '#6366f1' }}></i><span>ACCIONES</span>
+                      </th>
                     </tr>
-                  ))}
-                  {productos.length === 0 && <tr><td colSpan="9">No hay productos disponibles</td></tr>}
-                </tbody>
+                  </thead>
+                  <tbody>
+                    {productosPaginados.map((prod, index) => (
+                      <tr key={prod._id}>
+                        <td>{index + 1}</td>
+                        <td style={{ fontWeight: '600', color: '#1f2937', fontSize: '14px' }}>
+                          {prod.name}
+                        </td>
+                        <td>
+                          <div className="product-description">
+                            {prod.description}
+                          </div>
+                        </td>
+                        <td style={{ fontWeight: '600', color: '#059669' }}>
+                          ${prod.price}
+                        </td>
+                        <td>
+                          <span className={`stock-badge ${prod.stock < 10 ? 'low-stock' : 'normal-stock'}`}>
+                            {prod.stock}
+                          </span>
+                        </td>
+                        <td>
+                          {prod.category?.name || '-'}
+                        </td>
+                        <td>
+                          {prod.subcategory?.name || '-'}
+                        </td>
+                        <td>
+                          {prod.proveedor?.nombre || '-'}
+                        </td>
+                        <td style={{ textAlign: 'center' }}>
+                          <label className="switch">
+                            <input
+                              type="checkbox"
+                              checked={!!prod.activo}
+                              aria-label={`Estado del producto ${prod.name || prod._id}`}
+                              onChange={() => handleToggleEstado(prod, prod.activo)}
+                              style={{ opacity: 0, width: 0, height: 0 }}
+                            />
+                            <span className="slider" style={{
+                              backgroundColor: prod.activo ? '#10b981' : '#ef4444'
+                            }}></span>
+                          </label>
+                        </td>
+                        <td>
+                          <div className="action-buttons">
+                            <button 
+                              className="action-btn edit"
+                              onClick={() => handleEdit(prod)}
+                              title="Editar producto"
+                            >
+                              <i className="fa-solid fa-pen-to-square"></i>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    {productos.length === 0 && (
+                      <tr>
+                        <td colSpan="9">
+                          <div className="table-empty-state">
+                            <div className="table-empty-icon">
+                              <i className="fa-solid fa-boxes-stacked" style={{ fontSize: '3.5rem', color: '#9ca3af' }}></i>
+                            </div>
+                            <div>
+                              <h5 className="table-empty-title">
+                                No hay productos disponibles
+                              </h5>
+                              <p className="table-empty-text">
+                                No se encontraron productos con los criterios de búsqueda
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
 
-              </table>
-            
+              {/* Paginación */}
+              {totalPaginas > 1 && (
+                <div className="table-pagination">
+                  {Array.from({ length: totalPaginas }, (_, i) => (
+                    <button
+                      key={i + 1}
+                      onClick={() => cambiarPagina(i + 1)}
+                      className={`pagination-btn ${paginaActual === i + 1 ? 'active' : ''}`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
             {modalVisible && (
               <ProductoModal
                 producto={productoEditando}
@@ -1155,21 +1163,8 @@ const GestionProductos = () => {
                 onToggleEstado={handleToggleEstado}
               />
             )}
-            <div className="pagination">
-              {Array.from({ length: totalPaginas }, (_, i) => (
-                <button
-                  key={i + 1}
-                  onClick={() => cambiarPagina(i + 1)}
-                  className={paginaActual === i + 1 ? 'active-page' : ''}
-                >
-                  {i + 1}
-                </button>
-              ))}
-            </div>
           </div>
         </div>
-
-
 
         <div className="custom-footer">
           <p className="custom-footer-text">

@@ -30,6 +30,10 @@ const CotizacionSchema = new mongoose.Schema({
     type: Date,
     required: true
   },
+  fechaString: {
+    type: String,
+    required: false
+  },
   descripcion: String,
   condicionesPago: String,
   productos: [

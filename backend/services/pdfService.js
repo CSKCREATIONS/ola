@@ -102,7 +102,17 @@ class PDFService {
 
   // Generar HTML para cotización
   generarHTMLCotizacion(cotizacion) {
-  const fechaCotizacion = cotizacion.fecha ? new Date(cotizacion.fecha).toLocaleDateString('es-ES') : 'N/A';
+  let fechaCotizacion = 'N/A';
+  if (cotizacion.fechaString) {
+    try {
+      const [y, m, d] = String(cotizacion.fechaString).split('-').map(n => parseInt(n, 10));
+      fechaCotizacion = new Date(Date.UTC(y, m - 1, d, 0, 0, 0)).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+    } catch (e) {
+      fechaCotizacion = cotizacion.fecha ? new Date(cotizacion.fecha).toLocaleDateString('es-ES') : 'N/A';
+    }
+  } else if (cotizacion.fecha) {
+    fechaCotizacion = new Date(cotizacion.fecha).toLocaleDateString('es-ES');
+  }
   // fechaVencimiento was previously computed but not used in the template; removed to avoid dead code
     
     // Calcular total si no existe

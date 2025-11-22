@@ -265,7 +265,7 @@
   width: 100%;
   color: var(--text-light);
   transition: var(--transition);
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 500;
 }
 
@@ -314,7 +314,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   transition: var(--transition);
   border-left: 3px solid transparent;
   cursor: pointer;
@@ -344,9 +344,8 @@
 .logout-btn {
   bottom: 2rem;
   width: calc(100% - 3rem);
-  max-width: 240px;
+  width: 100%;
   padding: 1rem 1.5rem;
-  border-radius: var(--border-radius);
   font-size: 0.95rem;
   font-weight: 600;
   color: var(--text-white);
@@ -358,7 +357,6 @@
   box-shadow: var(--shadow-strong);
   z-index: 1002;
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .logout-btn:hover {
@@ -394,12 +392,6 @@
 
   .empresa-nombre {
     font-size: 1.4rem;
-  }
-
-
-  .logout-btn {
-    width: calc(100% - 2rem);
-    max-width: 220px;
   }
 
   body {
@@ -470,4 +462,19 @@
 
 .dropdown.visible li:nth-child(5) {
   animation-delay: 0.25s;
+}
+
+/* Logo PANGEA: destacar sobre fondos oscuros del menú */
+.pangea-logo {
+  display: block;
+  width: 100%;
+  height: 3rem;
+  background: rgba(190, 190, 190, 0.26);
+  padding: 6px 10px;
+  border: 1px solid rgba(0,0,0,0.06);
+  object-fit: contain;
+}
+
+@media (max-width: 480px) {
+  .pangea-logo { max-width: 120px; margin: 12px auto; }
 }

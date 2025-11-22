@@ -179,6 +179,9 @@ exports.createCotizacion = async (req, res) => {
       enviadoCorreo
     } = req.body;
 
+    // DEBUG: mostrar lo que llega en `fecha` para depuración
+    console.log('DEBUG createCotizacion - incoming fecha (type):', typeof fecha, 'value:', fecha);
+
     // Basic validations and email sanitization
     const validated = validateBasicInputs(responsable, cliente);
     if (validated.error) {
@@ -189,8 +192,48 @@ exports.createCotizacion = async (req, res) => {
     // Resolve or create cliente document
     const clienteExistente = await findOrCreateClienteByCorreo(correoSanitizado, cliente);
 
-    // Fecha de cotización
-    const fechaCotizacion = (fecha && !Number.isNaN(new Date(fecha).getTime())) ? new Date(fecha) : new Date();
+    // Fecha de cotización: extraer robustamente YYYY-MM-DD desde cualquier formato entrante
+    let fechaCotizacion;
+    let fechaStringVal;
+
+    if (fecha) {
+      // Si es string exacto YYYY-MM-DD
+      if (typeof fecha === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+        fechaStringVal = fecha;
+      } else if (typeof fecha === 'string' && fecha.length >= 10) {
+        // Puede venir como 'YYYY-MM-DDTHH:MM:SS...' — tomar primeros 10 caracteres
+        const maybe = fecha.slice(0, 10);
+        if (/^\d{4}-\d{2}-\d{2}$/.test(maybe)) fechaStringVal = maybe;
+      } else if (fecha instanceof Date) {
+        fechaStringVal = fecha.toISOString().slice(0, 10);
+      } else {
+        // Intentar forzar string y extraer
+        const asStr = String(fecha || '');
+        const maybe = asStr.slice(0, 10);
+        if (/^\d{4}-\d{2}-\d{2}$/.test(maybe)) fechaStringVal = maybe;
+      }
+    }
+
+    if (fechaStringVal) {
+      const [y, m, d] = fechaStringVal.split('-').map(n => parseInt(n, 10));
+      fechaCotizacion = new Date(Date.UTC(y, m - 1, d, 0, 0, 0));
+    } else {
+      const now = new Date();
+      fechaCotizacion = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0));
+      fechaStringVal = fechaCotizacion.toISOString().slice(0, 10);
+    }
+
+    // DEBUG: valores calculados
+    console.log('DEBUG createCotizacion - fechaStringVal:', fechaStringVal, 'fechaCotizacion:', fechaCotizacion.toISOString());
+
+    // Validación server-side: permitir la fecha de 'hoy' del usuario aunque el servidor esté en UTC+ (ventana de tolerancia)
+    // Calculamos el inicio del día UTC actual y permitimos fechas desde 24h antes (para cubrir zonas horarias retrasadas)
+    const now = new Date();
+    const todayUtcStart = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0);
+    const allowedStart = todayUtcStart - (24 * 60 * 60 * 1000); // 24h atrás
+    if (fechaCotizacion.getTime() < allowedStart) {
+      return res.status(400).json({ message: 'La fecha de la cotización no puede ser anterior a la fecha de hoy.' });
+    }
 
     // Map productos
     const productosConNombre = await mapProductosConNombre(productos);
@@ -215,6 +258,7 @@ exports.createCotizacion = async (req, res) => {
         secondSurname: responsable.secondSurname
       },
       fecha: fechaCotizacion,
+      fechaString: fechaStringVal,
       descripcion,
       condicionesPago,
       productos: productosConNombre,
@@ -355,6 +399,43 @@ exports.updateCotizacion = async (req, res) => {
         },
         { new: true }
       );
+    }
+
+    // Si se intenta cambiar la fecha desde el cliente, normalizar y validar
+    if (rest.fecha || rest.fechaString) {
+      const fechaRaw = rest.fechaString || rest.fecha;
+      // DEBUG: mostrar dato entrante al intentar actualizar la fecha
+      console.log('DEBUG updateCotizacion - incoming fechaRaw:', fechaRaw, 'rest.fecha (type):', typeof rest.fecha, 'rest.fechaString:', rest.fechaString);
+      if (typeof fechaRaw === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(fechaRaw)) {
+        const [yy, mm, dd] = fechaRaw.split('-').map(n => parseInt(n, 10));
+        const candidateDate = new Date(Date.UTC(yy, mm - 1, dd, 0, 0, 0));
+        const candidateFechaString = fechaRaw;
+
+        const now = new Date();
+        const todayUtcStart = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0);
+        const allowedStart = todayUtcStart - (24 * 60 * 60 * 1000); // permitir 24h de tolerancia
+        if (candidateDate.getTime() < allowedStart) {
+          return res.status(400).json({ message: 'No se puede actualizar la cotización a una fecha anterior a hoy.' });
+        }
+
+        rest.fecha = candidateDate;
+        rest.fechaString = candidateFechaString;
+        console.log('DEBUG updateCotizacion - set fechaString:', rest.fechaString, 'fecha:', rest.fecha.toISOString());
+      } else if (rest.fecha && !Number.isNaN(new Date(rest.fecha).getTime())) {
+        const tmp = new Date(rest.fecha);
+        // Usar componentes UTC para evitar shifts por zona horaria
+        const candidateDate = new Date(Date.UTC(tmp.getUTCFullYear(), tmp.getUTCMonth(), tmp.getUTCDate(), 0, 0, 0));
+        // Validación con tolerancia de 24h
+        const now2 = new Date();
+        const todayUtcStart2 = Date.UTC(now2.getUTCFullYear(), now2.getUTCMonth(), now2.getUTCDate(), 0, 0, 0);
+        const allowedStart2 = todayUtcStart2 - (24 * 60 * 60 * 1000);
+        if (candidateDate.getTime() < allowedStart2) {
+          return res.status(400).json({ message: 'No se puede actualizar la cotización a una fecha anterior a hoy.' });
+        }
+        rest.fecha = candidateDate;
+        rest.fechaString = candidateDate.toISOString().slice(0, 10);
+        console.log('DEBUG updateCotizacion - set fechaString(from Date):', rest.fechaString, 'fecha:', rest.fecha.toISOString());
+      }
     }
 
     const cotizacion = await Cotizacion.findByIdAndUpdate(
@@ -1071,6 +1152,80 @@ exports.remisionarCotizacion = async (req, res) => {
       await Cliente.updateOne({ _id: clienteId, esCliente: false }, { $set: { esCliente: true } });
     } catch (e) {
       console.warn('No se pudo actualizar esCliente a true para el cliente:', e?.message || e);
+    }
+
+    // Antes de crear la remisión, intentar descontar el stock de los productos mencionados.
+    // Preferimos usar transacciones si la deployment lo permite; si no (por ejemplo, servidor mongod standalone),
+    // hacemos un flujo de comprobación-antes-decremento sin sesión como fallback.
+    let usedTransaction = false;
+    try {
+      let session = null;
+      try {
+        session = await mongoose.startSession();
+        session.startTransaction();
+        usedTransaction = true;
+
+        for (const prod of cotizacion.productos || []) {
+          const prodId = prod.producto?.id || prod.producto;
+          if (!prodId) continue;
+          const productoDoc = await Product.findById(prodId).session(session);
+          if (!productoDoc) continue; // omitimos si no existe el producto
+          const cantidadReq = Number(prod.cantidad || 0);
+          if (productoDoc.stock < cantidadReq) {
+            await session.abortTransaction();
+            session.endSession();
+            return res.status(400).json({ message: `Stock insuficiente para ${productoDoc.name}. Stock actual: ${productoDoc.stock}, requerido: ${cantidadReq}` });
+          }
+          productoDoc.stock = productoDoc.stock - cantidadReq;
+          await productoDoc.save({ session });
+          console.log(`📦 Stock descontado (cotización->remisión): ${productoDoc.name} - nuevo stock: ${productoDoc.stock}`);
+        }
+
+        await session.commitTransaction();
+        session.endSession();
+      } catch (txErr) {
+        // Si el error indica que las transacciones no están soportadas, haremos fallback.
+        if (session) {
+          try { await session.abortTransaction(); } catch (e) { /* ignore */ }
+          try { session.endSession(); } catch (e) { /* ignore */ }
+        }
+        // Re-throw para ser capturado por el outer catch y ejecutar fallback
+        throw txErr;
+      }
+    } catch (errStart) {
+      // Si el error es por "Transaction numbers are only allowed..." u otro que impida usar transacciones,
+      // hacemos un flujo no-transaccional: primero verificamos que todo el stock sea suficiente, y si es así,
+      // decrementamos secuencialmente.
+      console.warn('Transacciones no disponibles o fallo al iniciar session, usando fallback no-transaccional para decrementar stock:', errStart?.message || errStart);
+
+      // 1) Verificar disponibilidad de stock para todos los productos
+      for (const prod of cotizacion.productos || []) {
+        const prodId = prod.producto?.id || prod.producto;
+        if (!prodId) continue;
+        const productoDoc = await Product.findById(prodId);
+        if (!productoDoc) continue;
+        const cantidadReq = Number(prod.cantidad || 0);
+        if (productoDoc.stock < cantidadReq) {
+          return res.status(400).json({ message: `Stock insuficiente para ${productoDoc.name}. Stock actual: ${productoDoc.stock}, requerido: ${cantidadReq}` });
+        }
+      }
+
+      // 2) Decrementar secuencialmente (no transaccional)
+      try {
+        for (const prod of cotizacion.productos || []) {
+          const prodId = prod.producto?.id || prod.producto;
+          if (!prodId) continue;
+          const productoDoc = await Product.findById(prodId);
+          if (!productoDoc) continue;
+          const cantidadReq = Number(prod.cantidad || 0);
+          productoDoc.stock = productoDoc.stock - cantidadReq;
+          await productoDoc.save();
+          console.log(`📦 Stock descontado (cotización->remisión fallback): ${productoDoc.name} - nuevo stock: ${productoDoc.stock}`);
+        }
+      } catch (errFallback) {
+        console.error('Error actualizando stock en fallback no-transaccional:', errFallback);
+        return res.status(500).json({ message: 'Error al actualizar stock (fallback)', error: errFallback.message });
+      }
     }
 
     const Remision = require('../models/Remision');

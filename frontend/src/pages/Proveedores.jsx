@@ -8,6 +8,7 @@ import Fijo from '../components/Fijo';
 import NavCompras from '../components/NavCompras';
 import AdvancedStats from '../components/AdvancedStats';
 import { contarProductosEnProveedores } from '../utils/calculations';
+import SharedListHeaderCard from '../components/SharedListHeaderCard';
 
 const API_URL = '/api/proveedores';
 
@@ -239,9 +240,9 @@ const ProveedorModal = ({ proveedor, onClose, onSave }) => {
           padding: '2rem',
           borderRadius: '20px 20px 0 0'
         }}>
-          <h3 style={{ 
-            margin: 0, 
-            fontSize: '1.5rem', 
+          <h3 style={{
+            margin: 0,
+            fontSize: '1.5rem',
             fontWeight: '600',
             display: 'flex',
             alignItems: 'center',
@@ -260,17 +261,17 @@ const ProveedorModal = ({ proveedor, onClose, onSave }) => {
             </div>
             {proveedor ? 'Editar Proveedor' : 'Nuevo Proveedor'}
           </h3>
-          <p style={{ 
-            margin: '0.5rem 0 0 4rem', 
-            opacity: 0.9, 
-            fontSize: '0.95rem' 
+          <p style={{
+            margin: '0.5rem 0 0 4rem',
+            opacity: 0.9,
+            fontSize: '0.95rem'
           }}>
             {proveedor ? 'Modifica la información del proveedor' : 'Registra un nuevo proveedor para la gestión de inventario'}
           </p>
         </div>
 
         {/* Contenido scrolleable */}
-        <div style={{ 
+        <div style={{
           flex: 1,
           overflowY: 'auto',
           padding: '2.5rem',
@@ -297,8 +298,8 @@ const ProveedorModal = ({ proveedor, onClose, onSave }) => {
               <i className="fa-solid fa-user" style={{ color: '#10b981' }}></i>
               <span>Información Básica</span>
             </h4>
-            
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
               <div>
                 <label htmlFor="input-proveedor-nombre" style={{
                   display: 'flex',
@@ -341,7 +342,7 @@ const ProveedorModal = ({ proveedor, onClose, onSave }) => {
                   required
                 />
               </div>
-              
+
               <div>
                 <label htmlFor="input-proveedor-empresa" style={{
                   display: 'flex',
@@ -406,7 +407,7 @@ const ProveedorModal = ({ proveedor, onClose, onSave }) => {
               <i className="fa-solid fa-phone" style={{ color: '#3b82f6' }}></i>
               <span>Información de Contacto</span>
             </h4>
-            
+
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
               <div>
                 <label htmlFor="input-proveedor-telefono" style={{
@@ -450,7 +451,7 @@ const ProveedorModal = ({ proveedor, onClose, onSave }) => {
                   required
                 />
               </div>
-              
+
               <div>
                 <label htmlFor="input-proveedor-correo" style={{
                   display: 'flex',
@@ -517,7 +518,7 @@ const ProveedorModal = ({ proveedor, onClose, onSave }) => {
               <i className="fa-solid fa-map-marker-alt" style={{ color: '#f59e0b' }}></i>
               <span>Dirección</span>
             </h4>
-            
+
             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
               <div>
                 <label htmlFor="input-proveedor-calle" style={{
@@ -561,7 +562,7 @@ const ProveedorModal = ({ proveedor, onClose, onSave }) => {
                   required
                 />
               </div>
-              
+
               <div>
                 <label htmlFor="input-proveedor-pais" style={{
                   display: 'flex',
@@ -609,9 +610,9 @@ const ProveedorModal = ({ proveedor, onClose, onSave }) => {
         </div>
 
         {/* Botones de acción */}
-        <div style={{ 
-          display: 'flex', 
-          gap: '1.5rem', 
+        <div style={{
+          display: 'flex',
+          gap: '1.5rem',
           justifyContent: 'flex-end',
           padding: '2rem 2.5rem',
           borderTop: '2px solid #e5e7eb',
@@ -619,8 +620,8 @@ const ProveedorModal = ({ proveedor, onClose, onSave }) => {
           borderRadius: '0 0 20px 20px',
           flexShrink: 0
         }}>
-          <button 
-            type="button" 
+          <button
+            type="button"
             onClick={onClose}
             style={{
               padding: '0.875rem 1.5rem',
@@ -648,8 +649,8 @@ const ProveedorModal = ({ proveedor, onClose, onSave }) => {
             <i className="fa-solid fa-times"></i>
             <span>Cancelar</span>
           </button>
-          
-          <button 
+
+          <button
             type="submit"
             style={{
               padding: '0.875rem 1.5rem',
@@ -752,8 +753,8 @@ ProveedorModal.propTypes = {
 
 ProveedorModal.defaultProps = {
   proveedor: null,
-  onClose: () => {},
-  onSave: () => {},
+  onClose: () => { },
+  onSave: () => { },
 };
 
 ModalProductosProveedor.propTypes = {
@@ -770,7 +771,7 @@ ModalProductosProveedor.propTypes = {
 
 ModalProductosProveedor.defaultProps = {
   visible: false,
-  onClose: () => {},
+  onClose: () => { },
   productos: [],
   proveedor: '',
 };
@@ -850,194 +851,195 @@ const GestionProveedores = () => {
         <NavCompras />
         <div className="max-width">
           <div className="contenido-modulo">
-          {/* Encabezado profesional */}
-          <div className="proveedor-professional-header">
-            <div className="proveedor-header-decoration"></div>
-            <div style={{ position: 'relative', zIndex: 2 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                <div className="proveedor-icon-container">
-                  <i className="fa-solid fa-truck" style={{ fontSize: '2.5rem', color: 'white' }}></i>
-                </div>
-                <div>
-                  <h2 style={{ margin: '0 0 8px 0', fontSize: '2rem', fontWeight: '700' }}>
-                    Lista de Proveedores
-                  </h2>
-                  <p style={{ margin: 0, fontSize: '1.1rem', opacity: 0.9 }}>
-                    Gestión integral de proveedores y servicios
-                  </p>
+            {/* Encabezado profesional usando SharedListHeaderCard */}
+            <SharedListHeaderCard
+              title="Gestión de Proveedores"
+              subtitle="Gestión integral de proveedores y servicios"
+              iconClass="fa-solid fa-truck"
+            >
+              <div className="export-buttons">
+                <button
+                  onClick={() => { setProveedorEditando(null); setModalVisible(true); }}
+                  className="export-btn create"
+                >
+                  <i className="fa-solid fa-plus"></i><span>Nuevo Proveedor</span>
+                </button>
+              </div>
+            </SharedListHeaderCard>
+
+            {/* Estadísticas avanzadas */}
+            <AdvancedStats cards={statsCards} />
+
+            {/* Tabla principal con diseño moderno */}
+            <div className="table-container">
+              <div className="table-header">
+                <div className="table-header-content">
+                  <div className="table-header-icon">
+                    <i className="fa-solid fa-table" style={{ color: 'white', fontSize: '16px' }}></i>
+                  </div>
+                  <div>
+                    <h4 className="table-title">
+                      Lista de Proveedores
+                    </h4>
+                    <p className="table-subtitle">
+                      Mostrando {currentItems.length} de {proveedores.length} proveedores
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
 
-          {/* Estadísticas avanzadas */}
-          <AdvancedStats cards={statsCards} />
-
-          {/* Botón agregar */}
-          <button 
-            className="proveedor-add-btn" 
-            onClick={() => { setProveedorEditando(null); setModalVisible(true); }}
-          >
-            <i className="fa-solid fa-plus"></i>
-            <span>Nuevo Proveedor</span>
-          </button>
-          {/* Tabla principal con diseño moderno */}
-          <div >
-            <div >
-              <table >
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Proveedor</th>
-                    <th>Contacto</th>
-                    <th>Dirección</th>
-                    <th>Empresa</th>
-                    <th>Estado</th>
-                    <th>Productos</th>
-                    <th>Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentItems.map((prov, index) => (
-                    <tr key={prov._id}>
-                      <td style={{ fontWeight: '500', color: '#6b7280' }}>
-                        {index + 1 + (currentPage - 1) * itemsPerPage}
-                      </td>
-                      <td style={{ fontWeight: '600', color: '#1f2937' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <div style={{
-                            background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                            borderRadius: '8px',
-                            padding: '8px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            minWidth: '35px'
-                          }}>
-                            <i className="fa-solid fa-truck" style={{ color: 'white', fontSize: '12px' }}></i>
-                          </div>
-                          {prov.nombre}
-                        </div>
-                      </td>
-                      <td>
-                        <div className="proveedor-contact-info">
-                          <div className="proveedor-contact-item">
-                            <i className="fa-solid fa-phone" style={{ color: '#10b981' }}></i>
-                            {prov.contacto?.telefono || 'N/A'}
-                          </div>
-                          <div className="proveedor-contact-item">
-                            <i className="fa-solid fa-envelope" style={{ color: '#6366f1' }}></i>
-                            {prov.contacto?.correo || 'N/A'}
-                          </div>
-                        </div>
-                      </td>
-                      <td style={{ fontSize: '12px', color: '#6b7280' }}>
-                        <div>
-                          <div>{prov.direccion?.calle || 'N/A'}</div>
-                          <div style={{ fontWeight: '600', color: '#374151', marginTop: '2px' }}>
-                            {prov.direccion?.pais || 'N/A'}
-                          </div>
-                        </div>
-                      </td>
-                      <td style={{ fontWeight: '500', color: '#374151' }}>
-                        {prov.empresa || 'N/A'}
-                      </td>
-                      <td>
-                        <span className={`proveedor-status-badge ${prov.activo === false ? '' : 'proveedor-status-active'}`}
-                          style={{
-                            background: prov.activo === false ? 
-                              'linear-gradient(135deg, #fef2f2, #fecaca)' : 
-                              'linear-gradient(135deg, #dcfce7, #bbf7d0)',
-                            color: prov.activo === false ? '#dc2626' : '#059669'
-                          }}
-                        >
-                          {prov.activo === false ? 'Inactivo' : 'Activo'}
-                        </span>
-                      </td>
-                      <td>
-                        <button 
-                          className="proveedor-action-btn"
-                          onClick={() => { 
-                            setProductosProveedor(prov.productos || []); 
-                            setProveedorNombre(prov.nombre); 
-                            setModalProductosVisible(true); 
-                          }}
-                          style={{
-                            background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
-                            fontSize: '11px'
-                          }}
-                        >
-                          <i className="fa-solid fa-boxes icon-gap"></i>
-                          <span>Ver ({prov.productos?.length || 0})</span>
-                        </button>
-                      </td>
-                      <td>
-                        <div style={{ display: 'flex', gap: '5px' }}>
-                          <button 
-                            className="proveedor-action-btn"
-                            onClick={() => { setProveedorEditando(prov); setModalVisible(true); }}
-                          >
-                            <i className="fa-solid fa-pen-to-square"></i>
-                          </button>
-                          
-                          {prov.activo ? (
-                            <button 
-                              className="proveedor-action-btn danger"
-                              onClick={() => toggleEstadoProveedor(prov._id, false)}
-                            >
-                              <i className="fa-solid fa-ban"></i>
-                            </button>
-                          ) : (
-                            <button 
-                              className="proveedor-action-btn"
-                              onClick={() => toggleEstadoProveedor(prov._id, true)}
-                              style={{
-                                background: 'linear-gradient(135deg, #10b981, #059669)'
-                              }}
-                            >
-                              <i className="fa-solid fa-check"></i>
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                  {currentItems.length === 0 && (
+              <div style={{ overflow: 'auto' }}>
+                <table className="data-table">
+                  <thead>
                     <tr>
-                      <td 
-                        colSpan="8" 
-                        style={{
-                          padding: '40px',
-                          textAlign: 'center',
-                          color: '#9ca3af',
-                          fontStyle: 'italic',
-                          fontSize: '16px'
-                        }}
-                      >
-                        No hay proveedores disponibles
-                      </td>
+                      <th>
+                        <i className="fa-solid fa-hashtag icon-gap" style={{ color: '#6366f1' }}></i><span>#</span>
+                      </th>
+                      <th>
+                        <i className="fa-solid fa-truck icon-gap"></i><span>PROVEEDOR</span>
+                      </th>
+                      <th>
+                        <i className="fa-solid fa-address-book icon-gap"></i><span>CONTACTO</span>
+                      </th>
+                      <th>
+                        <i className="fa-solid fa-location-dot icon-gap" style={{ color: '#6366f1' }}></i><span>DIRECCIÓN</span>
+                      </th>
+                      <th>
+                        <i className="fa-solid fa-building icon-gap" style={{ color: '#6366f1' }}></i><span>EMPRESA</span>
+                      </th>
+                      <th style={{ textAlign: 'center' }}>
+                        <i className="fa-solid fa-toggle-on icon-gap" style={{ color: '#6366f1' }}></i><span>ESTADO</span>
+                      </th>
+                      <th>
+                        <i className="fa-solid fa-boxes icon-gap" style={{ color: '#6366f1' }}></i><span>PRODUCTOS</span>
+                      </th>
+                      <th style={{ textAlign: 'center' }}>
+                        <i className="fa-solid fa-cogs icon-gap" style={{ color: '#6366f1' }}></i><span>ACCIONES</span>
+                      </th>
                     </tr>
-                  )}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {currentItems.map((prov, index) => (
+                      <tr key={prov._id}>
+                        <td style={{ fontWeight: '600', color: '#6366f1' }}>
+                          {indexOfFirstItem + index + 1}
+                        </td>
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <div className="table-icon-small">
+                              <i className="fa-solid fa-truck" style={{ color: 'white', fontSize: '12px' }}></i>
+                            </div>
+                            <div style={{ fontWeight: '600', color: '#1f2937', fontSize: '14px' }}>
+                              {prov.nombre}
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <div className="proveedor-contact-info">
+                            <div className="proveedor-contact-item">
+                              <i className="fa-solid fa-phone icon-gap-small" style={{ color: '#10b981' }}></i>
+                              {prov.contacto?.telefono || 'N/A'}
+                            </div>
+                            <div className="proveedor-contact-item">
+                              <i className="fa-solid fa-envelope icon-gap-small" style={{ color: '#6366f1' }}></i>
+                              {prov.contacto?.correo || 'N/A'}
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <div className="proveedor-address-info">
+                            <div>{prov.direccion?.calle || 'N/A'}</div>
+                            <div className="proveedor-country">
+                              {prov.direccion?.pais || 'N/A'}
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          {prov.empresa || 'N/A'}
+                        </td>
+                        <td style={{ textAlign: 'center' }}>
+                          <label className="switch">
+                            <input
+                              type="checkbox"
+                              checked={!!prov.activo}
+                              onChange={() => toggleEstadoProveedor(prov._id, !prov.activo)}
+                              aria-label={`Estado del proveedor ${prov.nombre || ''}: ${prov.activo ? 'Activo' : 'Inactivo'}`}
+                              style={{ opacity: 0, width: 0, height: 0 }}
+                            />
+                            <span className="slider" style={{
+                              backgroundColor: prov.activo ? '#10b981' : '#ef4444'
+                            }}></span>
+                          </label>
+                        </td>
+                        <td>
+                          <button
+                            className="action-btn view"
+                            onClick={() => {
+                              setProductosProveedor(prov.productos || []);
+                              setProveedorNombre(prov.nombre);
+                              setModalProductosVisible(true);
+                            }}
+                          >
+                            <i className="fa-solid fa-boxes icon-gap"></i>
+                            <span>Ver ({prov.productos?.length || 0})</span>
+                          </button>
+                        </td>
+                        <td>
+                          <div className="action-buttons">
+                            <button
+                              className="action-btn edit"
+                              onClick={() => { setProveedorEditando(prov); setModalVisible(true); }}
+                              title="Editar proveedor"
+                            >
+                              <i className="fa-solid fa-pen-to-square"></i>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    {currentItems.length === 0 && (
+                      <tr>
+                        <td colSpan="8">
+                          <div className="table-empty-state">
+                            <div className="table-empty-icon">
+                              <i className="fa-solid fa-truck" style={{ fontSize: '3.5rem', color: '#9ca3af' }}></i>
+                            </div>
+                            <div>
+                              <h5 className="table-empty-title">
+                                No hay proveedores disponibles
+                              </h5>
+                              <p className="table-empty-text">
+                                No se encontraron proveedores con los criterios de búsqueda
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Paginación */}
+              {totalPages > 1 && (
+                <div className="table-pagination">
+                  {Array.from({ length: totalPages }, (_, i) => (
+                    <button
+                      key={i + 1}
+                      onClick={() => paginate(i + 1)}
+                      className={`pagination-btn ${currentPage === i + 1 ? 'active' : ''}`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
+
+            {modalVisible && <ProveedorModal proveedor={proveedorEditando} onClose={() => setModalVisible(false)} onSave={guardarProveedor} />}
+            <ModalProductosProveedor visible={modalProductosVisible} onClose={() => setModalProductosVisible(false)} productos={productosProveedor} proveedor={proveedorNombre} />
           </div>
-
-          {/* Paginación */}
-          <div className="pagination">
-            {Array.from({ length: totalPages }, (_, i) => (
-              <button key={i + 1} onClick={() => paginate(i + 1)} className={currentPage === i + 1 ? 'active-page' : ''}>
-                {i + 1}
-              </button>
-            ))}
-          </div>
-
-          {modalVisible && <ProveedorModal proveedor={proveedorEditando} onClose={() => setModalVisible(false)} onSave={guardarProveedor} />}
-          <ModalProductosProveedor visible={modalProductosVisible} onClose={() => setModalProductosVisible(false)} productos={productosProveedor} proveedor={proveedorNombre} />
         </div>
-        </div>
-        
-
       </div>
       <div className="custom-footer">
         <p className="custom-footer-text">

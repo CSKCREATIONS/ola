@@ -275,7 +275,7 @@ export default function CotizacionPreview({ datos, onClose, onEmailSent, onRemis
     printRoot.appendChild(clone);
     document.body.appendChild(printRoot);
     const style = document.createElement('style');
-    style.type = 'text/css';
+    style.setAttribute('type', 'text/css');
     style.textContent = `@page { size: A4 portrait; margin: 8mm; }
       @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
       body * { visibility: hidden !important; }
@@ -284,6 +284,22 @@ export default function CotizacionPreview({ datos, onClose, onEmailSent, onRemis
       table { page-break-inside: avoid; } }`;
     document.head.appendChild(style);
     const A4_HEIGHT_PX = 1122;
+    const doPrintAndCleanup = () => {
+      try {
+        const printFn = window?.print;
+
+
+
+        if (typeof printFn === 'function') printFn();
+        else throw new Error('Print function not available');
+      } catch (e) {
+        console.error('Error al imprimir', e);
+        Swal.fire('Error', 'No se pudo iniciar la impresión', 'error');
+      } finally {
+        setTimeout(() => { printRoot.remove(); style.remove(); }, 400);
+      }
+    };
+
     requestAnimationFrame(() => {
       const h = printRoot.scrollHeight;
       if (h > A4_HEIGHT_PX) {
@@ -292,14 +308,7 @@ export default function CotizacionPreview({ datos, onClose, onEmailSent, onRemis
         clone.style.transformOrigin = 'top left';
         clone.style.width = `${(100/scale).toFixed(2)}%`;
       }
-      setTimeout(() => {
-        try { window.print(); } catch (e) {
-          console.error('Error al imprimir', e);
-          Swal.fire('Error', 'No se pudo iniciar la impresión', 'error');
-        } finally {
-          setTimeout(() => { printRoot.remove(); style.remove(); }, 400);
-        }
-      }, 40);
+      setTimeout(doPrintAndCleanup, 40);
     });
   };
 
@@ -377,7 +386,7 @@ export default function CotizacionPreview({ datos, onClose, onEmailSent, onRemis
               <div>
                 <h3 style={{ borderBottom: '3px solid #2563eb', paddingBottom: '0.5rem', color: '#2563eb', fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '1rem' }}>Información Empresa</h3>
                 <div style={{ lineHeight: '1.8' }}>
-                  <p><strong>Fecha de cotización:</strong> {formatDate(datos?.fecha)}</p>
+                  <p><strong>Fecha de cotización:</strong> {formatDate(datos)}</p>
                   <p><strong>Empresa:</strong> {COMPANY_NAME || (process.env.REACT_APP_COMPANY_NAME || process.env.COMPANY_NAME || '')}</p>
                   <p><strong>Teléfono:</strong> {COMPANY_PHONE}</p>
                 </div>
@@ -402,7 +411,6 @@ export default function CotizacionPreview({ datos, onClose, onEmailSent, onRemis
             )}
 
             <div style={{ marginBottom: '2rem' }}>
-              <h3 style={{ borderBottom: '3px solid #2563eb', paddingBottom: '0.5rem', color: '#2563eb', fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '1rem' }}>Productos Cotizados</h3>
               <table className="tabla-cotizacion" style={{ width: '100%', borderCollapse: 'collapse', marginTop: '1rem', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
                 <thead>
                   <tr style={{ background: 'linear-gradient(135deg, #2563eb, #1d4ed8)', color: 'white' }}>
