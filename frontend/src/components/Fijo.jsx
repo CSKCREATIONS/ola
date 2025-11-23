@@ -336,11 +336,8 @@ export default function Fijo() {
                 {puedeVerCategorias && (
                   <Link as={Link} to="/ListaDeCategorias" className="dropdown-link"><li><i className="fas fa-tags" aria-hidden={true}></i> <span>Categorias</span></li></Link>
                 )}
-                {puedeVerSubcategorias && (
-                  <Link as={Link} to="/Subcategorias" className="dropdown-link"><li><i className="fas fa-tag" aria-hidden={true}></i> <span>Subcategorias</span></li></Link>
-                )}
                 {puedeVerProductos && (
-                  <Link as={Link} to="/GestionProductos" className="dropdown-link"><li><i className="fas fa-box" aria-hidden={true}></i> <span>Lista de productos</span></li></Link>
+                  <Link as={Link} to="/GestionProductos" className="dropdown-link"><li><i className="fas fa-box" aria-hidden={true}></i> <span>Control de inventario</span></li></Link>
                 )}
                 {puedeVerReportesProductos && (
                   <Link as={Link} to="/ReporteProductos" className="dropdown-link"><li> <i className="fas fa-chart-bar" aria-hidden={true}></i> <span>Reportes</span></li></Link>
@@ -390,7 +387,7 @@ export default function Fijo() {
                   <Link as={Link} to="/ProspectosDeClientes" className="dropdown-link"><li><i className="fas fa-user-plus" aria-hidden={true}></i> <span>Prospectos de cliente</span></li></Link>
                 )}
                 {puedeVerReportesVentas && (
-                  <Link as={Link} to="/ReporteVentas" className="dropdown-link"><li><i className="fas fa-chart-bar" aria-hidden={true}></i> <span>Reportes</span></li></Link>
+                  <Link as={Link} to="/ReportessVentas" className="dropdown-link"><li><i className="fas fa-chart-bar" aria-hidden={true}></i> <span>Reportes</span></li></Link>
                 )}
               </ul>
             </nav>

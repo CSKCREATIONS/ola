@@ -142,9 +142,7 @@ const permisosCompras = [
 
 const permisosProductos = [
    'productos.ver','productos.crear','productos.editar','productos.inactivar',
-   'categorias.ver','categorias.crear','categorias.editar','categorias.inactivar',
-   'subcategorias.ver','subcategorias.crear','subcategorias.editar','subcategorias.inactivar',
-   'reportesProductos.ver'
+   'categorias.ver','categorias.crear','categorias.editar','categorias.inactivar','reportesProductos.ver'
 ];
 
 const permisosVentas = [
@@ -437,7 +435,7 @@ export default function AgregarRol() {
                                  <label style={{ display: 'block', marginBottom: 8 }}>
                                     <input className="input-gap" type="checkbox" checked={permisos.includes('productos.ver')}
                                        onChange={() => { toggleSubMenu('lista-productos'); togglePermiso('productos.ver'); }} />
-                                    <span style={{ marginLeft: 8 }}>Lista de productos</span>
+                                    <span style={{ marginLeft: 8 }}>Inventario</span>
                                  </label>
                                  <PermissionCheckbox checked={permisos.includes('categorias.ver')} onChange={() => togglePermiso('categorias.ver')} label="Ver categorías" />
                                  <PermissionCheckbox checked={permisos.includes('categorias.crear')} onChange={() => togglePermiso('categorias.crear')} label="Crear categorías" />
@@ -445,17 +443,13 @@ export default function AgregarRol() {
                                  <PermissionCheckbox checked={permisos.includes('categorias.inactivar')} onChange={() => togglePermiso('categorias.inactivar')} label="Inactivar categorías" />
                               </div>
                               <div style={{ minWidth: 260 }}>
-                                 <PermissionCheckbox checked={permisos.includes('subcategorias.ver')} onChange={() => togglePermiso('subcategorias.ver')} label="Ver subcategorías" />
-                                 <PermissionCheckbox checked={permisos.includes('subcategorias.crear')} onChange={() => togglePermiso('subcategorias.crear')} label="Crear subcategorías" />
-                                 <PermissionCheckbox checked={permisos.includes('subcategorias.editar')} onChange={() => togglePermiso('subcategorias.editar')} label="Editar subcategorías" />
-                                 <PermissionCheckbox checked={permisos.includes('subcategorias.inactivar')} onChange={() => togglePermiso('subcategorias.inactivar')} label="Inactivar subcategorías" />
                                  <PermissionCheckbox checked={permisos.includes('reportesProductos.ver')} onChange={() => togglePermiso('reportesProductos.ver')} label="Reportes" />
                                  <PermissionRadioAll onClick={() => toggleGrupoPermisos(permisosProductos)} checked={permisosProductos.every(p => permisos.includes(p))} />
                               </div>
                            </div>
 
                            <div id="lista-productos" style={{ marginTop: 12 }}>
-                              <h5 style={{ margin: '0 0 .5rem 0', fontWeight: 600, color: '#374151' }}>Permisos para lista de productos</h5>
+                              <h5 style={{ margin: '0 0 .5rem 0', fontWeight: 600, color: '#374151' }}>Permisos para Inventario</h5>
                               <PermissionCheckbox checked={permisos.includes('productos.crear')} onChange={() => togglePermiso('productos.crear')} label="Agregar Productos" />
                               <PermissionCheckbox checked={permisos.includes('productos.editar')} onChange={() => togglePermiso('productos.editar')} label="Editar productos" />
                               <PermissionCheckbox checked={permisos.includes('productos.inactivar')} onChange={() => togglePermiso('productos.inactivar')} label="Activar/Inactivar" />

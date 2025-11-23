@@ -34,11 +34,10 @@ const usePermisos = () => {
         // Productos
         productos:
           has('productos.ver') ||
-          has('categorias.ver') ||
-          has('subcategorias.ver') ||
+          has('categorias.ver') || 
           has('reportesProductos.ver'),
         verCategorias: has('categorias.ver'),
-        verSubcategorias: has('subcategorias.ver'),
+        
         verProductos: has('productos.ver'),
         verReportesProductos: has('reportesProductos.ver'),
 
@@ -79,7 +78,7 @@ const useModuleStats = (permisos) => {
     const groups = {
       usuarios: ['verUsuarios', 'verRoles'],
       compras: ['ordenesCompra', 'hcompras', 'proveedores', 'reportesCompras'],
-      productos: ['verCategorias', 'verSubcategorias', 'verProductos', 'verReportesProductos'],
+      productos: ['verCategorias', 'verProductos', 'verReportesProductos'],
       ventas: [
         'cotCrear',
         'cotVer',
@@ -201,12 +200,6 @@ export default function Home() {
               <Link to="/ListaDeCategorias" className="quick-access-btn">
                 <span className="quick-access-icon">🗂️</span>
                 <span>Categorías</span>
-              </Link>
-            )}
-            {permisos.verSubcategorias && (
-              <Link to="/subcategorias" className="quick-access-btn">
-                <span className="quick-access-icon">📁</span>
-                <span>Subcategorías</span>
               </Link>
             )}
             {permisos.verProductos && (

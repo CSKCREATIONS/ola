@@ -488,10 +488,7 @@ export default function OrdenCompra() {
       try {
         const res = await api.get('/api/products');
         const data = res.data || res;
-        console.log('=== ESTRUCTURA DE PRODUCTOS ===', data);
-
         if (data.products && data.products.length > 0) {
-          console.log('=== PRIMER PRODUCTO DETALLADO ===', data.products[0]);
         }
       } catch (error) {
         console.error('Error en debug:', error);
@@ -947,7 +944,7 @@ export default function OrdenCompra() {
         fechaOrden: ordenEditando.fechaOrden
       };
 
-      console.log('Enviando datos de actualización:', ordenActualizada); // Para debug
+      
 
       const res = await api.put(`/api/ordenes-compra/${ordenEditando._id}`, ordenActualizada);
       const data = res.data || res;

@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import api from '../api/axiosConfig';
 import PropTypes from 'prop-types';
 import LabeledInput from '../components/LabeledInput';
@@ -7,6 +7,7 @@ import Swal from 'sweetalert2';
 import '../App.css';
 import Fijo from '../components/Fijo';
 import NavVentas from '../components/NavVentas';
+import RemisionPreview from '../components/RemisionPreview';
 import Modal from '../components/Modal';
 
 import * as XLSX from 'xlsx';
@@ -298,6 +299,9 @@ export default function ListaDeClientes() {
   const [clienteSeleccionado, setClienteSeleccionado] = useState(null);
   const [mostrarModal, setMostrarModal] = useState(false);
   const [filtroTexto, setFiltroTexto] = useState(""); // 👉 filtro agregado
+  const [remisionesMap, setRemisionesMap] = useState({}); // clienteId -> [{_id, numeroRemision}]
+  const [remisionPreviewData, setRemisionPreviewData] = useState(null);
+  const [showRemisionPreview, setShowRemisionPreview] = useState(false);
 
   /*** PAGINACIÓN ***/
   const [currentPage, setCurrentPage] = useState(1);
@@ -335,6 +339,54 @@ export default function ListaDeClientes() {
     };
 
     cargarClientes();
+  }, []);
+
+  // Cargar remisiones y agruparlas por cliente
+  useEffect(() => {
+    const cargarRemisiones = async () => {
+      try {
+        const res = await api.get('/api/remisiones?limite=1000');
+        const payload = res.data || res;
+        const remisiones = payload.remisiones || [];
+        // Agrupar remisiones por cliente con bucles claros (evita callbacks anidados)
+        const grouped = {};
+        for (const r of remisiones) {
+          const cliId = r.cliente;
+          const idStr = typeof cliId === 'object' ? (cliId._id || cliId.id) : cliId;
+          if (!idStr) continue;
+          if (!grouped[idStr]) grouped[idStr] = [];
+          grouped[idStr].push({ _id: r._id, numeroRemision: r.numeroRemision });
+        }
+        // Ordenar remisiones por numeroRemision (desc) dentro de cada cliente
+        for (const k of Object.keys(grouped)) {
+          grouped[k].sort((a, b) => String(b.numeroRemision).localeCompare(String(a.numeroRemision)));
+        }
+        setRemisionesMap(grouped);
+      } catch (err) {
+        console.error('Error al cargar remisiones:', err);
+        setRemisionesMap({});
+      }
+    };
+    cargarRemisiones();
+  }, []);
+
+  const abrirRemisionPreview = useCallback(async (remisionId) => {
+    try {
+      const res = await api.get(`/api/remisiones/${remisionId}`);
+      const data = (res.data && (res.data.remision || res.data.data || res.data)) || null;
+      if (!data) throw new Error('Remisión no encontrada');
+      setRemisionPreviewData(data);
+      setShowRemisionPreview(true);
+    } catch (err) {
+      console.error('Error abriendo remisión:', err);
+      const SwalLib = (await import('sweetalert2')).default;
+      SwalLib.fire('Error', 'No se pudo cargar la remisión', 'error');
+    }
+  }, []);
+
+  const cerrarRemisionPreview = useCallback(() => {
+    setShowRemisionPreview(false);
+    setRemisionPreviewData(null);
   }, []);
 
 
@@ -383,6 +435,36 @@ export default function ListaDeClientes() {
     const data = new Blob([excelBuffer], { type: 'application/octet-stream' });
     saveAs(data, 'ListaClientes.xlsx');
   };
+
+  // Mostrar remisiones adicionales en un modal Swal
+  const handleVerMasRemisiones = useCallback((clienteId) => {
+    const rems = remisionesMap[clienteId] || [];
+    if (rems.length <= 3) return;
+    const restantes = rems.slice(3);
+    const listadoHTML = restantes
+      .map(r => `<button data-remision="${r._id}" style="display:inline-block;margin:4px;padding:6px 10px;border:1px solid #6366f1;border-radius:6px;background:#fff;color:#1e40af;font-size:12px;font-weight:600;cursor:pointer;">Remisión ${r.numeroRemision}</button>`)
+      .join('');
+    Swal.fire({
+      title: 'Remisiones adicionales',
+      html: `<div style="text-align:left;max-height:300px;overflow:auto">${listadoHTML}</div>`,
+      showCloseButton: true,
+      focusConfirm: false,
+      showConfirmButton: false,
+      width: 500
+    });
+    // Delegar clicks
+    setTimeout(() => {
+      const container = document.querySelector('.swal2-html-container');
+      if (!container) return;
+      container.querySelectorAll('button[data-remision]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.getAttribute('data-remision');
+            abrirRemisionPreview(id);
+            Swal.close();
+        });
+      });
+    }, 0);
+  }, [remisionesMap, abrirRemisionPreview]);
 
 
 
@@ -719,7 +801,56 @@ export default function ListaDeClientes() {
                         <td style={{ padding: '16px 12px', fontWeight: '700', color: '#374151', textAlign: 'left' }}>
                           {index + 1 + (currentPage - 1) * itemsPerPage}
                         </td>
-                        <td></td>
+                        <td style={{ padding: '16px 12px' }}>
+                          {Array.isArray(remisionesMap[cliente._id]) && remisionesMap[cliente._id].length > 0 ? (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems:'center' }}>
+                              {remisionesMap[cliente._id].slice(0,3).map(rm => (
+                                <button
+                                  key={rm._id}
+                                  title={`Ver remisión ${rm.numeroRemision}`}
+                                  onClick={() => abrirRemisionPreview(rm._id)}
+                                  style={{
+                                    background: 'linear-gradient(135deg, #dbeafe, #bfdbfe)',
+                                    color: '#1e40af',
+                                    border: 'none',
+                                    borderRadius: '8px',
+                                    padding: '6px 8px',
+                                    cursor: 'pointer',
+                                    fontSize: '11px',
+                                    fontWeight: '600',
+                                    transition: 'all 0.2s ease',
+                                    boxShadow: '0 2px 4px rgba(30,64,175,0.2)'
+                                  }}
+                                  onMouseEnter={(e)=>{e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.boxShadow='0 4px 8px rgba(30,64,175,0.3)';}}
+                                  onMouseLeave={(e)=>{e.currentTarget.style.transform='translateY(0)'; e.currentTarget.style.boxShadow='0 2px 4px rgba(30,64,175,0.2)';}}
+                                >
+                                  <span>{rm.numeroRemision}</span>
+                                </button>
+                              ))}
+                              {remisionesMap[cliente._id].length > 3 && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleVerMasRemisiones(cliente._id)}
+                                  style={{
+                                    background: 'none',
+                                    border: '1px dashed #6366f1',
+                                    borderRadius: '8px',
+                                    padding: '6px 8px',
+                                    cursor: 'pointer',
+                                    fontSize: '11px',
+                                    fontWeight: '600',
+                                    color: '#6366f1',
+                                    transition: 'all 0.2s ease'
+                                  }}
+                                  onMouseEnter={(e)=>{e.currentTarget.style.background='#eef2ff';}}
+                                  onMouseLeave={(e)=>{e.currentTarget.style.background='none';}}
+                                >ver más</button>
+                              )}
+                            </div>
+                          ) : (
+                            <span style={{ fontSize: '12px', color: '#9ca3af' }}>Sin remisiones</span>
+                          )}
+                        </td>
                         <td style={{ padding: '16px 12px' }}>
                           <div style={{ fontWeight: '600', color: '#1f2937', fontSize: '14px' }}>
                             {cliente.nombre || cliente.clienteInfo?.nombre || 'Sin nombre'}
@@ -887,6 +1018,9 @@ export default function ListaDeClientes() {
           © 2025 <span className="custom-highlight">PANGEA</span>. Todos los derechos reservados.
         </p>
       </div>
+      {showRemisionPreview && remisionPreviewData && (
+        <RemisionPreview datos={remisionPreviewData} onClose={cerrarRemisionPreview} />
+      )}
     </div>
   );
 }

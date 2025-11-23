@@ -26,10 +26,6 @@
 - `categorias.crear` - Crear nuevas categorías
 - `categorias.editar` - Editar categorías
 - `categorias.inactivar` - Activar/Inactivar categorías
-- `subcategorias.ver` - Ver subcategorías
-- `subcategorias.crear` - Crear nuevas subcategorías
-- `subcategorias.editar` - Editar subcategorías
-- `subcategorias.inactivar` - Activar/Inactivar subcategorías
 
 ### 🏭 MÓDULO PROVEEDORES (5 permisos)
 - `proveedores.ver` - Ver lista de proveedores
@@ -113,7 +109,7 @@
 
 ### 4️⃣ **ENCARGADO DE INVENTARIO** (16 permisos)
 - **Acceso**: Productos, categorías, inventario
-- **Módulos**: Productos, Categorías, Subcategorías, Reportes de productos
+- **Módulos**: Productos, Categorías,, Reportes de productos
 - **Función**: Gestión completa del inventario
 
 ### 5️⃣ **SUPERVISOR DE VENTAS** (26 permisos)

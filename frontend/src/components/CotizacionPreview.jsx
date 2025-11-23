@@ -290,6 +290,7 @@ export default function CotizacionPreview({ datos, onClose, onEmailSent, onRemis
 
 
 
+
         if (typeof printFn === 'function') printFn();
         else throw new Error('Print function not available');
       } catch (e) {

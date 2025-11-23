@@ -261,7 +261,7 @@ export default function EditarRol({ rol }) {
 
    /* Listas legibles para mapear en UI */
    const productosList = [
-      { key: 'productos.ver', label: 'Lista de productos' },
+      { key: 'productos.ver', label: 'Inventario' },
       { key: 'categorias.ver', label: 'Ver categorías' },
       { key: 'categorias.crear', label: 'Crear categorías' },
       { key: 'categorias.editar', label: 'Editar categorías' },
@@ -505,7 +505,7 @@ export default function EditarRol({ rol }) {
                            />
 
                            <div style={{ borderTop: '2px solid #fef3c7', paddingTop: '1rem' }}>
-                              <p style={{ margin: '0 0 0.75rem 0', fontWeight: 600, color: '#92400e', fontSize: '0.95rem' }}>Permisos para Lista de Productos</p>
+                              <p style={{ margin: '0 0 0.75rem 0', fontWeight: 600, color: '#92400e', fontSize: '0.95rem' }}>Permisos para Inventario</p>
                               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.75rem' }}>
                                  <InputCheck checked={permisos.includes('productos.crear')} onChange={() => togglePermiso('productos.crear')} label="Agregar Productos" />
                                  <InputCheck checked={permisos.includes('productos.editar')} onChange={() => togglePermiso('productos.editar')} label="Editar productos" />

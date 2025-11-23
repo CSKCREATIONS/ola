@@ -3,7 +3,6 @@ import { Link, useLocation } from 'react-router-dom';
 
 export default function NavUsuarios() {
   const [puedeVerCategorias, setPuedeVerCategorias] = useState(false);
-  const [puedeVerSubcategorias, setPuedeVerSubcategorias] = useState(false);
   const [puedeVerProductos, setPuedeVerProductos] = useState(false);
   const [puedeVerReportesProductos, setPuedeVerReportesProductos] = useState(false);
   const location = useLocation();
@@ -14,7 +13,6 @@ export default function NavUsuarios() {
       const usuario = JSON.parse(storedUser);
       if (usuario.permissions) {
         setPuedeVerCategorias(usuario.permissions.includes('categorias.ver'));
-        setPuedeVerSubcategorias(usuario.permissions.includes('subcategorias.ver'));
         setPuedeVerProductos(usuario.permissions.includes('productos.ver'));
         setPuedeVerReportesProductos(usuario.permissions.includes('reportesProductos.ver'));
       }
@@ -37,16 +35,6 @@ export default function NavUsuarios() {
             </Link>
           )}
 
-          {puedeVerSubcategorias && (
-            <Link
-              to="/Subcategorias"
-              className={
-                location.pathname === '/Subcategorias' ? 'nav-item active' : 'nav-item'
-              }
-            >
-              Subcategorias
-            </Link>
-          )}
 
           {puedeVerProductos && (
             <Link
@@ -55,7 +43,7 @@ export default function NavUsuarios() {
                 location.pathname === '/GestionProductos' ? 'nav-item active' : 'nav-item'
               }
             >
-              Lista de Productos
+              Control de inventario
             </Link>
           )}
           {puedeVerReportesProductos && (

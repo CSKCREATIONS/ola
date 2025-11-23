@@ -52,7 +52,7 @@ export const calcularDescuentoProducto = (producto) => {
 };
 
 /**
- * Calcula totales de una lista de productos (subtotal, descuentos, total)
+ * Calcula totales de una Inventario (subtotal, descuentos, total)
  * @param {Array} productos - Array de productos
  * @returns {object} Objeto con subtotal, descuentos y total
  */
@@ -123,7 +123,7 @@ export const contarLongitudesObjetoValues = (map = {}) => {
 
 /**
  * Calcula métricas del inventario: valor total, stock total y valor promedio por producto.
- * @param {Array} productos - lista de productos con `price` y `stock`
+ * @param {Array} productos - Inventario con `price` y `stock`
  * @returns {object} { totalValue, totalStock, avgValuePerProduct }
  */
 export const calcularInventario = (productos = []) => {

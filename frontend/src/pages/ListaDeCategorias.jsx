@@ -5,160 +5,17 @@ import SharedListHeaderCard from '../components/SharedListHeaderCard';
 import Fijo from '../components/Fijo';
 import NavProductos from '../components/NavProductos'
 import AdvancedStats from '../components/AdvancedStats';
-
 import api from '../api/axiosConfig';
 import PropTypes from 'prop-types';
 
 // Base endpoint used in this page
 const API_URL = '/api/categories';
 
-/* Estilos CSS avanzados para Categorías */
-const categoriasStyles = `
-  <style>
-    .categoria-advanced-container {
-      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-      min-height: 100vh;
-      padding: 20px;
-    }
-
-    .categoria-stats-card {
-      background: linear-gradient(135deg, #ffffff, #f8fafc);
-      border-radius: 16px;
-      padding: 25px;
-      border: 1px solid #e5e7eb;
-      transition: all 0.3s ease;
-      cursor: pointer;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .categoria-stats-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-    }
-
-    .categoria-stats-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 4px;
-      background: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899);
-    }
-
-    .categoria-professional-header {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      border-radius: 20px;
-      padding: 30px;
-      margin-bottom: 30px;
-      color: white;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .categoria-header-decoration {
-      position: absolute;
-      top: -50%;
-      right: -10%;
-      width: 300px;
-      height: 300px;
-      background: rgba(255,255,255,0.1);
-      border-radius: 50%;
-      z-index: 1;
-    }
-
-    .categoria-icon-container {
-      background: rgba(255,255,255,0.2);
-      border-radius: 16px;
-      padding: 20px;
-      backdrop-filter: blur(10px);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    
-
-    .categoria-action-btn {
-      background: linear-gradient(135deg, #6366f1, #8b5cf6);
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 8px;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      margin: 0 2px;
-    }
-
-    .categoria-action-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(99, 102, 241, 0.4);
-    }
-
-    .categoria-action-btn.danger {
-      background: linear-gradient(135deg, #ef4444, #dc2626);
-    }
-
-    .categoria-action-btn.danger:hover {
-      box-shadow: 0 5px 15px rgba(239, 68, 68, 0.4);
-    }
-
-    .categoria-add-btn {
-      background: linear-gradient(135deg, #10b981, #059669);
-      color: white;
-      border: none;
-      padding: 12px 24px;
-      border-radius: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      margin-bottom: 20px;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .categoria-add-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
-    }
-
-    .categoria-badge {
-      background: linear-gradient(135deg, #ddd6fe, #e0e7ff);
-      color: #6366f1;
-      padding: 6px 12px;
-      border-radius: 8px;
-      font-size: 12px;
-      font-weight: 600;
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-    }
-  </style>
-`;
-
-if (typeof document !== 'undefined') {
-  const existingStyles = document.getElementById('categoria-advanced-styles');
-  if (!existingStyles) {
-    const styleElement = document.createElement('div');
-    styleElement.id = 'categoria-advanced-styles';
-    styleElement.innerHTML = categoriasStyles;
-    document.head.appendChild(styleElement);
-  }
-}
-
 const CategoriaModal = ({ categoria, onClose, onSave }) => {
   const [name, setName] = useState(categoria ? categoria.name : '');
   const [description, setDescription] = useState(categoria ? categoria.description : '');
 
-  console.log('🔍 CategoriaModal - categoria recibida:', categoria);
-  console.log('🔍 CategoriaModal - categoria._id:', categoria?._id);
-
   const handleSubmit = async (e) => {
-
     e.preventDefault();
 
     if (!name.trim() || !description.trim()) {
@@ -441,6 +298,7 @@ const CategoriaModal = ({ categoria, onClose, onSave }) => {
     </div>
   );
 };
+
 // PropTypes for CategoriaModal
 CategoriaModal.propTypes = {
   categoria: PropTypes.shape({
@@ -496,19 +354,14 @@ const ListaDeCategorias = () => {
 
   const handleSave = async (categoriaData) => {
     try {
-      console.log('📝 handleSave - categoriaData:', categoriaData);
       const method = categoriaData.id ? 'PUT' : 'POST';
       const url = categoriaData.id ? `${API_URL}/${categoriaData.id}` : API_URL;
-
-      console.log('📝 Method:', method, 'URL:', url);
 
       const res = await api({
         url,
         method,
         data: { name: categoriaData.name, description: categoriaData.description }
       });
-
-      console.log('✅ Respuesta del servidor:', res.data);
 
       Swal.fire('Éxito', `Categoría ${categoriaData.id ? 'actualizada' : 'creada'} correctamente`, 'success');
       setModalVisible(false);
@@ -523,7 +376,7 @@ const ListaDeCategorias = () => {
   const toggleEstadoCategoria = async (id, activar = false) => {
     const confirm = await Swal.fire({
       title: activar ? '¿Activar categoría?' : '¿Desactivar categoría?',
-      text: activar ? 'Estará nuevamente disponible. Deberás activar sus subcategorías y productos manualmente si así lo deseas.' : 'Sus subcategorías y productos también serán desactivados. Podrás volver a activarla más adelante.',
+      text: activar ? 'Estará nuevamente disponible. Deberás activar sus productos manualmente si así lo deseas.' : 'Sus productos también serán desactivados. Podrás volver a activarla más adelante.',
       icon: activar ? 'question' : 'warning',
       showCancelButton: true,
       confirmButtonText: activar ? 'Sí, activar' : 'Sí, desactivar',
@@ -565,12 +418,11 @@ const ListaDeCategorias = () => {
         <NavProductos />
         <div className="max-width">
           <div className="contenido-modulo">
-            {/* Encabezado profesional */}
             <SharedListHeaderCard
               title="Gestión de Categorías"
-              subtitle="Administra el  y catálogo de Categorías"
-              iconClass="fa-solid fa-boxes-stacked"
-              >
+              subtitle="Administra el catálogo de categorías de productos"
+              iconClass="fa-solid fa-tags"
+            >
               <div className="export-buttons">
                 <button
                   onClick={() => {
@@ -587,115 +439,133 @@ const ListaDeCategorias = () => {
             {/* Estadísticas avanzadas */}
             <AdvancedStats cards={statsCards} />
 
-            {/* Botón agregar */}
-            <button
-              type="button"
-              className="categoria-add-btn"
-              onClick={() => { setCategoriaEditando(null); setModalVisible(true); }}
-            >
-              <i className="fa-solid fa-plus" aria-hidden={true}></i>
-              <span>Nueva Categoría</span>
-            </button>
+            {/* Tabla de categorías */}
+            <div className="table-container">
+              <div className="table-header">
+                <div className="table-header-content">
+                  <div className="table-header-icon">
+                    <i className="fa-solid fa-table" style={{ color: 'white', fontSize: '16px' }}></i>
+                  </div>
+                  <div>
+                    <h4 className="table-title">
+                      Lista de categorias
+                    </h4>
+                    <p className="table-subtitle">
+                      Mostrando {currentCategorias.length} de {categorias.length} categorías
+                    </p>
+                  </div>
+                </div>
+              </div>
 
-            {/* Tabla principal con diseño moderno */}
-              <div >
-                <table>
+              <div style={{ overflow: 'auto' }}>
+                <table className="data-table">
                   <thead>
                     <tr>
-                      <th>#</th>
-                      <th>Categoría</th>
-                      <th>Descripción</th>
-                      <th>Estado</th>
-                      <th>Acciones</th>
+                      <th>
+                        <i className="fa-solid fa-hashtag icon-gap" style={{ color: '#6366f1' }}></i>
+                        <span>#</span>
+                      </th>
+                      <th>
+                        <i className="fa-solid fa-tag icon-gap"></i><span>CATEGORÍA</span>
+                      </th>
+                      <th>
+                        <i className="fa-solid fa-align-left icon-gap" style={{ color: '#6366f1' }}></i><span>DESCRIPCIÓN</span>
+                      </th>
+                      <th style={{ textAlign: 'center' }}>
+                        <i className="fa-solid fa-toggle-on icon-gap"></i><span>ESTADO</span>
+                      </th>
+                      <th style={{ textAlign: 'center' }}>
+                        <i className="fa-solid fa-cogs icon-gap" style={{ color: '#6366f1' }}></i><span>ACCIONES</span>
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {categorias.length === 0 ? (
-                      <tr>
-                        <td
-                          colSpan={5}
-                          style={{
-                            padding: '40px',
-                            textAlign: 'center',
-                            color: '#9ca3af',
-                            fontStyle: 'italic',
-                            fontSize: '16px'
-                          }}
-                        >
-                          No hay categorías disponibles
+                    {currentCategorias.map((cat, index) => (
+                      <tr key={cat._id}>
+                        <td style={{ fontWeight: '600', color: '#6366f1' }}>
+                          {indexOfFirstItem + index + 1}
                         </td>
-                      </tr>
-                    ) : (
-                      currentCategorias.map((cat, index) => (
-                        <tr key={cat._id}>
-                          <td >
-                            {indexOfFirstItem + index + 1}
-                          </td>
-                          <td style={{ fontWeight: '600', color: '#1f2937' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                              <div style={{
-                                background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                                borderRadius: '8px',
-                                padding: '8px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                minWidth: '35px'
-                              }}>
-                                <i className="fa-solid fa-tag" style={{ color: 'white', fontSize: '12px' }} aria-hidden={true}></i>
-                              </div>
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <div className="table-icon-small">
+                              <i className="fa-solid fa-tag" style={{ color: 'white', fontSize: '12px' }}></i>
+                            </div>
+                            <div style={{ fontWeight: '600', color: '#1f2937', fontSize: '14px' }}>
                               {cat.name}
                             </div>
-                          </td>
-                          <td style={{ color: '#6b7280', fontSize: '14px' }}>
-                            {cat.description}
-                          </td>
-                          <td>
-                            <label className="switch">
-                              <input
-                                type="checkbox"
-                                checked={!!cat.activo}
-                                aria-label={`Estado de la categoría ${cat.name || cat._id}`}
-                                onChange={(e) => toggleEstadoCategoria(cat._id, e.target.checked)}
-                              />
-                              <span className="slider"></span>
-                            </label>
-                          </td>
-                          <td>
-                            <div style={{ display: 'flex', gap: '5px' }}>
-                              <button
-                                className="categoria-action-btn"
-                                onClick={() => handleEdit(cat)}
-                                aria-label={`Editar categoría ${cat.name || cat._id}`}
-                              >
-                                <i className="fa-solid fa-pen-to-square" aria-hidden={true}></i>
-                              </button>
+                          </div>
+                        </td>
+                        <td style={{ color: '#6b7280', fontSize: '14px' }}>
+                          {cat.description}
+                        </td>
+                        <td style={{ textAlign: 'center' }}>
+                          <label className="switch">
+                            <input
+                              type="checkbox"
+                              checked={!!cat.activo}
+                              aria-label={`Estado de la categoría ${cat.name || cat._id}`}
+                              onChange={(e) => toggleEstadoCategoria(cat._id, e.target.checked)}
+                              style={{ opacity: 0, width: 0, height: 0 }}
+                            />
+                            <span className="slider" style={{
+                              backgroundColor: cat.activo ? '#10b981' : '#ef4444'
+                            }}></span>
+                          </label>
+                        </td>
+                        <td>
+                          <div className="action-buttons">
+                            <button
+                              className="action-btn edit"
+                              onClick={() => handleEdit(cat)}
+                              title="Editar categoría"
+                            >
+                              <i className="fa-solid fa-pen-to-square"></i>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    
+                    {categorias.length === 0 && (
+                      <tr>
+                        <td colSpan="5">
+                          <div className="table-empty-state">
+                            <div className="table-empty-icon">
+                              <i className="fa-solid fa-tags" style={{ fontSize: '3.5rem', color: '#9ca3af' }}></i>
                             </div>
-                          </td>
-                        </tr>
-                      ))
+                            <div>
+                              <h5 className="table-empty-title">
+                                No hay categorías disponibles
+                              </h5>
+                              <p className="table-empty-text">
+                                No se encontraron categorías en el sistema
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
                     )}
                   </tbody>
                 </table>
               </div>
 
-
-            
-            {/* Paginación de la tabla*/}
-            <div className="pagination">
-              {Array.from({ length: totalPages }, (_, i) => (
-                <button
-                  key={i + 1}
-                  onClick={() => paginate(i + 1)}
-                  className={currentPage === i + 1 ? 'active-page' : ''}
-                >
-                  {i + 1}
-                </button>
-              ))}
+              {/* Paginación */}
+              {totalPages > 1 && (
+                <div className="table-pagination">
+                  {Array.from({ length: totalPages }, (_, i) => (
+                    <button
+                      key={i + 1}
+                      onClick={() => paginate(i + 1)}
+                      className={`pagination-btn ${currentPage === i + 1 ? 'active' : ''}`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
-
 
         {modalVisible && (
           <CategoriaModal

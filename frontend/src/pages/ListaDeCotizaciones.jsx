@@ -59,12 +59,7 @@ export default function ListaDeCotizaciones() {
         const cotRes = await api.get('/api/cotizaciones');
         const cotData = cotRes.data || [];
 
-        // DEBUG: inspeccionar primeros elementos que llegan desde la API
-        try {
-          console.log('DEBUG fetchData - cotizaciones raw sample:', Array.isArray(cotData) ? cotData.slice(0,3).map(c => ({ _id: c._id, fecha: c.fecha, fechaString: c.fechaString, createdAt: c.createdAt })) : cotData);
-        } catch (e) {
-          console.warn('DEBUG fetchData - error logging cotizaciones sample', e);
-        }
+        
 
         const prodRes = await api.get('/api/products');
         const prodData = prodRes.data?.data || prodRes.data || [];

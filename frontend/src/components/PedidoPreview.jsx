@@ -115,7 +115,7 @@ export default function FormatoCotizacion({ datos, onClose, onEmailSent }) {
 
 
 
-  // Obtener lista de productos para mostrar el nombre
+  // Obtener Inventario para mostrar el nombre
   const productosLista = datos.productosLista || [];
 
   // Usar datos de la cotización (traídos del backend) para empresa si existen
