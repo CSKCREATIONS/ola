@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
 import '../App.css';
+import SharedListHeaderCard from '../components/SharedListHeaderCard';
 import Fijo from '../components/Fijo';
 import NavProductos from '../components/NavProductos'
 import AdvancedStats from '../components/AdvancedStats';
@@ -565,24 +566,23 @@ const ListaDeCategorias = () => {
         <div className="max-width">
           <div className="contenido-modulo">
             {/* Encabezado profesional */}
-            <div className="categoria-professional-header">
-              <div className="categoria-header-decoration"></div>
-              <div style={{ position: 'relative', zIndex: 2 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                  <div className="categoria-icon-container">
-                    <i className="fa-solid fa-tags" style={{ fontSize: '2.5rem', color: 'white' }}></i>
-                  </div>
-                  <div>
-                    <h2 style={{ margin: '0 0 8px 0', fontSize: '2rem', fontWeight: '700' }}>
-                      Categorías
-                    </h2>
-                    <p style={{ margin: 0, fontSize: '1.1rem', opacity: 0.9 }}>
-                      Aquí podrá gestionar todas las categorías de productos
-                    </p>
-                  </div>
-                </div>
+            <SharedListHeaderCard
+              title="Gestión de Categorías"
+              subtitle="Administra el  y catálogo de Categorías"
+              iconClass="fa-solid fa-boxes-stacked"
+              >
+              <div className="export-buttons">
+                <button
+                  onClick={() => {
+                    setCategoriaEditando(null); 
+                    setModalVisible(true);
+                  }}
+                  className="export-btn create"
+                >
+                  <i className="fa-solid fa-plus"></i><span>Agregar Categoría</span>
+                </button>
               </div>
-            </div>
+            </SharedListHeaderCard>
 
             {/* Estadísticas avanzadas */}
             <AdvancedStats cards={statsCards} />

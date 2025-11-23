@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import Swal from 'sweetalert2';
 import api from '../api/axiosConfig';
+import SharedListHeaderCard from '../components/SharedListHeaderCard';
+
 import '../App.css';
 import AdvancedStats from '../components/AdvancedStats';
 import Fijo from '../components/Fijo';
@@ -493,41 +495,33 @@ const GestionSubcategorias = () => {
         <NavProductos />
         <div className="contenido-modulo">
           {/* Encabezado profesional */}
-          <div className="categoria-professional-header">
-            <div className="categoria-header-decoration"></div>
-            <div style={{ position: 'relative', zIndex: 2 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                <div className="categoria-icon-container">
-                  <i className="fa-solid fa-sitemap" style={{ fontSize: '2.5rem', color: 'white' }}></i>
-                </div>
-                <div>
-                  <h2 style={{ margin: '0 0 8px 0', fontSize: '2rem', fontWeight: '700' }}>
-                    Subcategorías
-                  </h2>
-                  <p style={{ margin: 0, fontSize: '1.1rem', opacity: 0.9 }}>
-                    Aquí podrá gestionar todas las subcategorías de productos
-                  </p>
-                </div>
+          <SharedListHeaderCard
+              title="Gestión de Subcategorías"
+              subtitle="Administra el  y catálogo de subcategorías"
+              iconClass="fa-solid fa-boxes-stacked"
+            >
+              <div className="export-buttons">
+                <button
+                  onClick={() => {
+                    setSubcategoriaEditando(null); 
+                    setModalVisible(true);
+                  }}
+                  className="export-btn create"
+                >
+                  <i className="fa-solid fa-plus"></i><span>Agregar Subcategoria</span>
+                </button>
               </div>
-            </div>
-          </div>
+            </SharedListHeaderCard>
 
           {/* Estadísticas avanzadas */}
           {/* Estadísticas avanzadas */}
           <AdvancedStats cards={statsCards} />
 
-          {/* Botón agregar */}
-          <button
-            className="categoria-add-btn"
-            onClick={() => { setSubcategoriaEditando(null); setModalVisible(true); }}
-          >
-            <i className="fa-solid fa-plus"></i>
-            <span>Nueva Subcategoría</span>
-          </button>
+          
           {/* Tabla principal con diseño moderno */}
 
           <div>
-            <table>
+            <table className="data-table">
               <thead>
                 <tr>
                   <th>Subcategoría</th>
