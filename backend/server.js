@@ -13,7 +13,6 @@ import dbConfig from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import categoryRoutes from './routes/categoryRoutes.js';
-import subcategoryRoutes from './routes/subcategoryRoutes.js';
 import productRoutes from './routes/productRoutes.js';
 import roleRoutes from './routes/roleRoutes.js';
 import clientesRoutes from './routes/clientesRoutes.js';
@@ -176,7 +175,6 @@ app.get('/ready', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/categories', categoryRoutes);
-app.use('/api/subcategories', subcategoryRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/roles', roleRoutes);
 app.use('/api/clientes', clientesRoutes);

@@ -25,12 +25,6 @@ module.exports = {
     EDITAR: 'categorias.editar',
     INACTIVAR: 'categorias.inactivar'
   },
-  SUBCATEGORIAS: {
-    VER: 'subcategorias.ver',
-    CREAR: 'subcategorias.crear',
-    EDITAR: 'subcategorias.editar',
-    INACTIVAR: 'subcategorias.inactivar'
-  },
   PROVEEDORES: {
     VER: 'proveedores.ver',
     CREAR: 'proveedores.crear',

@@ -22,7 +22,6 @@ import Proveedores from './pages/Proveedores';
 import HistorialCompras from './pages/HistorialCompras';
 import GestionProductos from './pages/GestionProductos';
 import ListaDeCategorias from './pages/ListaDeCategorias';
-import Subcategorias from './pages/Subcategorias';
 import ReportessVentas from './pages/ReportessVentas';
 import PrivateRoute from './routes/PrivateRoute';
 import PermisoRoute from './routes/PermisoRoute';
@@ -169,16 +168,6 @@ const App = () => {
             }
           />
 
-          <Route
-            path='/Subcategorias'
-            element={
-              <PrivateRoute>
-                <PermisoRoute permiso="subcategorias.ver">
-                  <Subcategorias />
-                </PermisoRoute>
-              </PrivateRoute>
-            }
-          />
 
           <Route
             path='/ReporteProductos'

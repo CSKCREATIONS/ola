@@ -12,105 +12,11 @@ import AdvancedStats from '../components/AdvancedStats';
 // API endpoint constants used in this page
 const API_PRODUCTS = '/api/products';
 
-// CSS inyectado para diseño avanzado
-const advancedStyles = `
-  
-
-  .productos-action-btn {
-    border: none;
-    border-radius: 8px;
-    padding: 8px 10px;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: 600;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 4px rgba(30, 64, 175, 0.2);
-    margin-right: 6px;
-  }
-  
-  .productos-action-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(30, 64, 175, 0.3);
-  }
-  
-  .productos-action-btn.delete {
-    background: linear-gradient(135deg, #fee2e2, #fecaca);
-    color: #dc2626;
-    box-shadow: 0 2px 4px rgba(220, 38, 38, 0.2);
-  }
-  
-  .productos-action-btn.delete:hover {
-    box-shadow: 0 4px 8px rgba(220, 38, 38, 0.3);
-  }
-  
-  .productos-status-badge {
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
-    display: inline-block;
-  }
-  
-  .productos-status-badge.activo {
-    background: #dcfce7;
-    color: #16a34a;
-  }
-  
-  .productos-status-badge.inactivo {
-    background: #fee2e2;
-    color: #dc2626;
-  }
-  
-  .productos-category-badge {
-    background: #fef3c7;
-    color: #d97706;
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
-    display: inline-block;
-  }
-  
-  .productos-pagination-container {
-    padding: 20px 25px;
-    border-top: 1px solid #e5e7eb;
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-  }
-  
-  .productos-pagination-btn {
-    padding: 8px 16px;
-    border: 2px solid #e5e7eb;
-    border-radius: 8px;
-    background: white;
-    color: #4b5563;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-  
-  .productos-pagination-btn.active {
-    border-color: #6366f1;
-    background: #6366f1;
-    color: white;
-  }
-  
-  .productos-pagination-btn:hover:not(.active) {
-    border-color: #6366f1;
-    color: #6366f1;
-  }
-`;
-
-// Styles will be injected when the component mounts
-
 const ProductoModal = ({
   producto,
   onClose,
   onSave,
   categorias = [],
-  subcategorias = [],
   proveedores = [],
   onToggleEstado
 }) => {
@@ -120,7 +26,6 @@ const ProductoModal = ({
     price: producto?.price || '',
     stock: producto?.stock || '',
     category: producto?.category?._id || producto?.category || '',
-    subcategory: producto?.subcategory?._id || producto?.subcategory || '',
     proveedor: producto?.proveedor?._id || producto?.proveedor || ''
   });
 
@@ -500,55 +405,6 @@ const ProductoModal = ({
                 </div>
 
                 <div>
-                  <label htmlFor="input-producto-subcategoria" style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    marginBottom: '0.5rem',
-                    fontWeight: '600',
-                    color: '#374151',
-                    fontSize: '0.95rem'
-                  }}>
-                    <i className="fa-solid fa-folder-open" style={{ color: '#8b5cf6', fontSize: '0.9rem' }} aria-hidden={true}></i>
-                    <span>Subcategoría</span>
-                    <span style={{ color: '#ef4444' }}>*</span>
-                  </label>
-                  <select
-                    id="input-producto-subcategoria"
-                    name="subcategory"
-                    value={form.subcategory}
-                    onChange={handleChange}
-                    required
-                    style={{
-                      width: '100%',
-                      padding: '0.875rem 1rem',
-                      border: '2px solid #e5e7eb',
-                      borderRadius: '10px',
-                      fontSize: '1rem',
-                      transition: 'all 0.3s ease',
-                      backgroundColor: '#ffffff',
-                      fontFamily: 'inherit',
-                      boxSizing: 'border-box'
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = '#f59e0b';
-                      e.target.style.boxShadow = '0 0 0 3px rgba(245, 158, 11, 0.1)';
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = '#e5e7eb';
-                      e.target.style.boxShadow = 'none';
-                    }}
-                  >
-                    <option value="">Seleccione Subcategoría</option>
-                    {subcategorias.map(sub => (
-                      <option key={sub._id} value={sub._id}>
-                        {sub.name} {sub.category?.name ? `(${sub.category.name})` : ''}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
                   <label htmlFor="input-producto-proveedor" style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -686,13 +542,11 @@ ProductoModal.propTypes = {
     price: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     stock: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     category: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
-    subcategory: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
     proveedor: PropTypes.oneOfType([PropTypes.string, PropTypes.object])
   }),
   onClose: PropTypes.func,
   onSave: PropTypes.func.isRequired,
   categorias: PropTypes.array,
-  subcategorias: PropTypes.array,
   proveedores: PropTypes.array,
   onToggleEstado: PropTypes.func
 };
@@ -701,7 +555,6 @@ ProductoModal.defaultProps = {
   producto: null,
   onClose: () => { },
   categorias: [],
-  subcategorias: [],
   proveedores: [],
   onToggleEstado: () => { }
 };
@@ -709,7 +562,6 @@ ProductoModal.defaultProps = {
 const GestionProductos = () => {
   const [productos, setProductos] = useState([]);
   const [categorias, setCategorias] = useState([]);
-  const [subcategorias, setSubcategorias] = useState([]);
   const [proveedores, setProveedores] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [productoEditando, setProductoEditando] = useState(null);
@@ -737,31 +589,9 @@ const GestionProductos = () => {
     setPaginaActual(1);
   }, [filtroEstado]);
 
-
   useEffect(() => {
     loadProductos();
     loadCategorias();
-    loadSubcategorias();
-
-    // Inject styles at mount time (avoids module-level DOM access)
-    if (typeof document !== 'undefined') {
-      const existing = document.getElementById('productos-advanced-styles');
-      if (!existing) {
-        const styleSheet = document.createElement('style');
-        styleSheet.id = 'productos-advanced-styles';
-        styleSheet.textContent = advancedStyles;
-        document.head.appendChild(styleSheet);
-      }
-    }
-
-    return () => {
-      try {
-        const el = document.getElementById('productos-advanced-styles');
-        if (el) el.remove();
-      } catch (e) {
-        console.warn('Failed to remove productos-advanced-styles element:', e);
-      }
-    };
   }, []);
 
   useEffect(() => {
@@ -777,7 +607,6 @@ const GestionProductos = () => {
 
     fetchProveedores();
   }, []);
-
 
   const loadProductos = async () => {
     try {
@@ -801,7 +630,6 @@ const GestionProductos = () => {
       ...producto,
       proveedor: typeof producto.proveedor === 'object' ? producto.proveedor._id : producto.proveedor,
       category: typeof producto.category === 'object' ? producto.category._id : producto.category,
-      subcategory: typeof producto.subcategory === 'object' ? producto.subcategory._id : producto.subcategory
     };
 
     try {
@@ -826,25 +654,6 @@ const GestionProductos = () => {
     const url = `${API_PRODUCTS}/${productoId}/${accion}`;
 
     try {
-      // Si vamos a activar, validar subcategoria y categoria padre
-      if (!estadoActual) { // estadoActual === false -> queremos activar
-        const subcatId = producto.subcategory?._id || producto.subcategory;
-
-        if (subcatId) {
-          // Obtener subcategoria para comprobar su estado
-          const subRes = await api.get(`/api/subcategories/${subcatId}`);
-          const subData = subRes.data || subRes;
-          const subcategoria = subData.data || subData;
-
-          if (subcategoria?.activo === false) {
-            return Swal.fire('Acción no permitida', 'No se puede activar el producto porque su subcategoría está desactivada', 'error');
-          }
-
-
-        }
-      }
-
-
       // Backend define PATCH para activar/desactivar productos
       const res = await api.patch(url);
       if (res.status >= 200 && res.status < 300) {
@@ -854,11 +663,15 @@ const GestionProductos = () => {
         throw new Error(res.data?.message || `No se pudo ${accion} el producto`);
       }
     } catch (error) {
-      Swal.fire('Error', error.message || 'Error inesperado', 'error');
+      const backendMsg = error?.response?.data?.message || error.message || '';
+      // Mensaje específico cuando se intenta activar y la categoría está desactivada
+      if (!estadoActual && /categoria|categoría/i.test(backendMsg) && /desactivada/i.test(backendMsg)) {
+        Swal.fire('Categoría inactiva', 'No se puede activar el producto porque su categoría está desactivada', 'warning');
+        return;
+      }
+      Swal.fire('Error', backendMsg || 'Error inesperado', 'error');
     }
   };
-
-
 
   const loadCategorias = async () => {
     try {
@@ -871,21 +684,6 @@ const GestionProductos = () => {
       setCategorias([]);
     }
   };
-
-  const loadSubcategorias = async () => {
-    try {
-      const res = await api.get('/api/subcategories');
-      const result = res.data || res;
-      const data = result.subcategories || result.data || result;
-      setSubcategorias(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error('Error loading subcategories', err);
-      setSubcategorias([]);
-    }
-  };
-
-
-
 
   return (
     <>
@@ -1014,10 +812,10 @@ const GestionProductos = () => {
                   </div>
                   <div>
                     <h4 className="table-title">
-                      Lista de Productos
+                      Lista de productos
                     </h4>
                     <p className="table-subtitle">
-                      Mostrando {productosPaginados.length} de {productos.length} productos
+                      Mostrando {productosPaginados.length} de {productosFiltrados.length} productos
                     </p>
                   </div>
                 </div>
@@ -1027,30 +825,29 @@ const GestionProductos = () => {
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>#</th>
                       <th>
-                        <i className="fa-solid fa-tag icon-gap" style={{ color: '#6366f1' }}></i><span>NOMBRE</span>
+                        <i className="fa-solid fa-hashtag icon-gap" style={{ color: '#6366f1' }}></i><span>#</span>
                       </th>
                       <th>
-                        <i className="fa-solid fa-align-left icon-gap"></i><span>DESCRIPCIÓN</span>
+                        <i className="fa-solid fa-tag icon-gap"></i><span>NOMBRE</span>
                       </th>
                       <th>
-                        <i className="fa-solid fa-dollar-sign icon-gap" style={{ color: '#6366f1' }}></i><span>PRECIO</span>
+                        <i className="fa-solid fa-align-left icon-gap" style={{ color: '#6366f1' }}></i><span>DESCRIPCIÓN</span>
                       </th>
                       <th>
-                        <i className="fa-solid fa-boxes-stacked icon-gap"></i><span>STOCK</span>
+                        <i className="fa-solid fa-dollar-sign icon-gap"></i><span>PRECIO</span>
                       </th>
                       <th>
-                        <i className="fa-solid fa-layer-group icon-gap" style={{ color: '#6366f1' }}></i><span>CATEGORÍA</span>
+                        <i className="fa-solid fa-boxes-stacked icon-gap" style={{ color: '#6366f1' }}></i><span>STOCK</span>
                       </th>
                       <th>
-                        <i className="fa-solid fa-sitemap icon-gap"></i><span>SUBCATEGORÍA</span>
+                        <i className="fa-solid fa-layer-group icon-gap"></i><span>CATEGORÍA</span>
                       </th>
                       <th>
                         <i className="fa-solid fa-truck icon-gap" style={{ color: '#6366f1' }}></i><span>PROVEEDOR</span>
                       </th>
                       <th style={{ textAlign: 'center' }}>
-                        <i className="fa-solid fa-toggle-on icon-gap" style={{ color: '#6366f1' }}></i><span>ESTADO</span>
+                        <i className="fa-solid fa-toggle-on icon-gap"></i><span>ESTADO</span>
                       </th>
                       <th style={{ textAlign: 'center' }}>
                         <i className="fa-solid fa-cogs icon-gap" style={{ color: '#6366f1' }}></i><span>ACCIONES</span>
@@ -1060,7 +857,9 @@ const GestionProductos = () => {
                   <tbody>
                     {productosPaginados.map((prod, index) => (
                       <tr key={prod._id}>
-                        <td>{index + 1}</td>
+                        <td style={{ fontWeight: '600', color: '#6366f1' }}>
+                          {indiceInicio + index + 1}
+                        </td>
                         <td style={{ fontWeight: '600', color: '#1f2937', fontSize: '14px' }}>
                           {prod.name}
                         </td>
@@ -1079,9 +878,6 @@ const GestionProductos = () => {
                         </td>
                         <td>
                           {prod.category?.name || '-'}
-                        </td>
-                        <td>
-                          {prod.subcategory?.name || '-'}
                         </td>
                         <td>
                           {prod.proveedor?.nombre || '-'}
@@ -1113,7 +909,7 @@ const GestionProductos = () => {
                         </td>
                       </tr>
                     ))}
-                    {productos.length === 0 && (
+                    {productosFiltrados.length === 0 && (
                       <tr>
                         <td colSpan="9">
                           <div className="table-empty-state">
@@ -1158,7 +954,6 @@ const GestionProductos = () => {
                 onClose={() => setModalVisible(false)}
                 onSave={handleSave}
                 categorias={categorias || []}
-                subcategorias={subcategorias || []}
                 proveedores={proveedores || []}
                 onToggleEstado={handleToggleEstado}
               />

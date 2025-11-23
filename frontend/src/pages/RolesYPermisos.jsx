@@ -3,144 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import Fijo from '../components/Fijo'
 import NavUsuarios from '../components/NavUsuarios'
 import SharedListHeaderCard from '../components/SharedListHeaderCard'
-import PrimaryButton from '../components/PrimaryButton'
 import AgregarRol from '../components/AgregarRol';
 import AdvancedStats from '../components/AdvancedStats';
 import { openModal } from '../funciones/animaciones';
 import Swal from 'sweetalert2';
 import api from '../api/axiosConfig';
 import EditarRol from '../components/EditarRol';
-
-// CSS inyectado para diseño avanzado
-const advancedStyles = `
-  .roles-advanced-table {
-    background: white;
-    border-radius: 16px;
-    overflow: hidden;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-    border: 1px solid #e5e7eb;
-  }
-  
-  .roles-header-section {
-    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
-    padding: 20px 25px;
-    border-bottom: 1px solid #e5e7eb;
-  }
-  
-  .roles-table-container {
-    overflow: auto;
-  }
-  
-  .roles-advanced-table table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 14px;
-  }
-  
-  .roles-advanced-table thead tr {
-    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
-    border-bottom: 2px solid #e5e7eb;
-  }
-  
-  .roles-advanced-table thead th {
-    padding: 16px 12px;
-    text-align: left;
-    font-weight: 600;
-    color: #374151;
-    font-size: 13px;
-    letter-spacing: 0.5px;
-  }
-  
-  .roles-advanced-table tbody tr {
-    border-bottom: 1px solid #f3f4f6;
-    transition: all 0.2s ease;
-  }
-  
-  .roles-advanced-table tbody tr:hover {
-    background-color: #f8fafc;
-  }
-  
-  .roles-advanced-table tbody td {
-    padding: 16px 12px;
-    color: #4b5563;
-    font-weight: 500;
-  }
-  
-  .roles-permission-btn {
-    background: linear-gradient(135deg, #fef3c7, #fde68a);
-    color: #d97706;
-    border: none;
-    border-radius: 8px;
-    padding: 8px 16px;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: 600;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 4px rgba(217, 119, 6, 0.2);
-  }
-  
-  .roles-permission-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(217, 119, 6, 0.3);
-  }
-  
-  .roles-action-btn {
-    background: linear-gradient(135deg, #dbeafe, #bfdbfe);
-    color: #1e40af;
-    border: none;
-    border-radius: 8px;
-    padding: 8px 10px;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: 600;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 4px rgba(30, 64, 175, 0.2);
-  }
-  
-  .roles-action-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(30, 64, 175, 0.3);
-  }
-  
-  .roles-pagination-container {
-    padding: 20px 25px;
-    border-top: 1px solid #e5e7eb;
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-  }
-  
-  .roles-pagination-btn {
-    padding: 8px 16px;
-    border: 2px solid #e5e7eb;
-    border-radius: 8px;
-    background: white;
-    color: #4b5563;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-  
-  .roles-pagination-btn.active {
-    border-color: #6366f1;
-    background: #6366f1;
-    color: white;
-  }
-  
-  .roles-pagination-btn:hover:not(.active) {
-    border-color: #6366f1;
-    color: #6366f1;
-  }
-`;
-
-// Inyectar estilos
-if (!document.getElementById('roles-advanced-styles')) {
-  const styleSheet = document.createElement('style');
-  styleSheet.id = 'roles-advanced-styles';
-  styleSheet.textContent = advancedStyles;
-  document.head.appendChild(styleSheet);
-}
 
 export default function RolesYPermisos() {
 
@@ -150,7 +18,6 @@ export default function RolesYPermisos() {
   const [puedeinhabilitarRol, setpuedeinhabilitarRol] = useState(false);
   const navigate = useNavigate();
   const [rolSeleccionado, setRolSeleccionado] = useState(null);
-
 
   //crea paginacion de tablas
   const [currentPage, setCurrentPage] = useState(1);
@@ -162,8 +29,6 @@ export default function RolesYPermisos() {
   const totalPages = Math.ceil(roles.length / itemsPerPage);
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
-
-
 
   const toggleEstadoRol = async (id, nuevoEstado, roleName) => {
     const confirmResult = await Swal.fire({
@@ -208,8 +73,6 @@ export default function RolesYPermisos() {
     });
   };
 
-
-
   useEffect(() => {
     const init = async () => {
       const usuario = JSON.parse(localStorage.getItem('user'));
@@ -242,7 +105,6 @@ export default function RolesYPermisos() {
     init();
   }, [navigate]);
 
-
   return (
     <div>
       <Fijo />
@@ -250,352 +112,189 @@ export default function RolesYPermisos() {
         <NavUsuarios />
         <div className="max-width">
           <div className="contenido-modulo">
-          <SharedListHeaderCard
-            title="Roles y Permisos"
-            subtitle="Gestiona roles de usuario y permisos del sistema"
-            iconClass="fa-solid fa-shield-alt"
-          >
-            {puedeCrearRol && (
-              <PrimaryButton onClick={() => openModal('crear-rol')} title="Crear Rol">
-                <i className="fa-solid fa-plus"></i>
-                <span>Crear Rol</span>
-              </PrimaryButton>
-            )}
-          </SharedListHeaderCard>
-
-          {/* Estadísticas avanzadas */}
-          <AdvancedStats cards={[
-            { iconClass: 'fa-solid fa-shield-alt', gradient: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', value: roles.length, label: 'Total Roles' },
-            { iconClass: 'fa-solid fa-check-circle', gradient: 'linear-gradient(135deg, #10b981, #059669)', value: roles.filter(r => r.enabled).length, label: 'Roles Activos' },
-            { iconClass: 'fa-solid fa-ban', gradient: 'linear-gradient(135deg, #ef4444, #dc2626)', value: roles.filter(r => !r.enabled).length, label: 'Roles Inactivos' }
-          ]} />
-          {/* Tabla de roles mejorada */}
-          <div style={{
-            background: 'white',
-            borderRadius: '16px',
-            overflow: 'hidden',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-            border: '1px solid #e5e7eb'
-          }}>
-            <div style={{
-              background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)',
-              padding: '20px 25px',
-              borderBottom: '1px solid #e5e7eb',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{
-                  background: 'linear-gradient(135deg, #667eea, #764ba2)',
-                  borderRadius: '12px',
-                  padding: '10px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <i className="fa-solid fa-table" style={{ color: 'white', fontSize: '16px' }}></i>
-                </div>
-                <div>
-                  <h4 style={{ margin: '0 0 4px 0', color: '#1f2937', fontSize: '1.3rem', fontWeight: '600' }}>
-                    Lista de Roles
-                  </h4>
-                  <p style={{ margin: 0, color: '#6b7280', fontSize: '14px' }}>
-                    Mostrando {currentItems.length} de {roles.length} roles
-                  </p>
-                </div>
-              </div>
-            </div>
-            
-            <div style={{ overflow: 'auto' }}>
-              <table style={{
-                width: '100%',
-                borderCollapse: 'collapse',
-                fontSize: '14px'
-              }} id='tabla_roles'>
-                <thead>
-                  <tr style={{ 
-                    background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)',
-                    borderBottom: '2px solid #e5e7eb'
-                  }}>
-                    <th style={{ 
-                      padding: '16px 12px', 
-                      textAlign: 'left', 
-                      fontWeight: '600', 
-                      color: '#374151',
-                      fontSize: '13px',
-                      letterSpacing: '0.5px'
-                    }}>
-                      <i className="fa-solid fa-hashtag icon-gap" style={{ color: '#6366f1' }}></i>
-                      <span>#</span>
-                    </th>
-                    <th style={{ 
-                      padding: '16px 12px', 
-                      textAlign: 'left', 
-                      fontWeight: '600', 
-                      color: '#374151',
-                      fontSize: '13px',
-                      letterSpacing: '0.5px'
-                    }}>
-                      <i className="fa-solid fa-shield-alt icon-gap" style={{ color: '#6366f1' }}></i>
-                      <span>NOMBRE DE ROL</span>
-                    </th>
-                    <th style={{ 
-                      padding: '16px 12px', 
-                      textAlign: 'left', 
-                      fontWeight: '600', 
-                      color: '#374151',
-                      fontSize: '13px',
-                      letterSpacing: '0.5px'
-                    }}>
-                      <i className="fa-solid fa-calendar-plus icon-gap" style={{ color: '#6366f1' }}></i>
-                      <span>CREADO</span>
-                    </th>
-                    <th style={{ 
-                      padding: '16px 12px', 
-                      textAlign: 'center', 
-                      fontWeight: '600', 
-                      color: '#374151',
-                      fontSize: '13px',
-                      letterSpacing: '0.5px'
-                    }}>
-                      <i className="fa-solid fa-key icon-gap" style={{ color: '#6366f1' }}></i>
-                      <span>PERMISOS</span>
-                    </th>
-                    <th style={{ 
-                      padding: '16px 12px', 
-                      textAlign: 'center', 
-                      fontWeight: '600', 
-                      color: '#374151',
-                      fontSize: '13px',
-                      letterSpacing: '0.5px'
-                    }}>
-                      <i className="fa-solid fa-toggle-on icon-gap" style={{ color: '#6366f1' }}></i>
-                      <span>ESTADO</span>
-                    </th>
-                    <th style={{ 
-                      padding: '16px 12px', 
-                      textAlign: 'center', 
-                      fontWeight: '600', 
-                      color: '#374151',
-                      fontSize: '13px',
-                      letterSpacing: '0.5px'
-                    }}>
-                      <i className="fa-solid fa-cogs icon-gap" style={{ color: '#6366f1' }}></i>
-                      <span>ACCIONES</span>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentItems.map((rol, index) => (
-                    <tr key={rol._id} 
-                        style={{
-                          borderBottom: '1px solid #f3f4f6',
-                          transition: 'all 0.2s ease'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = '#f8fafc';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = 'transparent';
-                        }}
-                    >
-                      <td style={{ padding: '16px 12px', fontWeight: '600', color: '#6366f1' }}>
-                        {indexOfFirstItem + index + 1}
-                      </td>
-                      <td style={{ padding: '16px 12px' }}>
-                        <div style={{ fontWeight: '600', color: '#1f2937', fontSize: '14px' }}>
-                          {rol.name}
-                        </div>
-                      </td>
-                      <td style={{ padding: '16px 12px', color: '#4b5563', fontWeight: '500' }}>
-                        {new Date(rol.createdAt).toLocaleDateString()}
-                      </td>
-                      <td style={{ padding: '16px 12px', textAlign: 'center' }}>
-                        <button
-                          onClick={() => mostrarPermisos(rol)}
-                          style={{
-                            background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '8px',
-                            padding: '8px 12px',
-                            cursor: 'pointer',
-                            fontSize: '13px',
-                            fontWeight: '600',
-                            transition: 'all 0.2s ease',
-                            boxShadow: '0 2px 4px rgba(245, 158, 11, 0.3)',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '6px'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.target.style.transform = 'translateY(-2px)';
-                            e.target.style.boxShadow = '0 4px 8px rgba(245, 158, 11, 0.4)';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.target.style.transform = 'translateY(0)';
-                            e.target.style.boxShadow = '0 2px 4px rgba(245, 158, 11, 0.3)';
-                          }}
-                        >
-                          <i className="fa-solid fa-key"></i>
-                          <span>Ver permisos</span>
-                        </button>
-                      </td>
-                      <td style={{ padding: '16px 12px', textAlign: 'center' }}>
-                        <label className="switch" style={{ position: 'relative', display: 'inline-block', width: '50px', height: '24px' }}>
-                          <input
-                            type="checkbox"
-                            checked={rol.enabled}
-                            aria-label={`Estado del rol ${rol.name || rol._id}`}
-                            onChange={() => {
-                              if (puedeinhabilitarRol) {
-                                toggleEstadoRol(rol._id, !rol.enabled, rol.name);
-                              } else {
-                                Swal.fire({
-                                  icon: 'error',
-                                  title: 'Acción no permitida',
-                                  text: 'No tienes permisos para esta accion',
-                                  confirmButtonText: 'Entendido'
-                                });
-                              }
-                            }}
-                            style={{ opacity: 0, width: 0, height: 0 }}
-                          />
-                          <span className="slider round" style={{
-                            position: 'absolute',
-                            cursor: 'pointer',
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            backgroundColor: rol.enabled ? '#10b981' : '#ef4444',
-                            transition: '0.4s',
-                            borderRadius: '24px'
-                          }}></span>
-                        </label>
-                      </td>
-                      <td style={{ padding: '16px 12px', textAlign: 'center' }}>
-                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                          {puedeEditarRol && (
-                            <button
-                              onClick={() => {
-                                setRolSeleccionado(rol);
-                                openModal('edit-role-modal');
-                              }}
-                              title="Editar rol"
-                              className="action-btn edit"
-                            >
-                              <i className="fa-solid fa-pen-to-square"></i>
-                              
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                  
-                  {roles.length === 0 && (
-                    <tr>
-                      <td colSpan="6" style={{ textAlign: 'center', padding: '80px 20px' }}>
-                        <div style={{
-                          display: 'flex',
-                          flexDirection: 'column',
-                          alignItems: 'center',
-                          gap: '20px'
-                        }}>
-                          <div style={{
-                            background: 'linear-gradient(135deg, #f3f4f6, #e5e7eb)',
-                            borderRadius: '50%',
-                            padding: '25px',
-                            marginBottom: '10px'
-                          }}>
-                            <i className="fa-solid fa-shield-alt" style={{ 
-                              fontSize: '3.5rem', 
-                              color: '#9ca3af'
-                            }}></i>
-                          </div>
-                          <div style={{ textAlign: 'center' }}>
-                            <h5 style={{ 
-                              color: '#6b7280', 
-                              margin: '0 0 12px 0',
-                              fontSize: '1.2rem',
-                              fontWeight: '600'
-                            }}>
-                              No hay roles disponibles
-                            </h5>
-                            <p style={{ 
-                              color: '#9ca3af', 
-                              margin: 0, 
-                              fontSize: '14px',
-                              lineHeight: '1.5'
-                            }}>
-                              No se encontraron roles en el sistema
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-            
-            {/* Paginación mejorada */}
-            {totalPages > 1 && (
-              <div style={{
-                padding: '20px 25px',
-                borderTop: '1px solid #e5e7eb',
-                display: 'flex',
-                justifyContent: 'center',
-                gap: '8px'
-              }}>
-                {Array.from({ length: totalPages }, (_, i) => (
+            <SharedListHeaderCard
+              title="Roles y Permisos"
+              subtitle="Gestiona roles de usuario y permisos del sistema"
+              iconClass="fa-solid fa-shield-alt"
+            >
+              {puedeCrearRol && (
+                <div className="export-buttons">
                   <button
-                    key={i + 1}
-                    onClick={() => paginate(i + 1)}
-                    style={{
-                      padding: '8px 16px',
-                      border: currentPage === i + 1 ? '2px solid #6366f1' : '2px solid #e5e7eb',
-                      borderRadius: '8px',
-                      background: currentPage === i + 1 ? '#6366f1' : 'white',
-                      color: currentPage === i + 1 ? 'white' : '#4b5563',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease'
-                    }}
-                    onMouseEnter={(e) => {
-                      if (currentPage !== i + 1) {
-                        e.target.style.borderColor = '#6366f1';
-                        e.target.style.color = '#6366f1';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (currentPage !== i + 1) {
-                        e.target.style.borderColor = '#e5e7eb';
-                        e.target.style.color = '#4b5563';
-                      }
-                    }}
+                    onClick={() => openModal('crear-rol')}
+                    className="export-btn create"
                   >
-                    {i + 1}
+                    <i className="fa-solid fa-plus"></i><span>Crear Rol</span>
                   </button>
-                ))}
-              </div>
-            )}
-          </div>
+                </div>
+              )}
+            </SharedListHeaderCard>
 
-        </div>
+            {/* Estadísticas avanzadas */}
+            <AdvancedStats cards={[
+              { iconClass: 'fa-solid fa-shield-alt', gradient: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', value: roles.length, label: 'Total Roles' },
+              { iconClass: 'fa-solid fa-check-circle', gradient: 'linear-gradient(135deg, #10b981, #059669)', value: roles.filter(r => r.enabled).length, label: 'Roles Activos' },
+              { iconClass: 'fa-solid fa-ban', gradient: 'linear-gradient(135deg, #ef4444, #dc2626)', value: roles.filter(r => !r.enabled).length, label: 'Roles Inactivos' }
+            ]} />
+
+            {/* Tabla de roles */}
+            <div className="table-container">
+              <div className="table-header">
+                <div className="table-header-content">
+                  <div className="table-header-icon">
+                    <i className="fa-solid fa-table" style={{ color: 'white', fontSize: '16px' }}></i>
+                  </div>
+                  <div>
+                    <h4 className="table-title">
+                      Lista de Roles
+                    </h4>
+                    <p className="table-subtitle">
+                      Mostrando {currentItems.length} de {roles.length} roles
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ overflow: 'auto' }}>
+                <table className="data-table" id='tabla_roles'>
+                  <thead>
+                    <tr>
+                      <th>
+                        <i className="fa-solid fa-hashtag icon-gap" style={{ color: '#6366f1' }}></i><span>#</span>
+                      </th>
+                      <th>
+                        <i className="fa-solid fa-shield-alt icon-gap"></i><span>NOMBRE DE ROL</span>
+                      </th>
+                      <th>
+                        <i className="fa-solid fa-calendar-plus icon-gap" style={{ color: '#6366f1' }}></i><span>CREADO</span>
+                      </th>
+                      <th style={{ textAlign: 'center' }}>
+                        <i className="fa-solid fa-key icon-gap"></i><span>PERMISOS</span>
+                      </th>
+                      <th style={{ textAlign: 'center' }}>
+                        <i className="fa-solid fa-toggle-on icon-gap" style={{ color: '#6366f1' }}></i><span>ESTADO</span>
+                      </th>
+                      <th style={{ textAlign: 'center' }}>
+                        <i className="fa-solid fa-cogs icon-gap" style={{ color: '#6366f1' }}></i><span>ACCIONES</span>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {currentItems.map((rol, index) => (
+                      <tr key={rol._id}>
+                        <td style={{ fontWeight: '600', color: '#6366f1' }}>
+                          {indexOfFirstItem + index + 1}
+                        </td>
+                        <td>
+                          <div style={{ fontWeight: '600', color: '#1f2937', fontSize: '14px' }}>
+                            {rol.name}
+                          </div>
+                        </td>
+                        <td style={{ color: '#4b5563', fontWeight: '500' }}>
+                          {new Date(rol.createdAt).toLocaleDateString()}
+                        </td>
+                        <td style={{ textAlign: 'center' }}>
+                          <button
+                            onClick={() => mostrarPermisos(rol)}
+                            className="action-btn view"
+                          >
+                            <i className="fa-solid fa-key"></i>
+                            <span>Ver permisos</span>
+                          </button>
+                        </td>
+                        <td style={{ textAlign: 'center' }}>
+                          <label className="switch">
+                            <input
+                              type="checkbox"
+                              checked={rol.enabled}
+                              aria-label={`Estado del rol ${rol.name || rol._id}`}
+                              onChange={() => {
+                                if (puedeinhabilitarRol) {
+                                  toggleEstadoRol(rol._id, !rol.enabled, rol.name);
+                                } else {
+                                  Swal.fire({
+                                    icon: 'error',
+                                    title: 'Acción no permitida',
+                                    text: 'No tienes permisos para esta accion',
+                                    confirmButtonText: 'Entendido'
+                                  });
+                                }
+                              }}
+                              style={{ opacity: 0, width: 0, height: 0 }}
+                            />
+                            <span className="slider" style={{
+                              backgroundColor: rol.enabled ? '#10b981' : '#ef4444'
+                            }}></span>
+                          </label>
+                        </td>
+                        <td>
+                          <div className="action-buttons">
+                            {puedeEditarRol && (
+                              <button
+                                onClick={() => {
+                                  setRolSeleccionado(rol);
+                                  openModal('edit-role-modal');
+                                }}
+                                title="Editar rol"
+                                className="action-btn edit"
+                              >
+                                <i className="fa-solid fa-pen-to-square"></i>
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    
+                    {roles.length === 0 && (
+                      <tr>
+                        <td colSpan="6">
+                          <div className="table-empty-state">
+                            <div className="table-empty-icon">
+                              <i className="fa-solid fa-shield-alt" style={{ fontSize: '3.5rem', color: '#9ca3af' }}></i>
+                            </div>
+                            <div>
+                              <h5 className="table-empty-title">
+                                No hay roles disponibles
+                              </h5>
+                              <p className="table-empty-text">
+                                No se encontraron roles en el sistema
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Paginación */}
+              {totalPages > 1 && (
+                <div className="table-pagination">
+                  {Array.from({ length: totalPages }, (_, i) => (
+                    <button
+                      key={i + 1}
+                      onClick={() => paginate(i + 1)}
+                      className={`pagination-btn ${currentPage === i + 1 ? 'active' : ''}`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+          </div>
         </div>
         
       </div>
       <AgregarRol />
       <EditarRol rol={rolSeleccionado} />
       <div className="custom-footer">
-          <p className="custom-footer-text">
-            © 2025 <span className="custom-highlight">PANGEA</span>. Todos los derechos reservados.
-          </p>
-        </div>
+        <p className="custom-footer-text">
+          © 2025 <span className="custom-highlight">PANGEA</span>. Todos los derechos reservados.
+        </p>
+      </div>
     </div>
   )
 }

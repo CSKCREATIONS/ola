@@ -180,6 +180,12 @@ async function safeUpdatePedidoWithRemision(pedido, nuevaRemisionId, numeroRemis
 async function updateStockIfEntregado(pedido) {
   const Products = require('../models/Products');
 
+  // Si el pedido ya estaba marcado como entregado previamente, evitamos doble descuento.
+  if (pedido.estado && String(pedido.estado).toLowerCase() === 'entregado') {
+    console.log(`🔁 Pedido ${pedido._id} ya marcado como entregado, se omite actualización de stock para evitar doble descuento.`);
+    return { ok: true, skipped: true };
+  }
+
   for (const item of pedido.productos) {
     if (!item.product) continue;
 
@@ -492,11 +498,22 @@ exports.remisionarPedido = async (req, res) => {
       .exec();
     if (!pedido) return res.status(404).json({ message: 'Pedido no encontrado' });
 
-    // Antes de crear la remisión, verificar y descontar stock de los productos
-    // Esto reutiliza el helper existente que valida y actualiza el stock por cada item
-    const stockResult = await updateStockIfEntregado(pedido);
-    if (!stockResult.ok) {
-      return res.status(stockResult.status || 400).json({ message: stockResult.message || 'Stock insuficiente' });
+    // Registrar contexto para diagnóstico
+    console.log(`🧪 Intentando remisionar pedido ${pedido.numeroPedido} (${pedido._id}) estado=${pedido.estado}`);
+    pedido.productos.forEach(p => {
+      const prodDoc = p.product || {};
+      console.log(`🧪 Producto en pedido -> id=${prodDoc._id || p.product} nombre=${prodDoc.name || prodDoc.nombre || 'N/A'} stock=${prodDoc.stock} cantidadSolicitada=${p.cantidad}`);
+    });
+
+    // Verificar/descontar stock solo si el pedido aún no estaba marcado como entregado
+    if (!(pedido.estado && String(pedido.estado).toLowerCase() === 'entregado')) {
+      const stockResult = await updateStockIfEntregado(pedido);
+      if (!stockResult.ok) {
+        console.warn(`🛑 Remisionar abortado por stock insuficiente: ${stockResult.message}`);
+        return res.status(stockResult.status || 400).json({ message: stockResult.message || 'Stock insuficiente', codigo: 'STOCK_INSUFICIENTE' });
+      }
+    } else {
+      console.log('🔁 Pedido ya entregado previamente, saltando verificación de stock para evitar doble descuento.');
     }
 
     // Generar número de remisión secuencial
@@ -665,62 +682,7 @@ exports.enviarPedidoAgendadoPorCorreo = async (req, res) => {
   }
 };
 
-// Enviar pedido devuelto por correo
-exports.enviarPedidoDevueltoPorCorreo = async (req, res) => {
-  try {
-    const { correoDestino, asunto, mensaje, motivoDevolucion } = req.body;
-    
-    // Sanitizar el ID para prevenir inyección NoSQL
-    const pedidoId = sanitizarId(req.params.id);
-    if (!pedidoId) {
-      return res.status(400).json({ message: 'ID de pedido inválido' });
-    }
 
-    console.log('🔍 Iniciando envío de correo para pedido devuelto:', pedidoId);
-
-    const pedido = await Pedido.findById(pedidoId)
-      .populate('cliente')
-      .populate('productos.product')
-      .populate('cotizacionReferenciada', 'codigo');
-
-    if (!pedido) {
-      return res.status(404).json({ message: 'Pedido no encontrado' });
-    }
-
-    const destinatario = correoDestino || pedido.cliente?.correo;
-    const asuntoFinal = asunto || `Pedido Devuelto ${pedido.numeroPedido} - ${process.env.COMPANY_NAME || 'JLA Global Company'}`;
-
-    // Generar PDF del pedido
-    let pdfAttachment = null;
-    try {
-      console.log('📄 Generando PDF del pedido devuelto...');
-      const pdfService = new PDFService();
-      const pdfData = await pdfService.generarPDFPedido(pedido, 'devuelto');
-      pdfAttachment = {
-        filename: pdfData.filename,
-        content: pdfData.buffer,
-        contentType: pdfData.contentType
-      };
-      console.log('✅ PDF generado exitosamente:', pdfData.filename);
-    } catch (pdfError) {
-      console.error('⚠️ Error generando PDF:', pdfError.message);
-    }
-
-    const htmlContent = generarHTMLPedidoDevuelto(pedido, mensaje, motivoDevolucion);
-
-    await enviarCorreoConAttachment(destinatario, asuntoFinal, htmlContent, pdfAttachment);
-
-    res.status(200).json({ 
-      message: 'Pedido devuelto enviado por correo exitosamente',
-      destinatario,
-      pedido: pedido.numeroPedido
-    });
-
-  } catch (error) {
-    console.error('❌ Error enviando pedido devuelto:', error);
-    res.status(500).json({ message: 'Error al enviar pedido por correo', error: error.message });
-  }
-};
 
 // Enviar pedido cancelado por correo
 exports.enviarPedidoCanceladoPorCorreo = async (req, res) => {
@@ -845,303 +807,6 @@ async function enviarCorreoConAttachment(destinatario, asunto, htmlContent, pdfA
 // avoid duplicate function definitions. See the consolidated implementation near the end
 // of this file (keeps one authoritative implementation used by all email senders).
 
-// Función auxiliar para generar HTML de pedido devuelto
-function generarHTMLPedidoDevuelto(pedido, mensaje, motivoDevolucion) {
-  // Calcular totales
-  const totalProductos = pedido.productos?.length || 0;
-  const cantidadTotal = pedido.productos?.reduce((total, p) => total + (p.cantidad || 0), 0) || 0;
-  const totalPedido = pedido.total || pedido.productos?.reduce((total, p) => total + ((p.cantidad || 0) * (p.precioUnitario || 0)), 0) || 0;
-
-  return `
-    <!DOCTYPE html>
-    <html lang="es">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Pedido Devuelto ${pedido.numeroPedido}</title>
-      <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-          line-height: 1.6; 
-          color: #333; 
-          background-color: #f8f9fa;
-          margin: 0;
-          padding: 10px;
-        }
-        .container { 
-          max-width: 800px; 
-          margin: 0 auto; 
-          background: white; 
-          border-radius: 10px; 
-          overflow: hidden; 
-          box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        .header { 
-          background: linear-gradient(135deg, #ff9800, #f57c00); 
-          color: white; 
-          padding: 20px; 
-          text-align: center; 
-        }
-        .header h1 { 
-          font-size: 2em; 
-          margin-bottom: 10px; 
-          font-weight: 300; 
-        }
-        .header p { 
-          font-size: 1em; 
-          opacity: 0.9; 
-        }
-        .content { 
-          padding: 20px; 
-        }
-        .info-grid { 
-          display: block;
-          margin-bottom: 20px; 
-        }
-        .info-card { 
-          background: #fff3e0; 
-          padding: 15px; 
-          border-radius: 8px; 
-          border-left: 4px solid #ff9800; 
-          margin-bottom: 15px;
-        }
-        .info-card h3 { 
-          color: #ff9800; 
-          margin-bottom: 10px; 
-          font-size: 1.1em; 
-        }
-        .info-card p { 
-          margin-bottom: 5px; 
-          color: #555; 
-          font-size: 0.9em;
-        }
-        .info-card strong { 
-          color: #333; 
-        }
-        .products-section { 
-          margin: 20px 0; 
-        }
-        .products-title { 
-          background: #ff9800; 
-          color: white; 
-          padding: 15px; 
-          margin-bottom: 0; 
-          border-radius: 8px 8px 0 0; 
-          font-size: 1.2em; 
-        }
-        .products-table { 
-          width: 100%; 
-          border-collapse: collapse; 
-          background: white; 
-          border-radius: 0 0 8px 8px; 
-          overflow: hidden; 
-          box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
-        }
-        .products-table thead { 
-          display: none; 
-        }
-        .products-table tr { 
-          display: block; 
-          border: 1px solid #eee; 
-          margin-bottom: 10px; 
-          border-radius: 8px; 
-          background: white; 
-          padding: 10px; 
-        }
-        .products-table td { 
-          display: block; 
-          text-align: left !important; 
-          padding: 5px 0; 
-          border: none; 
-          position: relative; 
-          padding-left: 120px; 
-        }
-        .products-table td:before { 
-          content: attr(data-label); 
-          position: absolute; 
-          left: 0; 
-          width: 110px; 
-          font-weight: bold; 
-          color: #ff9800; 
-          font-size: 0.9em; 
-        }
-        .mobile-total {
-          display: block;
-          background: linear-gradient(135deg, #ff9800, #f57c00);
-          color: white;
-          padding: 15px;
-          border-radius: 8px;
-          margin: 15px 0;
-          text-align: center;
-          font-size: 1.2em;
-          font-weight: bold;
-        }
-        .message-section { 
-          background: linear-gradient(135deg, #dc3545, #c82333); 
-          color: white; 
-          padding: 20px; 
-          border-radius: 8px; 
-          margin: 20px 0; 
-        }
-        .message-section h3 { 
-          margin-bottom: 10px; 
-          font-size: 1.2em; 
-        }
-        .message-section p { 
-          font-size: 1em; 
-          line-height: 1.6; 
-        }
-        .footer { 
-          background: #343a40; 
-          color: #adb5bd; 
-          padding: 20px; 
-          text-align: center; 
-        }
-        .footer p { 
-          margin-bottom: 5px; 
-          font-size: 0.9em; 
-        }
-        .status-badge { 
-          display: inline-block; 
-          padding: 5px 12px; 
-          border-radius: 20px; 
-          font-size: 0.8em; 
-          font-weight: bold; 
-          text-transform: uppercase; 
-          background: #ff9800; 
-          color: white; 
-        }
-        @media (min-width: 768px) { 
-          body { padding: 20px; }
-          .header h1 { font-size: 2.5em; }
-          .header p { font-size: 1.1em; }
-          .content { padding: 30px; }
-          .info-grid { 
-            display: grid; 
-            grid-template-columns: 1fr 1fr; 
-            gap: 30px; 
-          }
-          .info-card { padding: 20px; }
-          .info-card h3 { font-size: 1.2em; }
-          .info-card p { font-size: 1em; }
-          .products-table thead { display: table-header-group; }
-          .products-table tr { 
-            display: table-row; 
-            border: none; 
-            margin-bottom: 0; 
-            border-radius: 0; 
-            padding: 0; 
-          }
-          .products-table td { 
-            display: table-cell; 
-            padding: 15px; 
-            border-bottom: 1px solid #eee; 
-            padding-left: 15px; 
-          }
-          .products-table td:before { display: none; }
-          .products-table th { 
-            background: #f57c00; 
-            color: white; 
-            padding: 15px; 
-            text-align: left; 
-            font-weight: 600; 
-          }
-          .products-table tr:hover { background: #fff3e0; }
-          .mobile-total { display: none; }
-        }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <div class="header">
-          <h1>↩️ PEDIDO DEVUELTO</h1>
-          <p>Documento de pedido No. <strong>${pedido.numeroPedido}</strong></p>
-          <span class="status-badge">DEVUELTO</span>
-        </div>
-
-        <div class="content">
-          <div class="info-grid">
-            <div class="info-card">
-              <h3>👤 Información del Cliente</h3>
-              <p><strong>Nombre:</strong> ${pedido.cliente?.nombre || 'N/A'}</p>
-              <p><strong>Correo:</strong> ${pedido.cliente?.correo || 'N/A'}</p>
-              <p><strong>Teléfono:</strong> ${pedido.cliente?.telefono || 'N/A'}</p>
-              <p><strong>Dirección:</strong> ${pedido.cliente?.direccion || 'N/A'}</p>
-              <p><strong>Ciudad:</strong> ${pedido.cliente?.ciudad || 'N/A'}</p>
-            </div>
-
-            <div class="info-card">
-              <h3>📋 Detalles del Pedido</h3>
-              <p><strong>Fecha Original:</strong> ${new Date(pedido.createdAt).toLocaleDateString('es-ES', { 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-              })}</p>
-              <p><strong>Estado:</strong> Devuelto</p>
-              <p><strong>Responsable:</strong> Sistema</p>
-              <p><strong>Items:</strong> ${totalProductos} productos</p>
-              <p><strong>Cantidad Total:</strong> ${cantidadTotal} unidades</p>
-              ${motivoDevolucion ? '<p><strong>Motivo de Devolución:</strong> ' + motivoDevolucion + '</p>' : ''}
-            </div>
-          </div>
-
-          <div class="products-section">
-            <h2 class="products-title">🛍️ Productos Devueltos</h2>
-            <table class="products-table">
-              <thead>
-                <tr>
-                  <th>Producto</th>
-                  <th style="text-align: center;">Cantidad</th>
-                  <th style="text-align: right;">Precio Unitario</th>
-                  <th style="text-align: right;">Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${pedido.productos?.map((producto, index) => `
-                  <tr>
-                    <td data-label="Producto:">
-                      <strong>${producto.product?.name || producto.product?.nombre || producto.descripcion || 'Producto sin nombre'}</strong>
-                      ${producto.product?.codigo ? '<br><small style="color: #666;">Código: ' + producto.product.codigo + '</small>' : ''}
-                    </td>
-                    <td data-label="Cantidad:" style="text-align: center; font-weight: bold;">${producto.cantidad || 0}</td>
-                    <td data-label="Precio Unit.:" style="text-align: right;">$${(producto.precioUnitario || 0).toLocaleString('es-ES')}</td>
-                    <td data-label="Total:" style="text-align: right; font-weight: bold;">$${((producto.cantidad || 0) * (producto.precioUnitario || 0)).toLocaleString('es-ES')}</td>
-                  </tr>
-                `).join('') || '<tr><td colspan="4">No hay productos</td></tr>'}
-              </tbody>
-            </table>
-            
-            <div class="mobile-total">
-              💰 Total General: $${totalPedido.toLocaleString('es-ES')}
-            </div>
-          </div>
-
-          <div class="message-section">
-            <h3>💬 Mensaje</h3>
-            <p>${mensaje || `Estimado/a ${pedido.cliente?.nombre || 'Cliente'}, le informamos que su pedido ha sido devuelto. Lamentamos cualquier inconveniente que esto pueda causar. Encontrará adjunto el documento con los detalles del pedido devuelto. Para cualquier consulta sobre esta devolución, no dude en contactarnos.`}</p>
-          </div>
-
-          ${pedido.observaciones ? `
-          <div class="info-card" style="margin-top: 20px;">
-            <h3>📝 Observaciones</h3>
-            <p>${pedido.observaciones}</p>
-          </div>
-          ` : ''}
-        </div>
-
-        <div class="footer">
-          <p><strong>${process.env.COMPANY_NAME || 'JLA Global Company'}</strong></p>
-          <p>📧 ${process.env.GMAIL_USER || process.env.SENDGRID_FROM_EMAIL || 'contacto@empresa.com'} | 📞 ${process.env.COMPANY_PHONE || 'Tel: (555) 123-4567'}</p>
-          <p style="margin-top: 15px; font-size: 0.9em;">
-            Este documento fue generado automáticamente el ${new Date().toLocaleDateString('es-ES')} a las ${new Date().toLocaleTimeString('es-ES')}
-          </p>
-        </div>
-      </div>
-    </body>
-    </html>
-  `;
-}
 
 // Función auxiliar para generar HTML de pedido cancelado
 function generarHTMLPedidoCancelado(pedido, mensaje, motivoCancelacion) {
@@ -1511,89 +1176,7 @@ exports.enviarPedidoPorCorreo = async (req, res) => {
 };
 
 // Enviar remisi�n por correo
-exports.enviarRemisionPorCorreo = async (req, res) => {
-  try {
-    const { correoDestino, asunto, mensaje } = req.body;
-    
-    // Sanitizar el ID para prevenir inyección NoSQL
-    const pedidoId = sanitizarId(req.params.id);
-    if (!pedidoId) {
-      return res.status(400).json({ message: 'ID de pedido inválido' });
-    }
-    
-    console.log('🔍 Iniciando envío de remisión por correo:', pedidoId);
-    console.log('📧 Datos de envío:', { correoDestino, asunto });
 
-    const pedido = await Pedido.findById(pedidoId)
-      .populate('cliente')
-      .populate('productos.product')
-      .exec();
-
-    if (!pedido) {
-      return res.status(404).json({ message: 'Pedido no encontrado' });
-    }
-
-    const destinatario = correoDestino || pedido.cliente.correo;
-    const asuntoFinal = asunto || `Remisión - Pedido ${pedido.numeroPedido} - ${process.env.COMPANY_NAME || 'JLA Global Company'}`;
-    
-    // Generar número de remisión si no existe
-    const numeroRemision = `REM-${pedido.numeroPedido}-${Date.now().toString().slice(-6)}`;
-    
-    // Generar HTML profesional de la remisión
-    const htmlContent = generarHTMLRemision(pedido, numeroRemision, mensaje);
-    
-    // Generar PDF de la remisión
-    let pdfAttachment = null;
-    try {
-      console.log('📄 Generando PDF de la remisión...');
-      const pdfService = new PDFService();
-      
-      // Crear objeto remisión para el PDF
-      const remisionData = {
-        numeroRemision: numeroRemision,
-        pedidoReferencia: pedido._id,
-        codigoPedido: pedido.numeroPedido,
-        cliente: {
-          nombre: pedido.cliente.nombre,
-          correo: pedido.cliente.correo,
-          telefono: pedido.cliente.telefono,
-          ciudad: pedido.cliente.ciudad
-        },
-        productos: pedido.productos.map(p => ({
-          nombre: p.product?.name || 'Producto',
-          cantidad: p.cantidad,
-          precioUnitario: p.product?.price || 0,
-          total: (p.cantidad || 0) * (p.product?.price || 0),
-          codigo: p.product?.codigo || 'N/A'
-        })),
-        fechaRemision: new Date(),
-        responsable: null,
-        estado: 'activa',
-        total: pedido.productos.reduce((total, p) => {
-          return total + ((p.cantidad || 0) * (p.product?.price || 0));
-        }, 0)
-      };
-      
-      const pdfData = await pdfService.generarPDFRemision(remisionData);
-      pdfAttachment = {
-        filename: pdfData.filename,
-        content: pdfData.buffer,
-        contentType: pdfData.contentType
-      };
-      console.log('✅ PDF generado exitosamente:', pdfData.filename);
-    } catch (pdfError) {
-      console.error('⚠️ Error generando PDF:', pdfError.message);
-      // Continuar sin PDF si hay error
-    }
-
-    await enviarCorreoConAttachment(destinatario, asuntoFinal, htmlContent, pdfAttachment);
-
-    res.json({ message: 'Remisión enviada por correo exitosamente' });
-  } catch (error) {
-    console.error('❌ Error al enviar remisión por correo:', error);
-    res.status(500).json({ message: 'Error al enviar remisión por correo', error: error.message });
-  }
-};
 
 // Enviar remisión formal por correo
 exports.enviarRemisionFormalPorCorreo = async (req, res) => {
@@ -2579,3 +2162,29 @@ function generarHTMLPedidoAgendado(pedido, mensaje = '') {
     </html>
   `;
 }
+
+// Eliminar definitivamente un pedido cancelado
+exports.deletePedidocancelado = async (req, res) => {
+  try {
+    const pedidoId = sanitizarId(req.params.id);
+    if (!pedidoId) {
+      return res.status(400).json({ message: 'ID de pedido inválido' });
+    }
+
+    const pedido = await Pedido.findById(pedidoId).exec();
+    if (!pedido) {
+      return res.status(404).json({ message: 'Pedido no encontrado' });
+    }
+
+    const estadoActual = String(pedido.estado || '').toLowerCase();
+    if (estadoActual !== 'cancelado') {
+      return res.status(400).json({ message: 'Solo se pueden eliminar pedidos con estado cancelado' });
+    }
+
+    await Pedido.findByIdAndDelete(pedidoId).exec();
+    return res.status(200).json({ message: 'Pedido cancelado eliminado correctamente', id: pedidoId });
+  } catch (error) {
+    console.error('❌ Error al eliminar pedido cancelado:', error);
+    return res.status(500).json({ message: 'Error al eliminar pedido cancelado', error: error.message });
+  }
+};

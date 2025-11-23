@@ -35,7 +35,6 @@ const PedidoSchema = new mongoose.Schema({
 
   fechaEntrega: { type: Date, required: true },
   observacion: { type: String, default: '' },
-  motivoDevolucion: { type: String, default: '' },
   estado: {
     type: String,
     enum: ['agendado', 'entregado', 'cancelado'],

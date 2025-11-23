@@ -166,19 +166,7 @@ router.post('/:id/enviar-correo',
   pedidoController.enviarPedidoPorCorreo
 );
 
-// Enviar remisión por correo
-router.post('/:id/enviar-remision',
-  verifyToken,
-  checkPermission('pedidos.enviar'),
-  pedidoController.enviarRemisionPorCorreo
-);
 
-// Enviar remisión formal por correo
-router.post('/:id/enviar-remision-formal',
-  verifyToken,
-  checkPermission('pedidos.enviar'),
-  pedidoController.enviarRemisionFormalPorCorreo
-);
 
 // Remisionar pedido (crear documento Remision desde un pedido)
 router.post('/:id/remisionar',
@@ -193,6 +181,13 @@ router.post('/:id/enviar-cancelado',
   verifyToken,
   checkPermission('pedidos.enviar'),
   pedidoController.enviarPedidoCanceladoPorCorreo
+);
+
+// Eliminar definitivamente un pedido cancelado
+router.delete('/cancelado/:id',
+  verifyToken,
+  checkPermission('pedidos.eliminar'),
+  pedidoController.deletePedidocancelado
 );
 
 // Ruta para probar configuración de correo

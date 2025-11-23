@@ -28,11 +28,6 @@ const productSchema = new mongoose.Schema({
         ref:'Category',
         required:[true, 'la categoria es requerida']
     },
-    subcategory:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:'Subcategory',
-        required:[true,'la subcategoria es requerida']
-    },
     images:[{
         type:String
     }],

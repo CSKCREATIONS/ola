@@ -44,7 +44,7 @@ router.patch('/:id/deactivate',
 router.patch('/:id/activate',
     verifyToken,
     checkPermission('categorias.editar'),
-    categoryController.activarCategoriaYRelacionados
+    categoryController.activarCategoria
 );
 
 

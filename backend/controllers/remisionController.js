@@ -7,6 +7,16 @@ const emailSender = require('../utils/emailSender');
 const { normalizeProducto, calcularTotales } = require('../utils/normalize');
 const { isValidEmail } = require('../utils/validators');
 
+const sanitizarId = (id) => {
+  const idSanitizado = typeof id === 'string' ? id.trim() : '';
+  // Use RegExp.exec for deterministic behavior (avoids returning arrays like String.match)
+  if (!/^[0-9a-fA-F]{24}$/.exec(idSanitizado)) {
+    return null;
+  }
+  return idSanitizado;
+};
+
+
 async function fetchRemisionOrThrow(id) {
   // Validate id early to avoid costly DB lookups with invalid input
   const idStr = typeof id === 'string' ? id.trim() : '';
@@ -77,62 +87,162 @@ async function trySendWithSendGrid(correoDestino, asunto, mensaje, htmlContent, 
   }
 }
 
-function respondSimulatedOrError(res, lastError, correoDestino, asunto) {
-  const isDevelopment = process.env.NODE_ENV !== 'production';
-  if (isDevelopment) {
-    console.log('🧪 Modo desarrollo: simulando envío de correo');
-    return res.json({ message: 'Remisión enviada por correo exitosamente (modo desarrollo)', destinatario: correoDestino, asunto, simulado: true, proveedor: 'Simulado - Desarrollo', nota: 'En producción, configure correctamente Gmail SMTP o SendGrid' });
+// Helper local para enviar correo con adjunto (evita dependencia circular con pedidoControllers)
+async function enviarCorreoConAttachment(destinatario, asunto, htmlContent, pdfAttachment) {
+  const attachments = pdfAttachment ? [{ filename: pdfAttachment.filename, content: pdfAttachment.content, contentType: pdfAttachment.contentType }] : [];
+  // Intentar Gmail vía wrapper unificado
+  try {
+    const result = await emailSender.sendMail(destinatario, asunto, htmlContent, attachments);
+    if (result?.accepted?.length || !result?.rejected?.length) {
+      console.log('✅ Correo enviado (Gmail/local transporter)');
+      return;
+    }
+    console.warn('⚠️ Gmail/transporter no aceptó destinatario, intentando SendGrid');
+  } catch (e) {
+    console.warn('⚠️ Falló envío vía Gmail/transporter:', e.message);
   }
-
-  console.error('❌ No se pudo enviar el correo con ningún proveedor');
-  return res.status(500).json({ message: 'Error al enviar correo', error: lastError?.message || 'Error desconocido en los proveedores de correo', detalles: 'Verifique la configuración de Gmail SMTP o SendGrid', configuracion: { gmail: !!(process.env.GMAIL_USER || process.env.EMAIL_USER), sendgrid: !!process.env.SENDGRID_API_KEY } });
+  // Fallback SendGrid
+  const falloGmailMensaje = 'Fallback desde Gmail/transporter';
+  const sgRes = await trySendWithSendGrid(destinatario, asunto, falloGmailMensaje, htmlContent, pdfAttachment);
+  if (sgRes.ok) {
+    console.log('✅ Correo enviado (SendGrid)');
+    return;
+  }
+  throw new Error('No se pudo enviar el correo: proveedores no disponibles');
 }
 
-// Enviar remisión por correo (refactorado, baja complejidad)
+
+
+
+
+
 exports.enviarRemisionPorCorreo = async (req, res) => {
   try {
-    const correoDestino = req.body.correoDestino;
-    const asunto = req.body.asunto;
-    const mensaje = req.body.mensaje || '';
+    const { correoDestino, asunto, mensaje } = req.body;
+    
+    // Sanitizar el ID para prevenir inyección NoSQL
+    const pedidoId = sanitizarId(req.params.id);
+    if (!pedidoId) {
+      return res.status(400).json({ message: 'ID de pedido inválido' });
+    }
+    
+    console.log('🔍 Iniciando envío de remisión por correo:', pedidoId);
+    console.log('📧 Datos de envío:', { correoDestino, asunto });
 
-    if (!correoDestino || !isValidEmail(correoDestino)) {
-      return res.status(400).json({ message: 'Correo destinatario inválido o faltante' });
+    // Intentar tratar el ID primero como Pedido
+    let pedido = await Pedido.findById(pedidoId)
+      .populate('cliente')
+      .populate('productos.product')
+      .exec();
+
+    let remisionDoc = null;
+    let modo = 'pedido';
+
+    if (!pedido) {
+      // Fallback: intentar como Remision existente
+      remisionDoc = await Remision.findById(pedidoId)
+        .populate('cliente')
+        .exec();
+      if (!remisionDoc) {
+        return res.status(404).json({ message: 'Pedido o remisión no encontrado' });
+      }
+      modo = 'remision';
     }
 
-    let remision;
+    let numeroRemision; let htmlContent = ''; let destinatario; let asuntoFinal; let pdfAttachment = null;
+
+    if (modo === 'pedido') {
+      destinatario = correoDestino || pedido.cliente?.correo;
+      // Generar número dinámico para esta remisión derivada del pedido
+      numeroRemision = `REM-${pedido.numeroPedido}-${Date.now().toString().slice(-6)}`;
+      asuntoFinal = asunto || `Remisión - Pedido ${pedido.numeroPedido} - ${process.env.COMPANY_NAME || 'JLA Global Company'}`;
+      // Construir HTML ligero sin llamar a generarHTMLRemision (solicitud del usuario)
+      htmlContent = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8" /><title>Remisión ${numeroRemision}</title></head><body style="font-family:Arial,sans-serif;line-height:1.5;">
+        <h2 style="color:#059669;margin:0 0 12px;">Remisión ${numeroRemision}</h2>
+        <p><strong>Pedido origen:</strong> ${pedido.numeroPedido}</p>
+        <p><strong>Cliente:</strong> ${pedido.cliente?.nombre || 'N/A'} | <strong>Correo:</strong> ${pedido.cliente?.correo || 'N/A'}</p>
+        <p><strong>Productos:</strong> ${(pedido.productos||[]).length} items</p>
+        ${mensaje ? `<div style='margin-top:10px;padding:10px;border:1px solid #ddd;border-radius:6px;background:#f9f9f9;'>${mensaje}</div>` : ''}
+        <p style="margin-top:20px;font-size:12px;color:#666;">Documento generado automáticamente - ${new Date().toLocaleString('es-ES')}</p>
+      </body></html>`;
+      try {
+        console.log('📄 Generando PDF (derivado de pedido)...');
+        const pdfService = new PDFService();
+        const remisionData = {
+          numeroRemision,
+          pedidoReferencia: pedido._id,
+          codigoPedido: pedido.numeroPedido,
+          cliente: {
+            nombre: pedido.cliente.nombre,
+            correo: pedido.cliente.correo,
+            telefono: pedido.cliente.telefono,
+            ciudad: pedido.cliente.ciudad
+          },
+            productos: pedido.productos.map(p => ({
+            nombre: p.product?.name || 'Producto',
+            cantidad: p.cantidad,
+            precioUnitario: p.product?.price || 0,
+            total: (p.cantidad || 0) * (p.product?.price || 0),
+            codigo: p.product?.codigo || 'N/A'
+          })),
+          fechaRemision: new Date(),
+          responsable: null,
+          estado: 'activa',
+          total: pedido.productos.reduce((total, p) => total + ((p.cantidad || 0) * (p.product?.price || 0)), 0)
+        };
+        const pdfData = await pdfService.generarPDFRemision(remisionData);
+        pdfAttachment = { filename: pdfData.filename, content: pdfData.buffer, contentType: pdfData.contentType };
+        console.log('✅ PDF generado (pedido)');
+      } catch (e) {
+        console.warn('⚠️ PDF no generado (pedido):', e.message);
+      }
+    } else {
+      // Modo remisión existente
+      numeroRemision = remisionDoc.numeroRemision;
+      destinatario = correoDestino || remisionDoc.cliente?.correo;
+      asuntoFinal = asunto || `Remisión ${numeroRemision} - ${process.env.COMPANY_NAME || 'JLA Global Company'}`;
+      // Construir HTML ligero sin llamar a generarHTMLRemision (solicitud del usuario)
+      htmlContent = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8" /><title>Remisión ${numeroRemision}</title></head><body style="font-family:Arial,sans-serif;line-height:1.5;">
+        <h2 style="color:#059669;margin:0 0 12px;">Remisión ${numeroRemision}</h2>
+        <p><strong>Cliente:</strong> ${remisionDoc.cliente?.nombre || 'N/A'} | <strong>Correo:</strong> ${remisionDoc.cliente?.correo || 'N/A'}</p>
+        <p><strong>Productos:</strong> ${(remisionDoc.productos||[]).length} items</p>
+        ${mensaje ? `<div style='margin-top:10px;padding:10px;border:1px solid #ddd;border-radius:6px;background:#f9f9f9;'>${mensaje}</div>` : ''}
+        <p style="margin-top:20px;font-size:12px;color:#666;">Documento generado automáticamente - ${new Date().toLocaleString('es-ES')}</p>
+      </body></html>`;
+      const pedidoLike = {
+        numeroPedido: remisionDoc.codigoPedido || remisionDoc.numeroRemision,
+        cliente: remisionDoc.cliente,
+        estado: remisionDoc.estado,
+        observaciones: remisionDoc.observaciones,
+        productos: (remisionDoc.productos || []).map(p => ({
+          product: { name: p.nombre, price: p.precioUnitario, codigo: p.codigo },
+          cantidad: p.cantidad
+        }))
+      };
+
+      try {
+        console.log('📄 Generando PDF (remisión existente)...');
+        const pdfService = new PDFService();
+        const pdfData = await pdfService.generarPDFRemision(remisionDoc.toObject ? remisionDoc.toObject() : remisionDoc);
+        pdfAttachment = { filename: pdfData.filename, content: pdfData.buffer, contentType: pdfData.contentType };
+        console.log('✅ PDF generado (remisión)');
+      } catch (e) {
+        console.warn('⚠️ PDF no generado (remisión):', e.message);
+      }
+    }
+
+    // Enviar primero sin bloquear por PDF (si pdfAttachment llegó antes se adjunta)
     try {
-      remision = await fetchRemisionOrThrow(req.params.id);
-    } catch (e) {
-      if (e.code === 'INVALID_ID') return res.status(400).json({ message: 'ID de remisión inválido', id: req.params.id });
-      if (e.code === 'REMISION_NOT_FOUND') return res.status(404).json({ message: 'Remisión no encontrada', id: req.params.id });
-      throw e;
+      await enviarCorreoConAttachment(destinatario, asuntoFinal, htmlContent, pdfAttachment);
+    } catch (sendErr) {
+      console.error('❌ Error enviando correo de remisión:', sendErr.message);
+      return res.status(500).json({ message: 'Error al enviar remisión por correo', error: sendErr.message });
     }
 
-    // Preparar asunto y contenido HTML sencillo (no el template completo para reducir complejidad)
-    const asuntoFinal = asunto || `Remisión ${remision.numeroRemision} - ${process.env.COMPANY_NAME || ''}`;
-    const htmlContent = `<!doctype html><html><body><h2>Remisión ${remision.numeroRemision}</h2><p>Cliente: ${remision.cliente?.nombre || 'N/A'}</p><p>Total: $${(remision.total || 0).toLocaleString('es-ES')}</p><div>${mensaje}</div></body></html>`;
-
-    const pdfAttachment = await generatePdfAttachmentSafe(remision);
-
-    // First try centralized email sender (prefers Gmail transporter / OAuth when configured)
-    try {
-      const attachments = pdfAttachment ? [{ filename: pdfAttachment.filename, content: pdfAttachment.content, contentType: pdfAttachment.contentType }] : [];
-      await emailSender.sendMail(correoDestino, asuntoFinal, htmlContent, attachments);
-      // If sendMail resolved, assume success (gmailSender throws on failure)
-      return res.json({ message: 'Remisión enviada por correo exitosamente', proveedor: 'Gmail/Configured' });
-    } catch (error_) {
-      console.warn('emailSender failed, falling back to SendGrid or simulation:', error_?.message || error_);
-    }
-
-    // Fallback: try SendGrid
-    const sgResult = await trySendWithSendGrid(correoDestino, asuntoFinal, mensaje, htmlContent, pdfAttachment);
-    if (sgResult.ok) return res.json({ message: 'Remisión enviada por correo exitosamente', proveedor: 'SendGrid' });
-
-    // Nothing worked — respond with simulated/dev behavior or error
-    return respondSimulatedOrError(res, sgResult.error || null, correoDestino, asuntoFinal);
+    return res.json({ message: 'Remisión enviada por correo exitosamente', modo, numeroRemision, adjuntoPDF: !!pdfAttachment });
   } catch (error) {
     console.error('❌ Error al enviar remisión por correo:', error);
-    return res.status(500).json({ message: 'Error al enviar remisión por correo', error: error.message });
+    res.status(500).json({ message: 'Error al enviar remisión por correo', error: error.message });
   }
 };
 

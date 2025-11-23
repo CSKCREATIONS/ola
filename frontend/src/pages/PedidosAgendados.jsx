@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import Fijo from '../components/Fijo';
 import NavVentas from '../components/NavVentas';
 import Swal from 'sweetalert2';
@@ -9,6 +8,7 @@ import jsPDF from 'jspdf';
 import * as XLSX from 'xlsx';
 import EditarPedido from '../components/EditarPedido';
 import PedidoAgendadoPreview from '../components/PedidoAgendadoPreview';
+import RemisionPreview from '../components/RemisionPreview';
 import SharedListHeaderCard from '../components/SharedListHeaderCard';
 import AdvancedStats from '../components/AdvancedStats';
 import * as TinyMCE from "@tinymce/tinymce-react";
@@ -233,12 +233,13 @@ if (typeof document !== 'undefined') {
 }
 
 export default function PedidosAgendados() {
-  const navigate = useNavigate();
   const [pedidos, setPedidos] = useState([]);
   const [mostrarModalAgendar, setMostrarModalAgendar] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const [cotizacionPreview, setCotizacionPreview] = useState(null);
+  const [remisionPreviewData, setRemisionPreviewData] = useState(null);
+  const [showRemisionPreview, setShowRemisionPreview] = useState(false);
 
   // Usuario autenticado (para mostrar en Responsable)
   const [user, setUser] = useState(null);
@@ -667,15 +668,46 @@ export default function PedidosAgendados() {
       const res = await api.post(`/api/pedidos/${id}/remisionar`, { fechaEntrega: fechaSeleccionada });
       const data = res.data || res;
       if (res.status >= 200 && res.status < 300) {
+        // Remover el pedido de la lista local (ya remisionado / entregado)
         setPedidos(prev => prev.filter(p => p._id !== id));
-        await Swal.fire('Remisión creada', 'La remisión se ha creado correctamente.', 'success');
-        navigate('/PedidosEntregados');
+        // Cerrar vista previa del pedido agendado si estaba abierta
+        setCotizacionPreview(null);
+        // Obtener objeto remisión desde la respuesta
+        const remision = (res.data && res.data.remision) || (res.data?.data && res.data.data.remision) || null;
+        if (remision) {
+          setRemisionPreviewData(remision);
+          setShowRemisionPreview(true);
+          // Toast informativo
+          Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: `Pedido ${remision.codigoPedido || ''} remisionado`,
+            showConfirmButton: false,
+            timer: 2500,
+            timerProgressBar: true
+          });
+        } else {
+          // Fallback si no llegó el objeto completo
+          await Swal.fire('Remisión creada', 'La remisión se ha creado correctamente.', 'success');
+        }
       } else {
         throw new Error(data.message || 'No se pudo crear la remisión');
       }
     } catch (error) {
       console.error('Error al remisionar pedido:', error);
-      Swal.fire('Error', error.message || 'No se pudo remisionar el pedido', 'error');
+      const responseData = error?.response?.data;
+      // Manejo específico para stock insuficiente
+      if (responseData?.codigo === 'STOCK_INSUFICIENTE') {
+        Swal.fire({
+          icon: 'error',
+          title: 'Stock insuficiente',
+          html: `<p style="font-size:14px;line-height:1.4;margin:0;">${responseData.message || 'El stock disponible no cubre la cantidad solicitada.'}</p>`
+        });
+        return;
+      }
+      // Otros errores genéricos
+      Swal.fire('Error', responseData?.message || error.message || 'No se pudo remisionar el pedido', 'error');
     }
   };
 
@@ -908,6 +940,13 @@ export default function PedidosAgendados() {
                 onClose={() => setCotizacionPreview(null)}
                 onEmailSent={handleEmailSent}
                 onRemisionar={() => remisionarPedido(cotizacionPreview._id)}
+              />
+            )}
+
+            {showRemisionPreview && remisionPreviewData && (
+              <RemisionPreview
+                datos={remisionPreviewData}
+                onClose={() => { setShowRemisionPreview(false); setRemisionPreviewData(null); }}
               />
             )}
 

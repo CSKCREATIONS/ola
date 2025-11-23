@@ -102,315 +102,91 @@ class PDFService {
 
   // Generar HTML para cotización
   generarHTMLCotizacion(cotizacion) {
-    // Helper: format date (accepts YYYY-MM-DD or any Date-parsable input)
-    const formatDate = (input) => {
-      if (!input) return 'N/A';
-      const str = String(input);
-      // fast path for YYYY-MM-DD
-      const isoMatch = /^\d{4}-\d{2}-\d{2}$/.test(str);
-      if (isoMatch) {
-        const [y, m, d] = str.split('-').map(s => Number.parseInt(s, 10));
-        if (!Number.isNaN(y) && !Number.isNaN(m) && !Number.isNaN(d)) {
-          return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
-        }
-      }
-      const dt = new Date(input);
-      return Number.isNaN(dt.getTime()) ? 'N/A' : dt.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+    // === Nueva versión alineada a handlePrint de CotizacionPreview.jsx ===
+    const escapeHtml = (str) => {
+      if (typeof str !== 'string') return '';
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     };
-
-    // Helper: parse numeric-like values safely
-    const parseNumber = (v) => Number.parseFloat(v) || 0;
-
-    // Compute fechaCotizacion using formatDate helper
-    const fechaCotizacion = cotizacion.fechaString ? formatDate(cotizacion.fechaString) : (cotizacion.fecha ? formatDate(cotizacion.fecha) : 'N/A');
-
-    // Calcular total si no existe
-    const calcTotal = () => {
+    const formatDate = (data) => {
+      const raw = data?.fechaString || data?.fecha;
+      if (!raw) return 'N/A';
+      const d = new Date(raw);
+      return isNaN(d.getTime()) ? 'N/A' : d.toLocaleDateString('es-ES');
+    };
+    const total = (() => {
       if (cotizacion.total) return Number(cotizacion.total) || 0;
       if (!Array.isArray(cotizacion.productos)) return 0;
-      return cotizacion.productos.reduce((sum, prod) => {
-        const cantidad = parseNumber(prod.cantidad);
-        const valorUnitario = parseNumber(prod.precioUnitario ?? prod.valorUnitario);
-        const descuento = parseNumber(prod.descuento);
-        return sum + (cantidad * valorUnitario * (1 - descuento / 100));
-      }, 0);
-    };
+      return cotizacion.productos.reduce((s, p) => s + (Number(p.subtotal) || (Number(p.cantidad) || 0) * (Number(p.valorUnitario || p.precioUnitario) || 0)), 0);
+    })();
+    const productosRows = Array.isArray(cotizacion.productos) && cotizacion.productos.length > 0 ? cotizacion.productos.map((p, idx) => {
+      const nombre = p.producto?.name || p.producto?.nombre || p.nombre || 'Producto sin nombre';
+      const cantidad = p.cantidad || 0;
+      const valorUnitario = Number.parseFloat(p.valorUnitario || p.precioUnitario || 0).toFixed(2);
+      const subtotal = Number.parseFloat(p.subtotal != null ? p.subtotal : (cantidad * (p.valorUnitario || p.precioUnitario || 0))).toFixed(2);
+      return `<tr style="border-bottom:1px solid #eee; background:${idx % 2 === 0 ? '#fafafa' : '#fff'};">
+        <td style="padding:1rem; font-weight:bold;">${escapeHtml(String(nombre))}</td>
+        <td style="padding:1rem; text-align:center; font-weight:bold;">${cantidad}</td>
+        <td style="padding:1rem; text-align:right;">S/. ${valorUnitario}</td>
+        <td style="padding:1rem; text-align:right; font-weight:bold;">S/. ${subtotal}</td>
+      </tr>`;
+    }).join('') : `<tr><td colspan="4" style="padding:1rem; text-align:center; color:#666;">No hay productos disponibles</td></tr>`;
 
-    const total = calcTotal();
+    const descripcionHtml = cotizacion.descripcion ? `<div style="background:#eff6ff; padding:1rem; border-radius:8px; border-left:4px solid #2563eb; line-height:1.6; white-space:pre-wrap;">${escapeHtml(cotizacion.descripcion)}</div>` : '';
+    const condicionesHtml = cotizacion.condicionesPago ? `<div style="background:#eff6ff; padding:1rem; border-radius:8px; border-left:4px solid #2563eb; line-height:1.6;">${escapeHtml(cotizacion.condicionesPago)}</div>` : '';
 
-    // Render product rows with a small helper to lower complexity
-    const renderProductsRows = () => {
-      if (!Array.isArray(cotizacion.productos) || cotizacion.productos.length === 0) {
-        return `
-              <tr>
-                <td colspan="6" style="padding: 16px; text-align: center; font-size: 13px; color: #6b7280;">
-                  No hay productos disponibles
-                </td>
-              </tr>
-            `;
-      }
-
-      return cotizacion.productos.map(p => {
-        const cantidad = parseNumber(p.cantidad);
-        const nombre = p.producto?.name || p.producto?.nombre || p.nombre || 'Producto sin nombre';
-        const descripcion = p.producto?.description || p.producto?.descripcion || p.descripcion || 'Sin descripción';
-        const valorUnitario = parseNumber(p.precioUnitario ?? p.valorUnitario);
-        const descuento = parseNumber(p.descuento);
-        const subtotal = cantidad * valorUnitario * (1 - descuento / 100);
-        return `
-              <tr style="border-bottom: 1px solid #e5e7eb;">
-                <td style="font-weight: bold;">${cantidad || 0}</td>
-                <td>${nombre}</td>
-                <td style="color: #6b7280;">${descripcion}</td>
-                <td style="text-align: right;">$${valorUnitario.toLocaleString('es-CO')}</td>
-                <td style="text-align: right;">${descuento || 0}%</td>
-                <td style="text-align: right; font-weight: bold;">$${subtotal.toLocaleString('es-CO')}</td>
-              </tr>
-            `;
-      }).join('');
-    };
-
-    return `
-    <!DOCTYPE html>
-    <html lang="es">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Cotización ${cotizacion.codigo}</title>
-        <style>
-            body { 
-                font-family: Arial, sans-serif; 
-                margin: 0; 
-                padding: 24px; 
-                font-size: 14px;
-                line-height: 1.4;
-                background: #fff;
-            }
-            .pdf-cotizacion {
-                background: #fff;
-                padding: 24px;
-                border-radius: 8px;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-                font-size: 14px;
-            }
-            .cotizacion-encabezado h2 { 
-                color: #2563eb; 
-                font-weight: bold; 
-                font-size: 24px; 
-                margin: 0 0 8px 0; 
-            }
-            .info-container { 
-                display: flex; 
-                justify-content: space-between; 
-                align-items: flex-start;
-                font-size: 13px;
-                margin-bottom: 12px;
-            }
-            .info-section { 
-                flex: 1; 
-            }
-            .info-section:first-child { 
-                margin-right: 16px; 
-            }
-            .info-title { 
-                color: #374151; 
-                margin-bottom: 5px; 
-                font-size: 14px;
-                font-weight: normal;
-            }
-            .info-box { 
-                background-color: #f9fafb; 
-                padding: 8px; 
-                border-radius: 4px; 
-                border: 1px solid #e5e7eb; 
-                font-size: 12px; 
-            }
-            .info-box p { 
-                margin: 2px 0; 
-            }
-            .info-box .nombre { 
-                font-weight: bold; 
-                margin-bottom: 2px;
-                font-size: 13px; 
-            }
-            .info-box .ref { 
-                color: #6b7280;
-                font-size: 12px;
-            }
-            hr { 
-                border: none; 
-                border-top: 1px solid #e5e7eb; 
-                margin: 12px 0; 
-            }
-            .descripcion-section { 
-                margin-bottom: 12px; 
-            }
-            .descripcion-title {
-                color: #374151;
-                font-size: 14px;
-                margin-bottom: 5px;
-            }
-            .descripcion-box { 
-                background-color: #fffbeb; 
-                padding: 8px; 
-                border-radius: 4px; 
-                border: 1px solid #fed7aa; 
-                font-size: 12px; 
-            }
-            .tabla-cotizacion { 
-                width: 100%; 
-                border-collapse: collapse; 
-                margin-bottom: 16px; 
-                font-size: 13px; 
-            }
-            .tabla-cotizacion thead tr { 
-                background-color: #f3f4f6; 
-            }
-            .tabla-cotizacion th { 
-                text-align: left;
-                padding: 10px; 
-                font-size: 13px; 
-                font-weight: bold;
-                border-bottom: 1px solid #e5e7eb;
-            }
-            .tabla-cotizacion td { 
-                padding: 10px; 
-                border-bottom: 1px solid #e5e7eb; 
-                font-size: 13px;
-            }
-            .tabla-cotizacion tfoot tr { 
-                background-color: #f9fafb; 
-                font-weight: bold; 
-            }
-            .tabla-cotizacion tfoot td:last-child { 
-                font-size: 16px;
-                color: #059669; 
-            }
-            .condiciones-section { 
-                margin-bottom: 12px; 
-            }
-            .condiciones-title {
-                color: #374151;
-                font-size: 14px;
-                margin-bottom: 5px;
-            }
-            .condiciones-box { 
-                background-color: #f0f9ff; 
-                padding: 8px; 
-                border-radius: 4px; 
-                border: 1px solid #bfdbfe; 
-                font-size: 12px; 
-            }
-            .validez { 
-                margin-top: 16px; 
-                padding: 12px; 
-                background-color: #f8fafc; 
-                border-radius: 6px; 
-                border: 1pxencabezado">
-          <h2>COTIZACIÓN</h2>
-        </div>
-
-        <div class="info-container">
-          <div class="info-section">
-            <h4 class="info-title">CLIENTE:</h4>
-            <div class="info-box">
-              <p class="nombre">${cotizacion.cliente?.nombre || cotizacion.nombreCliente || 'Cliente no especificado'}</p>
-              <p>${cotizacion.cliente?.direccion || 'Dirección no especificada'}</p>
-              <p>${cotizacion.cliente?.ciudad || cotizacion.ciudadCliente || 'Ciudad no especificada'}</p>
-              <p>Tel: ${cotizacion.cliente?.telefono || cotizacion.telefonoCliente || 'No especificado'}</p>
-              <p>${cotizacion.cliente?.correo || cotizacion.correoCliente || 'Sin correo'}</p>
-            </div>
-          </div>
-          
-          <div class="info-section">
-            <h4 class="info-title">EMPRESA:</h4>
-            <div class="info-box">
-              <p class="nombre">${process.env.COMPANY_NAME || 'PANGEA'}</p>
-              <p>Responsable: ${cotizacion.responsable?.firstName || 'Natalia Cardenas'}</p>
-              ${cotizacion.codigo ? '<p class="ref">Ref. Cotización: ' + cotizacion.codigo + '</p>' : ''}
-              <p class="ref">Fecha: ${fechaCotizacion}</p>
-            </div>
-          </div>
-        </div>
-
-        <hr />
-
-        ${cotizacion.descripcion ? 
-          '<div class="descripcion-section">' +
-            '<h4 class="descripcion-title">Descripción de la cotización:</h4>' +
-            '<div class="descripcion-box">' +
-              '<div>' + cotizacion.descripcion + '</div>' +
-            '</div>' +
-          '</div>'
-        : ''}
-
-        <table class="tabla-cotizacion">
-          <thead>
-            <tr>
-              <th>Cant.</th>
-              <th>Producto</th>
-              <th>Descripción</th>
-              <th style="text-align: right;">Valor Unit.</th>
-              <th style="text-align: right;">% Desc.</th>
-              <th style="text-align: right;">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${renderProductsRows()}
-          </tbody>
-          <tfoot>
-            <tr>
-              <td colspan="5" style="padding: 12px; text-align: right; font-size: 14px;">
-                TOTAL COTIZACIÓN:
-              </td>
-              <td style="padding: 12px; text-align: right; font-size: 16px; color: #059669;">
-                $${total.toLocaleString('es-CO')}
-              </td>
-            </tr>
-          </tfoot>
-        </table>
-
-        ${cotizacion.condicionesPago ? 
-          '<div class="condiciones-section">' +
-            '<h4 class="condiciones-title">Condiciones de pago:</h4>' +
-            '<div class="condiciones-box">' +
-              '<div>' + cotizacion.condicionesPago + '</div>' +
-            '</div>' +
-          '</div>'
-        : ''}
-
-        <div class="validez">
-          <p style="margin: 0;">Cotización válida por 15 días</p>
-        </div>
-
-        <div style="margin-top: 40px; display: flex; justify-content: space-between;">
-          <div style="text-align: center; width: 200px;">
-            <div style="border-top: 1px solid #000; margin-top: 50px; padding-top: 5px; font-size: 10px; text-transform: uppercase;">
-              COTIZADO POR
-            </div>
-          </div>
-          <div style="text-align: center; width: 200px;">
-            <div style="border-top: 1px solid #000; margin-top: 50px; padding-top: 5px; font-size: 10px; text-transform: uppercase;">
-              RECIBIDO POR
-            </div>
-          </div>
-        </div>
-
-        <div style="margin-top: 30px; border-top: 1px solid #000; padding-top: 15px;">
-          <h4 style="margin: 0 0 10px 0; font-size: 12px; font-weight: bold; text-transform: uppercase;">
-            TÉRMINOS Y CONDICIONES:
-          </h4>
-          <ul style="margin: 0; padding-left: 20px; font-size: 10px;">
-            <li style="margin-bottom: 5px;">El presente documento es válido por 15 días a partir de la fecha de emisión</li>
-            <li style="margin-bottom: 5px;">Los productos y servicios están sujetos a disponibilidad al momento de la compra</li>
-            <li style="margin-bottom: 5px;">Los precios incluyen IVA y están expresados en pesos colombianos</li>
-            <li>Una vez firmada la cotización, se dará por aceptada la mercancía y las condiciones ofrecidas</li>
-          </ul>
+    return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"/><title>Cotización ${cotizacion.codigo || ''}</title>
+    <style>@page { size: A4 portrait; margin: 12mm; }</style></head><body style="font-family:Arial,Helvetica,sans-serif; margin:0; padding:0; background:#fff;">
+    <div style="display:flex; flex-direction:column; background:#fff; padding:1rem; font-size:12px;">
+      <div style="text-align:center; color:#fff; margin-bottom:2rem; padding:1.5rem; background:linear-gradient(135deg,#2563eb,#1d4ed8); border-radius:8px; font-size:1.8rem; font-weight:bold;">
+        <div style="display:flex; align-items:center; justify-content:center; gap:1rem;">
+          <div>COTIZACIÓN</div>
+          <div style="font-size:1rem; font-weight:normal; margin-top:0.5rem;">N° ${cotizacion.codigo || ''}</div>
         </div>
       </div>
-    </body>
-    </html>
-    `;
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:2rem; margin-bottom:2rem;">
+        <div>
+          <h3 style="border-bottom:3px solid #2563eb; padding-bottom:0.5rem; color:#2563eb; font-size:1.1rem; font-weight:bold; margin:0 0 1rem;">Información Cliente</h3>
+          <div style="line-height:1.8; font-size:12px;">
+            <p style="margin:0"><strong>Nombre:</strong> ${escapeHtml(cotizacion.cliente?.nombre || '')}</p>
+            <p style="margin:0"><strong>Dirección:</strong> ${escapeHtml(cotizacion.cliente?.direccion || '')}</p>
+            <p style="margin:0"><strong>Ciudad:</strong> ${escapeHtml(cotizacion.cliente?.ciudad || '')}</p>
+            <p style="margin:0"><strong>Teléfono:</strong> ${escapeHtml(cotizacion.cliente?.telefono || '')}</p>
+          </div>
+        </div>
+        <div>
+          <h3 style="border-bottom:3px solid #2563eb; padding-bottom:0.5rem; color:#2563eb; font-size:1.1rem; font-weight:bold; margin:0 0 1rem;">Información Empresa</h3>
+          <div style="line-height:1.8; font-size:12px;">
+            <p style="margin:0"><strong>Fecha de cotización:</strong> ${formatDate(cotizacion)}</p>
+            <p style="margin:0"><strong>Empresa:</strong> ${escapeHtml(process.env.COMPANY_NAME || 'JLA Global Company')}</p>
+            <p style="margin:0"><strong>Teléfono:</strong> ${escapeHtml(process.env.COMPANY_PHONE || '(555) 123-4567')}</p>
+          </div>
+        </div>
+      </div>
+      ${cotizacion.descripcion ? `<h3 style="border-bottom:3px solid #2563eb; padding-bottom:0.5rem; color:#2563eb; font-size:1.1rem; font-weight:bold; margin:0 0 1rem;">Descripción</h3>${descripcionHtml}` : ''}
+      <table style="width:100%; border-collapse:collapse; margin-top:1rem; border-radius:8px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+        <thead>
+          <tr style="background:linear-gradient(135deg,#2563eb,#1d4ed8); color:#fff;">
+            <th style="padding:1rem; text-align:left; font-weight:bold;">Producto</th>
+            <th style="padding:1rem; text-align:center; font-weight:bold;">Cantidad</th>
+            <th style="padding:1rem; text-align:right; font-weight:bold;">Precio Unit.</th>
+            <th style="padding:1rem; text-align:right; font-weight:bold;">Subtotal</th>
+          </tr>
+        </thead>
+        <tbody>${productosRows}</tbody>
+        <tfoot>
+          <tr style="background:linear-gradient(135deg,#eff6ff,#dbeafe); border-top:2px solid #2563eb;">
+            <td colspan="3" style="padding:1rem; text-align:right; font-weight:bold; font-size:1rem; color:#2563eb;">TOTAL:</td>
+            <td style="padding:1rem; text-align:right; font-weight:bold; font-size:1.2rem; color:#2563eb;">S/. ${total.toFixed(2)}</td>
+          </tr>
+        </tfoot>
+      </table>
+      ${cotizacion.condicionesPago ? `<h3 style="margin-top:2rem; border-bottom:3px solid #2563eb; padding-bottom:0.5rem; color:#2563eb; font-size:1.1rem; font-weight:bold;">Condiciones de Pago</h3>${condicionesHtml}` : ''}
+      <div style="margin-top:3rem; padding:1.2rem; background:linear-gradient(135deg,#f8f9fa,#e9ecef); border-radius:8px; text-align:center; border-top:3px solid #2563eb; font-size:12px;">
+        <div style="font-size:1rem; font-weight:bold; color:#2563eb; margin-bottom:0.4rem;">JLA Global Company</div>
+        <div style="font-size:0.8rem; color:#666;">Gracias por su preferencia • Cotización válida por ${escapeHtml(cotizacion.validez || '15 días')}</div>
+      </div>
+    </div>
+    </body></html>`;
   }
 
   // Generar HTML para remisión

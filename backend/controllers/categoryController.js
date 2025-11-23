@@ -1,5 +1,4 @@
 const Category = require('../models/category');
-const Subcategoria = require('../models/Subcategory')
 const Products = require('../models/Products');
 
 
@@ -114,6 +113,7 @@ exports.getCategoryById = async (req,res) =>{
     }
 };
 
+// Actualizar categoria
 exports.updateCategory = async (req, res) =>{
     try{
         const{name, description, activo} = req.body;
@@ -167,14 +167,13 @@ exports.updateCategory = async (req, res) =>{
                 message:'Categoria no encontrada'
             });
         }
-        
-        // Si se está desactivando, desactivar subcategorías y productos
-        if(activo === false){
-            const subcategorias = await Subcategoria.find({ category: categoryId });
-            
-            for (const sub of subcategorias) {
-              await Subcategoria.findByIdAndUpdate(sub._id, { activo: false });
-              await Products.updateMany({ subcategory: sub._id }, { activo: false });
+        // Si se desactiva la categoría, también desactivar productos asociados (sin tocar subcategorías)
+        if (updateData.activo === false) {
+            try {
+                const prodResult = await Products.updateMany({ category: categoryId }, { activo: false });
+                console.log(`Productos desactivados por categoría ${categoryId}: ${prodResult.modifiedCount}`);
+            } catch (error_) {
+                console.warn('No se pudieron desactivar productos asociados a la categoría:', error_?.message || error_);
             }
         }
         
@@ -195,47 +194,33 @@ exports.updateCategory = async (req, res) =>{
 };
 
 
-
-// DESACTIVAR Categoría + Subcategorías + Productos
+// DESACTIVAR sólo la Categoría (sin subcategorías ni productos)
 exports.desactivarCategoriaYRelacionados = async (req, res) => {
-  const { id } = req.params;
-
-  try {
-    // Sanitizar el ID para prevenir inyección NoSQL
-    const categoryId = typeof id === 'string' ? id.trim() : '';
-    
-    if (!categoryId) {
-      return res.status(400).json({
-        success: false,
-        message: 'ID de categoría inválido'
-      });
+    const { id } = req.params;
+    try {
+        const categoryId = typeof id === 'string' ? id.trim() : '';
+        if (!categoryId) {
+            return res.status(400).json({ success: false, message: 'ID de categoría inválido' });
+        }
+        const categoria = await Category.findByIdAndUpdate(categoryId, { activo: false }, { new: true });
+        if (!categoria) return res.status(404).json({ success: false, message: 'Categoría no encontrada' });
+        // Desactivar productos ligados a esta categoría
+        try {
+            const prodResult = await Products.updateMany({ category: categoryId }, { activo: false });
+            console.log(`Productos desactivados por categoría ${categoryId}: ${prodResult.modifiedCount}`);
+        } catch (error_) {
+            console.warn('No se pudieron desactivar productos asociados a la categoría:', error_?.message || error_);
+        }
+        return res.status(200).json({ success: true, message: 'Categoría desactivada correctamente', data: categoria });
+    } catch (error) {
+        console.error('Error al desactivar categoría:', error);
+        return res.status(500).json({ success: false, message: 'Error al desactivar la categoría', error: error.message });
     }
-
-    await Category.findByIdAndUpdate(categoryId, { activo: false });
-
-    const subcategorias = await Subcategoria.find({ category: categoryId });
-
-    for (const sub of subcategorias) {
-      await Subcategoria.findByIdAndUpdate(sub._id, { activo: false });
-
-      // CAMBIO AQUÍ 👇
-      const productos = await Products.find({ subcategory: sub._id });
-      console.log(`Productos encontrados para sub ${sub.name}:`, productos.length);
-
-      const result = await Products.updateMany({ subcategory: sub._id }, { activo: false });
-      console.log('Productos desactivados:', result.modifiedCount);
-    }
-
-    res.status(200).json({ message: 'Todo desactivado correctamente' });
-  } catch (error) {
-    console.error('Error al desactivar:', error);
-    res.status(500).json({ message: 'Error al desactivar la categoría', error });
-  }
 };
 
 
 // ACTIVAR Categoría (no activa subcategorías ni productos)
-exports.activarCategoriaYRelacionados = async (req, res) => {
+exports.activarCategoria = async (req, res) => {
     const { id } = req.params;
 
     try {
@@ -252,7 +237,7 @@ exports.activarCategoriaYRelacionados = async (req, res) => {
         const categoria = await Category.findByIdAndUpdate(categoryId, { activo: true }, { new: true });
         if (!categoria) return res.status(404).json({ message: 'Categoría no encontrada' });
 
-        // Nota: ya no se activan automáticamente las subcategorías ni los productos asociados.
+        // Activación sólo afecta la categoría.
         res.status(200).json({ message: 'Categoría activada correctamente' });
     } catch (error) {
         console.error('Error al activar:', error);

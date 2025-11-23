@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
-import '../App.css'; // Asegúrate de crear este archivo
+import './CambiarContrasena.css';
 import api from '../api/axiosConfig';
 
 export default function CambiarContrasena() {
@@ -44,11 +44,10 @@ export default function CambiarContrasena() {
             type="password"
             id="nueva"
             required
-            placeholder=" "
+            placeholder="Nueva contraseña"
             value={newPassword}
             onChange={e => setNewPassword(e.target.value)}
           />
-          <label htmlFor="nueva">Nueva contraseña</label>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', marginBottom: '1rem', alignItems: 'center' }}>
@@ -57,11 +56,10 @@ export default function CambiarContrasena() {
             type="password"
             id="confirmar"
             required
-            placeholder=" "
+            placeholder="Confirmar contraseña"
             value={confirmPassword}
             onChange={e => setConfirmPassword(e.target.value)}
           />
-          <label htmlFor="confirmar">Confirmar contraseña</label>
         </div>
 
         <button type="submit" className="btn btn-cambiar">Actualizar contraseña</button>

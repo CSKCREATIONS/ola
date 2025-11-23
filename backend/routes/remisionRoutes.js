@@ -77,7 +77,7 @@ router.get('/:id',
 );
 
 // Enviar remisión por correo
-router.post('/:id/enviar-correo',
+router.post('/:id/enviar-remision',
   verifyToken,
   checkPermission('remisiones.enviar'),
   remisionController.enviarRemisionPorCorreo

@@ -200,7 +200,7 @@ const SendModal = React.memo(function SendModal({ visible, correo, asunto, mensa
             Correo del destinatario:
           </label>
           <input id="correo-remision-preview" type="email" value={correo} onChange={e => onChange('correo', e.target.value)}
-            placeholder="ejemplo@correo.com" style={{ width: '100%', padding: '0.75rem', border: '1px solid #ddd', borderRadius: '6px', fontSize: '1rem' }} />
+            placeholder="ejemplo@correo.com" style={{ width: '100%', padding: '0.75rem', border: '1px solid #ddd', borderRadius: '6px', fontSize: '1rem' }} required />
         </div>
 
         <div style={{ marginBottom: '1rem' }}>
@@ -364,14 +364,21 @@ export default function RemisionPreview({ datos, onClose }) {
       ? '📝 OBSERVACIONES:\n' + (datos?.observaciones || datosConDefaults.observaciones) + '\n\n'
       : '';
     setMensaje(
-      `Estimado/a ${datos?.cliente?.nombre || datosConDefaults.cliente?.nombre || 'cliente'},\n\nEsperamos se encuentre muy bien. Adjunto encontrará la remisión de entrega con la siguiente información:\n\n📦 DETALLES DE LA REMISIÓN:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Número de remisión: ${datos?.numeroRemision || datosConDefaults.numeroRemision || 'N/A'}\n• Fecha de remisión: ${formatDateIso(datos?.fechaRemision || datosConDefaults.fechaRemision)}\n• Fecha de entrega: ${formatDateIso(datos?.fechaEntrega || datosConDefaults.fechaEntrega)}\n• Cliente: ${datos?.cliente?.nombre || datosConDefaults.cliente?.nombre || 'N/A'}\n• Correo: ${datos?.cliente?.correo || datosConDefaults.cliente?.correo || 'N/A'}\n• Teléfono: ${datos?.cliente?.telefono || datosConDefaults.cliente?.telefono || 'N/A'}\n• Ciudad: ${datos?.cliente?.ciudad || datosConDefaults.cliente?.ciudad || 'N/A'}\n• Estado: ${datos?.estado || datosConDefaults.estado || 'Entregado'} ✅\n• Total de productos entregados: ${datos?.productos?.length || datosConDefaults.productos?.length || 0} artículos\n• TOTAL GENERAL: S/. ${totalFinal.toLocaleString('es-ES')}\n• Ref. Pedido: ${datos?.codigoPedido || datosConDefaults.codigoPedido || 'N/A'}\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` + obsText + `¡Gracias por confiar en nosotros y esperamos que los productos entregados cumplan con sus expectativas!\n\nSi tiene alguna pregunta o comentario sobre la entrega, no dude en contactarnos.\n\nSaludos cordiales,\n\n${remitenteLinea}${remitenteEmailLinea}${remitenteTelefonoLinea}\n\n${COMPANY_NAME}\n🌐 Productos de calidad`
+      `Estimado/a ${datos?.cliente?.nombre || datosConDefaults.cliente?.nombre || 'cliente'},\n\nEsperamos se encuentre muy bien. Adjunto encontrará el documento PDF de la la remisión de entrega de su pedido con la siguiente información:\n\n📦 DETALLES DE LA REMISIÓN:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Número de remisión: ${datos?.numeroRemision || datosConDefaults.numeroRemision || 'N/A'}\n• Fecha de remisión: ${formatDateIso(datos?.fechaRemision || datosConDefaults.fechaRemision)}\n• Fecha de entrega: ${formatDateIso(datos?.fechaEntrega || datosConDefaults.fechaEntrega)}\n• Cliente: ${datos?.cliente?.nombre || datosConDefaults.cliente?.nombre || 'N/A'}\n• Correo: ${datos?.cliente?.correo || datosConDefaults.cliente?.correo || 'N/A'}\n• Teléfono: ${datos?.cliente?.telefono || datosConDefaults.cliente?.telefono || 'N/A'}\n• Ciudad: ${datos?.cliente?.ciudad || datosConDefaults.cliente?.ciudad || 'N/A'}\n• Estado: ${datos?.estado || datosConDefaults.estado || 'Entregado'} ✅\n• Total de productos entregados: ${datos?.productos?.length || datosConDefaults.productos?.length || 0} artículos\n• TOTAL GENERAL: S/. ${totalFinal.toLocaleString('es-ES')}\n• Ref. Pedido: ${datos?.codigoPedido || datosConDefaults.codigoPedido || 'N/A'}\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` + obsText + `¡Gracias por confiar en nosotros y esperamos que los productos entregados cumplan con sus expectativas!\n\nSi tiene alguna pregunta o comentario sobre la entrega, no dude en contactarnos.\n\nSaludos cordiales,\n\n${remitenteLinea}${remitenteEmailLinea}${remitenteTelefonoLinea}\n\n${COMPANY_NAME}\n🌐 Productos de calidad`
     );
     setShowEnviarModal(true);
   }, [usuario, datos, datosConDefaults, COMPANY_NAME]);
 
+  // Ensure correo state is initialized from resolved cliente if available,
+  // but do not override if user already typed an email.
+  useEffect(() => {
+    const defaultCorreo = clienteResolved?.correo || datosConDefaults.cliente?.correo || '';
+    if (!correo && defaultCorreo) setCorreo(defaultCorreo);
+  }, [clienteResolved?.correo, datosConDefaults.cliente?.correo]);
+
   const enviarRemisionPorCorreo = useCallback(async () => {
     try {
-      const response = await api.post(`/api/remisiones/${datos?._id}/enviar-correo`, {
+      const response = await api.post(`/api/remisiones/${datos?._id}/enviar-remision`, {
         remisionId: datos?._id,
         correoDestino: correo,
         asunto, mensaje

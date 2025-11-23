@@ -479,7 +479,7 @@ export default function RegistrarCompra() {
                 )}
               </div>
 
-              {/* Lista de Productos Agregados */}
+              {/* Inventario Agregados */}
               {nuevaCompra.productos.length > 0 && (
                 <div className="modal-section">
                   <h6>

@@ -1,13 +1,12 @@
 const Product = require('../models/Products');
 const Category = require('../models/category');
-const Subcategory = require('../models/Subcategory');
 const Proveedores = require('../models/proveedores');
 
 exports.createProduct = async(req,res) =>{
     try{
-        const{name,description, price, stock, category,subcategory, proveedor} = req.body;
+        const{name,description, price, stock, category, proveedor} = req.body;
 
-        if(!name || !description || !price || !stock || !category || !subcategory || !proveedor){
+        if(!name || !description || !price || !stock || !category || !proveedor){
             return res.status(404).json({
                 success: false,
                 message:'todos los campos son obligatorios'
@@ -22,17 +21,6 @@ exports.createProduct = async(req,res) =>{
             });
         }
 
-        const subcategoryExists = await Subcategory.findOne({
-            _id:subcategory,
-            category:category
-        });
-
-        if(!subcategoryExists){
-            return res.status(400).json({
-                success:false,
-                message:'la subcategoria no existe o no pertenecea a la categoria especifica'
-            });
-        }
 
         const proveedorExist = await Proveedores.findById(proveedor);
         if (!proveedorExist) {
@@ -48,7 +36,6 @@ exports.createProduct = async(req,res) =>{
             description,
             stock,
             category,
-            subcategory,
             proveedor
         });
 
@@ -64,7 +51,6 @@ exports.createProduct = async(req,res) =>{
 
         const productWithDetails = await Product.findById(savedProduct._id)
             .populate('category', 'name')
-            .populate('subcategory','name')
             .populate('proveedor');
 
 
@@ -93,7 +79,6 @@ exports.getProducts = async (req,res) =>{
     try{
         const products = await Product.find()
             .populate('category','name') 
-            .populate('subcategory','name')
             .populate('proveedor', 'nombre empresa')
             .sort({createdAt: -1 });
 
@@ -115,7 +100,6 @@ exports.getProductById = async (req, res) =>{
     try{
         const product = await Product.findById(req.params.id)
             .populate('category','name description')
-            .populate('subcategory','name description')
             .populate('proveedor', 'nombre empresa');
 
         if(!product){
@@ -140,7 +124,7 @@ exports.getProductById = async (req, res) =>{
 
 exports.updateProduct = async (req,res) =>{
     try{
-        const {name, description, price,stock,category,subcategory, proveedor} = req.body;
+        const {name, description, price,stock,category, proveedor} = req.body;
         const updateData = {};
 
         if(name) updateData.name = name;
@@ -159,20 +143,7 @@ exports.updateProduct = async (req,res) =>{
             updateData.category = category;
         }
 
-        if(subcategory){
-            const subcategoryExists = await Subcategory.findOne({
-                _id:subcategory,
-                category:category || updateData.category
-            });
-
-            if(!subcategoryExists){
-                return res.status(400).json({
-                    success:false,
-                    message:'esta subcategoria no existe o no pertenece a la categoria '
-                });
-            }
-            updateData.subcategory = subcategory;
-        }
+        
 
         if(proveedor){
             const proveedorExist = await Proveedores.findById(proveedor);
@@ -193,7 +164,6 @@ exports.updateProduct = async (req,res) =>{
             }
         )
         .populate('category', 'name')
-        .populate('subcategory','name')
         .populate('proveedor', 'nombre empresa');
 
         if(!updatedProduct){
@@ -235,15 +205,24 @@ exports.deactivateProduct = async (req, res) => {
 exports.activateProduct = async (req, res) => {
     try {
         const { id } = req.params;
-        const product = await Product.findByIdAndUpdate(
-            id,
-            { activo: true },
-            { new: true }
-        );
-
-        if (!product) {
+        // Obtener el producto primero para validar su categoría
+        const existing = await Product.findById(id).populate('category', 'name activo');
+        if (!existing) {
             return res.status(404).json({ message: 'Producto no encontrado' });
         }
+
+        // Validar que la categoría exista y esté activa
+        if (!existing.category) {
+            return res.status(400).json({ message: 'El producto no tiene categoría asociada válida' });
+        }
+        if (existing.category.activo === false) {
+            return res.status(400).json({ message: 'La categoría del producto está desactivada; no se puede activar el producto' });
+        }
+
+        // Activar el producto
+        const product = await Product.findByIdAndUpdate(id, { activo: true }, { new: true })
+            .populate('category', 'name')
+            .populate('proveedor', 'nombre empresa');
 
         res.status(200).json({ message: 'Producto activado', product });
     } catch (error) {

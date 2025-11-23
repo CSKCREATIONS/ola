@@ -1,5 +1,4 @@
 const Category = require('../models/category');
-const Subcategory = require('../models/Subcategory');
 const Product = require('../models/Products');
 const Cotizacion = require('../models/cotizaciones');
 const Cliente = require('../models/Cliente');
