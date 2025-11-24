@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 
 //test para login correcto
 test('login-exitoso', async ({ page }) => {
-  await page.goto('https://pangea.casacam.net/');
+  await page.goto('http://localhost:3000/');
   await page.getByRole('textbox', { name: 'Usuario' }).click();
   await page.getByRole('textbox', { name: 'Usuario' }).fill('admin');
   await page.getByRole('textbox', { name: 'Contraseña' }).click();
