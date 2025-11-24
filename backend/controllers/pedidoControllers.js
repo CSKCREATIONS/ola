@@ -267,19 +267,40 @@ try {
 exports.getPedidos = async (req, res) => {
   try {
     const { estado } = req.query;
-    
+
     // Sanitizar el estado para prevenir inyección NoSQL
     let filtro = {};
     if (estado) {
       const estadoSanitizado = typeof estado === 'string' ? estado.trim() : '';
-      
+
       // Lista blanca de estados válidos
       const estadosValidos = ['Pendiente', 'Agendado', 'Entregado', 'Cancelado'];
-      
+
       if (estadoSanitizado && estadosValidos.includes(estadoSanitizado)) {
         filtro = { estado: estadoSanitizado };
       } else if (estadoSanitizado) {
-        return res.status(400).json({ 
+        return res.status(400).json({
+          message: 'Estado inválido',
+          allowed: estadosValidos
+        });
+      }
+    }
+
+    // Obtener pedidos según filtro
+    const pedidos = await Pedido.find(filtro)
+      .populate('cliente')
+      .populate('productos.product')
+      .populate('cotizacionReferenciada', 'codigo')
+      .sort({ createdAt: -1 })
+      .exec();
+
+    return res.status(200).json({ data: pedidos });
+  } catch (error) {
+    console.error('❌ Error al obtener pedidos:', error);
+    return res.status(500).json({ message: 'Error al obtener pedidos', error: error.message });
+  }
+};
+
 exports.createPedido = async (req, res) => {
   try {
     const { cliente, productos, fechaEntrega, observacion, cotizacionReferenciada, cotizacionCodigo, descripcion, condicionesPago } = req.body;
@@ -325,44 +346,6 @@ exports.createPedido = async (req, res) => {
     // Delegar reglas de actualización de cliente a helper para reducir complejidad
     try {
       await applyPostPedidoClienteRules(clienteId, cotizacionReferenciada, clientePayload);
-    } catch (errSet) {
-      console.warn('⚠️ Error aplicando reglas de cliente post-pedido (no bloqueante):', errSet?.message || errSet);
-    }
-
-    return res.status(201).json(pedidoGuardado);
-  } catch (err) {
-    console.error('❌ Error al crear pedido:', err);
-    return res.status(500).json({ message: 'Error al crear el pedido', error: err.message });
-  }
-};
-    //     -> Si `esCliente` === false (prospecto), NO cambiar `esCliente`, pero actualizar solamente `operacion: 'agenda'`.
-    // - En los demás casos (pedido normal): mantener comportamiento previo: marcar esCliente:true
-    //   a menos que el payload original explicitara `operacion: 'agenda'`.
-    try {
-      if (cotizacionReferenciada) {
-        try {
-          const clienteDoc = await Cliente.findById(clienteId).exec();
-          if (clienteDoc) {
-            const esClienteFlag = clienteDoc.esCliente === true || String(clienteDoc.esCliente).toLowerCase() === 'true';
-            if (!esClienteFlag) {
-              // No promovemos a cliente (esCliente sigue false). Solo registramos la operación 'agenda'
-              await Cliente.findByIdAndUpdate(clienteId, { operacion: 'agenda' }, { new: true }).exec();
-              console.log(`Cliente ${clienteId} es prospecto: establecido operacion='agenda' (no se cambia esCliente)`);
-            } else {
-              console.log(`Cliente ${clienteId} ya es cliente (esCliente:true): no se modificó nada`);
-            }
-          }
-        } catch (errClienteUpdate) {
-          console.warn('⚠️ No se pudo actualizar operacion del cliente tras agendar desde cotización:', errClienteUpdate?.message || errClienteUpdate);
-        }
-      } else {
-        // comportamiento legacy: si no viene de agenda explícita en payload, marcar como cliente activo
-        if (!(clientePayload && typeof clientePayload === 'object' && clientePayload.operacion === 'agenda')) {
-          await safeSetClienteEsCliente(clienteId);
-        } else {
-          console.log('Cliente creado desde agenda: se omite marcar esCliente:true');
-        }
-      }
     } catch (errSet) {
       console.warn('⚠️ Error aplicando reglas de cliente post-pedido (no bloqueante):', errSet?.message || errSet);
     }

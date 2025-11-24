@@ -131,41 +131,56 @@ IconButton.propTypes = {
 
 const PrintButton = React.memo(function PrintButton({ numeroRemision, getPrintContent }) {
   const onPrint = useCallback(() => {
-    const printContent = getPrintContent();
-    const newWindow = (typeof globalThis !== 'undefined' && globalThis.window && globalThis.window.open)
-      ? globalThis.window.open('', '_blank') : null;
-    if (!newWindow) {
-      console.warn('No window available for printing.');
-      return;
-    }
-    const doc = newWindow.document;
-    doc.title = `Remisión - ${numeroRemision}`;
+    const contentHtml = getPrintContent();
+    const safeHtml = sanitizeHtml(contentHtml || '');
 
-    const headEl = doc.head || doc.getElementsByTagName('head')[0] || doc.createElement('head');
-    if (!doc.head) doc.documentElement.insertBefore(headEl, doc.body || null);
-    const styleEl = doc.createElement('style');
-    styleEl.textContent = `
-      body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
-      .header { text-align: center; margin-bottom: 30px; padding: 20px; background: linear-gradient(135deg, #059669, #065f46); color: white; border-radius: 10px; }
-      .info-section { margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; }
-      table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-      th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-      th { background: linear-gradient(135deg, #059669, #065f46); color: white; font-weight: bold; }
-      .total-row { background: #d1fae5; font-weight: bold; }
-      .status-badge { background: #059669; color: white; padding: 8px 16px; border-radius: 20px; display: inline-block; }
-    `;
-    headEl.appendChild(styleEl);
+    // remove any previous print roots to avoid duplicates
+    const existing = document.getElementById('print-root');
+    if (existing) existing.remove();
 
-    const bodyEl = doc.body || doc.createElement('body');
-    bodyEl.innerHTML = sanitizeHtml(printContent || '');
-    if (!doc.body) doc.documentElement.appendChild(bodyEl);
+    const clone = document.createElement('div');
+    clone.innerHTML = safeHtml;
+    clone.style.padding = '8mm';
+    clone.style.margin = '0';
+    clone.style.boxShadow = 'none';
+    clone.style.background = '#fff';
+    clone.style.width = '100%';
+    clone.style.fontSize = '12px';
 
-    // small delay to ensure content loads
-    setTimeout(() => {
-      newWindow.focus();
-      newWindow.print();
-      newWindow.close();
-    }, 0);
+    const printRoot = document.createElement('div');
+    printRoot.id = 'print-root';
+    printRoot.appendChild(clone);
+    document.body.appendChild(printRoot);
+
+    const style = document.createElement('style');
+    style.setAttribute('type', 'text/css');
+    style.textContent = `@page { size: A4 portrait; margin: 8mm; }
+      @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      body * { visibility: hidden !important; }
+      #print-root, #print-root * { visibility: visible !important; }
+      #print-root { position: fixed; inset: 0; margin:0; padding:0; background:#fff; }
+      table { page-break-inside: avoid; } }`;
+    document.head.appendChild(style);
+
+    const A4_HEIGHT_PX = 1122;
+    const doPrintAndCleanup = () => {
+      try { window.print(); } catch (e) { console.error('Error al imprimir', e); }
+      setTimeout(() => {
+        try { printRoot.remove(); } catch (err) { console.warn('No se pudo remover printRoot:', err); }
+        try { style.remove(); } catch (err) { console.warn('No se pudo remover style:', err); }
+      }, 400);
+    };
+
+    requestAnimationFrame(() => {
+      const h = printRoot.scrollHeight;
+      if (h > A4_HEIGHT_PX) {
+        const scale = Math.max(0.75, A4_HEIGHT_PX / h);
+        clone.style.transform = `scale(${scale})`;
+        clone.style.transformOrigin = 'top left';
+        clone.style.width = `${(100/scale).toFixed(2)}%`;
+      }
+      setTimeout(doPrintAndCleanup, 40);
+    });
   }, [getPrintContent, numeroRemision]);
 
   return (

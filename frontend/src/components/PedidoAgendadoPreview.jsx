@@ -232,21 +232,70 @@ const PedidoAgendadoPreview = ({ datos = {}, onClose = () => { }, onEmailSent, o
   };
 
   const handlePrint = () => {
-    const printContent = pdfRef.current;
-    const newWindow = window.open('', '_blank');
-    if (!newWindow?.document) return;
-    const doc = newWindow.document;
-    const title = `Pedido Agendado - ${datos?.numeroPedido || ''}`;
-    const htmlContent = printContent?.innerHTML || '';
-    const safeHtml = sanitizeHtml(htmlContent);
-    const style = buildStyle();
-
-    if (!trySetDocWithDOM(doc, title, safeHtml, style)) {
-      trySetDocOuterHTML(doc, title, safeHtml, style);
+    const source = document.getElementById('pdf-pedido-agendado-block');
+    if (!source) {
+      Swal.fire('Error', 'No se encontró el contenido para imprimir', 'error');
+      return;
     }
-    newWindow.focus();
-    newWindow.print();
-    newWindow.close();
+
+    // remove any previous print roots to avoid duplicates
+    const existing = document.getElementById('print-root');
+    if (existing) existing.remove();
+
+    const clone = source.cloneNode(true);
+    clone.style.padding = '8mm';
+    clone.style.margin = '0';
+    clone.style.boxShadow = 'none';
+    clone.style.background = '#fff';
+    clone.style.width = '100%';
+    clone.style.fontSize = '12px';
+    const printRoot = document.createElement('div');
+    printRoot.id = 'print-root';
+    printRoot.appendChild(clone);
+    // hide the original source while printing to ensure only clone is visible
+    const prevDisplay = source.style.display;
+    try {
+      source.style.display = 'none';
+      document.body.appendChild(printRoot);
+    } catch (err) {
+      console.warn('Could not append print root:', err);
+    }
+    const style = document.createElement('style');
+    style.setAttribute('type', 'text/css');
+    style.textContent = `@page { size: A4 portrait; margin: 8mm; }
+      @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      body * { visibility: hidden !important; }
+      #print-root, #print-root * { visibility: visible !important; }
+      #print-root { position: fixed; inset: 0; margin:0; padding:0; background:#fff; }
+      table { page-break-inside: avoid; } }`;
+      
+    document.head.appendChild(style);
+    const A4_HEIGHT_PX = 1122;
+    const doPrintAndCleanup = () => {
+      try {
+        window.print();
+      } catch (e) {
+        console.error('Error al imprimir', e);
+        Swal.fire('Error', 'No se pudo iniciar la impresión', 'error');
+      } finally {
+        setTimeout(() => {
+          try { printRoot.remove(); } catch (err) { console.warn('No se pudo remover printRoot:', err); }
+          try { style.remove(); } catch (err) { console.warn('No se pudo remover style:', err); }
+          try { source.style.display = prevDisplay ?? ''; } catch (err) { console.warn('No se pudo restaurar display del original:', err); }
+        }, 400);
+      }
+    };
+
+    requestAnimationFrame(() => {
+      const h = printRoot.scrollHeight;
+      if (h > A4_HEIGHT_PX) {
+        const scale = Math.max(0.75, A4_HEIGHT_PX / h);
+        clone.style.transform = `scale(${scale})`;
+        clone.style.transformOrigin = 'top left';
+        clone.style.width = `${(100/scale).toFixed(2)}%`;
+      }
+      setTimeout(doPrintAndCleanup, 40);
+    });
   };
 
   return (
