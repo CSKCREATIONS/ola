@@ -407,7 +407,7 @@ exports.cambiarEstadoPedido = async (req, res) => {
     const { id } = req.params;
     const { estado } = req.body;
 
-    const pedido = await Pedido.findById(id).populate('productos.product');
+    const pedido = await Pedido.findById(id).populate('productos.product').populate('cliente');
     if (!pedido) return res.status(404).json({ message: 'Pedido no encontrado' });
 
     // Si el nuevo estado es 'entregado', actualizar el stock (helper maneja validaciones)

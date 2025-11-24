@@ -121,6 +121,11 @@ router.get('/proveedores-recientes',
     reportesController.proveedoresRecientes
 );
 
+// Productos reales por proveedor (para detalle) - sin autenticación para QA
+router.get('/productos-de-proveedor/:id',
+    reportesController.productosDeProveedor
+);
+
 router.get('/clientes',
     reportesController.clientes
 );
@@ -151,6 +156,31 @@ router.get('/recientes',
     verifyToken,
     checkPermission('reportesCompras.ver'),
     reportesController.reporteProveedoresRecientes
+);
+
+// ===== Reportes de Compras =====
+router.get('/compras/por-periodo',
+    verifyToken,
+    checkPermission('reportesCompras.ver'),
+    reportesController.reporteComprasPorPeriodo
+);
+
+router.get('/compras/consolidado',
+    verifyToken,
+    checkPermission('reportesCompras.ver'),
+    reportesController.reporteComprasConsolidado
+);
+
+router.get('/compras/por-producto',
+    verifyToken,
+    checkPermission('reportesCompras.ver'),
+    reportesController.reporteComprasPorProducto
+);
+
+router.get('/compras/por-proveedor',
+    verifyToken,
+    checkPermission('reportesCompras.ver'),
+    reportesController.reporteComprasPorProveedor
 );
 
 module.exports = router;

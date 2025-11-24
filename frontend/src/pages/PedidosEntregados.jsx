@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Fijo from '../components/Fijo';
 import NavVentas from '../components/NavVentas';
 import html2canvas from 'html2canvas';
+import SharedListHeaderCard from '../components/SharedListHeaderCard';
 import jsPDF from 'jspdf';
 import * as XLSX from 'xlsx';
 import Swal from 'sweetalert2';
@@ -40,18 +41,10 @@ const pedidosEntregadosStyles = `
       left: 0;
       right: 0;
       height: 4px;
-      background: linear-gradient(90deg, #10b981, #059669, #047857);
+      
     }
 
-    .entregados-professional-header {
-      background: linear-gradient(135deg, #10b981 0%, #047857 100%);
-      border-radius: 20px;
-      padding: 30px;
-      margin-bottom: 30px;
-      color: white;
-      position: relative;
-      overflow: hidden;
-    }
+    
 
     .entregados-header-decoration {
       position: absolute;
@@ -234,16 +227,27 @@ export default function PedidosEntregados() {
     });
   };
 
-  const exportarExcel = () => {
-    const elementosNoExport = document.querySelectorAll('.no-export');
-    for (const el of elementosNoExport) { el.style.display = 'none'; }
+  const exportToExcel = (pedidosEntregados) => {
+    if (!pedidosEntregados || pedidosEntregados.length === 0) {
+      Swal.fire("Error", "No hay datos para exportar", "warning");
+      return;
+    }
 
-    const tabla = document.getElementById("tabla_entregados");
-    const workbook = XLSX.utils.table_to_book(tabla, { sheet: "Pedidos Entregados" });
-    workbook.Sheets["Pedidos Entregados"]["!cols"] = new Array(7).fill({ width: 20 });
+    const dataFormateada = pedidosEntregados.map(pedido => ({
+      'Nombre': pedido.cliente?.nombre || pedido.nombre || pedido.clienteInfo?.nombre || '',
+      'Remisión': pedido.numeroRemision || pedido.remision || '',
+      'Ciudad': pedido.cliente?.ciudad || pedido.ciudad || pedido.clienteInfo?.ciudad || '',
+      'Teléfono': pedido.cliente?.telefono || pedido.telefono || pedido.clienteInfo?.telefono || '',
+      'Correo': pedido.cliente?.correo || pedido.correo || pedido.clienteInfo?.correo || '',
+    }));
 
-    XLSX.writeFile(workbook, 'pedidos_entregados.xlsx');
-    for (const el of elementosNoExport) { el.style.display = ''; }
+    const worksheet = XLSX.utils.json_to_sheet(dataFormateada);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Clientes');
+
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    const data = new Blob([excelBuffer], { type: 'application/octet-stream' });
+    saveAs(data, 'ListaPedidosEntregados.xlsx');
   };
 
 
@@ -257,24 +261,26 @@ export default function PedidosEntregados() {
         <div className="max-width">
           <div className="contenido-modulo">
             {/* Encabezado profesional */}
-            <div className="entregados-professional-header">
-              <div className="entregados-header-decoration"></div>
-              <div style={{ position: 'relative', zIndex: 2 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                  <div className="entregados-icon-container">
-                    <i className="fa-solid fa-check-circle" style={{ fontSize: '2.5rem', color: 'white' }}></i>
-                  </div>
-                  <div>
-                    <h2 style={{ margin: '0 0 8px 0', fontSize: '2rem', fontWeight: '700' }}>
-                      Pedidos Entregados
-                    </h2>
-                    <p style={{ margin: 0, fontSize: '1.1rem', opacity: 0.9 }}>
-                      Aquí encontrará las ventas concretadas con sus respectivas remisiones
-                    </p>
-                  </div>
-                </div>
+            <SharedListHeaderCard
+              title="Pedidos Entregados"
+              subtitle="Gestión de pedidos entregados y detalles de entrega"
+              iconClass="fa-solid fa-check-circle"
+            >
+              <div className="export-buttons">
+                <button
+                  onClick={exportToExcel.bind(this, pedidosEntregados)}
+                  className="export-btn excel"
+                >
+                  <i className="fa-solid fa-file-excel"></i><span>Exportar Excel</span>
+                </button>
+                <button
+                  onClick={exportarPDF}
+                  className="export-btn pdf"
+                >
+                  <i className="fa-solid fa-file-pdf"></i><span>Exportar PDF</span>
+                </button>
               </div>
-            </div>
+            </SharedListHeaderCard>
 
             {/* Estadísticas avanzadas */}
             <div style={{
@@ -286,7 +292,7 @@ export default function PedidosEntregados() {
               <div className="entregados-stats-card">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                   <div style={{
-                    background: 'linear-gradient(135deg, #10b981, #059669)',
+                    
                     borderRadius: '12px',
                     padding: '15px',
                     display: 'flex',
@@ -360,106 +366,112 @@ export default function PedidosEntregados() {
             </div>
 
             {/* Controles de exportación */}
-            <div style={{
-              display: 'flex',
-              justifyContent: 'flex-start',
-              alignItems: 'center',
-              marginBottom: '20px',
-              flexWrap: 'wrap',
-              gap: '10px'
-            }}>
-              <button className="entregados-export-btn" onClick={exportarExcel}>
-                <i className="fa-solid fa-file-excel"></i>
-                <span>Exportar a Excel</span>
-              </button>
-              <button className="entregados-export-btn" onClick={exportarPDF}>
-                <i className="fa-solid fa-file-pdf"></i>
-                <span>Exportar a PDF</span>
-              </button>
-            </div>
+            
 
             {/* Tabla principal con diseño moderno */}
-              <div >
-                <table  id="tabla_entregados">
-                  <thead>
-                    <tr>
-                      <th>No</th>
-                      <th>Remisión</th>
-                      <th>F. Entrega</th>
-                      <th>Cliente</th>
-                      <th>Ciudad</th>
-                      <th>Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {currentItems.map((remision, index) => (
-                      <tr key={remision._id}>
-                        <td style={{ fontWeight: '500', color: '#6b7280' }}>
-                          {indexOfFirstItem + index + 1}
-                        </td>
-                        <td style={{ fontWeight: '600', color: '#1f2937' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <div style={{
-                              background: 'linear-gradient(135deg, #10b981, #059669)',
-                              borderRadius: '8px',
-                              padding: '8px',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              minWidth: '35px'
-                            }}>
-                              <i className="fa-solid fa-file-invoice" style={{ color: 'white', fontSize: '12px' }}></i>
-                            </div>
-                            <button
-                              type="button"
-                              style={{
-                                cursor: 'pointer',
-                                color: '#10b981',
-                                textDecoration: 'underline',
-                                fontWeight: 'bold',
-                                background: 'none',
-                                border: 'none',
-                                padding: 0,
-                                font: 'inherit'
-                              }}
-                              onClick={() => verRemisionPreview(remision)}
-                            >
-                              {remision.numeroRemision || '---'}
-                            </button>
-                          </div>
-                        </td>
-                        <td style={{ color: '#6b7280' }}>
-                          {new Date(remision.fechaEntrega || remision.fechaRemision || remision.updatedAt || remision.createdAt).toLocaleDateString()}
-                        </td>
-                        <td style={{ fontWeight: '500', color: '#1f2937' }}>
-                          {remision.cliente?.nombre || remision.cliente?.nombreCliente || remision.cliente?.nombreCompleto || ''}
-                        </td>
-                        <td style={{ color: '#6b7280' }}>
-                          {remision.cliente?.ciudad || remision.cliente?.direccion?.ciudad || ''}
-                        </td>
-                        <td style={{ fontWeight: '600', color: '#10b981', fontSize: '14px' }}>
-                          ${(remision.total || 0).toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </td>
-                      </tr>
-                    ))}
-                    {pedidosEntregados.length === 0 && (
+              <div className="table-container">
+                <div className="table-header">
+                <div className="table-header-content">
+                  <div className="table-header-icon">
+                    <i className="fa-solid fa-table" style={{ color: 'white', fontSize: '16px' }}></i>
+                  </div>
+                  <div>
+                    <h4 className="table-title">
+                      Lista de pedidos entregados
+                    </h4>
+                    <p className="table-subtitle">
+                      Mostrando {currentItems.length} de {pedidosEntregados.length} pedidos entregados
+                    </p>
+                  </div>
+                </div>
+              </div  >
+                <div style={{ overflow: 'auto' }}>
+                  <table className="data-table" id="tabla_entregados">
+                    <thead>
                       <tr>
-                        <td
-                          colSpan={6}
-                          style={{
-                            padding: '40px',
-                            textAlign: 'center',
-                            color: '#9ca3af',
-                            fontStyle: 'italic',
-                            fontSize: '16px'
-                          }}
-                        >
-                          No hay pedidos entregados disponibles
-                        </td>
+                        <th>
+                          <i className="fa-solid fa-hashtag icon-gap" style={{ color: '#6366f1' }}></i><span></span>
+                        </th>
+                        <th>
+                          <i className="fa-solid fa-file-invoice icon-gap" style={{ color: '#6366f1' }}></i><span>REMISIÓN</span>
+                        </th>
+                        <th>
+                          <i className="fa-solid fa-user icon-gap" style={{ color: '#6366f1' }}></i><span>CLIENTE</span>
+                        </th>
+                        <th>
+                          <i className="fa-solid fa-calendar-check icon-gap" style={{ color: '#6366f1' }}></i><span>F. ENTREGA</span>
+                        </th>
+                        <th>
+                          <i className="fa-solid fa-location-dot icon-gap" style={{ color: '#6366f1' }}></i><span>CIUDAD</span>
+                        </th>
+                        <th>
+                          <i className="fa-solid fa-dollar-sign icon-gap" style={{ color: '#6366f1' }}></i><span>TOTAL</span>
+                        </th>
+                        
                       </tr>
-                    )}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {currentItems.map((remision, index) => (
+                        <tr key={remision._id}>
+                          <td style={{ fontWeight: '600', color: '#6366f1' }}>
+                            {indexOfFirstItem + index + 1}
+                          </td>
+                          <td>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                              <div className="table-icon-small">
+                                <i className="fa-solid fa-file-invoice" style={{ color: 'white', fontSize: '12px' }}></i>
+                              </div>
+                              {remision.numeroRemision ? (
+                              <button
+                                style={{ cursor: 'pointer', color: '#6366f1', background: 'transparent', textDecoration: 'underline' }}
+                                onClick={() => verRemisionPreview(remision)}
+                              >
+                                
+                                <span>{remision.numeroRemision || '---'}</span>
+                              </button>
+                              ) : (
+                                <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>---</span>
+                              )}
+                            </div>
+                          </td>
+                       
+                          <td style={{ fontWeight: '600', color: '#1f2937', fontSize: '14px' }}>
+                            {remision.cliente?.nombre || remision.cliente?.nombreCliente || remision.cliente?.nombreCompleto || ''}
+                          </td>
+                          <td style={{ color: '#6b7280' }}>
+                            {new Date(remision.fechaEntrega || remision.fechaRemision || remision.updatedAt || remision.createdAt).toLocaleDateString()}
+                          </td>
+                          <td style={{ color: '#6b7280' }}>
+                            {remision.cliente?.ciudad || remision.cliente?.direccion?.ciudad || ''}
+                          </td>
+                          <td style={{ fontWeight: '600', color: '#6366f1', fontSize: '14px' }}>
+                            ${(remision.total || 0).toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </td>
+                          
+                        </tr>
+                      ))}
+                      {pedidosEntregados.length === 0 && (
+                        <tr>
+                          <td colSpan="7">
+                            <div className="table-empty-state">
+                              <div className="table-empty-icon">
+                                <i className="fa-solid fa-times-circle" style={{ fontSize: '3.5rem', color: '#9ca3af' }}></i>
+                              </div>
+                              <div>
+                                <h5 className="table-empty-title">
+                                  No hay pedidos entregados disponibles
+                                </h5>
+                                <p className="table-empty-text">
+                                  No se encontraron pedidos entregados en el sistema
+                                </p>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             
 
@@ -481,7 +493,7 @@ export default function PedidosEntregados() {
                       borderRadius: '6px',
                       cursor: 'pointer',
                       background: currentPage === i + 1 ?
-                        'linear-gradient(135deg, #10b981, #059669)' :
+                        'linear-gradient(135deg, #6366f1, #6366f1)' :
                         '#f3f4f6',
                       color: currentPage === i + 1 ? 'white' : '#374151',
                       fontWeight: '500'

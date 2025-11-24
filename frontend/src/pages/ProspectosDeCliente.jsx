@@ -212,19 +212,28 @@ export default function ProspectosDeCliente() {
   const registrosPorPagina = 10;
 
   // Exportar tabla a Excel
-  const exportToExcel = () => {
-    try {
-      const table = document.getElementById('tabla_prospectos');
-      if (!table) {
-        console.error('Tabla de prospectos no encontrada para exportar');
-        return;
-      }
-      const wb = XLSX.utils.table_to_book(table, { raw: true });
-      const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-      saveAs(new Blob([wbout], { type: 'application/octet-stream' }), 'prospectos.xlsx');
-    } catch (err) {
-      console.error('Error exportando Excel:', err);
+  const exportToExcel = (prospectosPaginados) => {
+    const rows = prospectosPaginados || prospectos;
+    if (!rows || rows.length === 0) {
+      Swal.fire("Error", "No hay datos para exportar", "warning");
+      return;
     }
+
+    const dataFormateada = rows.map(cliente => ({
+      'Nombre': cliente.cliente?.nombre || cliente.nombre || cliente.clienteInfo?.nombre || '',
+      'Cotizacion asociada': cotizacionesMap[cliente.cliente?.correo?.toLowerCase() || cliente.correo?.toLowerCase() || cliente.clienteInfo?.correo?.toLowerCase()]?.map(cot => cot.codigo).join(', ') || '',
+      'Ciudad': cliente.cliente?.ciudad || cliente.ciudad || cliente.clienteInfo?.ciudad || '',
+      'Teléfono': cliente.cliente?.telefono || cliente.telefono || cliente.clienteInfo?.telefono || '',
+      'Correo': cliente.cliente?.correo || cliente.correo || cliente.clienteInfo?.correo || '',
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(dataFormateada);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Clientes');
+
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    const data = new Blob([excelBuffer], { type: 'application/octet-stream' });
+    saveAs(data, 'ListaDeProspectos.xlsx');
   };
 
   const fetchProspectos = async () => {
@@ -397,7 +406,7 @@ export default function ProspectosDeCliente() {
             >
               <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                 <button
-                  onClick={exportToExcel}
+                  onClick={() => exportToExcel(prospectosPaginados)}
                   style={{
                     background: 'rgba(255,255,255,0.2)',
                     border: '2px solid rgba(255,255,255,0.3)',

@@ -598,27 +598,26 @@ export default function PedidosAgendados() {
     html2canvas(input).then(generatePdfFromCanvas).catch(handleExportError);
   };
 
-  const exportarExcel = () => {
-    const elementosNoExport = document.querySelectorAll('.no-export');
-    for (const el of elementosNoExport) {
-      el.style.display = 'none';
-    }
-
-    const tabla = document.getElementById("tabla_despachos");
-    if (!tabla) {
-      for (const el of elementosNoExport) {
-        el.style.display = '';
-      }
+  const exportToExcel = (pedidosAgendados) => {
+    if (!pedidosAgendados || pedidosAgendados.length === 0) {
+      Swal.fire("Error", "No hay datos para exportar", "warning");
       return;
     }
 
-    const workbook = XLSX.utils.table_to_book(tabla, { sheet: "Pedidos Agendados" });
-    workbook.Sheets["Pedidos Agendados"]["!cols"] = new Array(8).fill({ width: 20 });
+    const dataFormateada = pedidosAgendados.map(pedido => ({
+      'Nombre': pedido.cliente?.nombre || pedido.nombre || pedido.clienteInfo?.nombre || '',
+      'Numero de Pedido': pedido.numeroPedido || pedido.numeroPedido || '',
+      'Ciudad': pedido.cliente?.ciudad || pedido.ciudad || pedido.clienteInfo?.ciudad || '',
+      'Teléfono': pedido.cliente?.telefono || pedido.telefono || pedido.clienteInfo?.telefono || '',
+      'Correo': pedido.cliente?.correo || pedido.correo || pedido.clienteInfo?.correo || '',
+    }));
+    const worksheet = XLSX.utils.json_to_sheet(dataFormateada);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Clientes');
 
-    XLSX.writeFile(workbook, 'pedidos_agendados.xlsx');
-    for (const el of elementosNoExport) {
-      el.style.display = '';
-    }
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    const data = new Blob([excelBuffer], { type: 'application/octet-stream' });
+    saveAs(data, 'ListaPedidosAgendados.xlsx');
   };
 
   const cancelarPedido = async (id) => {
@@ -744,7 +743,7 @@ export default function PedidosAgendados() {
             >
               <div className="export-buttons">
                 <button
-                  onClick={exportarExcel}
+                  onClick={exportToExcel.bind(this, pedidos)}
                   className="export-btn excel"
                 >
                   <i className="fa-solid fa-file-excel"></i>{' '}<span>Exportar Excel</span>
@@ -812,19 +811,19 @@ export default function PedidosAgendados() {
                         <i className="fa-solid fa-hashtag icon-gap" style={{ color: '#6366f1' }}></i>{' '}<span>#</span>
                       </th>
                       <th>
-                        <i className="fa-solid fa-file-invoice icon-gap"></i>{' '}<span>IDENTIFICADOR DE PEDIDO</span>
+                        <i className="fa-solid fa-file-invoice icon-gap" style={{ color: '#6366f1' }}></i>{' '}<span>IDENTIFICADOR DE PEDIDO</span>
                       </th>
                       <th>
                         <i className="fa-solid fa-calendar-plus icon-gap" style={{ color: '#6366f1' }}></i>{' '}<span>F. AGENDAMIENTO</span>
                       </th>
                       <th>
-                        <i className="fa-solid fa-truck icon-gap"></i>{' '}<span>F. ENTREGA</span>
+                        <i className="fa-solid fa-truck icon-gap" style={{ color: '#6366f1' }}></i>{' '}<span>F. ENTREGA</span>
                       </th>
                       <th>
                         <i className="fa-solid fa-user icon-gap" style={{ color: '#6366f1' }}></i>{' '}<span>CLIENTE</span>
                       </th>
                       <th>
-                        <i className="fa-solid fa-location-dot icon-gap"></i>{' '}<span>CIUDAD</span>
+                        <i className="fa-solid fa-location-dot icon-gap" style={{ color: '#6366f1' }}></i>{' '}<span>CIUDAD</span>
                       </th>
                       <th>
                         <i className="fa-solid fa-dollar-sign icon-gap" style={{ color: '#6366f1' }}></i>{' '}<span>TOTAL</span>

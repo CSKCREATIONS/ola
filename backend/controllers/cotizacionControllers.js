@@ -671,6 +671,22 @@ exports.enviarCotizacionPorCorreo = async (req, res) => {
 
     const pdfAttachment = await generatePdfAttachmentSafe(cotizacion);
 
+    // Try to inline CSS for email clients using `juice` if available
+    let htmlParaEnviar = htmlCompleto;
+    try {
+      const juice = require('juice');
+      try {
+        htmlParaEnviar = juice(htmlCompleto);
+        console.log('✅ CSS inlined usando juice para el cuerpo del correo');
+      } catch (inlineErr) {
+        console.warn('⚠️ No se pudo inlinear HTML con juice, se enviará HTML original:', inlineErr.message || inlineErr);
+        htmlParaEnviar = htmlCompleto;
+      }
+    } catch (e) {
+      console.log('ℹ️ Paquete `juice` no disponible, enviando HTML sin inlining');
+      htmlParaEnviar = htmlCompleto;
+    }
+
     // Show debug info
     console.log('📊 Datos de cotización para HTML:', { total: cotizacion.total, productos: cotizacion.productos?.length || 0 });
 
@@ -680,7 +696,7 @@ exports.enviarCotizacionPorCorreo = async (req, res) => {
     if (useGmail) {
       try {
         const attachments = pdfAttachment ? [{ filename: pdfAttachment.filename, content: pdfAttachment.content, contentType: pdfAttachment.contentType }] : [];
-        await sendMail(destinatario, asuntoFinal, htmlCompleto, attachments);
+        await sendMail(destinatario, asuntoFinal, htmlParaEnviar, attachments);
         await markCotizacionAsSent(cotizacionId);
         return res.status(200).json({ message: '¡Cotización enviada por correo exitosamente!', details: { destinatario, asunto: asuntoFinal, enviado: true, metodo: 'Gmail SMTP', fecha: new Date().toLocaleString('es-CO') } });
       } catch (error_) {
@@ -689,7 +705,7 @@ exports.enviarCotizacionPorCorreo = async (req, res) => {
     }
 
     // Try SendGrid
-    const sendgridResult = await trySendWithSendGrid(destinatario, asuntoFinal, mensajeFinal, htmlCompleto, pdfAttachment);
+    const sendgridResult = await trySendWithSendGrid(destinatario, asuntoFinal, mensajeFinal, htmlParaEnviar, pdfAttachment);
     if (sendgridResult.ok) {
       await markCotizacionAsSent(cotizacionId);
       return res.status(200).json({ message: '¡Cotización enviada por correo exitosamente!', details: { destinatario, asunto: asuntoFinal, enviado: true, metodo: sendgridResult.metodo, fecha: new Date().toLocaleString('es-CO') } });

@@ -6,6 +6,7 @@ import exportElementToPdf from '../utils/exportToPdf';
 import api from '../api/axiosConfig';
 import Swal from 'sweetalert2';
 import '../App.css';
+import SharedListHeaderCard from '../components/SharedListHeaderCard';
 import '../cotizaciones-modal.css';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
@@ -26,13 +27,30 @@ export default function ListaDeCotizaciones() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const exportToExcel = () => {
-    const table = document.getElementById('tabla_cotizaciones');
-    if (!table) return;
-    const workbook = XLSX.utils.table_to_book(table);
+  const exportToExcel = (listaCotizaciones) => {
+    if (!listaCotizaciones || listaCotizaciones.length === 0) {
+      Swal.fire("Error", "No hay datos para exportar", "warning");
+      return;
+    }
+
+    const dataFormateada = listaCotizaciones.map(cotizacion => ({
+      'Nombre': cotizacion.cliente?.nombre || cotizacion.nombre || cotizacion.clienteInfo?.nombre || '',
+      'Numero de cotización': cotizacion.numeroCodigo || cotizacion.codigo || '',
+      'Ciudad': cotizacion.cliente?.ciudad || cotizacion.ciudad || cotizacion.clienteInfo?.ciudad || '',
+      'Teléfono': cotizacion.cliente?.telefono || cotizacion.telefono || cotizacion.clienteInfo?.telefono || '',
+      'Correo': cotizacion.cliente?.correo || cotizacion.correo || cotizacion.clienteInfo?.correo || '',
+      'Fecha': formatDate(cotizacion.fecha || cotizacion.fechaString || cotizacion.createdAt || ''),
+      'estado': cotizacion.estado || 'N/A',
+      'enviadoCorreo': cotizacion.enviadoCorreo ? 'Sí' : 'No',
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(dataFormateada);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Clientes');
+
     const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
     const data = new Blob([excelBuffer], { type: 'application/octet-stream' });
-    saveAs(data, 'listaCotizaciones.xlsx');
+    saveAs(data, 'ListaDeCotizaciones.xlsx');
   };
 
   const exportarPDF = async () => {
@@ -629,123 +647,26 @@ export default function ListaDeCotizaciones() {
         <div className="max-width">
           <div className="contenido-modulo">
             {/* Encabezado profesional del módulo */}
-            <div style={{
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              borderRadius: '15px',
-              padding: '25px 30px',
-              marginBottom: '30px',
-              boxShadow: '0 10px 30px rgba(102, 126, 234, 0.3)',
-              position: 'relative',
-              overflow: 'hidden'
-            }}>
-              <div style={{
-                position: 'absolute',
-                top: '-50%',
-                right: '-10%',
-                width: '200px',
-                height: '200px',
-                background: 'rgba(255,255,255,0.1)',
-                borderRadius: '50%',
-                pointerEvents: 'none'
-              }}></div>
-              <div style={{
-                position: 'absolute',
-                bottom: '-30%',
-                left: '-5%',
-                width: '150px',
-                height: '150px',
-                background: 'rgba(255,255,255,0.08)',
-                borderRadius: '50%',
-                pointerEvents: 'none'
-              }}></div>
-
-              <div style={{ position: 'relative', zIndex: 2 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
-                  <div>
-                    <h3 style={{
-                      color: 'white',
-                      margin: '0 0 8px 0',
-                      fontSize: '2rem',
-                      fontWeight: '700',
-                      letterSpacing: '-0.5px'
-                    }}>
-                      <i aria-hidden={true} className="fa-solid fa-file-invoice icon-gap" style={{ fontSize: '1.8rem' }}></i>
-                      <span>Lista de Cotizaciones</span>
-                    </h3>
-                    <p style={{
-                      color: 'rgba(255,255,255,0.9)',
-                      margin: 0,
-                      fontSize: '1.1rem',
-                      fontWeight: '400'
-                    }}>
-                      Gestión completa de cotizaciones comerciales
-                    </p>
-                  </div>
-
-                  <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                    <button
-                      onClick={exportToExcel}
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        padding: '12px 20px',
-                        border: '2px solid rgba(255,255,255,0.3)',
-                        borderRadius: '12px',
-                        background: 'rgba(255,255,255,0.2)',
-                        color: 'white',
-                        fontSize: '14px',
-                        fontWeight: '600',
-                        cursor: 'pointer',
-                        transition: 'all 0.3s ease',
-                        backdropFilter: 'blur(10px)'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.target.style.background = 'rgba(255,255,255,0.3)';
-                        e.target.style.transform = 'translateY(-2px)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.target.style.background = 'rgba(255,255,255,0.2)';
-                        e.target.style.transform = 'translateY(0)';
-                      }}
-                    >
-                      <i className="fa-solid fa-file-excel" style={{ fontSize: '16px' }}></i>
-                      <span>Exportar Excel</span>
-                    </button>
-
-                    <button
-                      onClick={exportarPDF}
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        padding: '12px 20px',
-                        border: '2px solid rgba(255,255,255,0.3)',
-                        borderRadius: '12px',
-                        background: 'rgba(255,255,255,0.2)',
-                        color: 'white',
-                        fontSize: '14px',
-                        fontWeight: '600',
-                        cursor: 'pointer',
-                        transition: 'all 0.3s ease',
-                        backdropFilter: 'blur(10px)'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.target.style.background = 'rgba(255,255,255,0.3)';
-                        e.target.style.transform = 'translateY(-2px)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.target.style.background = 'rgba(255,255,255,0.2)';
-                        e.target.style.transform = 'translateY(0)';
-                      }}
-                    >
-                      <i className="fa-solid fa-file-pdf" style={{ fontSize: '16px' }}></i>
-                      <span>Exportar PDF</span>
-                    </button>
-                  </div>
-                </div>
+            <SharedListHeaderCard
+              title="Lista de Cotizaciones"
+              subtitle="Gestión de cotizaciones registradas en el sistema"
+              iconClass="fa-solid fa-calendar-check-to-slot"
+            >
+              <div className="export-buttons">
+                <button
+                  onClick={() => exportToExcel(cotizacionesFiltradas)}
+                  className="export-btn excel"
+                >
+                  <i className="fa-solid fa-file-excel"></i><span>Exportar Excel</span>
+                </button>
+                <button
+                  onClick={exportarPDF}
+                  className="export-btn pdf"
+                >
+                  <i className="fa-solid fa-file-pdf"></i><span>Exportar PDF</span>
+                </button>
               </div>
-            </div>
+            </SharedListHeaderCard>
 
             {/* Panel de filtros avanzado */}
             <div style={{
@@ -959,7 +880,7 @@ export default function ListaDeCotizaciones() {
                         letterSpacing: '0.5px'
                       }}>
                         <i aria-hidden={true} className="fa-solid fa-hashtag icon-gap" style={{ color: '#6366f1' }}></i>
-                        <span>#</span>
+                        <span></span>
                       </th>
                       <th style={{
                         padding: '16px 12px',

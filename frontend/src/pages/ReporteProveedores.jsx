@@ -32,6 +32,8 @@ const ReportesProveedores = () => {
   const [proveedoresPorPais, setProveedoresPorPais] = useState([]);
   const [proveedoresPorEstado, setProveedoresPorEstado] = useState([]);
   const [productosProveedor, setProductosProveedor] = useState([]);
+  const [selectedProviderProducts, setSelectedProviderProducts] = useState([]);
+  const [selectedProviderName, setSelectedProviderName] = useState('');
   const [proveedoresRecientes, setProveedoresRecientes] = useState([]);
 
   useEffect(() => {
@@ -68,6 +70,16 @@ const ReportesProveedores = () => {
         setProductosProveedor(res.data?.data || res.data || []);
       } catch (error) {
         console.error("Error al obtener productos por proveedor:", error);
+      }
+    };
+
+    const fetchProductosDeProveedor = async (id) => {
+      try {
+        const res = await api.get(`/api/reportes/productos-de-proveedor/${id}`);
+        setSelectedProviderProducts(res.data?.data || res.data || []);
+      } catch (error) {
+        console.error('Error al obtener productos del proveedor:', error);
+        setSelectedProviderProducts([]);
       }
     };
 
@@ -190,7 +202,32 @@ const ReportesProveedores = () => {
                     ]}
                     pagination={false}
                     scroll={{ x: 600 }}
+                    onRow={(record) => ({
+                      onClick: () => {
+                        // cargar productos reales del proveedor
+                        setSelectedProviderName(record.nombre);
+                        fetchProductosDeProveedor(record._id);
+                      }
+                    })}
                   />
+                  {selectedProviderProducts.length > 0 && (
+                    <div style={{ marginTop: 12 }}>
+                      <Title level={5}>Productos de {selectedProviderName}</Title>
+                      <Table
+                        dataSource={selectedProviderProducts}
+                        rowKey={(r) => r._id}
+                        columns={[
+                          { title: 'Nombre', dataIndex: 'name', key: 'name' },
+                          { title: 'Precio', dataIndex: 'price', key: 'price', render: (v) => `$${v}` },
+                          { title: 'Stock', dataIndex: 'stock', key: 'stock' },
+                          { title: 'Activo', dataIndex: 'activo', key: 'activo', render: (a) => (a ? 'SI' : 'NO') }
+                        ]}
+                        pagination={false}
+                        size="small"
+                        style={{ marginTop: 8 }}
+                      />
+                    </div>
+                  )}
                 </Card>
               </Col>
               <Col xs={24} sm={24} md={12} lg={12}>

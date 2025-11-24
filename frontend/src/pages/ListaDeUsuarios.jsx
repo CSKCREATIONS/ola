@@ -36,10 +36,32 @@ const exportToExcel = (todosLosUsuarios) => {
     console.error("No hay datos para exportar");
     return;
   }
+  // Build a quick lookup of roleId -> roleName from available user objects
+  const roleLookup = {};
+  for (const u of todosLosUsuarios) {
+    const r = u.role;
+    if (!r) continue;
+    const id = (typeof r === 'string') ? r : (r._id || r.id || null);
+    const name = (typeof r === 'string') ? null : (r.name || null);
+    if (id && name) roleLookup[id.toString()] = name;
+  }
+
+  const resolveRoleName = (usuario) => {
+    if (!usuario) return 'Sin rol';
+    if (usuario.role && typeof usuario.role !== 'string' && usuario.role.name) return usuario.role.name;
+    const roleId = typeof usuario.role === 'string' ? usuario.role : (usuario.role && (usuario.role._id || usuario.role.id));
+    if (roleId && roleLookup[roleId.toString()]) return roleLookup[roleId.toString()];
+    // Try to find any user that has the same role object and a name
+    if (roleId) {
+      const found = todosLosUsuarios.find(u => u.role && typeof u.role !== 'string' && (u.role._id || u.role.id) && String(u.role._id || u.role.id) === String(roleId) && u.role.name);
+      if (found) return found.role.name;
+    }
+    return 'Sin rol';
+  };
 
   const dataFormateada = todosLosUsuarios.map(usuario => ({
     'Nombre completo': `${usuario.firstName || ''} ${usuario.secondName || ''} ${usuario.surname || ''} ${usuario.secondSurname || ''}`.trim(),
-    'Rol': usuario.role,
+    'Rol': resolveRoleName(usuario),
     'Correo': usuario.email,
     'Usuario': usuario.username,
     'Estado': usuario.enabled ? 'Habilitado' : 'Inhabilitado',

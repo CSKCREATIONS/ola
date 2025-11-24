@@ -5,6 +5,7 @@ const Cliente = require('../models/Cliente');
 const Pedido = require('../models/Pedido');
 const Venta = require('../models/venta');
 const Proveedor = require('../models/proveedores');
+const Compra = require('../models/compras');
 
 // Reporte de categorías con estadísticas
 exports.reporteCategorias = async (req, res) => {
@@ -595,12 +596,47 @@ exports.reporteCategorias = async (req, res) => {
 
           exports.reporteProveedoresPorPais = async (req, res) => {
             try {
+              // Obtener cantidad de proveedores por país
               const resultado = await Proveedor.aggregate([
                 { $group: { _id: '$direccion.pais', cantidad: { $sum: 1 } } },
                 { $project: { pais: '$_id', cantidad: 1, _id: 0 } },
                 { $sort: { cantidad: -1 } }
               ]);
-              res.json({ success: true, data: resultado });
+
+              // Obtener gastos/compras por país a partir de compras relacionadas a proveedores
+              const comprasPorPais = await Compra.aggregate([
+                {
+                  $lookup: {
+                    from: 'proveedors',
+                    localField: 'proveedor',
+                    foreignField: '_id',
+                    as: 'prov'
+                  }
+                },
+                { $unwind: { path: '$prov', preserveNullAndEmptyArrays: true } },
+                {
+                  $group: {
+                    _id: { pais: '$prov.direccion.pais' },
+                    totalGasto: { $sum: { $ifNull: ['$total', 0] } },
+                    comprasCount: { $sum: 1 }
+                  }
+                },
+                { $project: { pais: '$_id.pais', totalGasto: 1, comprasCount: 1, _id: 0 } }
+              ]);
+
+              // Merge results: attach compras info to each country row
+              const comprasMap = {};
+              for (const row of comprasPorPais) {
+                const key = row.pais || 'Sin País';
+                comprasMap[key] = { totalGasto: row.totalGasto || 0, comprasCount: row.comprasCount || 0 };
+              }
+
+              const merged = resultado.map(r => {
+                const key = r.pais || 'Sin País';
+                return Object.assign({}, r, comprasMap[key] || { totalGasto: 0, comprasCount: 0 });
+              });
+
+              res.json({ success: true, data: merged });
             } catch (error) {
               console.error('reportesController error:', error);
               console.error('Error reporteProveedoresPorPais:', error);
@@ -620,8 +656,32 @@ exports.reporteCategorias = async (req, res) => {
                     totalProductos: { $size: { $ifNull: ['$productos', []] } }
                   }
                 },
+                // Lookup compras statistics per proveedor
+                {
+                  $lookup: {
+                    from: 'compras',
+                    let: { provId: '$_id' },
+                    pipeline: [
+                      { $match: { $expr: { $eq: ['$proveedor', '$$provId'] } } },
+                      { $group: { _id: null, totalGasto: { $sum: { $ifNull: ['$total', 0] } }, comprasCount: { $sum: 1 } } },
+                      { $project: { _id: 0, totalGasto: 1, comprasCount: 1 } }
+                    ],
+                    as: 'comprasStats'
+                  }
+                },
+                { $unwind: { path: '$comprasStats', preserveNullAndEmptyArrays: true } },
+                {
+                  $project: {
+                    nombre: 1,
+                    empresa: 1,
+                    totalProductos: 1,
+                    comprasCount: { $ifNull: ['$comprasStats.comprasCount', 0] },
+                    totalGasto: { $ifNull: ['$comprasStats.totalGasto', 0] }
+                  }
+                },
                 { $sort: { totalProductos: -1 } }
               ]);
+
               res.json({ success: true, data: resultado });
             } catch (error) {
               console.error('reportesController error:', error);
@@ -651,13 +711,223 @@ exports.reporteCategorias = async (req, res) => {
           // Proveedores recientes
           exports.reporteProveedoresRecientes = async (req, res) => {
             try {
-              const resultado = await Proveedor.find()
-                .sort({ fechaCreacion: -1 })
-                .limit(5);
+              // Obtener proveedores recientes e incluir información de la última compra
+              const resultado = await Proveedor.aggregate([
+                { $sort: { fechaCreacion: -1 } },
+                { $limit: 5 },
+                { $project: { nombre: 1, empresa: 1, activo: 1, createdAt: 1, fechaCreacion: 1 } },
+                {
+                  $lookup: {
+                    from: 'compras',
+                    let: { provId: '$_id' },
+                    pipeline: [
+                      { $match: { $expr: { $eq: ['$proveedor', '$$provId'] } } },
+                      { $sort: { fecha: -1 } },
+                      { $limit: 1 },
+                      { $project: { fecha: 1, total: 1 } }
+                    ],
+                    as: 'ultimaCompra'
+                  }
+                },
+                { $unwind: { path: '$ultimaCompra', preserveNullAndEmptyArrays: true } },
+                { $addFields: { ultimaCompraFecha: '$ultimaCompra.fecha', ultimaCompraTotal: '$ultimaCompra.total' } },
+                { $project: { ultimaCompra: 0 } }
+              ]);
+
               res.json({ success: true, data: resultado });
             } catch (error) {
               console.error('reportesController error:', error);
               res.status(500).json({ success: false, message: 'Error al obtener proveedores recientes' });
+            }
+          };
+
+          // ===== Reportes de Compras =====
+
+          // Compras por periodo (fecha: desde - hasta)
+          exports.reporteComprasPorPeriodo = async (req, res) => {
+            try {
+              const { desde, hasta } = req.query;
+              const filtro = {};
+              if (desde && hasta && !Number.isNaN(new Date(desde).getTime()) && !Number.isNaN(new Date(hasta).getTime())) {
+                filtro.fecha = { $gte: new Date(desde), $lte: new Date(hasta) };
+              }
+
+              const compras = await Compra.aggregate([
+                { $match: filtro },
+                {
+                  $group: {
+                    _id: {
+                      año: { $year: '$fecha' },
+                      mes: { $month: '$fecha' },
+                      dia: { $dayOfMonth: '$fecha' }
+                    },
+                    totalCompras: { $sum: 1 },
+                    totalGasto: { $sum: { $ifNull: ['$total', 0] } }
+                  }
+                },
+                { $sort: { '_id.año': 1, '_id.mes': 1, '_id.dia': 1 } }
+              ]);
+
+              res.json({ success: true, data: compras });
+            } catch (error) {
+              console.error('reportesController error (compras por periodo):', error);
+              res.status(500).json({ success: false, message: 'Error al generar el reporte de compras por periodo' });
+            }
+          };
+
+          // Consolidado de compras: totales, promedio y top proveedores
+          exports.reporteComprasConsolidado = async (req, res) => {
+            try {
+              const { desde, hasta } = req.query;
+              const filtro = {};
+              if (desde && hasta && !Number.isNaN(new Date(desde).getTime()) && !Number.isNaN(new Date(hasta).getTime())) {
+                filtro.fecha = { $gte: new Date(desde), $lte: new Date(hasta) };
+              }
+
+              const estadisticas = await Compra.aggregate([
+                { $match: filtro },
+                {
+                  $group: {
+                    _id: null,
+                    totalCompras: { $sum: 1 },
+                    totalGasto: { $sum: { $ifNull: ['$total', 0] } },
+                    promedioCompra: { $avg: { $ifNull: ['$total', 0] } }
+                  }
+                }
+              ]);
+
+              const topProveedores = await Compra.aggregate([
+                { $match: filtro },
+                {
+                  $group: {
+                    _id: '$proveedor',
+                    totalGasto: { $sum: { $ifNull: ['$total', 0] } },
+                    comprasCount: { $sum: 1 }
+                  }
+                },
+                {
+                  $lookup: {
+                    from: 'proveedors',
+                    localField: '_id',
+                    foreignField: '_id',
+                    as: 'proveedor'
+                  }
+                },
+                { $unwind: { path: '$proveedor', preserveNullAndEmptyArrays: true } },
+                {
+                  $project: {
+                    proveedor: '$proveedor.nombre',
+                    empresa: '$proveedor.empresa',
+                    totalGasto: 1,
+                    comprasCount: 1
+                  }
+                },
+                { $sort: { totalGasto: -1 } },
+                { $limit: 10 }
+              ]);
+
+              const summary = estadisticas[0] || { totalCompras: 0, totalGasto: 0, promedioCompra: 0 };
+              res.json({ success: true, data: { summary, topProveedores } });
+            } catch (error) {
+              console.error('reportesController error (compras consolidado):', error);
+              res.status(500).json({ success: false, message: 'Error al generar el reporte consolidado de compras' });
+            }
+          };
+
+          // Top productos comprados (por cantidad y gasto)
+          exports.reporteComprasPorProducto = async (req, res) => {
+            try {
+              const { desde, hasta, limit } = req.query;
+              const filtro = {};
+              if (desde && hasta && !Number.isNaN(new Date(desde).getTime()) && !Number.isNaN(new Date(hasta).getTime())) {
+                filtro.fecha = { $gte: new Date(desde), $lte: new Date(hasta) };
+              }
+
+              const top = Number(limit) || 10;
+
+              const result = await Compra.aggregate([
+                { $match: filtro },
+                { $unwind: '$productos' },
+                {
+                  $group: {
+                    _id: '$productos.producto',
+                    cantidadComprada: { $sum: { $ifNull: ['$productos.cantidad', 0] } },
+                    gasto: { $sum: { $multiply: [{ $ifNull: ['$productos.cantidad', 0] }, { $ifNull: ['$productos.valorUnitario', 0] }] } }
+                  }
+                },
+                {
+                  $lookup: {
+                    from: 'products',
+                    localField: '_id',
+                    foreignField: '_id',
+                    as: 'producto'
+                  }
+                },
+                { $unwind: { path: '$producto', preserveNullAndEmptyArrays: true } },
+                {
+                  $project: {
+                    producto: '$producto.name',
+                    cantidadComprada: 1,
+                    gasto: 1
+                  }
+                },
+                { $sort: { cantidadComprada: -1 } },
+                { $limit: top }
+              ]);
+
+              res.json({ success: true, data: result });
+            } catch (error) {
+              console.error('reportesController error (compras por producto):', error);
+              res.status(500).json({ success: false, message: 'Error al generar el reporte de compras por producto' });
+            }
+          };
+
+          // Resumen de compras por proveedor (monto total y cantidad de compras)
+          exports.reporteComprasPorProveedor = async (req, res) => {
+            try {
+              const { desde, hasta, limit } = req.query;
+              const filtro = {};
+              if (desde && hasta && !Number.isNaN(new Date(desde).getTime()) && !Number.isNaN(new Date(hasta).getTime())) {
+                filtro.fecha = { $gte: new Date(desde), $lte: new Date(hasta) };
+              }
+
+              const top = Number(limit) || 50;
+
+              const resumen = await Compra.aggregate([
+                { $match: filtro },
+                {
+                  $group: {
+                    _id: '$proveedor',
+                    totalGasto: { $sum: { $ifNull: ['$total', 0] } },
+                    comprasCount: { $sum: 1 }
+                  }
+                },
+                {
+                  $lookup: {
+                    from: 'proveedors',
+                    localField: '_id',
+                    foreignField: '_id',
+                    as: 'proveedor'
+                  }
+                },
+                { $unwind: { path: '$proveedor', preserveNullAndEmptyArrays: true } },
+                {
+                  $project: {
+                    proveedorId: '$_id',
+                    proveedor: '$proveedor.nombre',
+                    empresa: '$proveedor.empresa',
+                    totalGasto: 1,
+                    comprasCount: 1
+                  }
+                },
+                { $sort: { totalGasto: -1 } },
+                { $limit: top }
+              ]);
+
+              res.json({ success: true, data: resumen });
+            } catch (error) {
+              console.error('reportesController error (compras por proveedor):', error);
+              res.status(500).json({ success: false, message: 'Error al generar el reporte de compras por proveedor' });
             }
           };
 
@@ -845,13 +1115,24 @@ exports.reporteCategorias = async (req, res) => {
     
               const conProductos = await Product.distinct('proveedor').then(ids => ids.length);
 
+              // Agregar estadísticas de compras relacionadas con proveedores
+              const totalCompras = await Compra.countDocuments();
+              const gastoAgg = await Compra.aggregate([
+                { $group: { _id: null, totalGasto: { $sum: { $ifNull: ['$total', 0] } } } }
+              ]);
+              const totalGasto = (gastoAgg && gastoAgg[0] && gastoAgg[0].totalGasto) ? gastoAgg[0].totalGasto : 0;
+
               res.json({
                 success: true,
                 data: {
                   totalProveedores,
                   proveedoresActivos,
                   proveedoresInactivos,
-                  conProductos
+                  conProductos,
+                  compras: {
+                    totalCompras,
+                    totalGasto
+                  }
                 }
               });
             } catch (error) {
@@ -950,6 +1231,23 @@ exports.reporteCategorias = async (req, res) => {
             } catch (error) {
               console.error('reportesController error:', error);
               res.status(500).json({ success: false, message: 'Error al obtener productos por proveedor' });
+            }
+          };
+
+          // Productos reales de un proveedor (listar productos para un proveedor específico)
+          exports.productosDeProveedor = async (req, res) => {
+            try {
+              const proveedorId = req.params.id;
+              if (!proveedorId) return res.status(400).json({ success: false, message: 'ID de proveedor requerido' });
+
+              const productos = await Product.find({ proveedor: proveedorId })
+                .select('name description price stock activo')
+                .sort({ name: 1 });
+
+              res.json({ success: true, data: productos });
+            } catch (error) {
+              console.error('reportesController error (productosDeProveedor):', error);
+              res.status(500).json({ success: false, message: 'Error al obtener productos del proveedor' });
             }
           };
 

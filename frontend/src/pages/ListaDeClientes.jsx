@@ -5,6 +5,7 @@ import PropTypes from 'prop-types';
 import LabeledInput from '../components/LabeledInput';
 import Swal from 'sweetalert2';
 import '../App.css';
+import SharedListHeaderCard from '../components/SharedListHeaderCard';
 import Fijo from '../components/Fijo';
 import NavVentas from '../components/NavVentas';
 import RemisionPreview from '../components/RemisionPreview';
@@ -347,16 +348,34 @@ export default function ListaDeClientes() {
       try {
         const res = await api.get('/api/remisiones?limite=1000');
         const payload = res.data || res;
-        const remisiones = payload.remisiones || [];
-        // Agrupar remisiones por cliente con bucles claros (evita callbacks anidados)
+        // soportar varias formas de respuesta por si cambia el backend
+        const remisiones = payload.remisiones || (payload.data && payload.data.remisiones) || payload.data || [];
+        // pequeño log para depuración en el navegador
+        if (typeof window !== 'undefined' && window.console && window.console.debug) {
+          console.debug('[ListaDeClientes] remisiones fetched count=', Array.isArray(remisiones) ? remisiones.length : 0, remisiones && remisiones.slice ? remisiones.slice(0,5) : remisiones);
+        }
+
         const grouped = {};
-        for (const r of remisiones) {
-          const cliId = r.cliente;
-          const idStr = typeof cliId === 'object' ? (cliId._id || cliId.id) : cliId;
+        for (const r of Array.isArray(remisiones) ? remisiones : []) {
+          const cli = r && r.cliente;
+          if (!cli) continue;
+          let idStr = null;
+          if (typeof cli === 'string') {
+            idStr = cli;
+          } else if (cli._id) {
+            try { idStr = typeof cli._id === 'string' ? cli._id : cli._id.toString(); } catch (e) { idStr = String(cli._id); }
+          } else if (cli.id) {
+            try { idStr = typeof cli.id === 'string' ? cli.id : cli.id.toString(); } catch (e) { idStr = String(cli.id); }
+          } else {
+            // último recurso: serializar el objeto cliente
+            try { idStr = String(cli); } catch (e) { continue; }
+          }
+
           if (!idStr) continue;
           if (!grouped[idStr]) grouped[idStr] = [];
           grouped[idStr].push({ _id: r._id, numeroRemision: r.numeroRemision });
         }
+
         // Ordenar remisiones por numeroRemision (desc) dentro de cada cliente
         for (const k of Object.keys(grouped)) {
           grouped[k].sort((a, b) => String(b.numeroRemision).localeCompare(String(a.numeroRemision)));
@@ -422,6 +441,7 @@ export default function ListaDeClientes() {
 
     const dataFormateada = todosLosClientes.map(cliente => ({
       'Nombre': cliente.nombre || cliente.clienteInfo?.nombre || '',
+      'Remisiones asociadas': (remisionesMap[cliente._id]?.map(r => r.numeroRemision).join(', ')) || '',
       'Ciudad': cliente.ciudad || cliente.clienteInfo?.ciudad || '',
       'Teléfono': cliente.telefono || cliente.clienteInfo?.telefono || '',
       'Correo': cliente.correo || cliente.clienteInfo?.correo || '',
@@ -476,123 +496,26 @@ export default function ListaDeClientes() {
         <div className="max-width">
           <div className="contenido-modulo">
             {/* Encabezado profesional del módulo */}
-            <div style={{
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              borderRadius: '15px',
-              padding: '25px 30px',
-              marginBottom: '30px',
-              boxShadow: '0 10px 30px rgba(102, 126, 234, 0.3)',
-              position: 'relative',
-              overflow: 'hidden'
-            }}>
-              <div style={{
-                position: 'absolute',
-                top: '-50%',
-                right: '-10%',
-                width: '200px',
-                height: '200px',
-                background: 'rgba(255,255,255,0.1)',
-                borderRadius: '50%',
-                pointerEvents: 'none'
-              }}></div>
-              <div style={{
-                position: 'absolute',
-                bottom: '-30%',
-                left: '-5%',
-                width: '150px',
-                height: '150px',
-                background: 'rgba(255,255,255,0.08)',
-                borderRadius: '50%',
-                pointerEvents: 'none'
-              }}></div>
-
-              <div style={{ position: 'relative', zIndex: 2 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
-                  <div>
-                    <h3 style={{
-                      color: 'white',
-                      margin: '0 0 8px 0',
-                      fontSize: '2rem',
-                      fontWeight: '700',
-                      letterSpacing: '-0.5px'
-                    }}>
-                      <i className="fa-solid fa-users icon-gap" style={{ fontSize: '1.8rem' }} aria-hidden={true}></i>
-                      <span>Lista de Clientes</span>
-                    </h3>
-                    <p style={{
-                      color: 'rgba(255,255,255,0.9)',
-                      margin: 0,
-                      fontSize: '1.1rem',
-                      fontWeight: '400'
-                    }}>
-                      Gestión completa de clientes registrados
-                    </p>
-                  </div>
-
-                  <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                    <button
-                      onClick={() => exportToExcel(clientes)}
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        padding: '12px 20px',
-                        border: '2px solid rgba(255,255,255,0.3)',
-                        borderRadius: '12px',
-                        background: 'rgba(255,255,255,0.2)',
-                        color: 'white',
-                        fontSize: '14px',
-                        fontWeight: '600',
-                        cursor: 'pointer',
-                        transition: 'all 0.3s ease',
-                        backdropFilter: 'blur(10px)'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.target.style.background = 'rgba(255,255,255,0.3)';
-                        e.target.style.transform = 'translateY(-2px)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.target.style.background = 'rgba(255,255,255,0.2)';
-                        e.target.style.transform = 'translateY(0)';
-                      }}
-                    >
-                      <i className="fa-solid fa-file-excel" style={{ fontSize: '16px' }}></i>
-                      <span>Exportar Excel</span>
-                    </button>
-
-                    <button
-                      onClick={exportarPDF}
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        padding: '12px 20px',
-                        border: '2px solid rgba(255,255,255,0.3)',
-                        borderRadius: '12px',
-                        background: 'rgba(255,255,255,0.2)',
-                        color: 'white',
-                        fontSize: '14px',
-                        fontWeight: '600',
-                        cursor: 'pointer',
-                        transition: 'all 0.3s ease',
-                        backdropFilter: 'blur(10px)'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.target.style.background = 'rgba(255,255,255,0.3)';
-                        e.target.style.transform = 'translateY(-2px)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.target.style.background = 'rgba(255,255,255,0.2)';
-                        e.target.style.transform = 'translateY(0)';
-                      }}
-                    >
-                      <i className="fa-solid fa-file-pdf" style={{ fontSize: '16px' }}></i>
-                      <span>Exportar PDF</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
+            <SharedListHeaderCard
+            title="Lista de Clientes"
+            subtitle="Gestión de Clientes registrados en el sistema"
+            iconClass="fa-solid fa-users"
+          >
+            <div className="export-buttons">
+              <button
+                onClick={() => exportToExcel(clientesFiltrados)}
+                className="export-btn excel"
+              >
+                <i className="fa-solid fa-file-excel"></i><span>Exportar Excel</span>
+              </button>
+              <button
+                onClick={exportarPDF}
+                className="export-btn pdf"
+              >
+                <i className="fa-solid fa-file-pdf"></i><span>Exportar PDF</span>
+              </button>
             </div>
+          </SharedListHeaderCard>
 
             {/* Panel de filtros avanzado */}
             <div style={{
@@ -725,8 +648,8 @@ export default function ListaDeClientes() {
                       background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)',
                       borderBottom: '2px solid #e5e7eb'
                     }}>
-                      <th>#</th>
-                      <th>SOPORTE</th>
+                      <th ><i className="fa-solid fa-hashtag icon-gap" style={{ color: '#6366f1' }}></i>{' '}<span></span></th>
+                      <th><i className="fa-solid fa-file-invoice icon-gap" style={{ color: '#6366f1' }}></i>{' '}<span>SOPORTE</span></th>
                       <th style={{
                         padding: '16px 12px',
                         textAlign: 'left',

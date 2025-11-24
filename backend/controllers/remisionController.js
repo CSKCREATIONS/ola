@@ -29,7 +29,8 @@ async function fetchRemisionOrThrow(id) {
 
   const remision = await Remision.findById(idStr)
     .populate('responsable', 'username firstName surname')
-    .populate('cotizacionReferencia', 'codigo');
+    .populate('cotizacionReferencia', 'codigo')
+    .populate('cliente', 'nombre correo telefono ciudad');
   if (!remision) {
     const err = new Error('Remisión no encontrada');
     err.code = 'REMISION_NOT_FOUND';
@@ -156,15 +157,55 @@ exports.enviarRemisionPorCorreo = async (req, res) => {
       // Generar número dinámico para esta remisión derivada del pedido
       numeroRemision = `REM-${pedido.numeroPedido}-${Date.now().toString().slice(-6)}`;
       asuntoFinal = asunto || `Remisión - Pedido ${pedido.numeroPedido} - ${process.env.COMPANY_NAME || 'JLA Global Company'}`;
-      // Construir HTML ligero sin llamar a generarHTMLRemision (solicitud del usuario)
-      htmlContent = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8" /><title>Remisión ${numeroRemision}</title></head><body style="font-family:Arial,sans-serif;line-height:1.5;">
-        <h2 style="color:#059669;margin:0 0 12px;">Remisión ${numeroRemision}</h2>
+      // Use PDFService to produce consistent HTML (same design as PDFs)
+      try {
+        const pdfService = new PDFService();
+        const remisionData = {
+          numeroRemision,
+          pedidoReferencia: pedido._id,
+          codigoPedido: pedido.numeroPedido,
+          cliente: {
+            nombre: pedido.cliente.nombre,
+            correo: pedido.cliente.correo,
+            telefono: pedido.cliente.telefono,
+            ciudad: pedido.cliente.ciudad
+          },
+          productos: pedido.productos.map(p => ({
+            nombre: p.product?.name || 'Producto',
+            cantidad: p.cantidad,
+            precioUnitario: p.product?.price || 0,
+            total: (p.cantidad || 0) * (p.product?.price || 0),
+            codigo: p.product?.codigo || 'N/A'
+          })),
+          fechaRemision: new Date(),
+          responsable: null,
+          estado: 'activa',
+          total: pedido.productos.reduce((total, p) => total + ((p.cantidad || 0) * (p.product?.price || 0)), 0)
+        };
+
+        // Generate HTML and PDF (PDF generation already attempted below; reuse html here)
+        htmlContent = pdfService.generarHTMLRemision(remisionData);
+
+        // Try to inline CSS for better email rendering
+        try {
+          const juice = require('juice');
+          htmlContent = juice(htmlContent);
+        } catch (inlineErr) {
+          // juice not available or failed - continue with non-inlined HTML
+          console.warn('⚠️ Juice inlining skipped (pedido remisión):', inlineErr?.message || inlineErr);
+        }
+      } catch (e) {
+        console.warn('⚠️ Fallback: no se pudo generar HTML profesional para remisión (pedido):', e.message);
+        // Fallback to simple HTML
+        htmlContent = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8" /><title>Remisión ${numeroRemision}</title></head><body style="font-family:Arial,sans-serif;line-height:1.5;">
+        <h2 style="margin:0 0 12px;">Remisión ${numeroRemision}</h2>
         <p><strong>Pedido origen:</strong> ${pedido.numeroPedido}</p>
         <p><strong>Cliente:</strong> ${pedido.cliente?.nombre || 'N/A'} | <strong>Correo:</strong> ${pedido.cliente?.correo || 'N/A'}</p>
         <p><strong>Productos:</strong> ${(pedido.productos||[]).length} items</p>
         ${mensaje ? `<div style='margin-top:10px;padding:10px;border:1px solid #ddd;border-radius:6px;background:#f9f9f9;'>${mensaje}</div>` : ''}
         <p style="margin-top:20px;font-size:12px;color:#666;">Documento generado automáticamente - ${new Date().toLocaleString('es-ES')}</p>
       </body></html>`;
+      }
       try {
         console.log('📄 Generando PDF (derivado de pedido)...');
         const pdfService = new PDFService();
@@ -201,14 +242,28 @@ exports.enviarRemisionPorCorreo = async (req, res) => {
       numeroRemision = remisionDoc.numeroRemision;
       destinatario = correoDestino || remisionDoc.cliente?.correo;
       asuntoFinal = asunto || `Remisión ${numeroRemision} - ${process.env.COMPANY_NAME || 'JLA Global Company'}`;
-      // Construir HTML ligero sin llamar a generarHTMLRemision (solicitud del usuario)
-      htmlContent = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8" /><title>Remisión ${numeroRemision}</title></head><body style="font-family:Arial,sans-serif;line-height:1.5;">
-        <h2 style="color:#059669;margin:0 0 12px;">Remisión ${numeroRemision}</h2>
+      // Use PDFService to build consistent HTML for existing remisión
+      try {
+        const pdfService = new PDFService();
+        const remObj = remisionDoc.toObject ? remisionDoc.toObject() : remisionDoc;
+        htmlContent = pdfService.generarHTMLRemision(remObj);
+
+        try {
+          const juice = require('juice');
+          htmlContent = juice(htmlContent);
+        } catch (inlineErr) {
+          console.warn('⚠️ Juice inlining skipped (remisión existente):', inlineErr?.message || inlineErr);
+        }
+      } catch (e) {
+        console.warn('⚠️ Fallback: no se pudo generar HTML profesional para remisión existente:', e.message);
+        htmlContent = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8" /><title>Remisión ${numeroRemision}</title></head><body style="font-family:Arial,sans-serif;line-height:1.5;">
+        <h2 style="margin:0 0 12px;">Remisión ${numeroRemision}</h2>
         <p><strong>Cliente:</strong> ${remisionDoc.cliente?.nombre || 'N/A'} | <strong>Correo:</strong> ${remisionDoc.cliente?.correo || 'N/A'}</p>
         <p><strong>Productos:</strong> ${(remisionDoc.productos||[]).length} items</p>
         ${mensaje ? `<div style='margin-top:10px;padding:10px;border:1px solid #ddd;border-radius:6px;background:#f9f9f9;'>${mensaje}</div>` : ''}
         <p style="margin-top:20px;font-size:12px;color:#666;">Documento generado automáticamente - ${new Date().toLocaleString('es-ES')}</p>
       </body></html>`;
+      }
       const pedidoLike = {
         numeroPedido: remisionDoc.codigoPedido || remisionDoc.numeroRemision,
         cliente: remisionDoc.cliente,
@@ -269,6 +324,7 @@ exports.getAllRemisiones = async (req, res) => {
 
     const remisiones = await Remision.find(filtro)
       .populate('responsable', 'username firstName surname')
+      .populate('cliente', 'nombre correo ciudad telefono')
       .populate('cotizacionReferencia', 'codigo')
       .sort({ fechaRemision: -1 })
       .limit(Number.parseInt(limite, 10))

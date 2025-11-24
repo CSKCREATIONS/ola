@@ -263,6 +263,10 @@ export default function CotizacionPreview({ datos, onClose, onEmailSent, onRemis
       Swal.fire('Error', 'No se encontró el contenido para imprimir', 'error');
       return;
     }
+    // remove any previous print roots to avoid duplicates
+    const existing = document.getElementById('print-root');
+    if (existing) existing.remove();
+
     const clone = source.cloneNode(true);
     clone.style.padding = '8mm';
     clone.style.margin = '0';
@@ -273,7 +277,14 @@ export default function CotizacionPreview({ datos, onClose, onEmailSent, onRemis
     const printRoot = document.createElement('div');
     printRoot.id = 'print-root';
     printRoot.appendChild(clone);
-    document.body.appendChild(printRoot);
+    // hide the original source while printing to ensure only clone is visible
+    const prevDisplay = source.style.display;
+    try {
+      source.style.display = 'none';
+      document.body.appendChild(printRoot);
+    } catch (err) {
+      console.warn('Could not append print root:', err);
+    }
     const style = document.createElement('style');
     style.setAttribute('type', 'text/css');
     style.textContent = `@page { size: A4 portrait; margin: 8mm; }
@@ -282,6 +293,7 @@ export default function CotizacionPreview({ datos, onClose, onEmailSent, onRemis
       #print-root, #print-root * { visibility: visible !important; }
       #print-root { position: fixed; inset: 0; margin:0; padding:0; background:#fff; }
       table { page-break-inside: avoid; } }`;
+      
     document.head.appendChild(style);
     const A4_HEIGHT_PX = 1122;
     const doPrintAndCleanup = () => {
@@ -297,7 +309,11 @@ export default function CotizacionPreview({ datos, onClose, onEmailSent, onRemis
         console.error('Error al imprimir', e);
         Swal.fire('Error', 'No se pudo iniciar la impresión', 'error');
       } finally {
-        setTimeout(() => { printRoot.remove(); style.remove(); }, 400);
+        setTimeout(() => {
+          try { printRoot.remove(); } catch (err) { console.warn('No se pudo remover printRoot:', err); }
+          try { style.remove(); } catch (err) { console.warn('No se pudo remover style:', err); }
+          try { source.style.display = prevDisplay ?? ''; } catch (err) { console.warn('No se pudo restaurar display del original:', err); }
+        }, 400);
       }
     };
 

@@ -7,6 +7,7 @@ import PedidoCanceladoPreview from '../components/PedidoCanceladoPreview';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 import Swal from 'sweetalert2';
 import api from '../api/axiosConfig';
 import { normalizePedidosArray } from '../utils/calculations';
@@ -82,16 +83,27 @@ export default function PedidosCancelados() {
     });
   };
 
-  const exportarExcel = () => {
-    const elementosNoExport = document.querySelectorAll('.no-export');
-    for (const el of elementosNoExport) { el.style.display = 'none'; }
+  const exportToExcel = (pedidosCancelados) => {
+    if (!pedidosCancelados || pedidosCancelados.length === 0) {
+      Swal.fire("Error", "No hay datos para exportar", "warning");
+      return;
+    }
 
-    const tabla = document.getElementById("tabla_cancelados");
-    const workbook = XLSX.utils.table_to_book(tabla, { sheet: "Pedidos Cancelados" });
-    workbook.Sheets["Pedidos Cancelados"]["!cols"] = new Array(7).fill({ width: 20 });
+    const dataFormateada = pedidosCancelados.map(pedido => ({
+      'Nombre': pedido.cliente?.nombre || pedido.nombre || pedido.clienteInfo?.nombre || '',
+      'Numero de Pedido': pedido.numeroPedido || pedido.numeroPedido || '',
+      'Ciudad': pedido.cliente?.ciudad || pedido.ciudad || pedido.clienteInfo?.ciudad || '',
+      'Teléfono': pedido.cliente?.telefono || pedido.telefono || pedido.clienteInfo?.telefono || '',
+      'Correo': pedido.cliente?.correo || pedido.correo || pedido.clienteInfo?.correo || '',
+    }));
 
-    XLSX.writeFile(workbook, 'pedidos_cancelados.xlsx');
-    for (const el of elementosNoExport) { el.style.display = ''; }
+    const worksheet = XLSX.utils.json_to_sheet(dataFormateada);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Clientes');
+
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    const data = new Blob([excelBuffer], { type: 'application/octet-stream' });
+    saveAs(data, 'ListaPedidosCancelados.xlsx');
   };
 
   const verDetallesCancelado = async (pedidoId) => {
@@ -162,11 +174,11 @@ export default function PedidosCancelados() {
             <SharedListHeaderCard
               title="Pedidos Cancelados"
               subtitle="Gestión de pedidos cancelados y motivos de cancelación"
-              iconClass="fa-solid fa-times-circle"
+              iconClass="fa-solid fa-circle-xmark"
             >
               <div className="export-buttons">
                 <button
-                  onClick={exportarExcel}
+                  onClick={() => exportToExcel(pedidosCancelados)}
                   className="export-btn excel"
                 >
                   <i className="fa-solid fa-file-excel"></i><span>Exportar Excel</span>
@@ -231,22 +243,22 @@ export default function PedidosCancelados() {
                   <thead>
                     <tr>
                       <th>
-                        <i className="fa-solid fa-hashtag icon-gap" style={{ color: '#6366f1' }}></i><span>#</span>
+                        <i className="fa-solid fa-hashtag icon-gap" style={{ color: '#6366f1' }}></i><span></span>
                       </th>
                       <th>
-                        <i className="fa-solid fa-file-invoice icon-gap"></i><span>IDENTIFICADOR DE PEDIDO</span>
+                        <i className="fa-solid fa-file-invoice icon-gap" style={{ color: '#6366f1' }}></i><span>IDENTIFICADOR DE PEDIDO</span>
                       </th>
                       <th>
                         <i className="fa-solid fa-calendar-times icon-gap" style={{ color: '#6366f1' }}></i><span>F. CANCELACIÓN</span>
                       </th>
                       <th>
-                        <i className="fa-solid fa-user icon-gap"></i><span>CLIENTE</span>
+                        <i className="fa-solid fa-user icon-gap" style={{ color: '#6366f1' }}></i><span>CLIENTE</span>
                       </th>
                       <th>
                         <i className="fa-solid fa-location-dot icon-gap" style={{ color: '#6366f1' }}></i><span>CIUDAD</span>
                       </th>
                       <th>
-                        <i className="fa-solid fa-dollar-sign icon-gap"></i><span>TOTAL</span>
+                        <i className="fa-solid fa-dollar-sign icon-gap" style={{ color: '#6366f1' }}></i><span>TOTAL</span>
                       </th>
                       {hasPermission('pedidos.eliminar') && (
                         <th style={{ textAlign: 'center' }}>
@@ -262,13 +274,23 @@ export default function PedidosCancelados() {
                           {indexOfFirstItem + index + 1}
                         </td>
                         <td>
-                          <button
-                            style={{ cursor: 'pointer', color: 'red', background: 'transparent', textDecoration: 'underline' }}
-                            onClick={() => verDetallesCancelado(pedido._id)}
-                          >
-                            <i className="fa-solid fa-file-invoice"></i>
-                            <span>{pedido.numeroPedido || '---'}</span>
-                          </button>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <div className="table-icon-small">
+                              <i className="fa-solid fa-file-invoice" style={{ color: 'white', fontSize: '12px' }}></i>
+                            </div>
+                            {pedido.numeroPedido ? (
+                            <button
+                              style={{ cursor: 'pointer', color: '#6366f1', background: 'transparent', textDecoration: 'underline' }}
+                              onClick={() => verDetallesCancelado(pedido._id)}
+                            >
+                              
+                              <span>{pedido.numeroPedido || '---'}</span>
+                            </button>
+                            ) : (
+                              <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>---</span>
+                            )}
+                          </div>
+                          
                         </td>
                         <td style={{ color: '#6b7280' }}>
                           {new Date(pedido.updatedAt).toLocaleDateString()}
@@ -279,7 +301,7 @@ export default function PedidosCancelados() {
                         <td style={{ color: '#6b7280' }}>
                           {pedido.cliente?.ciudad}
                         </td>
-                        <td style={{ fontWeight: '600', color: '#ef4444', fontSize: '14px' }}>
+                        <td style={{ fontWeight: '600', color: '#6366f1', fontSize: '14px' }}>
                           ${(pedido.total || 0).toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </td>
                         <td className="no-export">
