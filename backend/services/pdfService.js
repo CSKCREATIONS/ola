@@ -154,14 +154,14 @@ class PDFService {
     // Mejor plantilla centralizada con estilos CSS para PDF
     const escapeHtml = (str) => {
       if (typeof str !== 'string') return '';
-      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      return str.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
     };
 
     const formatDate = (data) => {
       const raw = data?.fechaString || data?.fecha;
       if (!raw) return 'N/A';
       const d = new Date(raw);
-      return isNaN(d.getTime()) ? 'N/A' : d.toLocaleDateString('es-ES');
+      return Number.isNaN(d.getTime()) ? 'N/A' : d.toLocaleDateString('es-ES');
     };
 
     const total = (() => {
@@ -274,7 +274,7 @@ class PDFService {
   generarHTMLRemision(remision) {
     const escapeHtml = (str) => {
       if (typeof str !== 'string') return '';
-      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      return str.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
     };
 
     const formatDate = (d) => (d ? new Date(d).toLocaleDateString('es-ES') : 'N/A');
@@ -387,7 +387,7 @@ class PDFService {
     // Reuse cotizacion styling and layout for pedidos agendados
     const escapeHtml = (s) => {
       if (typeof s !== 'string') return '';
-      return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      return s.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
     };
 
     const formatDate = (d) => (d ? new Date(d).toLocaleDateString('es-ES') : 'N/A');

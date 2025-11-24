@@ -191,7 +191,7 @@ function parseFechaCotizacion(fecha) {
   }
 
   if (fechaStringVal) {
-    const [y, m, d] = fechaStringVal.split('-').map(n => parseInt(n, 10));
+    const [y, m, d] = fechaStringVal.split('-').map(n => Number.parseInt(n, 10));
     fechaCotizacion = new Date(Date.UTC(y, m - 1, d, 0, 0, 0));
   } else {
     // Fallback to today's UTC date at midnight
@@ -449,7 +449,7 @@ exports.updateCotizacion = async (req, res) => {
       // DEBUG: mostrar dato entrante al intentar actualizar la fecha
       console.log('DEBUG updateCotizacion - incoming fechaRaw:', fechaRaw, 'rest.fecha (type):', typeof rest.fecha, 'rest.fechaString:', rest.fechaString);
       if (typeof fechaRaw === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(fechaRaw)) {
-        const [yy, mm, dd] = fechaRaw.split('-').map(n => parseInt(n, 10));
+        const [yy, mm, dd] = fechaRaw.split('-').map(n => Number.parseInt(n, 10));
         const candidateDate = new Date(Date.UTC(yy, mm - 1, dd, 0, 0, 0));
         const candidateFechaString = fechaRaw;
 

@@ -128,6 +128,44 @@ async function safeSetClienteEsCliente(clienteId) {
   }
 }
 
+// Helper: aplicar reglas de actualización de cliente después de crear un pedido
+// - Si el pedido proviene de una cotización: no promovemos prospectos a cliente, sólo registramos operacion='agenda'.
+// - Si no proviene de cotización y el payload no indica operacion: 'agenda', promovemos a cliente (esCliente:true).
+// Esta función atrapa y registra errores internamente (no bloqueante).
+async function applyPostPedidoClienteRules(clienteId, cotizacionReferenciada, clientePayload) {
+  if (!clienteId) return;
+
+  // Si vino desde cotización, sólo registrar operacion='agenda' para prospectos
+  if (cotizacionReferenciada) {
+    try {
+      const clienteDoc = await Cliente.findById(clienteId).exec();
+      if (!clienteDoc) return;
+
+      const esClienteFlag = clienteDoc.esCliente === true || String(clienteDoc.esCliente).toLowerCase() === 'true';
+      if (!esClienteFlag) {
+        await Cliente.findByIdAndUpdate(clienteId, { operacion: 'agenda' }, { new: true }).exec();
+        console.log(`Cliente ${clienteId} es prospecto: establecido operacion='agenda' (no se cambia esCliente)`);
+      } else {
+        console.log(`Cliente ${clienteId} ya es cliente (esCliente:true): no se modificó nada`);
+      }
+    } catch (err) {
+      console.warn('⚠️ No se pudo actualizar operacion del cliente tras agendar desde cotización:', err?.message || err);
+    }
+    return;
+  }
+
+  // Comportamiento legacy: si el payload no indica operacion='agenda', marcar como cliente activo
+  try {
+    if (!(clientePayload && typeof clientePayload === 'object' && clientePayload.operacion === 'agenda')) {
+      await safeSetClienteEsCliente(clienteId);
+    } else {
+      console.log('Cliente creado desde agenda: se omite marcar esCliente:true');
+    }
+  } catch (err) {
+    console.warn('⚠️ Error aplicando reglas legacy de cliente post-pedido:', err?.message || err);
+  }
+}
+
 // Helper: construir productos para documento de remisión
 function buildProductosRemisionDoc(pedido) {
   return (pedido.productos || []).map(prod => ({
@@ -242,44 +280,6 @@ exports.getPedidos = async (req, res) => {
         filtro = { estado: estadoSanitizado };
       } else if (estadoSanitizado) {
         return res.status(400).json({ 
-          message: 'Estado inválido. Valores permitidos: Pendiente, Agendado, Entregado, Cancelado' 
-        });
-      }
-    }
-    
-    const pedidos = await Pedido.find(filtro)
-      .populate('cliente')
-      .populate('productos.product')
-      .populate('cotizacionReferenciada', 'codigo');
-    
-    // Calcular el total para cada pedido
-    const pedidosConTotal = pedidos.map(pedido => {
-      const total = pedido.productos.reduce((sum, prod) => {
-        const cantidad = prod.cantidad || 0;
-        const precio = prod.precioUnitario || 0;
-        return sum + (cantidad * precio);
-      }, 0);
-      const pedidoObj = pedido.toObject();
-      // Reemplazar cotizacionReferenciada por su código cuando esté poblada
-      if (pedidoObj.cotizacionReferenciada && typeof pedidoObj.cotizacionReferenciada === 'object') {
-        pedidoObj.cotizacionReferenciada = pedidoObj.cotizacionReferenciada.codigo || String(pedidoObj.cotizacionReferenciada._id);
-      }
-
-      return {
-        ...pedidoObj,
-        total
-      };
-    });
-    
-    res.json(pedidosConTotal);
-  } catch (err) {
-    console.error('Error al obtener pedidos:', err);
-    res.status(500).json({ message: 'Error al obtener pedidos' });
-  }
-};
-
-
-// Crear pedido (refactor: delegar pasos a helpers para bajar complejidad)
 exports.createPedido = async (req, res) => {
   try {
     const { cliente, productos, fechaEntrega, observacion, cotizacionReferenciada, cotizacionCodigo, descripcion, condicionesPago } = req.body;
@@ -322,9 +322,19 @@ exports.createPedido = async (req, res) => {
     // Si vino de una cotización, intentar marcar (no bloqueante)
     await safeMarkCotizacionAgendada(cotizacionReferenciada, pedidoGuardado._id, cotizacionCodigo);
 
-    // Actualizar cliente según origen del pedido:
-    // - Si el pedido proviene de una cotización (cotizacionReferenciada):
-    //     -> Consultar el documento cliente. Si `esCliente` === true no hacemos nada.
+    // Delegar reglas de actualización de cliente a helper para reducir complejidad
+    try {
+      await applyPostPedidoClienteRules(clienteId, cotizacionReferenciada, clientePayload);
+    } catch (errSet) {
+      console.warn('⚠️ Error aplicando reglas de cliente post-pedido (no bloqueante):', errSet?.message || errSet);
+    }
+
+    return res.status(201).json(pedidoGuardado);
+  } catch (err) {
+    console.error('❌ Error al crear pedido:', err);
+    return res.status(500).json({ message: 'Error al crear el pedido', error: err.message });
+  }
+};
     //     -> Si `esCliente` === false (prospecto), NO cambiar `esCliente`, pero actualizar solamente `operacion: 'agenda'`.
     // - En los demás casos (pedido normal): mantener comportamiento previo: marcar esCliente:true
     //   a menos que el payload original explicitara `operacion: 'agenda'`.

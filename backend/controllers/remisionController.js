@@ -190,9 +190,9 @@ exports.enviarRemisionPorCorreo = async (req, res) => {
         try {
           const juice = require('juice');
           htmlContent = juice(htmlContent);
-        } catch (inlineErr) {
+        } catch (error_) {
           // juice not available or failed - continue with non-inlined HTML
-          console.warn('⚠️ Juice inlining skipped (pedido remisión):', inlineErr?.message || inlineErr);
+          console.warn('⚠️ Juice inlining skipped (pedido remisión):', error_?.message || error_);
         }
       } catch (e) {
         console.warn('⚠️ Fallback: no se pudo generar HTML profesional para remisión (pedido):', e.message);
@@ -251,8 +251,8 @@ exports.enviarRemisionPorCorreo = async (req, res) => {
         try {
           const juice = require('juice');
           htmlContent = juice(htmlContent);
-        } catch (inlineErr) {
-          console.warn('⚠️ Juice inlining skipped (remisión existente):', inlineErr?.message || inlineErr);
+        } catch (error_) {
+          console.warn('⚠️ Juice inlining skipped (remisión existente):', error_?.message || error_);
         }
       } catch (e) {
         console.warn('⚠️ Fallback: no se pudo generar HTML profesional para remisión existente:', e.message);

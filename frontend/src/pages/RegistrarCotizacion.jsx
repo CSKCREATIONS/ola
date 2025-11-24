@@ -564,7 +564,7 @@ export default function RegistrarCotizacion() {
                     onChange={(e) => {
                       // Solo permitir números y caracteres válidos para teléfonos: +, espacios, guiones, paréntesis
                       const valor = e.target.value;
-                      const valorFiltrado = valor.replace(/[^0-9+\-() ]/g, '');
+                      const valorFiltrado = valor.replaceAll(/[^0-9+\-() ]/g, '');
                       setClienteTelefono(valorFiltrado);
                     }}
                     onKeyDown={(e) => {
@@ -601,14 +601,20 @@ export default function RegistrarCotizacion() {
 
                 {/* Campo Responsable */}
                 <div className="grupo-campo-compacto">
-                  <label className="label-campo-compacto">
+                  <label htmlFor="vendedor" className="label-campo-compacto">
                     <i className="fa-solid fa-user-tie" style={{ color: '#06b6d4' }}></i>
                     <span>Responsable</span>
                   </label>
                   <div className="input-compacto input-solo-lectura">
                     <i className="fa-solid fa-badge-check" style={{ color: '#10b981', marginRight: '0.5rem' }}></i>
-                    <span id='vendedor'>
-                      {user ? user.firstName : ''} {user ? user.surname : ''}</span>
+                    <input
+                      id='vendedor'
+                      type='text'
+                      readOnly
+                      className="input-vendedor-texto"
+                      value={user ? `${user.firstName} ${user.surname}` : ''}
+                      aria-readonly="true"
+                    />
                   </div>
                 </div>
 

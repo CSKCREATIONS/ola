@@ -476,13 +476,14 @@ export default function ListaDeClientes() {
     setTimeout(() => {
       const container = document.querySelector('.swal2-html-container');
       if (!container) return;
-      container.querySelectorAll('button[data-remision]').forEach(btn => {
+      const buttons = container.querySelectorAll('button[data-remision]');
+      for (const btn of buttons) {
         btn.addEventListener('click', () => {
           const id = btn.getAttribute('data-remision');
             abrirRemisionPreview(id);
             Swal.close();
         });
-      });
+      }
     }, 0);
   }, [remisionesMap, abrirRemisionPreview]);
 

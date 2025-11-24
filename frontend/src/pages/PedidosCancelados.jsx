@@ -91,7 +91,7 @@ export default function PedidosCancelados() {
 
     const dataFormateada = pedidosCancelados.map(pedido => ({
       'Nombre': pedido.cliente?.nombre || pedido.nombre || pedido.clienteInfo?.nombre || '',
-      'Numero de Pedido': pedido.numeroPedido || pedido.numeroPedido || '',
+      'Numero de Pedido': pedido.numeroPedido || '',
       'Ciudad': pedido.cliente?.ciudad || pedido.ciudad || pedido.clienteInfo?.ciudad || '',
       'Teléfono': pedido.cliente?.telefono || pedido.telefono || pedido.clienteInfo?.telefono || '',
       'Correo': pedido.cliente?.correo || pedido.correo || pedido.clienteInfo?.correo || '',
@@ -154,7 +154,7 @@ export default function PedidosCancelados() {
       const base64Payload = token.split('.')[1];
       if (!base64Payload) return false;
       // Normalizar base64url
-      const jsonPayload = atob(base64Payload.replace(/-/g, '+').replace(/_/g, '/'));
+      const jsonPayload = atob(base64Payload.replaceAll('-', '+').replaceAll('_', '/'));
       const payload = JSON.parse(jsonPayload);
       const perms = payload.permissions || payload.permisos || [];
       return Array.isArray(perms) && perms.includes(perm);

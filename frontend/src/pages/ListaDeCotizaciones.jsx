@@ -133,7 +133,7 @@ export default function ListaDeCotizaciones() {
     if (!raw) return null;
     try {
       if (typeof raw === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(raw)) {
-        const [y, m, d] = raw.split('-').map(n => parseInt(n, 10));
+        const [y, m, d] = raw.split('-').map(n => Number.parseInt(n, 10));
         return new Date(Date.UTC(y, m - 1, d, 0, 0, 0));
       }
       const tmp = new Date(raw);

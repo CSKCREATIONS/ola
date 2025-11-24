@@ -606,7 +606,7 @@ export default function PedidosAgendados() {
 
     const dataFormateada = pedidosAgendados.map(pedido => ({
       'Nombre': pedido.cliente?.nombre || pedido.nombre || pedido.clienteInfo?.nombre || '',
-      'Numero de Pedido': pedido.numeroPedido || pedido.numeroPedido || '',
+      'Numero de Pedido': pedido.numeroPedido || '',
       'Ciudad': pedido.cliente?.ciudad || pedido.ciudad || pedido.clienteInfo?.ciudad || '',
       'Teléfono': pedido.cliente?.telefono || pedido.telefono || pedido.clienteInfo?.telefono || '',
       'Correo': pedido.cliente?.correo || pedido.correo || pedido.clienteInfo?.correo || '',
@@ -672,7 +672,7 @@ export default function PedidosAgendados() {
         // Cerrar vista previa del pedido agendado si estaba abierta
         setCotizacionPreview(null);
         // Obtener objeto remisión desde la respuesta
-        const remision = (res.data && res.data.remision) || (res.data?.data && res.data.data.remision) || null;
+        const remision = res?.data?.remision || res?.data?.data?.remision || null;
         if (remision) {
           setRemisionPreviewData(remision);
           setShowRemisionPreview(true);
