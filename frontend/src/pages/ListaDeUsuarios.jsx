@@ -173,12 +173,13 @@ export default function ListaDeUsuarios() {
 
   const toggleEstadoUsuario = async (id, estadoActual, username) => {
 
-    const accion = estadoActual ? 'inhabilitar' : 'habilitar';
-    const participio = estadoActual ? 'inhabilitado' : 'habilitado';
+    const accion = estadoActual ? 'Deshabilitar' : 'Habilitar';
+    const participio = estadoActual ? 'deshabilitado' : 'habilitado';
+    const accionFutura = estadoActual ? 'impedirá' : 'permitirá';
 
     const confirmacion = await Swal.fire({
-      title: `¿Estás seguro?`,
-      text: `¿Quieres ${accion} al usuario "${username}"?`,
+      title: `${accion} al usuario "${username}"?`,
+      text: `Esta acción le ${accionFutura} el ingreso al sistema`,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonText: `Sí, ${accion}`,
