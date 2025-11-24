@@ -93,12 +93,42 @@ export default function DetallesOrdenModal({ visible, orden = {}, onClose = () =
       </html>
     `;
     const doc = newWindow.document;
-    doc.open();
-    doc.documentElement.innerHTML = html;
-    doc.close();
+    try {
+      // Try to adopt the parsed documentElement into the new window's document
+      const parser = new DOMParser();
+      const newDoc = parser.parseFromString(html, 'text/html');
+      if (doc && doc.documentElement && newDoc && newDoc.documentElement) {
+        try {
+          doc.replaceChild(doc.adoptNode(newDoc.documentElement), doc.documentElement);
+        } catch (errReplace) {
+          // fallback to document.write if replaceChild/adoptNode fails
+          try {
+            doc.open();
+            doc.write(html);
+            doc.close();
+          } catch (errWrite) {
+            console.error('Both replaceChild and document.write failed for print:', errReplace, errWrite);
+          }
+        }
+      } else {
+        // Fallback: write HTML into document
+        doc.open();
+        doc.write(html);
+        doc.close();
+      }
+    } catch (err) {
+      console.error('Error preparing print document:', err);
+      try {
+        doc.open();
+        doc.write(html);
+        doc.close();
+      } catch (err2) {
+        console.error('Fallback document.write also failed:', err2);
+      }
+    }
     newWindow.focus();
-    newWindow.print();
-    newWindow.close();
+    try { newWindow.print(); } catch (e) { console.debug('print() failed:', e); }
+    try { newWindow.close(); } catch (e) { /* ignore close errors */ }
   }, [orden]);
 
   if (!visible) return null;
@@ -118,13 +148,7 @@ export default function DetallesOrdenModal({ visible, orden = {}, onClose = () =
             subtitle={`N° ${o.numeroOrden || 'Sin número'}`}
             onClose={onClose}
           >
-            <button
-              onClick={() => handleOpenPrintWindow()}
-              style={styles.btnGhost}
-              aria-label="Imprimir encabezado"
-            >
-              <i className="fa-solid fa-print" aria-hidden={true}></i>
-            </button>
+            
 
             <button
               className="btn"
@@ -213,7 +237,7 @@ export default function DetallesOrdenModal({ visible, orden = {}, onClose = () =
             <span style={{ color: '#7f8c8d', fontSize: '0.8rem' }}><i className="fa-solid fa-clock icon-gap" />{o.fechaOrden ? new Date(o.fechaOrden).toLocaleDateString() : ''}</span>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <button className="btn btn-success" onClick={() => onPrint(o)} style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}><i className="fa-solid fa-print" /> Imprimir</button>
-              <button className="btn btn-warning" onClick={() => onSendEmail(o)} style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', color: '#fff' }}><i className="fa-solid fa-envelope" /> Enviar Correo</button>
+              <button className="btn btn-warning" onClick={() => onSendEmail(o)} style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', color: '#000  ' }}><i className="fa-solid fa-envelope" /> Enviar Correo</button>
               <button className="btn btn-secondary" onClick={onClose} style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>Cerrar</button>
             </div>
           </div>

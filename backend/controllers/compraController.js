@@ -27,14 +27,18 @@ const crearCompra = async (req, res) => {
     
     // Validar y sanitizar productos (evita inyección de campos no deseados)
     const productos = Array.isArray(req.body.productos) 
-      ? req.body.productos.map(p => ({
-          producto: String(p.producto || '').trim(),
-          descripcion: String(p.descripcion || '').trim(),
-          cantidad: Number(p.cantidad) || 0,
-          valorUnitario: Number(p.valorUnitario) || 0,
-          descuento: Number(p.descuento) || 0,
-          valorTotal: Number(p.valorTotal) || 0
-        }))
+      ? req.body.productos.map(p => {
+          const valor = Number(p.valorUnitario ?? p.precioUnitario) || 0;
+          return {
+            producto: String(p.producto || '').trim(),
+            descripcion: String(p.descripcion || '').trim(),
+            cantidad: Number(p.cantidad) || 0,
+            valorUnitario: valor,
+            precioUnitario: valor,
+            descuento: Number(p.descuento) || 0,
+            valorTotal: Number(p.valorTotal) || (Number(p.cantidad || 0) * valor)
+          };
+        })
       : [];
     
     // Validar números de forma segura (previene NaN y valores maliciosos)
@@ -100,9 +104,15 @@ const obtenerComprasPorProveedor = async (req, res) => {
       });
     }
 
-    const compras = await Compra.find({ proveedor: proveedorId })
-      .populate('proveedor', 'name')
-      .populate('productos.producto', 'nombre precio');
+    // populate full proveedor document to ensure fields like `nombre` and nested `contacto` are available
+    let compras = await Compra.find({ proveedor: proveedorId });
+
+    // Populate productos and proveedor details for each compra (best-effort)
+    compras = await Promise.all((compras || []).map(async (c) => {
+      let tmp = await populateProductosIfNeeded(c);
+      tmp = await populateProveedorIfNeeded(tmp);
+      return tmp;
+    }));
 
     res.status(200).json({ success: true, data: compras });
   } catch (error) {
@@ -114,15 +124,16 @@ const obtenerComprasPorProveedor = async (req, res) => {
 // Obtener todas las compras
 const obtenerTodasLasCompras = async (req, res) => {
   try {
-    const compras = await Compra.find()
-      .populate('proveedor', 'nombre')
-      .populate('productos.producto', 'name price') // ✅ campos correctos
-      .sort({ fecha: -1 });
+    let compras = await Compra.find().sort({ fecha: -1 });
 
-    res.status(200).json({
-      success: true,
-      data: compras
-    });
+    // Best-effort populate product and proveedor objects for each compra since schema stores producto/proveedor as String
+    compras = await Promise.all((compras || []).map(async (c) => {
+      let tmp = await populateProductosIfNeeded(c);
+      tmp = await populateProveedorIfNeeded(tmp);
+      return tmp;
+    }));
+
+    res.status(200).json({ success: true, data: compras });
   } catch (error) {
     console.error('Error al obtener compras:', error);
     res.status(500).json({
@@ -170,11 +181,25 @@ const actualizarCompra = async (req, res) => {
       });
     }
 
+    // Normalize productos to ensure precioUnitario is present
+    const productosNormalized = Array.isArray(productos) ? productos.map(p => {
+      const valor = Number(p.precioUnitario ?? p.valorUnitario) || 0;
+      return {
+        producto: p.producto ?? p.productoId ?? '',
+        descripcion: p.descripcion ?? p.description ?? '',
+        cantidad: Number(p.cantidad) || 0,
+        precioUnitario: valor,
+        valorUnitario: valor, 
+        descuento: Number(p.descuento) || 0,
+        valorTotal: Number(p.valorTotal) || (Number(p.cantidad || 0) * valor)
+      };
+    }) : [];
+
     const compraActualizada = await Compra.findByIdAndUpdate(
       compraId,
       {
         proveedor,
-        productos,
+        productos: productosNormalized,
         condicionesPago,
         observaciones,
         total,
@@ -207,11 +232,13 @@ const enviarCompraPorCorreo = async (req, res) => {
 
     if (!destinatario) return res.status(400).json({ success: false, message: 'Destinatario es requerido' });
 
-    let compra = await Compra.findById(compraId).populate('proveedor', 'nombre email telefono');
+    // populate full proveedor so we can access nested contact info reliably
+    let compra = await Compra.findById(compraId);
     if (!compra) return res.status(404).json({ success: false, message: 'Compra no encontrada' });
 
-    // Asegurar que cada producto tenga datos (best-effort)
+    // Asegurar que cada producto y proveedor tengan datos (best-effort)
     compra = await populateProductosIfNeeded(compra);
+    compra = await populateProveedorIfNeeded(compra);
 
     const compraHTML = generarHTMLCompra(compra, mensaje);
     const pdfAttachment = await generatePdfAttachmentSafe(compra);
@@ -220,14 +247,28 @@ const enviarCompraPorCorreo = async (req, res) => {
     const attachments = pdfAttachment ? [{ filename: pdfAttachment.filename, content: pdfAttachment.content, contentType: pdfAttachment.contentType }] : [];
 
     try {
-      await sendMail(destinatario, asuntoFinal, compraHTML, attachments);
+      const mailResult = await sendMail(destinatario, asuntoFinal, compraHTML, attachments);
+
+      // Some sendMail implementations return an object with accepted/rejected arrays (nodemailer),
+      // or an object with info when no transporter is configured. Detect common failure shapes.
+      if (mailResult && typeof mailResult === 'object') {
+        const rejected = Array.isArray(mailResult.rejected) ? mailResult.rejected : (Array.isArray(mailResult.rejectedRecipients) ? mailResult.rejectedRecipients : []);
+        const accepted = Array.isArray(mailResult.accepted) ? mailResult.accepted : (Array.isArray(mailResult.acceptedRecipients) ? mailResult.acceptedRecipients : []);
+        const infoFlag = String(mailResult.info || mailResult.messageId || mailResult.response || '').toLowerCase();
+
+        // If there is an explicit info flag indicating no transporter, or no accepted recipients, treat as failure
+        if (infoFlag.includes('no-transporter') || (Array.isArray(accepted) && accepted.length === 0 && Array.isArray(rejected) && rejected.length > 0)) {
+          console.warn('⚠️ sendMail reported no transporter or rejected recipients:', { info: mailResult.info, accepted, rejected });
+          return res.status(500).json({ success: false, message: 'No hay transporter de correo configurado o el destinatario fue rechazado', details: { info: mailResult } });
+        }
+      }
+
+      console.log('✅ Correo enviado exitosamente' + (pdfAttachment ? ' con PDF adjunto' : ''));
+      return res.status(200).json({ success: true, message: '¡Compra enviada por correo exitosamente!' + (pdfAttachment ? ' con PDF adjunto' : ''), details: { destinatario, asunto: asuntoFinal, numeroOrden: compra.numeroOrden, pdfAdjunto: !!pdfAttachment, fecha: new Date().toLocaleString('es-CO') } });
     } catch (err) {
       console.error('❌ Error al enviar correo vía emailSender:', err?.message || err);
       return res.status(500).json({ success: false, message: 'Error al enviar correo', error: err?.message || String(err) });
     }
-
-    console.log('✅ Correo enviado exitosamente' + (pdfAttachment ? ' con PDF adjunto' : ''));
-    res.status(200).json({ success: true, message: '¡Compra enviada por correo exitosamente!' + (pdfAttachment ? ' con PDF adjunto' : ''), details: { destinatario, asunto: asuntoFinal, numeroOrden: compra.numeroOrden, pdfAdjunto: !!pdfAttachment, fecha: new Date().toLocaleString('es-CO') } });
   } catch (error) {
     console.error('❌ Error al enviar correo:', error);
     res.status(500).json({ success: false, message: 'Error al enviar correo', error: error.message });
@@ -236,8 +277,9 @@ const enviarCompraPorCorreo = async (req, res) => {
 
 // Función para generar HTML profesional (igual al módulo de ventas)
 function generarHTMLCompra(compra, mensajePersonalizado = '') {
-  const totalCalculado = compra.productos.reduce((total, producto) => {
-    const subtotal = Number(producto.cantidad * producto.precioUnitario) || 0;
+  const totalCalculado = (Array.isArray(compra.productos) ? compra.productos : []).reduce((total, producto) => {
+    const precioUnit = Number(producto.precioUnitario ?? producto.valorUnitario ?? producto.producto?.price ?? 0) || 0;
+    const subtotal = Number(producto.cantidad * precioUnit) || 0;
     return total + subtotal;
   }, 0);
 
@@ -245,15 +287,17 @@ function generarHTMLCompra(compra, mensajePersonalizado = '') {
   const subtotalFinal = Number(compra.subtotal) || totalCalculado;
   const impuestosFinal = Number(compra.impuestos) || 0;
 
-  // Generar filas de productos
-  const productosHTML = compra.productos.map((p, index) => {
-    const subtotal = p.cantidad * p.precioUnitario;
+  // Generar filas de productos (usar valorUnitario/valorUnitario fallbacks)
+  const productosHTML = (Array.isArray(compra.productos) ? compra.productos : []).map((p, index) => {
+    const precioUnit = Number(p.precioUnitario ?? p.valorUnitario ?? p.producto?.price ?? 0) || 0;
+    const subtotal = Number((p.cantidad || 0) * precioUnit) || 0;
+    const nombreProd = p.producto?.name || p.producto?.nombre || p.descripcion || 'N/A';
     return `
       <tr data-label="Producto ${index + 1}">
-        <td data-label="Producto">${p.producto?.name || 'N/A'}</td>
-        <td data-label="Cantidad">${p.cantidad}</td>
-        <td data-label="Precio Unit.">$${Number(p.precioUnitario || 0).toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-        <td data-label="Subtotal">$${Number(subtotal || 0).toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+        <td data-label="Producto">${nombreProd}</td>
+        <td data-label="Cantidad">${p.cantidad || 0}</td>
+        <td data-label="Precio Unit.">$${precioUnit.toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+        <td data-label="Subtotal">$${subtotal.toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
       </tr>
     `;
   }).join('');
@@ -284,7 +328,7 @@ function generarHTMLCompra(compra, mensajePersonalizado = '') {
           box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
         .header { 
-          background: linear-gradient(135deg, #27ae60, #229954); 
+          background: linear-gradient(135deg, #6f42c1, #5a31a6); 
           color: white; 
           padding: 20px; 
           text-align: center; 
@@ -305,11 +349,11 @@ function generarHTMLCompra(compra, mensajePersonalizado = '') {
           background: #f8f9fa; 
           padding: 15px; 
           border-radius: 8px; 
-          border-left: 4px solid #27ae60; 
+          border-left: 4px solid #6f42c1; 
           margin-bottom: 15px;
         }
         .info-card h3 { 
-          color: #27ae60; 
+          color: #6f42c1; 
           margin-bottom: 10px; 
           font-size: 1.1em; 
         }
@@ -325,7 +369,7 @@ function generarHTMLCompra(compra, mensajePersonalizado = '') {
           margin: 20px 0; 
         }
         .products-title { 
-          background: #27ae60; 
+          background: #6f42c1; 
           color: white; 
           padding: 15px; 
           margin-bottom: 0; 
@@ -365,7 +409,7 @@ function generarHTMLCompra(compra, mensajePersonalizado = '') {
           left: 0; 
           width: 110px; 
           font-weight: bold; 
-          color: #27ae60; 
+          color: #6f42c1; 
           font-size: 0.9em; 
         }
         .total-section { 
@@ -384,21 +428,21 @@ function generarHTMLCompra(compra, mensajePersonalizado = '') {
           border-bottom: none; 
           font-size: 1.3em; 
           font-weight: bold; 
-          color: #27ae60; 
+          color: #6f42c1; 
           margin-top: 10px; 
           padding-top: 10px; 
-          border-top: 2px solid #27ae60; 
+          border-top: 2px solid #6f42c1; 
         }
         .observaciones {
-          background: #fff3cd;
-          border-left: 4px solid #ffc107;
+          background: #fff0f6;
+          border-left: 4px solid #d3a1ff;
           padding: 15px;
           border-radius: 8px;
           margin-top: 20px;
         }
         .mensaje-personal {
-          background: #d1ecf1;
-          border-left: 4px solid #17a2b8;
+          background: #f3e8ff;
+          border-left: 4px solid #6f42c1;
           padding: 15px;
           border-radius: 8px;
           margin-top: 15px;
@@ -416,7 +460,7 @@ function generarHTMLCompra(compra, mensajePersonalizado = '') {
             display: table-header-group; 
           }
           .products-table thead tr { 
-            background: #27ae60; 
+            background: #6f42c1; 
             color: white; 
             display: table-row; 
           }
@@ -466,8 +510,8 @@ function generarHTMLCompra(compra, mensajePersonalizado = '') {
           <div class="info-card">
             <h3>🏢 Información del Proveedor</h3>
             <p><strong>Nombre:</strong> ${compra.proveedor?.nombre || 'No especificado'}</p>
-            ${compra.proveedor?.email ? `<p><strong>Email:</strong> ${compra.proveedor.email}</p>` : ''}
-            ${compra.proveedor?.telefono ? `<p><strong>Teléfono:</strong> ${compra.proveedor.telefono}</p>` : ''}
+            ${compra.proveedor?.contacto?.correo ? `<p><strong>Email:</strong> ${compra.proveedor.contacto.correo}</p>` : ''}
+            ${compra.proveedor?.contacto?.telefono ? `<p><strong>Teléfono:</strong> ${compra.proveedor.contacto.telefono}</p>` : ''}
           </div>
 
           <div class="products-section">
@@ -543,28 +587,67 @@ function validateId(raw) {
 async function populateProductosIfNeeded(compra) {
   if (!compra || !Array.isArray(compra.productos)) return compra;
   const Producto = require('../models/Products');
-
   // Build a new productos array to avoid mutating the original referencia
   const productosPopulados = await Promise.all(compra.productos.map(async (item) => {
     if (typeof item?.producto !== 'string') {
-      // already populated or malformed - keep as-is
-      return item;
+      // already populated or malformed - keep as-is but ensure cantidad is numeric
+      return { ...item, cantidad: Number(item.cantidad) || 0 };
     }
 
     try {
-      // lean+exec for slightly better performance and consistent returns
-      const producto = await Producto.findById(item.producto).lean().exec();
-      if (!producto) return item;
-      // Return a new item with producto replaced by populated object
+      // Avoid CastError: check if the string is a valid ObjectId first
+      const mongoose = require('mongoose');
+      let producto = null;
+      const raw = String(item.producto).trim();
+
+      const isObjectId = mongoose.Types.ObjectId.isValid(raw);
+      if (isObjectId) {
+        // lean+exec for slightly better performance and consistent returns
+        producto = await Producto.findById(raw).lean().exec();
+      } else {
+        // Fallback: try to find by common text fields (name, nombre, sku)
+        producto = await Producto.findOne({
+          $or: [
+            { name: raw },
+            { nombre: raw },
+            { sku: raw },
+            { code: raw }
+          ]
+        }).lean().exec();
+      }
+
+      if (!producto) {
+        // Could not resolve the product to a DB doc; keep the original item but ensure numeric fields
+        const fallbackPrecio = Number(item.precioUnitario ?? item.valorUnitario) || 0;
+        return {
+          ...item,
+          cantidad: Number(item.cantidad) || 0,
+          precioUnitario: fallbackPrecio,
+          valorUnitario: Number(item.valorUnitario ?? fallbackPrecio) || fallbackPrecio
+        };
+      }
+
+      // Normalize price fields: prefer existing precioUnitario/valorUnitario, fallback to product.price
+      const precioUnitario = Number(item.precioUnitario ?? item.valorUnitario ?? producto.price ?? 0) || 0;
+      const descripcion = item.descripcion || producto.description || producto.descripcion || '';
+      // Return a new item with producto replaced by populated object and ensure precioUnitario is present
       return {
         ...item,
-        producto: { _id: producto._id, name: producto.name, description: producto.description }
+        cantidad: Number(item.cantidad) || 0,
+        descripcion,
+        precioUnitario,
+        valorUnitario: Number(item.valorUnitario ?? precioUnitario) || precioUnitario,
+        producto: { _id: producto._id, name: producto.name || producto.nombre, description: producto.description || producto.descripcion || '', price: producto.price }
       };
     } catch (err) {
       // Keep function resilient but provide useful debug info
       console.warn('⚠️ No se pudo poblar el producto:', item.producto, '; error:', err?.message || err);
-      if (err?.stack) console.debug(err.stack);
-      return item;
+      return {
+        ...item,
+        cantidad: Number(item.cantidad) || 0,
+        precioUnitario: Number(item.precioUnitario ?? item.valorUnitario) || 0,
+        valorUnitario: Number(item.valorUnitario ?? item.precioUnitario) || Number(item.precioUnitario ?? 0)
+      };
     }
   }));
 
@@ -572,6 +655,52 @@ async function populateProductosIfNeeded(compra) {
   const compraObj = typeof compra.toObject === 'function' ? compra.toObject() : { ...compra };
   compraObj.productos = productosPopulados;
   return compraObj;
+}
+
+// Helper: ensure proveedor field is populated as an object (best-effort)
+async function populateProveedorIfNeeded(compra) {
+  if (!compra) return compra;
+  const Proveedor = require('../models/proveedores');
+  try {
+    // If proveedor is already an object with a nombre, assume populated
+    if (typeof compra.proveedor === 'object' && compra.proveedor !== null) {
+      return compra;
+    }
+
+    const mongoose = require('mongoose');
+    const raw = String(compra.proveedor || '').trim();
+
+    if (!raw) return compra;
+
+    let proveedorDoc = null;
+    if (mongoose.Types.ObjectId.isValid(raw)) {
+      proveedorDoc = await Proveedor.findById(raw).lean().exec();
+    }
+
+    if (!proveedorDoc) {
+      proveedorDoc = await Proveedor.findOne({
+        $or: [
+          { nombre: raw },
+          { empresa: raw },
+          { 'contacto.correo': raw }
+        ]
+      }).lean().exec();
+    }
+
+    const compraObj = typeof compra.toObject === 'function' ? compra.toObject() : { ...compra };
+    if (proveedorDoc) {
+      compraObj.proveedor = proveedorDoc;
+    } else {
+      // fallback: keep original string as the nombre so templates can show it
+      compraObj.proveedor = { nombre: raw };
+    }
+    return compraObj;
+  } catch (err) {
+    console.warn('⚠️ No se pudo poblar el proveedor:', compra.proveedor, '; error:', err?.message || err);
+    const compraObj = typeof compra.toObject === 'function' ? compra.toObject() : { ...compra };
+    compraObj.proveedor = { nombre: String(compra.proveedor || '') };
+    return compraObj;
+  }
 }
 
 // Helper: generate PDF attachment safely

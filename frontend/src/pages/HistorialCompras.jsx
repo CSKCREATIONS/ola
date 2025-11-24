@@ -529,10 +529,10 @@ export default function HistorialCompras() {
       title: '📧 Enviar Compra por Correo',
       html: `
         <div style="text-align: left;">
-          <label htmlFor="input-historial-1" style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">
+          <label htmlFor="emailDestino" style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">
             Correo del destinatario:
           </label>
-          <input id="input-historial-1" 
+          <input 
             type="email" 
             id="emailDestino" 
             class="swal2-input" 
@@ -542,10 +542,10 @@ export default function HistorialCompras() {
             required
           >
           
-          <label htmlFor="input-historial-2" style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">
+          <label htmlFor="asuntoEmail" style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">
             Asunto:
           </label>
-          <input id="input-historial-2" 
+          <input 
             type="text" 
             id="asuntoEmail" 
             class="swal2-input" 
@@ -554,10 +554,10 @@ export default function HistorialCompras() {
             value="Compra Confirmada - N° ${compraSeleccionada.numeroOrden || 'N/A'} - JLA Global Company"
           >
           
-          <label htmlFor="input-historial-3" style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">
+          <label htmlFor="mensajeEmail" style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">
             Mensaje:
           </label>
-          <textarea id="input-historial-3" 
+          <textarea 
             id="mensajeEmail" 
             class="swal2-textarea" 
             placeholder="Escribe tu mensaje aquí..."
@@ -585,6 +585,16 @@ JLA Global Company</textarea>
       cancelButtonText: 'Cancelar',
       confirmButtonColor: '#27ae60',
       cancelButtonColor: '#6c757d',
+      didOpen: () => {
+        try {
+          const container = Swal.getContainer();
+          if (container) container.style.zIndex = '20000';
+          const popup = Swal.getPopup();
+          if (popup) popup.style.zIndex = '20001';
+        } catch (e) {
+          // ignore
+        }
+      },
       preConfirm: async () => {
         // Make this an async preConfirm so it always returns a Promise (consistent type).
         const email = document.getElementById('emailDestino').value;
@@ -612,12 +622,20 @@ JLA Global Company</textarea>
     });
 
     if (formValues) {
-      try {
+        try {
         Swal.fire({
           title: 'Enviando...',
           text: 'Por favor espera',
           allowOutsideClick: false,
           didOpen: () => {
+            try {
+              const container = Swal.getContainer && Swal.getContainer();
+              const popup = Swal.getPopup && Swal.getPopup();
+              if (container) container.style.zIndex = '21000';
+              if (popup) popup.style.zIndex = '21001';
+            } catch (e) {
+              // ignore
+            }
             Swal.showLoading();
           }
         });
@@ -632,11 +650,36 @@ JLA Global Company</textarea>
           icon: 'success',
           title: '¡Enviado!',
           text: 'La compra ha sido enviada por correo electrónico',
-          confirmButtonColor: '#27ae60'
+          confirmButtonColor: '#27ae60',
+          didOpen: () => {
+            try {
+              const container = Swal.getContainer && Swal.getContainer();
+              const popup = Swal.getPopup && Swal.getPopup();
+              if (container) container.style.zIndex = '22000';
+              if (popup) popup.style.zIndex = '22001';
+            } catch (e) {
+              // ignore
+            }
+          }
         });
       } catch (error) {
         console.error('Error al enviar correo:', error);
-        Swal.fire('Error', error.response?.data?.message || 'No se pudo enviar el correo electrónico', 'error');
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: error.response?.data?.message || 'No se pudo enviar el correo electrónico',
+          confirmButtonColor: '#dc3545',
+          didOpen: () => {
+            try {
+              const container = Swal.getContainer && Swal.getContainer();
+              const popup = Swal.getPopup && Swal.getPopup();
+              if (container) container.style.zIndex = '22000';
+              if (popup) popup.style.zIndex = '22001';
+            } catch (e) {
+              // ignore
+            }
+          }
+        });
       }
     }
   };
@@ -1085,7 +1128,7 @@ JLA Global Company</textarea>
                       <button
                         className="btn-profesional btn-primary-profesional"
                         onClick={imprimirCompra}
-                        style={{ background: 'linear-gradient(135deg, #6a1b9a, #9b59b6)', color: 'white' }}
+                        style={{ background: 'linear-gradient(135deg, #6a1b9a, #9b59b6)', color: 'white', borderRadius: '8px', padding: '15px' }}
                       >
                         <i className="fa-solid fa-print" aria-hidden={true}></i>
                         <span>Imprimir PDF</span>
@@ -1096,7 +1139,9 @@ JLA Global Company</textarea>
                         style={{
                           background: 'linear-gradient(135deg, #6a1b9a, #9b59b6)',
                           color: 'white',
-                          padding: '0.5rem 1.5rem'
+                          padding: '15px',
+                          borderRadius: '8px'
+                          
                         }}
                       >
                         <i className="fa-solid fa-envelope" aria-hidden={true}></i>
@@ -1108,7 +1153,8 @@ JLA Global Company</textarea>
                         style={{
                           background: '#95a5a6',
                           color: 'white',
-                          padding: '0.5rem 1.5rem'
+                          padding: '15px',
+                          borderRadius: '8px'
                         }}
                       >
                         <i className="fa-solid fa-times" aria-hidden={true}></i>

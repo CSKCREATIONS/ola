@@ -30,6 +30,14 @@ export function mostrarFormularioEnvio() {
     focusConfirm: false,
     confirmButtonText: 'Enviar',
     showCancelButton: true,
+    didOpen: () => {
+      try {
+        const c = document.querySelector('.swal2-container');
+        if (c) c.style.zIndex = '20000';
+      } catch (e) {
+        // ignore
+      }
+    },
     preConfirm: () => {
       const para = document.getElementById('input-para').value || '';
       const asunto = document.getElementById('input-asunto').value || '';

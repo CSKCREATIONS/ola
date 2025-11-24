@@ -725,9 +725,18 @@ class PDFService {
 
         <div class="info-section">
           <h3>🏢 Información del Proveedor</h3>
-          <p><strong>Nombre:</strong> ${compra.proveedor?.nombre || 'No especificado'}</p>
-          ${compra.proveedor?.email ? `<p><strong>Email:</strong> ${compra.proveedor.email}</p>` : ''}
-          ${compra.proveedor?.telefono ? `<p><strong>Teléfono:</strong> ${compra.proveedor.telefono}</p>` : ''}
+          ${(() => {
+            // robust provider resolution: could be populated object, plain string, or nested contacto
+            const prov = compra.proveedor || {};
+            const providerName = (prov && (prov.nombre || prov.name)) || (typeof prov === 'string' ? prov : '') || 'No especificado';
+            const providerEmail = prov?.contacto?.correo || prov?.email || prov?.contacto?.correo || prov?.correo || '';
+            const providerPhone = prov?.contacto?.telefono || prov?.telefono || prov?.contacto?.telefono || '';
+            return `
+              <p><strong>Nombre:</strong> ${providerName}</p>
+              ${providerEmail ? `<p><strong>Email:</strong> ${providerEmail}</p>` : ''}
+              ${providerPhone ? `<p><strong>Teléfono:</strong> ${providerPhone}</p>` : ''}
+            `;
+          })()}
         </div>
 
         <div class="products-section">
@@ -743,16 +752,19 @@ class PDFService {
             </thead>
             <tbody>
               ${compra.productos?.map(p => {
-                const subtotal = p.cantidad * p.precioUnitario;
-                return `
-                  <tr>
-                    <td>${p.producto?.name || 'N/A'}</td>
-                    <td style="text-align: center; font-weight: 600;">${p.cantidad}</td>
-                    <td style="text-align: right;">$${Number(p.precioUnitario || 0).toLocaleString('es-CO', { minimumFractionDigits: 2 })}</td>
-                    <td style="text-align: right; font-weight: 600;">$${Number(subtotal || 0).toLocaleString('es-CO', { minimumFractionDigits: 2 })}</td>
-                  </tr>
-                `;
-              }).join('') || '<tr><td colspan="4" style="text-align: center; padding: 20px;">No hay productos</td></tr>'}
+                  const qty = Number(p.cantidad ?? p.qty) || 0;
+                  const precio = Number(p.precioUnitario ?? p.valorUnitario) || 0;
+                  const subtotal = qty * precio;
+                  const prodName = (p.producto && (p.producto.name || p.producto.nombre)) || (typeof p.producto === 'string' ? p.producto : '') || p.descripcion || 'N/A';
+                  return `
+                    <tr>
+                      <td>${prodName}</td>
+                      <td style="text-align: center; font-weight: 600;">${qty}</td>
+                      <td style="text-align: right;">$${Number(precio || 0).toLocaleString('es-CO', { minimumFractionDigits: 2 })}</td>
+                      <td style="text-align: right; font-weight: 600;">$${Number(subtotal || 0).toLocaleString('es-CO', { minimumFractionDigits: 2 })}</td>
+                    </tr>
+                  `;
+                }).join('') || '<tr><td colspan="4" style="text-align: center; padding: 20px;">No hay productos</td></tr>'}
             </tbody>
           </table>
         </div>
