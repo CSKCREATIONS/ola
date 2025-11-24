@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import Swal from 'sweetalert2';
 import api from '../api/axiosConfig';
@@ -45,18 +45,18 @@ const STYLES = {
   }
 };
 
-/* --- Utilities for printing --- */
-const buildStyle = () => `
-  body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
-  .header { text-align: center; margin-bottom: 30px; padding: 20px; background: linear-gradient(135deg, #fd7e14, #e85d04); color: white; border-radius: 10px; }
-  .info-section { margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; }
-  table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-  th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-  th { background: linear-gradient(135deg, #fd7e14, #e85d04); color: white; font-weight: bold; }
-  .total-row { background: #fef3c7; font-weight: bold; }
-  .status-badge { background: #fd7e14; color: white; padding: 8px 16px; border-radius: 20px; display: inline-block; }
+const buildPrintStyleText = () => `
+  @page { size: A4 portrait; margin: 8mm; }
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    body * { visibility: hidden !important; }
+    #print-root, #print-root * { visibility: visible !important; }
+    #print-root { position: fixed; inset: 0; margin:0; padding:0; background:#fff; }
+    table { page-break-inside: avoid; }
+  }
 `;
 
+/* DOM set helpers (kept for potential alternative print strategies) */
 const trySetDocWithDOM = (doc, title, htmlContent, style) => {
   try {
     doc.open();
@@ -78,7 +78,7 @@ const trySetDocWithDOM = (doc, title, htmlContent, style) => {
     console.error('trySetDocWithDOM failed', err);
     return false;
   } finally {
-    try { doc.close(); } catch (e) { console.warn('trySetDocWithDOM: doc.close() failed', e); }
+    try { doc.close(); } catch (e) { /* ignore */ }
   }
 };
 
@@ -102,17 +102,16 @@ const trySetDocOuterHTML = (doc, title, htmlContent, style) => {
     console.error('trySetDocOuterHTML failed', err);
     return false;
   } finally {
-    try { doc.close(); } catch (e) { console.warn('trySetDocOuterHTML: doc.close() failed', e); }
+    try { doc.close(); } catch (e) { /* ignore */ }
   }
 };
 
-/* --- Subcomponents --- */
+/* Small subcomponents */
 const ActionButton = ({ onClick, children, aria, style }) => (
   <button onClick={onClick} aria-label={aria} style={{ ...STYLES.actionBtn(), ...style }}>
     {children}
   </button>
 );
-
 ActionButton.propTypes = {
   onClick: PropTypes.func, children: PropTypes.node, aria: PropTypes.string, style: PropTypes.object
 };
@@ -167,13 +166,12 @@ const EnviarModal = ({ correo, asunto, mensaje, onClose, onChangeCorreo, onChang
     </div>
   </div>
 );
-
 EnviarModal.propTypes = {
   correo: PropTypes.string, asunto: PropTypes.string, mensaje: PropTypes.string,
   onClose: PropTypes.func, onChangeCorreo: PropTypes.func, onChangeAsunto: PropTypes.func, onChangeMensaje: PropTypes.func, onSend: PropTypes.func
 };
 
-/* --- Main Component --- */
+/* Main component */
 const PedidoAgendadoPreview = ({ datos = {}, onClose = () => { }, onEmailSent, onRemisionar }) => {
   const [showEnviarModal, setShowEnviarModal] = useState(false);
   const [correo, setCorreo] = useState('');
@@ -194,14 +192,14 @@ const PedidoAgendadoPreview = ({ datos = {}, onClose = () => { }, onEmailSent, o
     }
   }, [datos?.productos]);
 
-  const abrirModalEnvio = () => {
+  const abrirModalEnvio = useCallback(() => {
     const tpl = makePedidoAgendadoTemplate(datos) || {};
     setAsunto(tpl.asunto || '');
     setMensaje(tpl.mensaje || '');
     setShowEnviarModal(true);
-  };
+  }, [datos]);
 
-  const enviarPorCorreo = async () => {
+  const enviarPorCorreo = useCallback(async () => {
     try {
       const response = await api.post(`/api/pedidos/${datos._id}/enviar-correo`, {
         pedidoId: datos._id, correoDestino: correo, asunto, mensaje
@@ -229,16 +227,15 @@ const PedidoAgendadoPreview = ({ datos = {}, onClose = () => { }, onEmailSent, o
       const backendMessage = error_?.response?.data?.message || error_?.message || 'No se pudo enviar el correo';
       Swal.fire({ icon: 'error', title: 'Error', text: backendMessage, confirmButtonColor: '#fd7e14' });
     }
-  };
+  }, [datos._id, correo, asunto, mensaje, onEmailSent]);
 
-  const handlePrint = () => {
+  const handlePrint = useCallback(() => {
     const source = document.getElementById('pdf-pedido-agendado-block');
     if (!source) {
       Swal.fire('Error', 'No se encontró el contenido para imprimir', 'error');
       return;
     }
 
-    // remove any previous print roots to avoid duplicates
     const existing = document.getElementById('print-root');
     if (existing) existing.remove();
 
@@ -249,10 +246,11 @@ const PedidoAgendadoPreview = ({ datos = {}, onClose = () => { }, onEmailSent, o
     clone.style.background = '#fff';
     clone.style.width = '100%';
     clone.style.fontSize = '12px';
+
     const printRoot = document.createElement('div');
     printRoot.id = 'print-root';
     printRoot.appendChild(clone);
-    // hide the original source while printing to ensure only clone is visible
+
     const prevDisplay = source.style.display;
     try {
       source.style.display = 'none';
@@ -260,16 +258,12 @@ const PedidoAgendadoPreview = ({ datos = {}, onClose = () => { }, onEmailSent, o
     } catch (err) {
       console.warn('Could not append print root:', err);
     }
+
     const style = document.createElement('style');
     style.setAttribute('type', 'text/css');
-    style.textContent = `@page { size: A4 portrait; margin: 8mm; }
-      @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-      body * { visibility: hidden !important; }
-      #print-root, #print-root * { visibility: visible !important; }
-      #print-root { position: fixed; inset: 0; margin:0; padding:0; background:#fff; }
-      table { page-break-inside: avoid; } }`;
-      
+    style.textContent = buildPrintStyleText();
     document.head.appendChild(style);
+
     const A4_HEIGHT_PX = 1122;
     const doPrintAndCleanup = () => {
       try {
@@ -292,9 +286,48 @@ const PedidoAgendadoPreview = ({ datos = {}, onClose = () => { }, onEmailSent, o
         const scale = Math.max(0.75, A4_HEIGHT_PX / h);
         clone.style.transform = `scale(${scale})`;
         clone.style.transformOrigin = 'top left';
-        clone.style.width = `${(100/scale).toFixed(2)}%`;
+        clone.style.width = `${(100 / scale).toFixed(2)}%`;
       }
       setTimeout(doPrintAndCleanup, 40);
+    });
+  }, []);
+
+  const handleRemisionarClick = useCallback(() => {
+    if (typeof onRemisionar === 'function') {
+      onRemisionar();
+    } else {
+      Swal.fire('Acción no disponible', 'No se pudo ejecutar la remisión (handler no definido).', 'warning');
+    }
+  }, [onRemisionar]);
+
+  const renderDescripcion = () => {
+    if (!datos?.descripcion) return null;
+    const desc = datos.descripcion;
+    const looksLikeHtml = typeof desc === 'string' && /<[^>]+>/.test(desc);
+    if (looksLikeHtml) {
+      const safeHtml = sanitizeHtml(desc);
+      return <div dangerouslySetInnerHTML={{ __html: safeHtml }} />;
+    }
+    return <div style={{ whiteSpace: 'pre-wrap' }}>{desc}</div>;
+  };
+
+  const renderProductosRows = () => {
+    return (datos?.productos || []).map((producto, index) => {
+      const key = producto._id || producto.product?._id || producto.codigo || producto.product?.codigo || index;
+      const nombre = producto.product?.name || producto.product?.nombre || producto.nombre || 'Producto sin nombre';
+      const precio = Number.parseFloat(producto.precioUnitario || 0) || 0;
+      const cantidad = Number(producto.cantidad || 0);
+      return (
+        <tr key={key} style={{ borderBottom: '1px solid #eee', backgroundColor: index % 2 === 0 ? '#fafafa' : 'white' }}>
+          <td style={{ padding: '1rem' }}>
+            <div style={{ fontWeight: 'bold', color: '#333' }}>{nombre}</div>
+            {producto.product?.categoria && <div style={{ fontSize: '0.9rem', color: '#666', marginTop: '0.25rem' }}>{producto.product.categoria}</div>}
+          </td>
+          <td style={{ padding: '1rem', textAlign: 'center', fontWeight: 'bold' }}>{cantidad}</td>
+          <td style={{ padding: '1rem', textAlign: 'right' }}>S/. {precio.toFixed(2)}</td>
+          <td style={{ padding: '1rem', textAlign: 'right', fontWeight: 'bold' }}>S/. {(cantidad * precio).toFixed(2)}</td>
+        </tr>
+      );
     });
   };
 
@@ -320,7 +353,7 @@ const PedidoAgendadoPreview = ({ datos = {}, onClose = () => { }, onEmailSent, o
               <span>Enviar</span>
             </ActionButton>
 
-            <ActionButton onClick={() => (typeof onRemisionar === 'function' ? onRemisionar() : Swal.fire('Acción no disponible', 'No se pudo ejecutar la remisión (handler no definido).', 'warning'))} aria="Remisionar">
+            <ActionButton onClick={handleRemisionarClick} aria="Remisionar">
               <i className="fa-solid fa-file-invoice" aria-hidden />
               <span>Remisionar</span>
             </ActionButton>
@@ -363,20 +396,11 @@ const PedidoAgendadoPreview = ({ datos = {}, onClose = () => { }, onEmailSent, o
               </div>
             </div>
 
-
             {datos?.descripcion && (
               <div style={{ marginBottom: '2rem' }}>
                 <h3 style={{ borderBottom: '3px solid #fd7e14', paddingBottom: '0.5rem', color: '#fd7e14', fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '1rem' }}>Descripción</h3>
                 <div style={{ background: '#eff6ff', padding: '1rem', borderRadius: '8px', borderLeft: '4px solid #fd7e14', lineHeight: '1.6' }}>
-                  {(() => {
-                    const desc = datos.descripcion;
-                    const looksLikeHtml = typeof desc === 'string' && /<[^>]+>/.test(desc);
-                    if (looksLikeHtml) {
-                      const safeHtml = sanitizeHtml(desc);
-                      return <div dangerouslySetInnerHTML={{ __html: safeHtml }} />;
-                    }
-                    return <div style={{ whiteSpace: 'pre-wrap' }}>{desc}</div>;
-                  })()}
+                  {renderDescripcion()}
                 </div>
               </div>
             )}
@@ -394,23 +418,7 @@ const PedidoAgendadoPreview = ({ datos = {}, onClose = () => { }, onEmailSent, o
                   </tr>
                 </thead>
                 <tbody>
-                  {datos?.productos?.map((producto, index) => {
-                    const key = producto._id || producto.product?._id || producto.codigo || producto.product?.codigo || index;
-                    const nombre = producto.product?.name || producto.product?.nombre || producto.nombre || 'Producto sin nombre';
-                    const precio = Number.parseFloat(producto.precioUnitario || 0) || 0;
-                    const cantidad = Number(producto.cantidad || 0);
-                    return (
-                      <tr key={key} style={{ borderBottom: '1px solid #eee', backgroundColor: index % 2 === 0 ? '#fafafa' : 'white' }}>
-                        <td style={{ padding: '1rem' }}>
-                          <div style={{ fontWeight: 'bold', color: '#333' }}>{nombre}</div>
-                          {producto.product?.categoria && <div style={{ fontSize: '0.9rem', color: '#666', marginTop: '0.25rem' }}>{producto.product.categoria}</div>}
-                        </td>
-                        <td style={{ padding: '1rem', textAlign: 'center', fontWeight: 'bold' }}>{cantidad}</td>
-                        <td style={{ padding: '1rem', textAlign: 'right' }}>S/. {precio.toFixed(2)}</td>
-                        <td style={{ padding: '1rem', textAlign: 'right', fontWeight: 'bold' }}>S/. {(cantidad * precio).toFixed(2)}</td>
-                      </tr>
-                    );
-                  })}
+                  {renderProductosRows()}
                 </tbody>
                 <tfoot>
                   <tr style={{ background: 'linear-gradient(135deg, #fff5e6, #ffe4cc)', borderTop: '2px solid #fd7e14' }}>
@@ -429,8 +437,7 @@ const PedidoAgendadoPreview = ({ datos = {}, onClose = () => { }, onEmailSent, o
             )}
 
             {datos?.observacion && (
-              <div>
-
+              <div style={{ marginTop: '1rem' }}>
                 {datos.observacion}
               </div>
             )}
