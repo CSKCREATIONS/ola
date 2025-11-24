@@ -1,5 +1,3 @@
-/* ===== ESTRUCTURA PRINCIPAL ===== */
-
 
 /* ===== HEADER RESPONSIVE ===== */
 .header {
@@ -12,16 +10,11 @@
   z-index: 1000;
   transition: var(--transition);
   box-shadow: var(--shadow-soft);
-  position: static;
 }
 
 /* Header fijo solo en desktop */
 @media (min-width: 768px) {
   .header {
-    top: 0;
-    left: 0;
-    right: 0;
-    width: 100%;
     padding: 1rem 2rem;
   }
 

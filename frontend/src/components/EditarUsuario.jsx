@@ -268,7 +268,7 @@ export default function EditarUsuario({ usuario, fetchUsuarios }) {
               <span>Editar Usuario</span>
             </h3>
             <p style={{ margin: '0.5rem 0 0 4rem', opacity: 0.9, fontSize: '0.95rem' }}>
-              {usuario?.username || 'Actualizar información del usuario'}
+              {usuario?.username || 'Usuario'}
             </p>
           </div>
 
