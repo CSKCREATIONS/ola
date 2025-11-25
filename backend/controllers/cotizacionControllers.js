@@ -223,7 +223,6 @@ function buildCotizacionPayload({
   productosConNombre,
   enviadoCorreo,
   empresa,
-  clientePotencial
 }) {
   return {
     codigo: generarCodigoCotizacion(),
@@ -249,7 +248,6 @@ function buildCotizacionPayload({
     condicionesPago,
     productos: productosConNombre,
     empresa: empresa || undefined,
-    clientePotencial,
     enviadoCorreo
   };
 }
@@ -258,7 +256,6 @@ exports.createCotizacion = async (req, res) => {
   try {
     const {
       cliente,
-      clientePotencial,
       fecha,
       descripcion,
       condicionesPago,
@@ -306,7 +303,6 @@ exports.createCotizacion = async (req, res) => {
       productosConNombre,
       enviadoCorreo,
       empresa: req.body.empresa,
-      clientePotencial
     });
 
     const cotizacion = new Cotizacion(cotizacionPayload);

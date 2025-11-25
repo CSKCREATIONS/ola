@@ -114,9 +114,6 @@ async function enviarCorreoConAttachment(destinatario, asunto, htmlContent, pdfA
 
 
 
-
-
-
 exports.enviarRemisionPorCorreo = async (req, res) => {
   try {
     const { correoDestino, asunto, mensaje } = req.body;
@@ -345,134 +342,8 @@ exports.getAllRemisiones = async (req, res) => {
 };
 
 
-// Probar configuración de Gmail SMTP (usa wrapper centralizado)
-exports.probarGmail = async (req, res) => {
-  try {
-    const { getGmailTransporter } = require('../utils/gmailSender');
-    const emailUser = process.env.EMAIL_USER || process.env.GMAIL_USER;
-    const emailPass = process.env.EMAIL_PASS || process.env.GMAIL_APP_PASSWORD;
 
-    if (!emailUser || !emailPass) {
-      return res.status(400).json({ 
-        message: 'Gmail SMTP no configurado',
-        faltantes: {
-          usuario: emailUser ? null : 'EMAIL_USER o GMAIL_USER',
-          contraseña: emailPass ? null : 'EMAIL_PASS o GMAIL_APP_PASSWORD'
-        }
-      });
-    }
 
-    console.log('🧪 Probando Gmail SMTP - usuario configurado:', !!emailUser);
-
-    // Use centralized transporter factory (ensures consistent TLS config)
-    const transporter = getGmailTransporter();
-    if (!transporter) {
-      return res.status(500).json({ message: 'No se pudo crear transporter de Gmail (revise credenciales en .env)' });
-    }
-
-    // Verificar la conexión (throws on failure)
-    await transporter.verify();
-
-    console.log('✅ Gmail SMTPS verificado correctamente');
-
-    // Warn if APP_URL is configured with http (insecure)
-    const appUrl = process.env.APP_URL || process.env.FRONTEND_URL;
-    if (appUrl && typeof appUrl === 'string' && appUrl.startsWith('http://')) {
-      console.warn('⚠️ APP_URL está usando http:// — se recomienda usar https:// en producción');
-    }
-
-    res.json({
-      message: 'Gmail SMTP configurado y verificado correctamente',
-      configuracion: {
-        usuario: emailUser,
-        servicio: 'gmail_smtps',
-        secure: true
-      }
-    });
-
-  } catch (error) {
-    console.error('❌ Error en prueba Gmail SMTP:', error);
-    res.status(500).json({
-      message: 'Error en configuración de Gmail SMTP',
-      error: error.message,
-      code: error.code,
-      solucion: error.code === 'EAUTH' ? 
-        'Verifique que la contraseña de aplicación de Gmail sea correcta' :
-        'Verifique la conexión a internet y configuración de Gmail'
-    });
-  }
-};
-
-// Probar configuración de SendGrid
-exports.probarSendGrid = async (req, res) => {
-  try {
-    const sgKey = process.env.SENDGRID_API_KEY;
-    if (!sgKey?.startsWith('SG.')) {
-      return res.status(400).json({ message: 'SENDGRID_API_KEY no configurada o inválida' });
-    }
-
-    sgMail.setApiKey(sgKey);
-    
-    const testEmail = {
-      to: 'test@example.com', // Email de prueba
-      from: process.env.SENDGRID_FROM_EMAIL || 'test@test.com',
-      subject: 'Prueba de configuración SendGrid',
-      text: 'Este es un correo de prueba'
-    };
-
-    console.log('🧪 Probando SendGrid con configuración:', {
-      apiKey: 'SG.***',
-      fromEmail: testEmail.from,
-      toEmail: testEmail.to
-    });
-
-    // Intentar validar la configuración sin enviar realmente
-    await sgMail.send(testEmail);
-    
-    res.json({
-      message: 'SendGrid configurado correctamente',
-      configuracion: {
-        apiKey: 'Configurada (' + process.env.SENDGRID_API_KEY.substring(0, 10) + '...)',
-        fromEmail: testEmail.from
-      }
-    });
-
-  } catch (error) {
-    console.error('❌ Error en prueba SendGrid:', error);
-    res.status(500).json({
-      message: 'Error en configuración de SendGrid',
-      error: error.message,
-      detalles: error.response?.body || 'Error desconocido',
-      solucion: 'Verifique que la API key sea válida y que el correo FROM esté verificado en SendGrid'
-    });
-  }
-};
-
-// Verificar configuración de correo (para debugging)
-exports.verificarConfiguracionCorreo = async (req, res) => {
-  try {
-    const config = {
-      gmail: {
-        configurado: !!(process.env.GMAIL_USER || process.env.EMAIL_USER) && !!(process.env.GMAIL_APP_PASSWORD || process.env.EMAIL_PASS),
-        usuario: process.env.GMAIL_USER || process.env.EMAIL_USER || 'No configurado'
-      },
-      sendgrid: {
-        configurado: !!process.env.SENDGRID_API_KEY,
-        fromEmail: process.env.SENDGRID_FROM_EMAIL || process.env.FROM_EMAIL || 'No configurado'
-      }
-    };
-
-    res.json({
-      message: 'Configuración de correo',
-      proveedores: config,
-      recomendacion: !config.gmail.configurado && !config.sendgrid.configurado ? 
-        'Configure al menos Gmail SMTP o SendGrid para enviar correos' : 
-        'Al menos un proveedor está configurado'
-    });
-  } catch (error) {
-    res.status(500).json({ message: 'Error al verificar configuración', error: error.message });
-  }
-};
 
 // Eliminar remisión (solo si está en estado 'cancelada')
 exports.deleteRemision = async (req, res) => {
@@ -529,23 +400,7 @@ exports.getRemisionById = async (req, res) => {
   }
 };
 
-// Actualizar estado de una remisión (ej: marcar como entregada/cancelada)
-exports.updateEstadoRemision = async (req, res) => {
-  try {
-    const nuevoEstado = req.body.estado;
-    if (!nuevoEstado || typeof nuevoEstado !== 'string') {
-      return res.status(400).json({ message: 'Estado inválido' });
-    }
-    const remision = await Remision.findById(req.params.id);
-    if (!remision) return res.status(404).json({ message: 'Remisión no encontrada' });
-    remision.estado = nuevoEstado;
-    await remision.save();
-    return res.json({ message: 'Estado actualizado', remision });
-  } catch (error) {
-    console.error('Error al actualizar estado de remisión:', error);
-    return res.status(500).json({ message: 'Error actualizando estado', error: error.message });
-  }
-};
+
 
 // Obtener remisión por referencia de cotización
 exports.getByCotizacionReferencia = async (req, res) => {

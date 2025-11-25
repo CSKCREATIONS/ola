@@ -12,34 +12,6 @@ router.get('/',
   remisionController.getAllRemisiones
 );
 
-// 🆕 Debug endpoint - obtener lista simple de IDs de remisiones
-router.get('/debug/ids',
-  verifyToken,
-  checkPermission('remisiones.ver'),
-  async (req, res) => {
-    try {
-      const remisiones = await require('../models/Remision').find({}, '_id numeroRemision estado').limit(10);
-      res.json({
-        total: remisiones.length,
-        remisiones: remisiones.map(r => ({
-          id: r._id,
-          numero: r.numeroRemision,
-          estado: r.estado
-        }))
-      });
-    } catch (error) {
-      res.status(500).json({ error: error.message });
-    }
-  }
-);
-
-// Crear remisión desde un pedido (si ya existe, retorna la existente)
-router.post('/crear-desde-pedido/:id',
-  verifyToken,
-  checkPermission('remisiones.crear'),
-  pedidoController.remisionarPedido
-);
-
 // Obtener estadísticas de remisiones
 router.get('/estadisticas',
   verifyToken,
@@ -47,26 +19,6 @@ router.get('/estadisticas',
   remisionController.getEstadisticasRemisiones
 );
 
-// Verificar configuración de correo (para debugging)
-router.get('/config-correo',
-  verifyToken,
-  checkPermission('remisiones.ver'),
-  remisionController.verificarConfiguracionCorreo
-);
-
-// Probar SendGrid (para debugging)
-router.post('/probar-sendgrid',
-  verifyToken,
-  checkPermission('remisiones.ver'),
-  remisionController.probarSendGrid
-);
-
-// Probar Gmail SMTP (para debugging)
-router.post('/probar-gmail',
-  verifyToken,
-  checkPermission('remisiones.ver'),
-  remisionController.probarGmail
-);
 
 
 // Obtener una remisión por ID
@@ -83,12 +35,7 @@ router.post('/:id/enviar-remision',
   remisionController.enviarRemisionPorCorreo
 );
 
-// Actualizar estado de remisión
-router.patch('/:id/estado',
-  verifyToken,
-  checkPermission('remisiones.editar'),
-  remisionController.updateEstadoRemision
-);
+
 
 // Eliminar remisión
 router.delete('/:id',

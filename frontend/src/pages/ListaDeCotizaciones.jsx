@@ -917,6 +917,17 @@ export default function ListaDeCotizaciones() {
                       </th>
                       <th style={{
                         padding: '16px 12px',
+                        textAlign: 'left',
+                        fontWeight: '600',
+                        color: '#374151',
+                        fontSize: '13px',
+                        letterSpacing: '0.5px'
+                      }}>
+                        <i aria-hidden={true} className="fa-solid fa-user-tie icon-gap" style={{ color: '#6366f1' }}></i>
+                        <span>RESPONSABLE</span>
+                      </th>
+                      <th style={{
+                        padding: '16px 12px',
                         textAlign: 'center',
                         fontWeight: '600',
                         color: '#374151',
@@ -1069,6 +1080,11 @@ export default function ListaDeCotizaciones() {
                               {cot.cliente?.nombre || 'Sin nombre'}
                             </div>
                           </td>
+                          <td style={{ padding: '16px 12px' }}>
+                            <div style={{ color: '#374151', fontWeight: 600 }}>
+                              {cot.responsable ? `${cot.responsable.firstName || ''} ${cot.responsable.surname || ''}`.trim() : <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>Sin responsable</span>}
+                            </div>
+                          </td>
                           <td style={{ padding: '16px 12px', textAlign: 'center' }}>
                             {cot.enviadoCorreo ? (
                               <span style={{
@@ -1180,7 +1196,7 @@ export default function ListaDeCotizaciones() {
 
                     {cotizacionesFiltradas.length === 0 && (
                       <tr>
-                        <td colSpan="7" style={{ textAlign: 'center', padding: '80px 20px' }}>
+                        <td colSpan="8" style={{ textAlign: 'center', padding: '80px 20px' }}>
                           <div style={{
                             display: 'flex',
                             flexDirection: 'column',

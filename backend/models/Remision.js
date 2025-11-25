@@ -21,6 +21,11 @@ const RemisionSchema = new mongoose.Schema({
     type: String,
     required: false,
   },
+  descripcion: {
+    type: String,
+    default: ''
+  },
+  
   cliente: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Cliente',
@@ -39,14 +44,13 @@ const RemisionSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  condicionesPago: {
+    type: String,
+    default: ''
+  },
   responsable: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
-  },
-  estado: {
-    type: String,
-    enum: ['activa', 'cerrada', 'cancelada'],
-    default: 'activa'
   },
   subtotal: {
     type: Number,

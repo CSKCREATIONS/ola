@@ -289,6 +289,7 @@ exports.getPedidos = async (req, res) => {
     // Obtener pedidos según filtro
     const pedidos = await Pedido.find(filtro)
       .populate('cliente')
+      .populate('responsableCancelacion', 'username firstName surname')
       .populate('productos.product')
       .populate('cotizacionReferenciada', 'codigo')
       .sort({ createdAt: -1 })
@@ -303,7 +304,7 @@ exports.getPedidos = async (req, res) => {
 
 exports.createPedido = async (req, res) => {
   try {
-    const { cliente, productos, fechaEntrega, observacion, cotizacionReferenciada, cotizacionCodigo, descripcion, condicionesPago } = req.body;
+    const { cliente, productos, fechaAgendamiento, fechaEntrega, observacion, cotizacionReferenciada, cotizacionCodigo, descripcion, condicionesPago } = req.body;
     const clientePayload = req.body.cliente; // preserve original payload to detect operacion
 
     // Resolver / crear cliente
@@ -325,11 +326,21 @@ exports.createPedido = async (req, res) => {
     );
     const numeroPedido = `PED-${String(counter.seq).padStart(5, '0')}`;
 
+    // Parsear fechas de manera segura
+    const parseSafeDate = (value) => {
+      if (!value) return new Date();
+      const d = new Date(value);
+      return (d instanceof Date && !isNaN(d)) ? d : new Date();
+    };
+    const fechaAgSegura = parseSafeDate(fechaAgendamiento);
+    const fechaEntSegura = parseSafeDate(fechaEntrega);
+
     const nuevoPedido = new Pedido({
       numeroPedido,
       cliente: clienteId,
       productos: productosMapped,
-      fechaEntrega,
+      fechaAgendamiento: fechaAgSegura,
+      fechaEntrega: fechaEntSegura,
       descripcion: descripcion || '',
       condicionesPago: condicionesPago || '',
       observacion,
@@ -350,7 +361,18 @@ exports.createPedido = async (req, res) => {
       console.warn('⚠️ Error aplicando reglas de cliente post-pedido (no bloqueante):', errSet?.message || errSet);
     }
 
-    return res.status(201).json(pedidoGuardado);
+    // Recuperar el pedido guardado con relaciones pobladas para enviar al frontend
+    try {
+      const pedidoPopulado = await Pedido.findById(pedidoGuardado._id)
+        .populate('cliente')
+        .populate('productos.product')
+        .populate('cotizacionReferenciada', 'codigo')
+        .exec();
+      return res.status(201).json(pedidoPopulado || pedidoGuardado);
+    } catch (popErr) {
+      console.warn('⚠️ No se pudo popular el pedido antes de responder, devolviendo el documento guardado:', popErr?.message || popErr);
+      return res.status(201).json(pedidoGuardado);
+    }
   } catch (err) {
     console.error('❌ Error al crear pedido:', err);
     return res.status(500).json({ message: 'Error al crear el pedido', error: err.message });
@@ -395,85 +417,6 @@ exports.getPedidoById = async (req, res) => {
 };
 
 
-exports.cambiarEstadoPedido = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { estado } = req.body;
-
-    const pedido = await Pedido.findById(id).populate('productos.product').populate('cliente');
-    if (!pedido) return res.status(404).json({ message: 'Pedido no encontrado' });
-
-    // Si el nuevo estado es 'entregado', actualizar el stock (helper maneja validaciones)
-    if (estado === 'entregado') {
-      const result = await updateStockIfEntregado(pedido);
-      if (!result.ok) {
-        return res.status(result.status || 400).json({ message: result.message || 'Error actualizando stock' });
-      }
-    }
-
-    pedido.estado = estado;
-    await pedido.save();
-
-    return res.json({ message: 'Estado del pedido actualizado', pedido });
-  } catch (err) {
-    console.error('Error al cambiar el estado del pedido:', err);
-    return res.status(500).json({ message: 'Error interno al cambiar estado del pedido', error: err.message });
-  }
-};
-
-
-exports.actualizarEstadoPedido = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { nuevoEstado } = req.body;
-
-    const pedido = await Pedido.findById(id)
-      .populate('productos.product') // importante que el campo sea productos.product
-      .populate('cliente');
-
-    if (!pedido) {
-      return res.status(404).json({ message: 'Pedido no encontrado' });
-    }
-
-    pedido.estado = nuevoEstado;
-    await pedido.save();
-
-    // Si el nuevo estado es 'entregado', registrar la venta
-    if (nuevoEstado === 'entregado') {
-      const productosVenta = pedido.productos.map(item => {
-        if (item.product?.precio == null) {
-          throw new Error(`Falta el precio del producto: ${item.product?._id}`);
-        }
-
-        return {
-          producto: item.product._id,
-          cantidad: item.cantidad,
-          precioUnitario: item.product.precio
-        };
-      });
-
-      const total = productosVenta.reduce((sum, p) => sum + (p.cantidad * p.precioUnitario), 0);
-
-      const venta = new Venta({
-        cliente: pedido.cliente._id,
-        productos: productosVenta,
-        total,
-        estado: 'completado',
-        pedidoReferenciado: pedido._id,
-        fecha: new Date()
-      });
-
-      await venta.save();
-    }
-
-    res.status(200).json({ message: 'Estado del pedido actualizado correctamente' });
-
-  } catch (error) {
-    console.error('❌ Error al actualizar estado del pedido:', error);
-    res.status(500).json({ message: 'Error al actualizar estado del pedido', error });
-  }
-};
-
 
 
 // Remisionar un pedido: crea un documento en la colección Remision usando los datos del pedido
@@ -481,6 +424,17 @@ exports.remisionarPedido = async (req, res) => {
   try {
     const pedidoId = sanitizarId(req.params.id);
     const { fechaEntrega, observaciones } = req.body || {};
+
+    // Parsear fechaEntrega enviada por el cliente (si existe) de forma segura
+    let fechaEntregaParsed = null;
+    if (fechaEntrega) {
+      const tmp = new Date(fechaEntrega);
+      if (tmp instanceof Date && !isNaN(tmp)) {
+        fechaEntregaParsed = tmp;
+      } else {
+        fechaEntregaParsed = null;
+      }
+    }
 
     if (!pedidoId) return res.status(400).json({ message: 'ID de pedido inválido' });
 
@@ -537,7 +491,7 @@ exports.remisionarPedido = async (req, res) => {
       cliente: clienteId,
       productos: productosRemisionDoc,
       fechaRemision: new Date(),
-      fechaEntrega: fechaEntrega ? new Date(fechaEntrega) : new Date(),
+      fechaEntrega: fechaEntregaParsed || new Date(),
       observaciones: obsFinal,
       responsable: req.userId || null,
       estado: 'activa',
@@ -558,6 +512,17 @@ exports.remisionarPedido = async (req, res) => {
 
     const nuevaRemision = new RemisionModel(remisionData);
     await nuevaRemision.save();
+
+    // Si el cliente proporcionó una fecha de entrega, actualizar el pedido para reflejarla
+    try {
+      if (fechaEntregaParsed) {
+        pedido.fechaEntrega = fechaEntregaParsed;
+      } else if (!pedido.fechaEntrega) {
+        pedido.fechaEntrega = new Date();
+      }
+    } catch (errAssign) {
+      console.warn('⚠️ No se pudo asignar fechaEntrega al pedido (no crítico):', errAssign?.message || errAssign);
+    }
 
     // Actualizar pedido con referencia a remisión (no bloqueante)
     safeUpdatePedidoWithRemision(pedido, nuevaRemision._id, numeroRemision);

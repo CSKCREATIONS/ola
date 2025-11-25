@@ -42,101 +42,23 @@ router.get('/',
    pedidoController.getPedidoById
   );
 
-// Cambiar estado del pedido (genérico)
-router.patch('/:id/estado',
-   verifyToken, 
-   pedidoController.cambiarEstadoPedido
-  );
-
-
-
-// Marcar pedido como entregado
-router.put('/:id/entregar', verifyToken, async (req, res) => {
-  try {
-    const pedido = await Pedido.findById(req.params.id)
-      .populate('productos.product') // Asegúrate de que en tu esquema sea `productos.product`, no `productos.producto`
-      .populate('cliente')
-      .exec();
-
-
-    if (!pedido) {
-      return res.status(404).json({ message: 'Pedido no encontrado' });
-    }
-
-    const productosVenta = pedido.productos.map(item => {
-      if (!item.product) {
-        console.log('🛑 Producto no encontrado (referencia rota):', item);
-        throw new Error('Producto no encontrado en el pedido (referencia rota o eliminado)');
-      }
-
-      if (typeof item.product.price !== 'number') {
-        console.log('🛑 Producto sin precio numérico válido:', item.product);
-        throw new Error(`Producto sin precio válido: ${item.product.name || 'Sin nombre'}`);
-      }
-
-
-      return {
-        producto: item.product._id,
-        cantidad: item.cantidad,
-        precioUnitario: item.product.price
-      };
-    });
-
-    const total = productosVenta.reduce((sum, item) => {
-      return sum + item.cantidad * item.precioUnitario;
-    }, 0);
-
-    const nuevaVenta = new Venta({
-      cliente: pedido.cliente._id,
-      productos: productosVenta,
-      total,
-      fecha: new Date(),
-      estado: 'completado',
-      pedidoReferenciado: pedido._id
-    });
-
-    await nuevaVenta.save();
-
-    // Actualizar el stock de los productos
-    for (const item of pedido.productos) {
-      if (item.product) {
-        const producto = await require('../models/Products').findById(item.product._id);
-        if (producto) {
-          // Verificar que hay suficiente stock
-          if (producto.stock < item.cantidad) {
-            throw new Error(`Stock insuficiente para ${producto.name}. Stock actual: ${producto.stock}, requerido: ${item.cantidad}`);
-          }
-          
-          // Disminuir el stock
-          producto.stock -= item.cantidad;
-          await producto.save();
-          
-          console.log(`📦 Stock actualizado: ${producto.name} - Stock anterior: ${producto.stock + item.cantidad}, Stock nuevo: ${producto.stock}`);
-        }
-      }
-    }
-
-    // Actualizar el estado del pedido
-    pedido.estado = 'entregado';
-    await pedido.save();
-
-    res.json({ message: 'Pedido entregado y venta registrada', venta: nuevaVenta });
-
-  } catch (error) {
-    console.error('❌ Error al entregar pedido:', error);
-    res.status(500).json({ message: 'Error al entregar el pedido', error: error.message });
-  }
-});
 
 
 
 
-// Cancelar pedido
+// Cancelar pedido (marca estado y registra fecha de cancelación)
 router.patch('/:id/cancelar', verifyToken, async (req, res) => {
   try {
+    // Intentar parsear fecha enviada; si no viene o es inválida, usar ahora
+    const fechaRaw = req.body && req.body.fechaCancelacion ? req.body.fechaCancelacion : null;
+    let fechaCancelacion = fechaRaw ? new Date(fechaRaw) : new Date();
+    if (!(fechaCancelacion instanceof Date) || isNaN(fechaCancelacion)) {
+      fechaCancelacion = new Date();
+    }
+
     const pedido = await Pedido.findByIdAndUpdate(
       req.params.id,
-      { estado: 'cancelado' },
+      { estado: 'cancelado', fechaCancelacion, responsableCancelacion: req.userId || null },
       { new: true }
     );
 

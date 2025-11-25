@@ -347,9 +347,8 @@ export default function PedidoCanceladoPreview({ datos = {}, onClose = () => {},
                 <div style={{ lineHeight: '1.8' }}>
                   <p><strong>Cliente:</strong> {datos.cliente?.nombre || 'Cliente no especificado'}</p>
                   <p><strong>Teléfono:</strong> {datos.cliente?.telefono || 'No especificado'}</p>
-                  <p><strong>Email:</strong> {datos.cliente?.correo || 'Sin correo'}</p>
-                  <p><strong>Dirección:</strong> {datos.cliente?.direccion || 'Dirección no especificada'}</p>
-                  <p><strong>Ciudad:</strong> {datos.cliente?.ciudad || 'Ciudad no especificada'}</p>
+                  <p><strong>Email:</strong> {datos.cliente?.correo || 'Sin correo'} </p>
+                  <p><strong>Dirección:</strong> {datos.cliente?.direccion || 'Dirección no especificada'} {datos.cliente?.ciudad || 'Ciudad no especificada'}</p>
                 </div>
               </div>
 
@@ -358,15 +357,10 @@ export default function PedidoCanceladoPreview({ datos = {}, onClose = () => {},
                   Detalles de la Cancelación
                 </h3>
                 <div style={{ lineHeight: '1.8' }}>
-                  <p><strong>Fecha de Pedido:</strong> {formatDate(datos?.createdAt)}</p>
+                  <p><strong>Fecha de agendamiento:</strong> {formatDate(datos?.fechaAgendamiento)}</p>
+                  <p><strong>F. Entrega estipulada:</strong> {formatDate(datos?.fechaEntrega)}</p>
                   <p><strong>Fecha de Cancelación:</strong> {formatDate(new Date())}</p>
-                  <p>
-                    <strong>Estado:</strong>
-                    <span style={{ background: '#dc2626', color: 'white', padding: '4px 12px', borderRadius: '15px', fontSize: '.9rem', marginLeft: '.5rem' }}>
-                      CANCELADO
-                    </span>
-                  </p>
-                  <p><strong>Responsable:</strong> {usuario?.firstName || ''} {usuario?.surname || ''}</p>
+                  
                 </div>
               </div>
             </div>
@@ -383,9 +377,6 @@ export default function PedidoCanceladoPreview({ datos = {}, onClose = () => {},
             )}
 
             <div style={{ marginBottom: '2rem' }}>
-              <h3 style={{ borderBottom: '3px solid #dc2626', paddingBottom: '.5rem', color: '#dc2626', fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '1rem' }}>
-                Productos del Pedido Cancelado
-              </h3>
               <table className="tabla-cotizacion" style={{ width: '100%', borderCollapse: 'collapse', marginTop: '1rem', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
                 <thead>
                   <tr style={{ background: 'linear-gradient(135deg, #dc2626, #b91c1c)', color: 'white' }}>

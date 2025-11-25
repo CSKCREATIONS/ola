@@ -256,7 +256,8 @@ export default function PedidosAgendados() {
   const [agendarDireccion, setAgendarDireccion] = useState('');
   const [agendarTelefono, setAgendarTelefono] = useState('');
   const [agendarCorreo, setAgendarCorreo] = useState('');
-  const [agendarFecha, setAgendarFecha] = useState('');
+  const [agendarFechaAg, setAgendarFechaAg] = useState('');
+  const [agendarFechaEnt, setAgendarFechaEnt] = useState('');
 
   // Editors (UI only)
   const descripcionRef = useRef(null);
@@ -442,6 +443,12 @@ export default function PedidosAgendados() {
         return;
       }
 
+      // Validar fechas obligatorias
+      if (!agendarFechaAg || !agendarFechaEnt) {
+        Swal.fire('Error', 'Las fechas de agendamiento y entrega son obligatorias.', 'warning');
+        return;
+      }
+
       if (!isValidEmail(agendarCorreo)) {
         Swal.fire('Error', 'El correo del cliente no tiene un formato válido.', 'warning');
         return;
@@ -482,7 +489,8 @@ export default function PedidosAgendados() {
       const body = {
         cliente: clientePayload,
         productos: productosPayload,
-        fechaEntrega: agendarFecha || new Date().toISOString(),
+        fechaAgendamiento: agendarFechaAg || new Date().toISOString(),
+        fechaEntrega: agendarFechaEnt || new Date().toISOString(),
         descripcion: descripcionRef.current?.getContent({ format: 'html' }) || '',
         condicionesPago: condicionesRef.current?.getContent({ format: 'html' }) || '',
         observacion: '',
@@ -507,7 +515,7 @@ export default function PedidosAgendados() {
   // Helper: handle UI updates after creating a pedido
   const handlePostCreate = async (nuevoPedido) => {
     setMostrarModalAgendar(false);
-    setAgendarCliente(''); setAgendarCiudad(''); setAgendarDireccion(''); setAgendarTelefono(''); setAgendarCorreo(''); setAgendarFecha(''); setAgendarProductos([]);
+    setAgendarCliente(''); setAgendarCiudad(''); setAgendarDireccion(''); setAgendarTelefono(''); setAgendarCorreo(''); setAgendarFechaAg(''); setAgendarFechaEnt(''); setAgendarProductos([]);
     if (descripcionRef.current) descripcionRef.current.setContent('');
     if (condicionesRef.current) condicionesRef.current.setContent('');
 
@@ -633,7 +641,7 @@ export default function PedidosAgendados() {
     if (!confirm.isConfirmed) return;
 
     try {
-      const res = await api.patch(`/api/pedidos/${id}/cancelar`, {});
+      const res = await api.patch(`/api/pedidos/${id}/cancelar`, { fechaCancelacion: new Date().toISOString() });
       const result = res.data || res;
       if (res.status >= 200 && res.status < 300) {
         Swal.fire('Cancelado', 'El pedido ha sido cancelado', 'success');
@@ -727,6 +735,55 @@ export default function PedidosAgendados() {
       return '';
     }
   };
+
+  // Componente helper para una fila de pedido (reduce anidamiento en JSX principal)
+  const PedidoRow = ({ pedido, index, indexOfFirstItem }) => (
+    <tr key={pedido._id}>
+      <td style={{ fontWeight: '600', color: '#6366f1' }}>{indexOfFirstItem + index + 1}</td>
+      <td>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div className="table-icon-small">
+            <i className="fa-solid fa-file-invoice" style={{ color: 'white', fontSize: '12px' }}></i>
+          </div>
+          {pedido.numeroPedido ? (
+            <button
+              type="button"
+              className="orden-numero-link"
+              onClick={() => handleViewPedido(pedido._id)}
+              title="Clic para ver información del pedido"
+            >
+              {pedido.numeroPedido}
+            </button>
+          ) : (
+            <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>---</span>
+          )}
+        </div>
+      </td>
+      <td style={{ color: '#6b7280' }}>{pedido.fechaAgendamiento}</td>
+      <td style={{ color: '#6b7280' }}>{pedido.fechaEntrega}</td>
+      <td style={{ fontWeight: '600', color: '#1f2937', fontSize: '14px' }}>{pedido.cliente?.nombre}</td>
+      <td style={{ color: '#6b7280' }}>{pedido.cliente?.ciudad}</td>
+      <td style={{ fontWeight: '600', color: '#059669', fontSize: '14px' }}>{(pedido.total || 0).toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+      <td className="no-export">
+        <div className="action-buttons">
+          <button
+            className="action-btn success"
+            onClick={() => remisionarPedido(pedido._id)}
+            title="Marcar como entregado"
+          >
+            <i className="fas fa-check"></i>
+          </button>
+          <button
+            className="action-btn danger"
+            onClick={() => cancelarPedido(pedido._id)}
+            title="Marcar como cancelado"
+          >
+            <i className="fas fa-times"></i>
+          </button>
+        </div>
+      </td>
+    </tr>
+  );
 
   return (
     <div>
@@ -835,63 +892,12 @@ export default function PedidosAgendados() {
                   </thead>
                   <tbody>
                     {currentItems.map((pedido, index) => (
-                      <tr key={pedido._id}>
-                        <td style={{ fontWeight: '600', color: '#6366f1' }}>
-                          {indexOfFirstItem + index + 1}
-                        </td>
-                        <td>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <div className="table-icon-small">
-                              <i className="fa-solid fa-file-invoice" style={{ color: 'white', fontSize: '12px' }}></i>
-                            </div>
-                            {pedido.numeroPedido ? (
-                              <button
-                                type="button"
-                                className="orden-numero-link"
-                                    onClick={() => handleViewPedido(pedido._id)}
-                                title="Clic para ver información del pedido"
-                              >
-                                {pedido.numeroPedido}
-                              </button>
-                            ) : (
-                              <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>---</span>
-                            )}
-                          </div>
-                        </td>
-                        <td style={{ color: '#6b7280' }}>
-                          {new Date(pedido.createdAt).toLocaleDateString()}
-                        </td>
-                        <td style={{ color: '#6b7280' }}>
-                          {new Date(pedido.fechaEntrega).toLocaleDateString()}
-                        </td>
-                        <td style={{ fontWeight: '600', color: '#1f2937', fontSize: '14px' }}>
-                          {pedido.cliente?.nombre}
-                        </td>
-                        <td style={{ color: '#6b7280' }}>
-                          {pedido.cliente?.ciudad}
-                        </td>
-                        <td style={{ fontWeight: '600', color: '#059669', fontSize: '14px' }}>
-                          ${(pedido.total || 0).toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </td>
-                        <td className="no-export">
-                          <div className="action-buttons">
-                            <button
-                              className="action-btn success"
-                              onClick={() => remisionarPedido(pedido._id)}
-                              title="Marcar como entregado"
-                            >
-                              <i className="fas fa-check"></i>
-                            </button>
-                            <button
-                              className="action-btn danger"
-                              onClick={() => cancelarPedido(pedido._id)}
-                              title="Marcar como cancelado"
-                            >
-                              <i className="fas fa-times"></i>
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
+                      <PedidoRow
+                        key={pedido._id}
+                        pedido={pedido}
+                        index={index}
+                        indexOfFirstItem={indexOfFirstItem}
+                      />
                     ))}
                     {pedidos.length === 0 && (
                       <tr>
@@ -975,7 +981,7 @@ export default function PedidosAgendados() {
                       </div>
 
                       <div className="modal-grid">
-                        <div className="modal-grid-full">
+                        <div className="modal-grid-item">
                           <label htmlFor="agendar-cliente" className="modal-label">
                             Nombre o Razón Social <span className="required">*</span>
                           </label>
@@ -1052,7 +1058,35 @@ export default function PedidosAgendados() {
                             className="modal-input"
                             placeholder="+57 000 000 0000"
                             value={agendarTelefono}
-                            onChange={(e) => setAgendarTelefono(e.target.value)}
+                            inputMode="tel"
+                            autoComplete="tel"
+                            pattern="^[+]?\d[\d ]{3,}$"
+                            onKeyDown={(e) => {
+                              // Bloquear letras directamente al tipear
+                              if (/^[a-zA-Z]$/.test(e.key)) {
+                                e.preventDefault();
+                              }
+                            }}
+                            onPaste={(e) => {
+                              // Sanitizar contenido pegado eliminando letras y símbolos no permitidos
+                              const pasted = (e.clipboardData.getData('text') || '').replaceAll(/[^\d+ ]/g, '');
+                              e.preventDefault();
+                              setAgendarTelefono(prev => (prev + pasted)
+                                .replaceAll(/(?!^)[+]/g, '')
+                                .replaceAll(/[^\d+ ]/g, ''));
+                            }}
+                            onChange={(e) => {
+                              const raw = e.target.value;
+                              // Permitir sólo dígitos, espacios y un '+' inicial opcional
+                              let sanitized = raw.replaceAll(/[^\d+ ]/g, '');
+                              // Si hay más de un '+', conservar sólo el primero al inicio
+                              sanitized = sanitized.replaceAll(/(?!^)\+/g, '');
+                              // Si '+' aparece y no está al inicio, moverlo al inicio
+                              if (/\+/.test(sanitized) && sanitized[0] !== '+') {
+                                sanitized = '+' + sanitized.replaceAll('+', '');
+                              }
+                              setAgendarTelefono(sanitized);
+                            }}
                           />
                         </div>
 
@@ -1079,13 +1113,24 @@ export default function PedidosAgendados() {
                         </div>
 
                         <div className="modal-grid-item">
-                          <label htmlFor="agendar-fecha" className="modal-label">Fecha</label>
+                          <label htmlFor="fecha-agendamiento" className="modal-label">Fecha de agendamiento</label>
                           <input
-                            id="agendar-fecha"
+                            id="fecha-agendamiento"
                             type="date"
                             className="modal-input"
-                            value={agendarFecha}
-                            onChange={(e) => setAgendarFecha(e.target.value)}
+                            value={agendarFechaAg}
+                            onChange={(e) => setAgendarFechaAg(e.target.value)}
+                          />
+                        </div>
+
+                        <div className="modal-grid-item">
+                          <label htmlFor="fecha-entrega" className="modal-label">Fecha de entrega</label>
+                          <input
+                            id="fecha-entrega"
+                            type="date"
+                            className="modal-input"
+                            value={agendarFechaEnt}
+                            onChange={(e) => setAgendarFechaEnt(e.target.value)}
                           />
                         </div>
                       </div>
@@ -1310,7 +1355,7 @@ export default function PedidosAgendados() {
                         <div style={{ width: 36, height: 36, borderRadius: 10, background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
                           <i className="fa-solid fa-clipboard-list"></i>
                         </div>
-                        <h4 style={{ margin: 0, fontWeight: 600, color: '#1e293b' }}>Condiciones del Pedido</h4>
+                        <h4 style={{ margin: 0, fontWeight: 600, color: '#1e293b' }}>Condiciones de pago</h4>
                       </div>
                       <div style={{ background: '#fff', borderRadius: 10, padding: '0.75rem', border: '2px solid #e5e7eb' }}>
                         <TinyMCE.Editor
@@ -1362,7 +1407,7 @@ export default function PedidosAgendados() {
                           cursor: 'pointer'
                         }}
                       >
-                        Guardar
+                        Agendar
                       </button>
 
                       <button
@@ -1377,7 +1422,7 @@ export default function PedidosAgendados() {
                           cursor: 'pointer'
                         }}
                       >
-                        Guardar y Enviar
+                        Agendar y Enviar
                       </button>
                     </div>
                   </div>
