@@ -12,7 +12,7 @@ export default function PrivateRoute({ children }) {
     return <Navigate to="/" />;
   }
 
-  // Si el usuario está inhabilitado
+  // Si el usuario está deshabilitado
   if (user.enabled === false) {
     return <Navigate to="/" />;
   }

@@ -48,19 +48,14 @@ const usePermisos = () => {
           has('clientes.ver') ||
           has('reportesVentas.ver') ||
           has('pedidosAgendados.ver') ||
-          has('pedidosDespachados.ver') ||
-          has('pedidosEntregados.ver') ||
           has('pedidosCancelados.ver') ||
-          has('pedidosDevueltos.ver') ||
           has('prospectos.ver') ||
           has('remisiones.ver'),
         cotCrear: has('cotizaciones.crear'),
         cotVer: has('cotizaciones.ver'),
         pedidosAg: has('pedidosAgendados.ver'),
-        pedidosDesp: has('pedidosDespachados.ver'),
-        pedidosEnt: has('pedidosEntregados.ver'),
         pedidosCanc: has('pedidosCancelados.ver'),
-        pedidosDev: has('pedidosDevueltos.ver'),
+        pedidosEnt: has('remisiones.ver'),
         clientes: has('clientes.ver'),
         prospectos: has('prospectos.ver'),
         reportesVentas: has('reportesVentas.ver'),

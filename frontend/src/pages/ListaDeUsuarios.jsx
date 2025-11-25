@@ -64,7 +64,7 @@ const exportToExcel = (todosLosUsuarios) => {
     'Rol': resolveRoleName(usuario),
     'Correo': usuario.email,
     'Usuario': usuario.username,
-    'Estado': usuario.enabled ? 'Habilitado' : 'Inhabilitado',
+    'Estado': usuario.enabled ? 'Habilitado' : 'Deshabilitado',
     'Fecha de creación': new Date(usuario.createdAt).toLocaleString('es-CO', {
       day: '2-digit',
       month: '2-digit',
@@ -89,7 +89,7 @@ export default function ListaDeUsuarios() {
   const [todosLosUsuarios, setTodosLosUsuarios] = useState([]);
   const [usuarios, setUsuarios] = useState([]);
   const [puedeEditarUsuario, setPuedeEditarUsuario] = useState(false);
-  const [puedeinhabilitarUsuario, setPuedeinhabilitarUsuario] = useState(false);
+  const [puedeDeshabilitarUsuario, setPuedeDeshabilitarUsuario] = useState(false);
   const [puedeCrearUsuario, setPuedeCrearUsuario] = useState(false);
   const [puedeEliminarUsuario, setPuedeEliminarUsuario] = useState(false);
   const [usuarioEditando, setUsuarioEditando] = useState(null);
@@ -136,7 +136,7 @@ export default function ListaDeUsuarios() {
     if (user?.permissions) {
       setPuedeCrearUsuario(user.permissions.includes('usuarios.crear'));
       setPuedeEditarUsuario(user.permissions.includes('usuarios.editar'));
-      setPuedeinhabilitarUsuario(user.permissions.includes('usuarios.inhabilitar'));
+      setPuedeDeshabilitarUsuario(user.permissions.includes('usuarios.deshabilitar'));
       setPuedeEliminarUsuario(user.permissions.includes('usuarios.eliminar'));
     }
   }, []);
@@ -159,7 +159,7 @@ export default function ListaDeUsuarios() {
       const coincideEstado =
         filtroEstado === 'todos' ||
         (filtroEstado === 'habilitado' && usuario.enabled) ||
-        (filtroEstado === 'inhabilitado' && !usuario.enabled);
+        (filtroEstado === 'deshabilitado' && !usuario.enabled);
 
       return coincideTexto && coincideRol && coincideEstado;
     });
@@ -355,7 +355,7 @@ export default function ListaDeUsuarios() {
                   >
                     <option value="todos">Todos los estados</option>
                     <option value="habilitado">Usuarios Activos</option>
-                    <option value="inhabilitado">Usuarios Inactivos</option>
+                    <option value="deshabilitado">Usuarios Inactivos</option>
                   </select>
                 </div>
               </div>
@@ -441,7 +441,7 @@ export default function ListaDeUsuarios() {
                               checked={usuario.enabled}
                               aria-label={`Estado del usuario ${usuario.username || usuario._id}`}
                               onChange={() => {
-                                if (puedeinhabilitarUsuario) {
+                                if (puedeDeshabilitarUsuario) {
                                   toggleEstadoUsuario(usuario._id, usuario.enabled, usuario.username);
                                 } else {
                                   Swal.fire({

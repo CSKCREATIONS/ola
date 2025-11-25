@@ -15,7 +15,7 @@ export default function RolesYPermisos() {
   const [roles, setRoles] = useState([]);
   const [puedeCrearRol, setPuedeCrearRol] = useState(false);
   const [puedeEditarRol, setPuedeEditarRol] = useState(false);
-  const [puedeinhabilitarRol, setpuedeinhabilitarRol] = useState(false);
+  const [puedeDeshabilitarRol, setPuedeDeshabilitarRol] = useState(false);
   const navigate = useNavigate();
   const [rolSeleccionado, setRolSeleccionado] = useState(null);
 
@@ -33,7 +33,7 @@ export default function RolesYPermisos() {
   const toggleEstadoRol = async (id, nuevoEstado, roleName) => {
     const confirmResult = await Swal.fire({
       title: nuevoEstado ? `¿Habilitar rol "${roleName || ''}"?` : `¿Deshabilitar rol "${roleName || ''}?`,
-      text: "Esta accion le impidirá el ingreso al sistema a los usuarios con este rol.",
+      text: "Esta accion le impedirá el ingreso al sistema a los usuarios con este rol.",
       icon: 'warning',
       showCancelButton: true,
       confirmButtonText: 'Sí, confirmar',
@@ -52,7 +52,7 @@ export default function RolesYPermisos() {
       Swal.fire({
         icon: 'success',
         title: 'Estado actualizado',
-        text: `El rol "${roleName || ''}" ha sido ${nuevoEstado ? 'habilitado' : 'inhabilitado'} correctamente.`,
+        text: `El rol "${roleName || ''}" ha sido ${nuevoEstado ? 'habilitado' : 'deshabilitado'} correctamente.`,
         timer: 2000,
         showConfirmButton: false
       });
@@ -78,10 +78,10 @@ export default function RolesYPermisos() {
       const usuario = JSON.parse(localStorage.getItem('user'));
       if (usuario?.permissions) {
         const tieneEditarRol = usuario.permissions.includes('roles.editar');
-        const tieneinhabilitarRol = usuario.permissions.includes('roles.inhabilitar');
+        const tieneDeshabilitarRol = usuario.permissions.includes('roles.deshabilitar');
         const tieneCrearRol = usuario.permissions.includes('roles.crear');
         setPuedeEditarRol(tieneEditarRol);
-        setpuedeinhabilitarRol(tieneinhabilitarRol);
+        setPuedeDeshabilitarRol(tieneDeshabilitarRol);
         setPuedeCrearRol(tieneCrearRol);
       }
 
@@ -208,7 +208,7 @@ export default function RolesYPermisos() {
                               checked={rol.enabled}
                               aria-label={`Estado del rol ${rol.name || rol._id}`}
                               onChange={() => {
-                                if (puedeinhabilitarRol) {
+                                if (puedeDeshabilitarRol) {
                                   toggleEstadoRol(rol._id, !rol.enabled, rol.name);
                                 } else {
                                   Swal.fire({

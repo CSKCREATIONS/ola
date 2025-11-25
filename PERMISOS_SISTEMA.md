@@ -6,14 +6,14 @@
 - `usuarios.ver` - Ver lista de usuarios
 - `usuarios.crear` - Crear nuevos usuarios  
 - `usuarios.editar` - Editar información de usuarios
-- `usuarios.inhabilitar` - Habilitar/inhabilitar usuarios
+- `usuarios.deshabilitar` - Habilitar/deshabilitar usuarios
 - `usuarios.eliminar` - Eliminar usuarios del sistema
 
 ### 🔐 MÓDULO ROLES (4 permisos)
 - `roles.ver` - Ver roles y permisos
 - `roles.crear` - Crear nuevos roles
 - `roles.editar` - Editar roles existentes
-- `roles.inhabilitar` - Habilitar/inhabilitar roles
+- `roles.deshabilitar` - Habilitar/deshabilitar roles
 
 ### 📦 MÓDULO PRODUCTOS (4 permisos)
 - `productos.ver` - Ver catálogo de productos
@@ -46,16 +46,11 @@
 - `ordenes.aprobar` - Aprobar órdenes de compra
 
 ### 💰 MÓDULO VENTAS (2 permisos)
-- `ventas.crear` - Registrar nuevas ventas
-- `listaDeVentas.ver` - Ver lista general de ventas
 
 ### 📝 MÓDULO PEDIDOS (8 permisos)
 - `pedidos.ver` - Ver pedidos generales
 - `pedidosAgendados.ver` - Ver pedidos agendados
-- `pedidosDespachados.ver` - Ver pedidos despachados
-- `pedidosEntregados.ver` - Ver pedidos entregados
 - `pedidosCancelados.ver` - Ver pedidos cancelados
-- `pedidosDevueltos.ver` - Ver pedidos devueltos
 - `pedidos.remisionar` - Crear remisiones de pedidos
 - `pedidos.enviar` - Enviar pedidos
 

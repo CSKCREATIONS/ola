@@ -11,7 +11,7 @@ export default function NavVentas() {
   const [puedeRegistrarCotizacion, setPuedeRegistrarCotizacion] = useState(false);
   const [puedeVerCotizaciones, setPuedeVerCotizaciones] = useState(false);
   const [puedeVerVentasAgendadas, setPuedeVerVentasAgendadas] = useState(false);
-  const [puedeVerPedidosEntregados, setPuedeVerPedidosEntregados] = useState(false);
+  const [puedeVerRemisiones, setPuedeVerRemisiones] = useState(false);
   const [puedeVerPedidosCancelados, setPuedeVerPedidosCancelados] = useState(false);
   const [puedeVerListaDeClientes, setPuedeVerListaDeClientes] = useState(false);
   const [puedeVerProspectos, setPuedeVerProspectos] = useState(false);
@@ -24,7 +24,7 @@ export default function NavVentas() {
       setPuedeRegistrarCotizacion(usuario.permissions.includes('cotizaciones.crear'));
       setPuedeVerCotizaciones(usuario.permissions.includes('cotizaciones.ver'));
       setPuedeVerVentasAgendadas(usuario.permissions.includes('pedidosAgendados.ver'));
-      setPuedeVerPedidosEntregados(usuario.permissions.includes('pedidosEntregados.ver'));
+      setPuedeVerRemisiones(usuario.permissions.includes('remisiones.ver'));
       setPuedeVerPedidosCancelados(usuario.permissions.includes('pedidosCancelados.ver'));
       setPuedeVerListaDeClientes(usuario.permissions.includes('clientes.ver'));
       setPuedeVerProspectos(usuario.permissions.includes('prospectos.ver'));
@@ -36,7 +36,7 @@ export default function NavVentas() {
     { path: "/ListaDeCotizaciones", label: "Lista de cotizaciones", visible: puedeVerCotizaciones },
     { path: "/PedidosAgendados", label: "Pedidos agendados", visible: puedeVerVentasAgendadas },
     { path: "/PedidosCancelados", label: "Pedidos cancelados", visible: puedeVerPedidosCancelados },
-    { path: "/PedidosEntregados", label: "Pedidos Entregados", visible: puedeVerPedidosEntregados },
+    { path: "/PedidosEntregados", label: "Pedidos Entregados", visible: puedeVerRemisiones },
     { path: "/ListaDeClientes", label: "Lista de clientes", visible: puedeVerListaDeClientes },
     { path: "/ProspectosDeClientes", label: "Prospectos de clientes", visible: puedeVerProspectos },
     { path: "/ReportessVentas", label: "Reportes", visible: puedeVerReportesVentas }
@@ -44,7 +44,7 @@ export default function NavVentas() {
     puedeRegistrarCotizacion,
     puedeVerCotizaciones,
     puedeVerVentasAgendadas,
-    puedeVerPedidosEntregados,
+    puedeVerRemisiones,
     puedeVerPedidosCancelados,
     puedeVerListaDeClientes,
     puedeVerProspectos,

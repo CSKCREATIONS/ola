@@ -3,14 +3,14 @@ module.exports = {
     VER: 'usuarios.ver',
     CREAR: 'usuarios.crear',
     EDITAR: 'usuarios.editar',
-    inhabilitar: 'usuarios.inhabilitar',
+    DESHABILITAR: 'usuarios.deshabilitar',
     ELIMINAR: 'usuarios.eliminar'
   },
   ROLES: {
     VER: 'roles.ver',
     CREAR: 'roles.crear',
     EDITAR: 'roles.editar',
-    inhabilitar: 'roles.inhabilitar'
+    DESHABILITAR: 'roles.deshabilitar'
   },
   PRODUCTOS: {
     VER: 'productos.ver',
@@ -45,14 +45,10 @@ module.exports = {
     APROBAR: 'ordenes.aprobar'
   },
   VENTAS: {
-    CREAR: 'ventas.crear',
     VER: 'pedidos.ver',
     VERGENERALES: 'listaDeVentas.ver',
     VERAGENDADOS: 'pedidosAgendados.ver',
-    VERDESPACHADOS: 'pedidosDespachados.ver',
-    VERENTREGADOS: 'pedidosEntregados.ver',
     VERCANCELADOS: 'pedidosCancelados.ver',
-    VERDEVUELTOS: 'pedidosDevueltos.ver',
     VERREPORTES: 'reportesVentas.ver',
     REMISIONAR: 'pedidos.remisionar',
     ENVIAR: 'pedidos.enviar'

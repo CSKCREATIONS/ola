@@ -221,7 +221,7 @@ const App = () => {
             path='/PedidosEntregados'
             element={
               <PrivateRoute>
-                <PermisoRoute permiso="pedidosEntregados.ver">
+                <PermisoRoute permiso="remisiones.ver">
                   <PedidosEntregados />
                 </PermisoRoute>
               </PrivateRoute>

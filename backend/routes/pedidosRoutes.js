@@ -24,7 +24,7 @@ async function generarNumeroPedido() {
 // Crear pedido - delegamos a pedidoController.createPedido para mantener la lógica en un solo lugar
 router.post('/',
   verifyToken,
-  checkPermission('ventas.crear'),
+  checkPermission('pedidos.agendar'),
   pedidoController.createPedido
 );
 
@@ -105,7 +105,7 @@ router.post('/:id/enviar-cancelado',
   pedidoController.enviarPedidoCanceladoPorCorreo
 );
 
-// Eliminar definitivamente un pedido cancelado
+// Eliminar un pedido cancelado
 router.delete('/cancelado/:id',
   verifyToken,
   checkPermission('pedidos.eliminar'),

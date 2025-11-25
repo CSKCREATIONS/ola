@@ -36,8 +36,8 @@ async function main() {
   const rolesToEnsure = [
     { name: 'admin', permissions: allPerms, enabled: true },
     { name: 'ventas', permissions: [
-        PERM.VENTAS.CREAR, PERM.VENTAS.VER, PERM.VENTAS.VERENTREGADOS,
-        PERM.VENTAS.VERAGENDADOS, PERM.VENTAS.VERDESPACHADOS,
+         PERM.VENTAS.VER, PERM.VENTAS.VERENTREGADOS,
+        PERM.VENTAS.VERAGENDADOS,
         PERM.VENTAS.VERCANCELADOS, PERM.VENTAS.VERREPORTES,
         PERM.COTIZACIONES.VER, PERM.COTIZACIONES.CREAR, PERM.COTIZACIONES.ENVIAR
       ].filter(Boolean), enabled: true },

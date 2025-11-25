@@ -68,10 +68,10 @@ router.patch('/:id',
   userController.updateUser
 );
 
-// PATCH /api/users/:id/toggle-enabled - Habilitar/inhabilitar usuario
+// PATCH /api/users/:id/toggle-enabled - Habilitar/deshabilitar usuario
 router.patch('/:id/toggle-enabled',
   verifyToken,
-  checkPermission('usuarios.inhabilitar'),
+  checkPermission('usuarios.deshabilitar'),
   async (req, res) => {
     try {
       const { id } = req.params;
