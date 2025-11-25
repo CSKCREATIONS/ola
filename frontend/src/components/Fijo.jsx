@@ -99,9 +99,8 @@ export default function Fijo() {
   const [puedeRegistrarCotizacion, setPuedeRegistrarCotizacion] = useState(false);
   const [puedeVerCotizaciones, setPuedeVerCotizaciones] = useState(false);
   const [puedeVerVentasAgendadas, setPuedeVerVentasAgendadas] = useState(false);
-  const [puedeVerPedidosEntregados, setPuedeVerPedidosEntregados] = useState(false);
+  const [puedeVerRemisiones, setPuedeVerRemisiones] = useState(false);
   const [puedeVerPedidosCancelados, setPuedeVerPedidosCancelados] = useState(false);
-  const [puedeVerPedidosDevueltos, setPuedeVerPedidosDevueltos] = useState(false);
   const [puedeVerListaDeClientes, setPuedeVerListaDeClientes] = useState(false);
   const [puedeVerProspectos, setPuedeVerProspectos] = useState(false);
   const [puedeVerReportesVentas, setPuedeVerReportesVentas] = useState(false);
@@ -137,9 +136,8 @@ export default function Fijo() {
       setPuedeRegistrarCotizacion(has('cotizaciones.crear'));
       setPuedeVerCotizaciones(has('cotizaciones.ver'));
       setPuedeVerVentasAgendadas(has('pedidosAgendados.ver'));
-      setPuedeVerPedidosEntregados(has('pedidosEntregados.ver'));
       setPuedeVerPedidosCancelados(has('pedidosCancelados.ver'));
-      setPuedeVerPedidosDevueltos(has('pedidosDevueltos.ver'));
+      setPuedeVerRemisiones(has('remisiones.ver'));
       setPuedeVerListaDeClientes(has('clientes.ver'));
       setPuedeVerProspectos(has('prospectos.ver'));
       setPuedeVerReportesVentas(has('reportesVentas.ver'));
@@ -348,7 +346,7 @@ export default function Fijo() {
 
 
 
-          {(puedeRegistrarCotizacion || puedeVerCotizaciones || puedeVerListaDeClientes || puedeVerPedidosCancelados || puedeVerPedidosDevueltos || puedeVerPedidosEntregados || puedeVerProspectos || puedeVerReportesVentas || puedeVerVentasAgendadas) && (
+          {(puedeRegistrarCotizacion || puedeVerCotizaciones || puedeVerListaDeClientes || puedeVerPedidosCancelados || puedeVerRemisiones || puedeVerProspectos || puedeVerReportesVentas || puedeVerVentasAgendadas) && (
             <nav>
               <button
                 type="button"
@@ -374,7 +372,7 @@ export default function Fijo() {
                 {puedeVerVentasAgendadas && (
                   <Link as={Link} to="/PedidosAgendados" className="dropdown-link"><li><i className="fas fa-calendar-check" aria-hidden={true}></i> <span>Pedidos agendados</span></li></Link>
                 )}
-                {puedeVerPedidosEntregados && (
+                {puedeVerRemisiones && (
                   <Link as={Link} to="/PedidosEntregados" className="dropdown-link"><li><i className="fas fa-check-circle" aria-hidden={true}></i> <span>Pedidos entregados</span></li></Link>
                 )}
                 {puedeVerPedidosCancelados && (

@@ -127,11 +127,11 @@ PermissionRadioAll.defaultProps = {
 
 /* ---------- Permission sets ---------- */
 const permisosUsuarios = [
-   'usuarios.crear','usuarios.editar','usuarios.inhabilitar','usuarios.eliminar'
+   'usuarios.crear','usuarios.editar','usuarios.deshabilitar','usuarios.eliminar'
 ];
 
 const permisosRoles = [
-   'roles.ver','roles.crear','roles.editar','roles.inhabilitar'
+   'roles.ver','roles.crear','roles.editar','roles.deshabilitar'
 ];
 
 const permisosCompras = [
@@ -146,9 +146,8 @@ const permisosProductos = [
 ];
 
 const permisosVentas = [
-   'ventas.crear','listaDeVentas.ver','pedidos.ver','pedidos.remisionar','pedidos.enviar',
-   'pedidosAgendados.ver','pedidosDespachados.ver','pedidosEntregados.ver','pedidosCancelados.ver',
-   'pedidosDevueltos.ver','cotizaciones.ver','cotizaciones.crear','cotizaciones.editar',
+   'pedidos.agendar','pedidos.ver','pedidos.remisionar','pedidos.enviar',
+   'pedidosAgendados.ver','pedidosCancelados.ver', 'cotizaciones.ver','cotizaciones.crear','cotizaciones.editar',
    'cotizaciones.eliminar','cotizaciones.enviar','cotizaciones.remisionar',
    'remisiones.ver','remisiones.crear','remisiones.editar','remisiones.eliminar','remisiones.enviar',
    'clientes.ver','clientes.crear','clientes.editar','clientes.inactivar','prospectos.ver',
@@ -380,7 +379,7 @@ export default function AgregarRol() {
                                     <h5 style={{ margin: '0 0 .5rem 0', fontWeight: 600, color: '#374151' }}>Permisos para lista de usuarios</h5>
                                     <PermissionCheckbox checked={permisos.includes('usuarios.crear')} onChange={() => togglePermiso('usuarios.crear')} label="Crear usuarios" />
                                     <PermissionCheckbox checked={permisos.includes('usuarios.editar')} onChange={() => togglePermiso('usuarios.editar')} label="Editar usuarios" />
-                                    <PermissionCheckbox checked={permisos.includes('usuarios.inhabilitar')} onChange={() => togglePermiso('usuarios.inhabilitar')} label="Habilitar / inhabilitar" />
+                                    <PermissionCheckbox checked={permisos.includes('usuarios.deshabilitar')} onChange={() => togglePermiso('usuarios.deshabilitar')} label="Habilitar / deshabilitar" />
                                     <PermissionCheckbox checked={permisos.includes('usuarios.eliminar')} onChange={() => togglePermiso('usuarios.eliminar')} label="Eliminar usuarios" />
                                     <PermissionRadioAll onClick={() => toggleGrupoPermisos(permisosUsuarios)} checked={permisosUsuarios.every(p => permisos.includes(p))} />
                                  </div>
@@ -391,7 +390,7 @@ export default function AgregarRol() {
                                     <h5 style={{ margin: '0 0 .5rem 0', fontWeight: 600, color: '#374151' }}>Permisos para roles y permisos</h5>
                                     <PermissionCheckbox checked={permisos.includes('roles.crear')} onChange={() => togglePermiso('roles.crear')} label="Crear roles" />
                                     <PermissionCheckbox checked={permisos.includes('roles.editar')} onChange={() => togglePermiso('roles.editar')} label="Editar roles" />
-                                    <PermissionCheckbox checked={permisos.includes('roles.inhabilitar')} onChange={() => togglePermiso('roles.inhabilitar')} label="Habilitar / inhabilitar" />
+                                    <PermissionCheckbox checked={permisos.includes('roles.deshabilitar')} onChange={() => togglePermiso('roles.deshabilitar')} label="Habilitar / deshabilitar" />
                                     <PermissionRadioAll onClick={() => toggleGrupoPermisos(permisosRoles)} checked={permisosRoles.every(p => permisos.includes(p))} />
                                  </div>
                               )}
@@ -463,16 +462,13 @@ export default function AgregarRol() {
                            <h4>Permisos módulo ventas</h4>
                            <div style={{ display: 'flex', gap: 24, marginTop: 12, flexWrap: 'wrap' }}>
                               <div style={{ minWidth: 260 }}>
-                                 <PermissionCheckbox checked={permisos.includes('ventas.crear')} onChange={() => togglePermiso('ventas.crear')} label="Crear ventas" />
-                                 <PermissionCheckbox checked={permisos.includes('listaDeVentas.ver')} onChange={() => togglePermiso('listaDeVentas.ver')} label="Lista de ventas" />
+                                 <PermissionCheckbox checked={permisos.includes('pedidos.agendar')} onChange={() => togglePermiso('pedidos.agendar')} label="Agendar pedidos" />
                                  <PermissionCheckbox checked={permisos.includes('pedidos.ver')} onChange={() => togglePermiso('pedidos.ver')} label="Ver pedidos" />
                                  <PermissionCheckbox checked={permisos.includes('pedidos.remisionar')} onChange={() => togglePermiso('pedidos.remisionar')} label="Remisionar pedidos" />
                                  <PermissionCheckbox checked={permisos.includes('pedidos.enviar')} onChange={() => togglePermiso('pedidos.enviar')} label="Enviar pedidos" />
                                  <PermissionCheckbox checked={permisos.includes('pedidosAgendados.ver')} onChange={() => togglePermiso('pedidosAgendados.ver')} label="Pedidos agendados" />
-                                 <PermissionCheckbox checked={permisos.includes('pedidosDespachados.ver')} onChange={() => togglePermiso('pedidosDespachados.ver')} label="Pedidos despachados" />
-                                 <PermissionCheckbox checked={permisos.includes('pedidosEntregados.ver')} onChange={() => togglePermiso('pedidosEntregados.ver')} label="Pedidos entregados" />
+                                 
                                  <PermissionCheckbox checked={permisos.includes('pedidosCancelados.ver')} onChange={() => togglePermiso('pedidosCancelados.ver')} label="Pedidos cancelados" />
-                                 <PermissionCheckbox checked={permisos.includes('pedidosDevueltos.ver')} onChange={() => togglePermiso('pedidosDevueltos.ver')} label="Pedidos devueltos" />
                               </div>
 
                               <div style={{ minWidth: 320 }}>

@@ -8,13 +8,13 @@ const MODULE_PERMISSIONS = {
    usuarios: [
       'usuarios.crear',
       'usuarios.editar',
-      'usuarios.inhabilitar',
+      'usuarios.deshabilitar',
       'usuarios.eliminar'
    ],
    roles: [
       'roles.crear',
       'roles.editar',
-      'roles.inhabilitar'
+      'roles.deshabilitar'
    ],
    compras: [
       'hcompras.ver',
@@ -47,16 +47,12 @@ const MODULE_PERMISSIONS = {
       'reportesProductos.ver'
    ],
    ventas: [
-      'ventas.crear',
-      'listaDeVentas.ver',
+      'pedidos.agendar',
       'pedidos.ver',
       'pedidos.remisionar',
       'pedidos.enviar',
       'pedidosAgendados.ver',
-      'pedidosDespachados.ver',
-      'pedidosEntregados.ver',
       'pedidosCancelados.ver',
-      'pedidosDevueltos.ver',
       'cotizaciones.ver',
       'cotizaciones.crear',
       'cotizaciones.editar',
@@ -421,7 +417,7 @@ export default function EditarRol({ rol }) {
                                     const label = ({
                                        'usuarios.crear': 'Crear usuarios',
                                        'usuarios.editar': 'Editar usuarios',
-                                       'usuarios.inhabilitar': 'Habilitar / inhabilitar',
+                                       'usuarios.deshabilitar': 'Habilitar / deshabilitar',
                                        'usuarios.eliminar': 'Eliminar usuarios'
                                     })[key] || key;
                                     return <InputCheck key={key} checked={permisos.includes(key)} onChange={() => togglePermiso(key)} label={label} />;
@@ -442,7 +438,7 @@ export default function EditarRol({ rol }) {
                                     const label = ({
                                        'roles.crear': 'Crear roles',
                                        'roles.editar': 'Editar roles',
-                                       'roles.inhabilitar': 'Habilitar / inhabilitar'
+                                       'roles.deshabilitar': 'Habilitar / deshabilitar'
                                     })[key] || key;
                                     return <InputCheck key={key} checked={permisos.includes(key)} onChange={() => togglePermiso(key)} label={label} />;
                                  })}

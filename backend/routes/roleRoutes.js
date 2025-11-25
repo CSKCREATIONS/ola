@@ -18,10 +18,10 @@ router.post('/',
   roleController.createRole
 );
 
-//PATCH api/roles/:id/toggle-enabled  inhabilitar rol
+//PATCH api/roles/:id/toggle-enabled  deshabilitar rol
 router.patch('/:id/toggle-enabled',
   verifyToken,
-  checkPermission('roles.inhabilitar'),
+  checkPermission('roles.deshabilitar'),
   roleController.toggleEnabled
 );
 

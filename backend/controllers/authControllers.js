@@ -80,7 +80,7 @@ exports.signin = async (req, res) => {
       });
     }
 
-    // valida si en usuario esta inhabilitado 
+    // valida si en usuario esta deshabilitado 
     if (!user.enabled) {
       console.log('[AuthController] Usuario deshabilitado');
       return res.status(403).json({
