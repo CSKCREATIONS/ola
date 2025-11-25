@@ -224,7 +224,6 @@ exports.recoverPassword = async (req, res) => {
       await sgMail.send(msg);
       // Solo si el envío por SendGrid fue exitoso, actualizamos la contraseña (plain, el pre-save la hashea)
       user.password = provisionalPassword;
-      user.provisional = true; // fuerza cambio en próximo login
       user.mustChangePassword = true; // obliga cambio de contraseña
       await user.save();
       return res.status(200).json({ success: true, message: 'Correo enviado correctamente (SendGrid)' });
@@ -239,7 +238,6 @@ exports.recoverPassword = async (req, res) => {
         const emailSrv = new EmailService();
         await emailSrv.enviarCorreoConAttachment(sanitizedEmail, 'Recuperación de contraseña - JLA Global Company', msg.html, null);
         user.password = provisionalPassword; // pre-save hash
-        user.provisional = true;
         user.mustChangePassword = true; // obliga cambio de contraseña
         await user.save();
         return res.status(200).json({ success: true, message: 'Correo enviado correctamente (Gmail)' });

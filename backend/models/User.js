@@ -53,15 +53,10 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
-    lastLogin: {
+  lastLogin: {
     type: Date,
     default: null
-  },
-  provisional: {
-  type: Boolean,
-  default: false
-}
-
+  }
 }, { timestamps: true });
 
 // Middleware para hashear la contraseña antes de guardar

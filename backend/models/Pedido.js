@@ -32,8 +32,14 @@ const PedidoSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Remision'
   },
-
-  fechaEntrega: { type: Date, required: true },
+  fechaAgendamiento: { type: Date},
+  fechaCancelacion: { type: Date},
+  responsableCancelacion: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null
+  },
+  fechaEntrega: { type: Date},
   observacion: { type: String, default: '' },
   estado: {
     type: String,

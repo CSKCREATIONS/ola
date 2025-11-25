@@ -262,12 +262,6 @@ SendModal.propTypes = {
 const ProductsTable = React.memo(function ProductsTable({ productos, total }) {
   return (
     <div style={{ marginBottom: '2rem' }}>
-      <h3 style={{
-        borderBottom: '3px solid #059669', paddingBottom: '0.5rem',
-        color: '#059669', fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '1rem'
-      }}>
-        Productos Entregados
-      </h3>
       <table className="tabla-cotizacion" style={{
         width: '100%', borderCollapse: 'collapse', marginTop: '1rem',
         borderRadius: '8px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
@@ -456,8 +450,8 @@ export default function RemisionPreview({ datos, onClose }) {
                 <h3 style={{ borderBottom: '3px solid #059669', paddingBottom: '0.5rem', color: '#059669', fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '1rem' }}>Entregar a:</h3>
                 <div style={{ lineHeight: '1.8' }}>
                   <p><strong>Cliente:</strong> {clienteResolved?.nombre || datosConDefaults.cliente?.nombre || 'Cliente no especificado'}</p>
-                  <p><strong>Dirección:</strong> {clienteResolved?.direccion || datosConDefaults.cliente?.direccion || 'Dirección no especificada'}</p>
-                  <p><strong>Ciudad:</strong> {clienteResolved?.ciudad || datosConDefaults.cliente?.ciudad || 'Ciudad no especificada'}</p>
+                  <p><strong>Dirección:</strong> {clienteResolved?.direccion || datosConDefaults.cliente?.direccion || 'Dirección no especificada'} {clienteResolved?.ciudad || datosConDefaults.cliente?.ciudad || 'Ciudad no especificada'}</p>
+                  <p><strong>Email:</strong> {clienteResolved?.correo || datosConDefaults.cliente?.correo || 'No especificado'}</p>
                   <p><strong>Teléfono:</strong> {clienteResolved?.telefono || datosConDefaults.cliente?.telefono || 'No especificado'}</p>
                 </div>
               </div>
@@ -465,7 +459,7 @@ export default function RemisionPreview({ datos, onClose }) {
               <div>
                 <h3 style={{ borderBottom: '3px solid #059669', paddingBottom: '0.5rem', color: '#059669', fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '1rem' }}>Remite:</h3>
                 <div style={{ lineHeight: '1.8' }}>
-                  <p><strong>Fecha:</strong> {new Date(datosConDefaults.fechaEntrega).toLocaleDateString('es-ES')}</p>
+                  <p><strong>Fecha de entrega:</strong> {datosConDefaults.fechaEntrega}</p>
                   <p><strong>Empresa:</strong> {datosConDefaults.empresa?.nombre || COMPANY_NAME}</p>
                   <p><strong>Dirección:</strong> {datosConDefaults.empresa?.direccion || 'Cl. 21 # 5 - 52 C19, Chía, Cundinamarca'}</p>
                   <p><strong>Teléfono:</strong> {datosConDefaults.empresa?.telefono || COMPANY_PHONE}</p>

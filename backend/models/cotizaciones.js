@@ -56,10 +56,6 @@ const CotizacionSchema = new mongoose.Schema({
     nombre: { type: String },
     direccion: { type: String }
   },
-  clientePotencial: {
-    type: Boolean,
-    default: false
-  },
   enviadoCorreo: {
     type: Boolean,
     default: false

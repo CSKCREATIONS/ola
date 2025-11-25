@@ -249,6 +249,9 @@ export default function PedidosCancelados() {
                         <i className="fa-solid fa-file-invoice icon-gap" style={{ color: '#6366f1' }}></i><span>IDENTIFICADOR DE PEDIDO</span>
                       </th>
                       <th>
+                        <i className="fa-solid fa-user-pen icon-gap" style={{ color: '#6366f1' }}></i><span>RESPONSABLE</span>
+                      </th>
+                      <th>
                         <i className="fa-solid fa-calendar-times icon-gap" style={{ color: '#6366f1' }}></i><span>F. CANCELACIÓN</span>
                       </th>
                       <th>
@@ -279,22 +282,32 @@ export default function PedidosCancelados() {
                               <i className="fa-solid fa-file-invoice" style={{ color: 'white', fontSize: '12px' }}></i>
                             </div>
                             {pedido.numeroPedido ? (
-                            <button
-                              style={{ cursor: 'pointer', color: '#6366f1', background: 'transparent', textDecoration: 'underline' }}
-                              onClick={() => verDetallesCancelado(pedido._id)}
-                            >
-                              
-                              <span>{pedido.numeroPedido || '---'}</span>
-                            </button>
+                              <button
+                                style={{ cursor: 'pointer', color: '#6366f1', background: 'transparent', textDecoration: 'underline' }}
+                                onClick={() => verDetallesCancelado(pedido._id)}
+                              >
+
+                                <span>{pedido.numeroPedido || '---'}</span>
+                              </button>
                             ) : (
                               <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>---</span>
                             )}
                           </div>
-                          
+
+                        </td>
+                        <td style={{ color: '#374151', fontWeight: 600 }}>
+                          {pedido.responsableCancelacion ? (
+                            (pedido.responsableCancelacion.firstName || pedido.responsableCancelacion.username)
+                              ? `${pedido.responsableCancelacion.firstName || ''} ${pedido.responsableCancelacion.surname || ''}`.trim()
+                              : (pedido.responsableCancelacion.username || String(pedido.responsableCancelacion))
+                          ) : (
+                            <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>Sistema</span>
+                          )}
                         </td>
                         <td style={{ color: '#6b7280' }}>
                           {new Date(pedido.updatedAt).toLocaleDateString()}
                         </td>
+
                         <td style={{ fontWeight: '600', color: '#1f2937', fontSize: '14px' }}>
                           {pedido.cliente?.nombre}
                         </td>
@@ -319,7 +332,7 @@ export default function PedidosCancelados() {
                     ))}
                     {pedidosCancelados.length === 0 && (
                       <tr>
-                        <td colSpan="7">
+                        <td colSpan={hasPermission('pedidos.eliminar') ? 8 : 7}>
                           <div className="table-empty-state">
                             <div className="table-empty-icon">
                               <i className="fa-solid fa-times-circle" style={{ fontSize: '3.5rem', color: '#9ca3af' }}></i>

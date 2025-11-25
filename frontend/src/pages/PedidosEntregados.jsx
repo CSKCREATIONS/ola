@@ -396,6 +396,9 @@ export default function PedidosEntregados() {
                           <i className="fa-solid fa-file-invoice icon-gap" style={{ color: '#6366f1' }}></i><span>REMISIÓN</span>
                         </th>
                         <th>
+                          <i className="fa-solid fa-user-pen icon-gap" style={{ color: '#6366f1' }}></i><span>RESPONSABLE</span>
+                        </th>
+                        <th>
                           <i className="fa-solid fa-user icon-gap" style={{ color: '#6366f1' }}></i><span>CLIENTE</span>
                         </th>
                         <th>
@@ -434,6 +437,15 @@ export default function PedidosEntregados() {
                               )}
                             </div>
                           </td>
+                          <td style={{ color: '#374151', fontWeight: 600 }}>
+                            {remision.responsable ? (
+                              (remision.responsable.firstName || remision.responsable.username)
+                                ? `${remision.responsable.firstName || ''} ${remision.responsable.surname || ''}`.trim()
+                                : (remision.responsable.username || String(remision.responsable))
+                            ) : (
+                              <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>Sistema</span>
+                            )}
+                          </td>
                        
                           <td style={{ fontWeight: '600', color: '#1f2937', fontSize: '14px' }}>
                             {remision.cliente?.nombre || remision.cliente?.nombreCliente || remision.cliente?.nombreCompleto || ''}
@@ -452,7 +464,7 @@ export default function PedidosEntregados() {
                       ))}
                       {pedidosEntregados.length === 0 && (
                         <tr>
-                          <td colSpan="7">
+                          <td colSpan="8">
                             <div className="table-empty-state">
                               <div className="table-empty-icon">
                                 <i className="fa-solid fa-times-circle" style={{ fontSize: '3.5rem', color: '#9ca3af' }}></i>
