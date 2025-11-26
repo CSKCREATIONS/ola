@@ -62,36 +62,26 @@ export function makeCotizacionTemplate(datos = {}, usuario = null) {
   const totalFinal = datos?.total || calculateTotal(datos) || 0;
   const fechaEmision = datos?.fecha ? formatDateIso(datos.fecha) : formatDateIso(new Date().toISOString());
 
-  const asunto = `Cotización ${datos?.codigo || ''} - ${datos?.cliente?.nombre || 'Cliente'} | ${getCompanyName()}`;
+  const asunto = `Cotización ${datos?.codigo || ''} | ${getCompanyName()}`;
 
   const mensaje = `Estimado/a ${datos?.cliente?.nombre || 'cliente'},
 
-Esperamos se encuentre muy bien. Adjunto encontrará la cotización solicitada con la siguiente información:
+Esperamos se encuentre muy bien. Adjunto encontrará el PDF de la cotización solicitada con la siguiente información:
 
-📋 DETALLES DE LA COTIZACIÓN:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 • Código: ${datos?.codigo || 'N/A'}
 • Fecha de emisión: ${fechaEmision}
-• Cliente: ${datos?.cliente?.nombre || 'N/A'}
-• Correo: ${datos?.cliente?.correo || 'N/A'}
-• Teléfono: ${datos?.cliente?.telefono || 'N/A'}
-• Ciudad: ${datos?.cliente?.ciudad || 'N/A'}
-• Estado actual: ${datos?.estado || 'Pendiente'}
-• Validez de la oferta: ${datos?.validez || '15 días'}
 • Total de productos: ${datos?.productos?.length || 0} artículos
 • TOTAL GENERAL: S/. ${(Number(totalFinal) || 0).toLocaleString('es-ES')}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ${datos?.descripcion ? `📝 DESCRIPCIÓN:\n${datos.descripcion}\n\n` : ''}${datos?.condicionesPago ? `💳 CONDICIONES DE PAGO:\n${datos.condicionesPago}\n\n` : ''}Quedamos atentos a sus comentarios y esperamos su pronta respuesta para proceder con la atención de su requerimiento.
 
-¡Gracias por confiar en nosotros!
+Cabe recalcar que los precios en esta cotización tienen una validez de ${datos?.validez || '15 días'}
 
 Saludos cordiales,
 
-${buildSignature(usuario)}
 
-${getCompanyName()}
-🌐 Productos de calidad`;
+${getCompanyName()}`;
 
   return { asunto, mensaje };
 }

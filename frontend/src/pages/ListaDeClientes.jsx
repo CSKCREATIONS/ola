@@ -352,7 +352,7 @@ export default function ListaDeClientes() {
         const remisiones = payload.remisiones || (payload.data && payload.data.remisiones) || payload.data || [];
         // pequeño log para depuración en el navegador
         if (typeof window !== 'undefined' && window.console && window.console.debug) {
-          console.debug('[ListaDeClientes] remisiones fetched count=', Array.isArray(remisiones) ? remisiones.length : 0, remisiones && remisiones.slice ? remisiones.slice(0,5) : remisiones);
+          console.debug('[ListaDeClientes] remisiones fetched count=', Array.isArray(remisiones) ? remisiones.length : 0, remisiones && remisiones.slice ? remisiones.slice(0, 5) : remisiones);
         }
 
         const grouped = {};
@@ -480,8 +480,8 @@ export default function ListaDeClientes() {
       for (const btn of buttons) {
         btn.addEventListener('click', () => {
           const id = btn.getAttribute('data-remision');
-            abrirRemisionPreview(id);
-            Swal.close();
+          abrirRemisionPreview(id);
+          Swal.close();
         });
       }
     }, 0);
@@ -498,25 +498,25 @@ export default function ListaDeClientes() {
           <div className="contenido-modulo">
             {/* Encabezado profesional del módulo */}
             <SharedListHeaderCard
-            title="Lista de Clientes"
-            subtitle="Gestión de Clientes registrados en el sistema"
-            iconClass="fa-solid fa-users"
-          >
-            <div className="export-buttons">
-              <button
-                onClick={() => exportToExcel(clientesFiltrados)}
-                className="export-btn excel"
-              >
-                <i className="fa-solid fa-file-excel"></i><span>Exportar Excel</span>
-              </button>
-              <button
-                onClick={exportarPDF}
-                className="export-btn pdf"
-              >
-                <i className="fa-solid fa-file-pdf"></i><span>Exportar PDF</span>
-              </button>
-            </div>
-          </SharedListHeaderCard>
+              title="Lista de Clientes"
+              subtitle="Gestión de Clientes registrados en el sistema"
+              iconClass="fa-solid fa-users"
+            >
+              <div className="export-buttons">
+                <button
+                  onClick={() => exportToExcel(clientesFiltrados)}
+                  className="export-btn excel"
+                >
+                  <i className="fa-solid fa-file-excel"></i><span>Exportar Excel</span>
+                </button>
+                <button
+                  onClick={exportarPDF}
+                  className="export-btn pdf"
+                >
+                  <i className="fa-solid fa-file-pdf"></i><span>Exportar PDF</span>
+                </button>
+              </div>
+            </SharedListHeaderCard>
 
             {/* Panel de filtros avanzado */}
             <div style={{
@@ -727,27 +727,20 @@ export default function ListaDeClientes() {
                         </td>
                         <td style={{ padding: '16px 12px' }}>
                           {Array.isArray(remisionesMap[cliente._id]) && remisionesMap[cliente._id].length > 0 ? (
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems:'center' }}>
-                              {remisionesMap[cliente._id].slice(0,3).map(rm => (
+                            <div>
+                              {remisionesMap[cliente._id].slice(0, 3).map(rm => (
+
                                 <button
                                   key={rm._id}
                                   title={`Ver remisión ${rm.numeroRemision}`}
                                   onClick={() => abrirRemisionPreview(rm._id)}
-                                  style={{
-                                    background: 'linear-gradient(135deg, #dbeafe, #bfdbfe)',
-                                    color: '#1e40af',
-                                    border: 'none',
-                                    borderRadius: '8px',
-                                    padding: '6px 8px',
-                                    cursor: 'pointer',
-                                    fontSize: '11px',
-                                    fontWeight: '600',
-                                    transition: 'all 0.2s ease',
-                                    boxShadow: '0 2px 4px rgba(30,64,175,0.2)'
-                                  }}
-                                  onMouseEnter={(e)=>{e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.boxShadow='0 4px 8px rgba(30,64,175,0.3)';}}
-                                  onMouseLeave={(e)=>{e.currentTarget.style.transform='translateY(0)'; e.currentTarget.style.boxShadow='0 2px 4px rgba(30,64,175,0.2)';}}
+                                  style={{ cursor: 'pointer', color: '#6366f1', background: 'transparent', textDecoration: 'underline', display: 'flex', alignItems: 'center', marginBottom: '0.3rem' }}
+                                  onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 4px 8px rgba(30,64,175,0.3)'; }}
+                                  onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 2px 4px rgba(30,64,175,0.2)'; }}
                                 >
+                                  <div className="table-icon-small" style={{marginRight: '0.2rem'}}>
+                                    <i className="fa-solid fa-file-invoice" style={{ color: 'white', fontSize: '12px', marginRight: '0.2rem' }}></i>
+                                  </div>
                                   <span>{rm.numeroRemision}</span>
                                 </button>
                               ))}
@@ -766,8 +759,8 @@ export default function ListaDeClientes() {
                                     color: '#6366f1',
                                     transition: 'all 0.2s ease'
                                   }}
-                                  onMouseEnter={(e)=>{e.currentTarget.style.background='#eef2ff';}}
-                                  onMouseLeave={(e)=>{e.currentTarget.style.background='none';}}
+                                  onMouseEnter={(e) => { e.currentTarget.style.background = '#eef2ff'; }}
+                                  onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
                                 >ver más</button>
                               )}
                             </div>
