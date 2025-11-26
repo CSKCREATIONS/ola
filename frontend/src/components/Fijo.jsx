@@ -372,11 +372,12 @@ export default function Fijo() {
                 {puedeVerVentasAgendadas && (
                   <Link as={Link} to="/PedidosAgendados" className="dropdown-link"><li><i className="fas fa-calendar-check" aria-hidden={true}></i> <span>Pedidos agendados</span></li></Link>
                 )}
-                {puedeVerRemisiones && (
-                  <Link as={Link} to="/PedidosEntregados" className="dropdown-link"><li><i className="fas fa-check-circle" aria-hidden={true}></i> <span>Pedidos entregados</span></li></Link>
-                )}
+                
                 {puedeVerPedidosCancelados && (
                   <Link as={Link} to="/PedidosCancelados" className="dropdown-link"><li><i className="fas fa-times-circle" aria-hidden={true}></i> <span>Pedidos cancelados</span></li></Link>
+                )}
+                {puedeVerRemisiones && (
+                  <Link as={Link} to="/PedidosEntregados" className="dropdown-link"><li><i className="fas fa-check-circle" aria-hidden={true}></i> <span>Pedidos entregados</span></li></Link>
                 )}
                 {puedeVerListaDeClientes && (
                   <Link as={Link} to="/ListaDeClientes" className="dropdown-link"><li> <i className="fas fa-address-book" aria-hidden={true}></i> <span>Clientes</span></li></Link>

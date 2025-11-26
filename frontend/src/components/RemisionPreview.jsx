@@ -450,7 +450,7 @@ export default function RemisionPreview({ datos, onClose }) {
                 <h3 style={{ borderBottom: '3px solid #059669', paddingBottom: '0.5rem', color: '#059669', fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '1rem' }}>Entregar a:</h3>
                 <div style={{ lineHeight: '1.8' }}>
                   <p><strong>Cliente:</strong> {clienteResolved?.nombre || datosConDefaults.cliente?.nombre || 'Cliente no especificado'}</p>
-                  <p><strong>Dirección:</strong> {clienteResolved?.direccion || datosConDefaults.cliente?.direccion || 'Dirección no especificada'} {clienteResolved?.ciudad || datosConDefaults.cliente?.ciudad || 'Ciudad no especificada'}</p>
+                  <p><strong>Dirección:</strong> {clienteResolved?.direccion || datosConDefaults.cliente?.direccion } {clienteResolved?.ciudad || datosConDefaults.cliente?.ciudad || 'Ciudad no especificada'}</p>
                   <p><strong>Email:</strong> {clienteResolved?.correo || datosConDefaults.cliente?.correo || 'No especificado'}</p>
                   <p><strong>Teléfono:</strong> {clienteResolved?.telefono || datosConDefaults.cliente?.telefono || 'No especificado'}</p>
                 </div>

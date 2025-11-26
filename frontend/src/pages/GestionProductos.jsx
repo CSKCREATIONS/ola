@@ -826,7 +826,7 @@ const GestionProductos = () => {
                   <thead>
                     <tr>
                       <th>
-                        <i className="fa-solid fa-hashtag icon-gap" style={{ color: '#6366f1' }}></i><span>#</span>
+                        <i className="fa-solid fa-hashtag icon-gap" style={{ color: '#6366f1' }}></i>
                       </th>
                       <th>
                         <i className="fa-solid fa-tag icon-gap"></i><span>NOMBRE</span>

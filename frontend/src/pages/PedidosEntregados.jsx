@@ -143,6 +143,8 @@ export default function PedidosEntregados() {
   const itemsPerPage = 10;
   const [remisionPreview, setRemisionPreview] = useState(null);
 
+  // Visual-only modal state for "Nueva remisión" (UI only, no backend logic)
+  const [mostrarModalNuevaRemision, setMostrarModalNuevaRemision] = useState(false);
   const indexOfFirstItem = (currentPage - 1) * itemsPerPage;
   const currentItems = pedidosEntregados.slice(indexOfFirstItem, indexOfFirstItem + itemsPerPage);
   const totalPages = Math.ceil(pedidosEntregados.length / itemsPerPage);
@@ -263,7 +265,7 @@ export default function PedidosEntregados() {
             {/* Encabezado profesional */}
             <SharedListHeaderCard
               title="Pedidos Entregados"
-              subtitle="Gestión de pedidos entregados y detalles de entrega"
+              subtitle="Aquí encontrará las remisiones con sus respectivos detalles"
               iconClass="fa-solid fa-check-circle"
             >
               <div className="export-buttons">
@@ -279,6 +281,12 @@ export default function PedidosEntregados() {
                 >
                   <i className="fa-solid fa-file-pdf"></i><span>Exportar PDF</span>
                 </button>
+                <button
+                  onClick={() => setMostrarModalNuevaRemision(true)}
+                  className="export-btn create"
+                >
+                  <i className="fa-solid fa-plus"></i>{' '}<span>Nueva remisión</span>
+                </button>
               </div>
             </SharedListHeaderCard>
 
@@ -292,7 +300,7 @@ export default function PedidosEntregados() {
               <div className="entregados-stats-card">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                   <div style={{
-                    
+
                     borderRadius: '12px',
                     padding: '15px',
                     display: 'flex',
@@ -366,126 +374,126 @@ export default function PedidosEntregados() {
             </div>
 
             {/* Controles de exportación */}
-            
+
 
             {/* Tabla principal con diseño moderno */}
-              <div className="table-container">
-                <div className="table-header">
+            <div className="table-container">
+              <div className="table-header">
                 <div className="table-header-content">
                   <div className="table-header-icon">
                     <i className="fa-solid fa-table" style={{ color: 'white', fontSize: '16px' }}></i>
                   </div>
                   <div>
                     <h4 className="table-title">
-                      Lista de pedidos entregados
+                      Lista de remisiones
                     </h4>
                     <p className="table-subtitle">
-                      Mostrando {currentItems.length} de {pedidosEntregados.length} pedidos entregados
+                      Mostrando {currentItems.length} de {pedidosEntregados.length} remisiones
                     </p>
                   </div>
                 </div>
               </div  >
-                <div style={{ overflow: 'auto' }}>
-                  <table className="data-table" id="tabla_entregados">
-                    <thead>
-                      <tr>
-                        <th>
-                          <i className="fa-solid fa-hashtag icon-gap" style={{ color: '#6366f1' }}></i><span></span>
-                        </th>
-                        <th>
-                          <i className="fa-solid fa-file-invoice icon-gap" style={{ color: '#6366f1' }}></i><span>REMISIÓN</span>
-                        </th>
-                        <th>
-                          <i className="fa-solid fa-user-pen icon-gap" style={{ color: '#6366f1' }}></i><span>RESPONSABLE</span>
-                        </th>
-                        <th>
-                          <i className="fa-solid fa-user icon-gap" style={{ color: '#6366f1' }}></i><span>CLIENTE</span>
-                        </th>
-                        <th>
-                          <i className="fa-solid fa-calendar-check icon-gap" style={{ color: '#6366f1' }}></i><span>F. ENTREGA</span>
-                        </th>
-                        <th>
-                          <i className="fa-solid fa-location-dot icon-gap" style={{ color: '#6366f1' }}></i><span>CIUDAD</span>
-                        </th>
-                        <th>
-                          <i className="fa-solid fa-dollar-sign icon-gap" style={{ color: '#6366f1' }}></i><span>TOTAL</span>
-                        </th>
-                        
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {currentItems.map((remision, index) => (
-                        <tr key={remision._id}>
-                          <td style={{ fontWeight: '600', color: '#6366f1' }}>
-                            {indexOfFirstItem + index + 1}
-                          </td>
-                          <td>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                              <div className="table-icon-small">
-                                <i className="fa-solid fa-file-invoice" style={{ color: 'white', fontSize: '12px' }}></i>
-                              </div>
-                              {remision.numeroRemision ? (
+              <div style={{ overflow: 'auto' }}>
+                <table className="data-table" id="tabla_entregados">
+                  <thead>
+                    <tr>
+                      <th>
+                        <i className="fa-solid fa-hashtag icon-gap" style={{ color: '#6366f1' }}></i><span></span>
+                      </th>
+                      <th>
+                        <i className="fa-solid fa-file-invoice icon-gap" style={{ color: '#6366f1' }}></i><span>REMISIÓN</span>
+                      </th>
+                      <th>
+                        <i className="fa-solid fa-user-pen icon-gap" style={{ color: '#6366f1' }}></i><span>RESPONSABLE</span>
+                      </th>
+                      <th>
+                        <i className="fa-solid fa-user icon-gap" style={{ color: '#6366f1' }}></i><span>CLIENTE</span>
+                      </th>
+                      <th>
+                        <i className="fa-solid fa-calendar-check icon-gap" style={{ color: '#6366f1' }}></i><span>F. ENTREGA</span>
+                      </th>
+                      <th>
+                        <i className="fa-solid fa-location-dot icon-gap" style={{ color: '#6366f1' }}></i><span>CIUDAD</span>
+                      </th>
+                      <th>
+                        <i className="fa-solid fa-dollar-sign icon-gap" style={{ color: '#6366f1' }}></i><span>TOTAL</span>
+                      </th>
+
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {currentItems.map((remision, index) => (
+                      <tr key={remision._id}>
+                        <td style={{ fontWeight: '600', color: '#6366f1' }}>
+                          {indexOfFirstItem + index + 1}
+                        </td>
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <div className="table-icon-small">
+                              <i className="fa-solid fa-file-invoice" style={{ color: 'white', fontSize: '12px' }}></i>
+                            </div>
+                            {remision.numeroRemision ? (
                               <button
                                 style={{ cursor: 'pointer', color: '#6366f1', background: 'transparent', textDecoration: 'underline' }}
                                 onClick={() => verRemisionPreview(remision)}
                               >
-                                
+
                                 <span>{remision.numeroRemision || '---'}</span>
                               </button>
-                              ) : (
-                                <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>---</span>
-                              )}
-                            </div>
-                          </td>
-                          <td style={{ color: '#374151', fontWeight: 600 }}>
-                            {remision.responsable ? (
-                              (remision.responsable.firstName || remision.responsable.username)
-                                ? `${remision.responsable.firstName || ''} ${remision.responsable.surname || ''}`.trim()
-                                : (remision.responsable.username || String(remision.responsable))
                             ) : (
-                              <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>Sistema</span>
+                              <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>---</span>
                             )}
-                          </td>
-                       
-                          <td style={{ fontWeight: '600', color: '#1f2937', fontSize: '14px' }}>
-                            {remision.cliente?.nombre || remision.cliente?.nombreCliente || remision.cliente?.nombreCompleto || ''}
-                          </td>
-                          <td style={{ color: '#6b7280' }}>
-                            {new Date(remision.fechaEntrega || remision.fechaRemision || remision.updatedAt || remision.createdAt).toLocaleDateString()}
-                          </td>
-                          <td style={{ color: '#6b7280' }}>
-                            {remision.cliente?.ciudad || remision.cliente?.direccion?.ciudad || ''}
-                          </td>
-                          <td style={{ fontWeight: '600', color: '#6366f1', fontSize: '14px' }}>
-                            ${(remision.total || 0).toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                          </td>
-                          
-                        </tr>
-                      ))}
-                      {pedidosEntregados.length === 0 && (
-                        <tr>
-                          <td colSpan="8">
-                            <div className="table-empty-state">
-                              <div className="table-empty-icon">
-                                <i className="fa-solid fa-times-circle" style={{ fontSize: '3.5rem', color: '#9ca3af' }}></i>
-                              </div>
-                              <div>
-                                <h5 className="table-empty-title">
-                                  No hay pedidos entregados disponibles
-                                </h5>
-                                <p className="table-empty-text">
-                                  No se encontraron pedidos entregados en el sistema
-                                </p>
-                              </div>
+                          </div>
+                        </td>
+                        <td style={{ color: '#374151', fontWeight: 600 }}>
+                          {remision.responsable ? (
+                            (remision.responsable.firstName || remision.responsable.username)
+                              ? `${remision.responsable.firstName || ''} ${remision.responsable.surname || ''}`.trim()
+                              : (remision.responsable.username || String(remision.responsable))
+                          ) : (
+                            <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>Sistema</span>
+                          )}
+                        </td>
+
+                        <td style={{ fontWeight: '600', color: '#1f2937', fontSize: '14px' }}>
+                          {remision.cliente?.nombre || remision.cliente?.nombreCliente || remision.cliente?.nombreCompleto || ''}
+                        </td>
+                        <td style={{ color: '#6b7280' }}>
+                          {new Date(remision.fechaEntrega || remision.fechaRemision || remision.updatedAt || remision.createdAt).toLocaleDateString()}
+                        </td>
+                        <td style={{ color: '#6b7280' }}>
+                          {remision.cliente?.ciudad || remision.cliente?.direccion?.ciudad || ''}
+                        </td>
+                        <td style={{ fontWeight: '600', color: '#6366f1', fontSize: '14px' }}>
+                          ${(remision.total || 0).toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </td>
+
+                      </tr>
+                    ))}
+                    {pedidosEntregados.length === 0 && (
+                      <tr>
+                        <td colSpan="8">
+                          <div className="table-empty-state">
+                            <div className="table-empty-icon">
+                              <i className="fa-solid fa-times-circle" style={{ fontSize: '3.5rem', color: '#9ca3af' }}></i>
                             </div>
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+                            <div>
+                              <h5 className="table-empty-title">
+                                No hay pedidos entregados disponibles
+                              </h5>
+                              <p className="table-empty-text">
+                                No se encontraron pedidos entregados en el sistema
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
-            
+            </div>
+
 
             {/* Paginación */}
             {totalPages > 1 && (
@@ -524,6 +532,8 @@ export default function PedidosEntregados() {
               />
             )}
 
+            
+            
 
           </div>
         </div>

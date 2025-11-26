@@ -159,7 +159,7 @@ export default function RolesYPermisos() {
                   <thead>
                     <tr>
                       <th>
-                        <i className="fa-solid fa-hashtag icon-gap" style={{ color: '#6366f1' }}></i><span>#</span>
+                        <i className="fa-solid fa-hashtag icon-gap" style={{ color: '#6366f1' }}></i>
                       </th>
                       <th>
                         <i className="fa-solid fa-shield-alt icon-gap"></i><span>NOMBRE DE ROL</span>

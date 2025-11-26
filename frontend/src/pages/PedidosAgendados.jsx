@@ -817,6 +817,7 @@ export default function PedidosAgendados() {
                 >
                   <i className="fa-solid fa-plus"></i>{' '}<span>Agendar Pedido</span>
                 </button>
+                
               </div>
             </SharedListHeaderCard>
 
@@ -865,7 +866,7 @@ export default function PedidosAgendados() {
                   <thead>
                     <tr>
                       <th>
-                        <i className="fa-solid fa-hashtag icon-gap" style={{ color: '#6366f1' }}></i>{' '}<span>#</span>
+                        <i className="fa-solid fa-hashtag icon-gap" style={{ color: '#6366f1' }}></i>{' '}
                       </th>
                       <th>
                         <i className="fa-solid fa-file-invoice icon-gap" style={{ color: '#6366f1' }}></i>{' '}<span>IDENTIFICADOR DE PEDIDO</span>
