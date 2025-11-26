@@ -1,14 +1,16 @@
-version: '3.9'
 services:
   mongo:
-    image: mongo:6.0
+    build: ./db
+    image: cskcreations/pangea-mongo
     container_name: pangea-mongo
     restart: unless-stopped
     environment:
       MONGO_INITDB_DATABASE: pangea
+      MONGO_INITDB_ROOT_USERNAME: AdminPangea
+      MONGO_INITDB_ROOT_PASSWORD: "Pangea121"
     volumes:
       - mongo_data:/data/db
-      - ./db/init:/docker-entrypoint-initdb.d:ro
+      - mongo_init:/docker-entrypoint-initdb.d:ro
     ports:
       - "27017:27017"
 
@@ -21,26 +23,36 @@ services:
       - mongo
     environment:
       PORT: 5000
-      MONGO_URL: mongodb://mongo:27017/pangea
+      MONGO_URL: mongodb://AdminPangea:Pangea121@mongo:27017/pangea?authSource=admin
       CORS_ORIGINS: http://localhost,http://localhost:8080
       SENDGRID_API_KEY: ${SENDGRID_API_KEY:-}
       USE_GMAIL: ${USE_GMAIL:-false}
       GMAIL_USER: ${GMAIL_USER:-}
       GMAIL_PASS: ${GMAIL_PASS:-}
+    volumes:
+      - backend_data:/usr/src/app
     ports:
       - "5000:5000"
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        REACT_APP_API_URL: ${REACT_APP_API_URL:-http://backend:5000}
     image: cskcreations/pangea-frontend:latest
     container_name: pangea-frontend
     restart: unless-stopped
     depends_on:
       - backend
     environment:
-      REACT_APP_API_URL: http://backend:5000/api
+      REACT_APP_API_URL: http://backend:5000
+    volumes:
+      - frontend_data:/usr/share/nginx/html
     ports:
       - "3000:80"
 
 volumes:
   mongo_data:
+  mongo_init:
+  backend_data:
+  frontend_data:
