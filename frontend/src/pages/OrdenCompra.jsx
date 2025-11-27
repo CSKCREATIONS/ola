@@ -1139,46 +1139,26 @@ export default function OrdenCompra() {
               subtitle="Gestiona y supervisa las órdenes de compra a proveedores"
               iconClass="fa-solid fa-file-invoice-dollar"
             >
-              <PrimaryButton onClick={abrirModalAgregar} title="Agregar Orden de Compra">
+              <PrimaryButton onClick={abrirModalAgregar}>
                 <i className="fa-solid fa-plus" aria-hidden={true}></i>
-                <span>Agregar Orden de Compra</span>
+                <span>Nueva Orden</span>
               </PrimaryButton>
             </SharedListHeaderCard>
 
             <AdvancedStats cards={statsCards} />
 
             {/* Tabla de órdenes mejorada */}
-            <div style={{
-              background: 'white',
-              borderRadius: '16px',
-              overflow: 'hidden',
-              boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-              border: '1px solid #e5e7eb'
-            }}>
-              <div style={{
-                background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)',
-                padding: '20px 25px',
-                borderBottom: '1px solid #e5e7eb',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={{
-                    background: 'linear-gradient(135deg, #667eea, #764ba2)',
-                    borderRadius: '12px',
-                    padding: '10px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
-                    <i className="fa-solid fa-table" style={{ color: 'white', fontSize: '16px' }}></i>
+            <div className="table-container">
+              <div className="table-header">
+                <div className="table-header-content">
+                  <div className="table-header-icon">
+                    <i className="fa-solid fa-table"></i>
                   </div>
                   <div>
-                    <h4 style={{ margin: '0 0 4px 0', color: '#1f2937', fontSize: '1.3rem', fontWeight: '600' }}>
+                    <h4 className="table-title">
                       Lista de Órdenes de Compra
                     </h4>
-                    <p style={{ margin: 0, color: '#6b7280', fontSize: '14px' }}>
+                    <p className="table-subtitle">
                       Mostrando {ordenesPendientes.length} órdenes pendientes
                     </p>
                   </div>
@@ -1186,261 +1166,95 @@ export default function OrdenCompra() {
               </div>
 
               <div style={{ overflow: 'auto' }}>
-                <table style={{
-                  width: '100%',
-                  borderCollapse: 'collapse',
-                  fontSize: '14px'
-                }}>
+                <table className="data-table">
                   <thead>
-                    <tr style={{
-                      background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)',
-                      borderBottom: '2px solid #e5e7eb'
-                    }}>
-                      <th style={{
-                        padding: '16px 12px',
-                        textAlign: 'left',
-                        fontWeight: '600',
-                        color: 'white',
-                        fontSize: '13px',
-                        letterSpacing: '0.5px'
-                      }}>#</th>
-                      <th style={{
-                        padding: '16px 12px',
-                        textAlign: 'left',
-                        fontWeight: '600',
-                        color: 'white',
-                        fontSize: '13px',
-                        letterSpacing: '0.5px'
-                      }}>IDENTIFICADOR</th>
-                      <th style={{
-                        padding: '16px 12px',
-                        textAlign: 'left',
-                        fontWeight: '600',
-                        color: 'white',
-                        fontSize: '13px',
-                        letterSpacing: '0.5px'
-                      }}>PROVEEDOR</th>
-                      <th style={{
-                        padding: '16px 12px',
-                        textAlign: 'left',
-                        fontWeight: '600',
-                        color: 'white',
-                        fontSize: '13px',
-                        letterSpacing: '0.5px'
-                      }}>TOTAL</th>
-                      <th style={{
-                        padding: '16px 12px',
-                        textAlign: 'left',
-                        fontWeight: '600',
-                        color: 'white',
-                        fontSize: '13px',
-                        letterSpacing: '0.5px'
-                      }}>FECHA</th>
-                      <th style={{
-                        padding: '16px 12px',
-                        textAlign: 'left',
-                        fontWeight: '600',
-                        color: '#374151',
-                        fontSize: '13px',
-                        letterSpacing: '0.5px'
-                      }}>
-
-                        SOLICITADO POR
+                    <tr>
+                      <th>
+                        <i className="fa-solid fa-hashtag icon-gap"></i>
                       </th>
-                      <th style={{
-                        padding: '16px 12px',
-                        textAlign: 'center',
-                        fontWeight: '600',
-                        color: 'white',
-                        fontSize: '13px',
-                        letterSpacing: '0.5px'
-                      }}>
-                        ESTADO
+                      <th>
+                        <i className="fa-solid fa-hashtag icon-gap"></i><span>IDENTIFICADOR</span>
                       </th>
-                      <th style={{
-                        padding: '16px 12px',
-                        textAlign: 'center',
-                        fontWeight: '600',
-                        color: 'white',
-                        fontSize: '13px',
-                        letterSpacing: '0.5px'
-                      }}>
-                        ENVIADO
+                      <th>
+                        <i className="fa-solid fa-truck icon-gap"></i><span>PROVEEDOR</span>
                       </th>
-                      <th style={{
-                        padding: '16px 12px',
-                        textAlign: 'center',
-                        fontWeight: '600',
-                        color: 'white',
-                        fontSize: '13px',
-                        letterSpacing: '0.5px'
-                      }}>
-
-                        ACCIONES
+                      <th>
+                        <i className="fa-solid fa-dollar-sign icon-gap"></i><span>TOTAL</span>
+                      </th>
+                      <th>
+                        <i className="fa-solid fa-calendar icon-gap"></i><span>FECHA</span>
+                      </th>
+                      <th>
+                        <i className="fa-solid fa-user icon-gap"></i><span>SOLICITADO POR</span>
+                      </th>
+                      <th style={{ textAlign: 'center' }}>
+                        <i className="fa-solid fa-toggle-on icon-gap"></i><span>ESTADO</span>
+                      </th>
+                      <th style={{ textAlign: 'center' }}>
+                        <i className="fa-solid fa-paper-plane icon-gap"></i><span>ENVIADO</span>
+                      </th>
+                      <th style={{ textAlign: 'center' }}>
+                        <i className="fa-solid fa-cogs icon-gap"></i><span>ACCIONES</span>
                       </th>
                     </tr>
                   </thead>
                   <tbody>
                     {currentOrdenes.map((orden, index) => (
-                      <tr key={orden._id}
-                        style={{
-                          borderBottom: '1px solid #f3f4f6',
-                          transition: 'all 0.2s ease'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = '#f8fafc';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = 'transparent';
-                        }}
-                      >
-                        <td style={{ padding: '16px 12px', fontWeight: '600', color: '#6366f1' }}>
+                      <tr key={orden._id}>
+                        <td style={{ fontWeight: '600', color: '#6366f1' }}>
                           {indexOfFirstItem + index + 1}
                         </td>
-                        <td style={{ padding: '16px 12px' }}>
+                        <td>
                           <button
                             onClick={() => verDetallesOrden(orden)}
                             className="orden-numero-link"
-                            style={{
-                              background: 'none',
-                              border: 'none',
-                              color: '#6366f1',
-                              textDecoration: 'none',
-                              padding: '4px 8px',
-                              borderRadius: '6px',
-                              transition: 'all 0.2s ease',
-                              fontWeight: '600',
-                              display: 'inline-block',
-                              cursor: 'pointer'
-                            }}
-                            onMouseEnter={(e) => {
-                              e.target.style.background = 'rgba(99, 102, 241, 0.1)';
-                              e.target.style.textDecoration = 'underline';
-                            }}
-                            onMouseLeave={(e) => {
-                              e.target.style.background = 'none';
-                              e.target.style.textDecoration = 'none';
-                            }}
                           >
                             {orden.numeroOrden}
                           </button>
                         </td>
-                        <td style={{ padding: '16px 12px' }}>
-                          <span style={{
-                            background: '#fef3c7',
-                            color: '#d97706',
-                            padding: '6px 12px',
-                            borderRadius: '20px',
-                            fontSize: '12px',
-                            fontWeight: '600',
-                            display: 'inline-block'
-                          }}>
+                        <td>
+                          <span className="role-badge">
                             {orden.proveedor || 'No especificado'}
                           </span>
                         </td>
-                        <td style={{ padding: '16px 12px', fontWeight: '600', color: '#1f2937' }}>
+                        <td style={{ fontWeight: '600', color: '#1f2937' }}>
                           ${orden.total?.toLocaleString()}
                         </td>
-                        <td style={{ padding: '16px 12px', color: '#4b5563', fontWeight: '500' }}>
+                        <td>
                           {new Date(orden.fechaOrden).toLocaleDateString()}
                         </td>
-                        <td style={{ padding: '16px 12px', color: '#4b5563', fontWeight: '500' }}>
+                        <td>
                           {orden.solicitadoPor || 'No especificado'}
                         </td>
-                        <td style={{ padding: '16px 12px', textAlign: 'center' }}>
+                        <td style={{ textAlign: 'center' }}>
                           {orden.estado === 'Pendiente' ? (
                             <button
                               onClick={() => abrirModalConfirmacion(orden)}
-                              style={{
-                                background: 'linear-gradient(135deg, #fef3c7, #fde68a)',
-                                color: '#d97706',
-                                border: 'none',
-                                borderRadius: '8px',
-                                padding: '6px 12px',
-                                cursor: 'pointer',
-                                fontSize: '12px',
-                                fontWeight: '600',
-                                transition: 'all 0.2s ease',
-                                boxShadow: '0 2px 4px rgba(217, 119, 6, 0.2)'
-                              }}
-                              onMouseEnter={(e) => {
-                                e.target.style.transform = 'translateY(-2px)';
-                                e.target.style.boxShadow = '0 4px 8px rgba(217, 119, 6, 0.3)';
-                              }}
-                              onMouseLeave={(e) => {
-                                e.target.style.transform = 'translateY(0)';
-                                e.target.style.boxShadow = '0 2px 4px rgba(217, 119, 6, 0.2)';
-                              }}
+                              className="action-btn edit"
                             >
                               Pendiente
                             </button>
                           ) : (
-                            <span style={{
-                              background: orden.estado === 'Completada' ? '#dcfce7' : '#fee2e2',
-                              color: orden.estado === 'Completada' ? '#16a34a' : '#dc2626',
-                              padding: '6px 12px',
-                              borderRadius: '20px',
-                              fontSize: '12px',
-                              fontWeight: '600',
-                              display: 'inline-block'
-                            }}>
+                            <span className={`status-badge ${orden.estado === 'Completada' ? 'active' : 'inactive'}`}>
                               {orden.estado}
                             </span>
                           )}
                         </td>
-                        <td style={{ padding: '16px 12px', textAlign: 'center' }}>
+                        <td style={{ textAlign: 'center' }}>
                           <button
                             onClick={() => toggleEnviado(orden._id, orden.enviado)}
-                            style={{
-                              background: orden.enviado ? 'linear-gradient(135deg, #dcfce7, #bbf7d0)' : 'linear-gradient(135deg, #fee2e2, #fecaca)',
-                              color: orden.enviado ? '#16a34a' : '#dc2626',
-                              border: 'none',
-                              borderRadius: '8px',
-                              padding: '6px 12px',
-                              cursor: 'pointer',
-                              fontSize: '12px',
-                              fontWeight: '600',
-                              transition: 'all 0.2s ease',
-                              boxShadow: orden.enviado ? '0 2px 4px rgba(22, 163, 74, 0.2)' : '0 2px 4px rgba(220, 38, 38, 0.2)',
-                              minWidth: '50px'
-                            }}
-                            onMouseEnter={(e) => {
-                              e.target.style.transform = 'translateY(-2px)';
-                              e.target.style.boxShadow = orden.enviado ? '0 4px 8px rgba(22, 163, 74, 0.3)' : '0 4px 8px rgba(220, 38, 38, 0.3)';
-                            }}
-                            onMouseLeave={(e) => {
-                              e.target.style.transform = 'translateY(0)';
-                              e.target.style.boxShadow = orden.enviado ? '0 2px 4px rgba(22, 163, 74, 0.2)' : '0 2px 4px rgba(220, 38, 38, 0.2)';
-                            }}
+                            className={`action-btn ${orden.enviado ? 'edit' : 'delete'}`}
+                            style={{ minWidth: '50px' }}
                           >
                             {orden.enviado ? 'Sí' : 'No'}
                           </button>
                         </td>
-                        <td style={{ padding: '16px 12px', textAlign: 'center' }}>
-                          <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
+                        <td>
+                          <div className="action-buttons">
                             <button
                               onClick={() => abrirModalEditar(orden)}
                               title="Editar orden"
-                              style={{
-                                background: 'linear-gradient(135deg, #dbeafe, #bfdbfe)',
-                                color: '#1e40af',
-                                border: 'none',
-                                borderRadius: '8px',
-                                padding: '8px 10px',
-                                cursor: 'pointer',
-                                fontSize: '12px',
-                                fontWeight: '600',
-                                transition: 'all 0.2s ease',
-                                boxShadow: '0 2px 4px rgba(30, 64, 175, 0.2)'
-                              }}
-                              onMouseEnter={(e) => {
-                                e.target.style.transform = 'translateY(-2px)';
-                                e.target.style.boxShadow = '0 4px 8px rgba(30, 64, 175, 0.3)';
-                              }}
-                              onMouseLeave={(e) => {
-                                e.target.style.transform = 'translateY(0)';
-                                e.target.style.boxShadow = '0 2px 4px rgba(30, 64, 175, 0.2)';
-                              }}
+                              className="action-btn edit"
                             >
                               <i className="fa-solid fa-pen-to-square"></i>
                             </button>
@@ -1456,26 +1270,16 @@ export default function OrdenCompra() {
 
                     {ordenesPendientes.length === 0 && (
                       <tr>
-                        <td colSpan="9" style={{ textAlign: 'center', padding: '80px 20px' }}>
-                          <div style={{ display: 'flex', gap: '20px', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
-                            <div style={{ fontSize: '3.5rem', color: '#9ca3af' }}>
+                        <td colSpan="9">
+                          <div className="table-empty-state">
+                            <div className="table-empty-icon">
                               <i className="fa-solid fa-file-invoice-dollar"></i>
                             </div>
-                            <div style={{ textAlign: 'center' }}>
-                              <h5 style={{
-                                color: '#6b7280',
-                                margin: '0 0 12px 0',
-                                fontSize: '1.2rem',
-                                fontWeight: '600'
-                              }}>
+                            <div>
+                              <h5 className="table-empty-title">
                                 No hay órdenes pendientes
                               </h5>
-                              <p style={{
-                                color: '#9ca3af',
-                                margin: 0,
-                                fontSize: '14px',
-                                lineHeight: '1.5'
-                              }}>
+                              <p className="table-empty-text">
                                 No se encontraron órdenes de compra pendientes
                               </p>
                             </div>
@@ -1489,34 +1293,12 @@ export default function OrdenCompra() {
 
               {/* Paginación */}
               {totalPages > 1 && (
-                <div style={{ padding: '12px 20px', display: 'flex', justifyContent: 'flex-end', gap: '8px', alignItems: 'center' }}>
-                  {Array.from({ length: totalPages }).map((_, i) => (
+                <div className="table-pagination">
+                  {Array.from({ length: totalPages }, (_, i) => (
                     <button
                       key={i + 1}
                       onClick={() => setCurrentPage(i + 1)}
-                      style={{
-                        padding: '8px 16px',
-                        border: currentPage === i + 1 ? '2px solid #6366f1' : '2px solid #e5e7eb',
-                        borderRadius: '8px',
-                        background: currentPage === i + 1 ? '#6366f1' : 'white',
-                        color: currentPage === i + 1 ? 'white' : '#4b5563',
-                        fontSize: '14px',
-                        fontWeight: '600',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease'
-                      }}
-                      onMouseEnter={(e) => {
-                        if (currentPage !== i + 1) {
-                          e.currentTarget.style.borderColor = '#6366f1';
-                          e.currentTarget.style.color = '#6366f1';
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (currentPage !== i + 1) {
-                          e.currentTarget.style.borderColor = '#e5e7eb';
-                          e.currentTarget.style.color = '#4b5563';
-                        }
-                      }}
+                      className={`pagination-btn ${currentPage === i + 1 ? 'active' : ''}`}
                     >
                       {i + 1}
                     </button>

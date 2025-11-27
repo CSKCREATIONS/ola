@@ -77,6 +77,10 @@ export default function RegistrarCotizacion() {
   const [clientes, setClientes] = useState([]);
   const [filteredClientes, setFilteredClientes] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
+  // Errores inline para formulario
+  const [errors, setErrors] = useState({});
+  // Errores por producto (array paralelo a `productosSeleccionados`)
+  const [productErrors, setProductErrors] = useState([]);
 
 
   useEffect(() => {
@@ -156,16 +160,20 @@ export default function RegistrarCotizacion() {
   const agregarProducto = () => {
     // create a lightweight stable id for React keys so re-orders/removals don't rely on index
     const uid = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`;
-    setProductosSeleccionados([...productosSeleccionados, {
+    setProductosSeleccionados(prev => ([...prev, {
       uid,
       producto: '', descripcion: '', cantidad: '', valorUnitario: '', descuento: '', valorTotal: ''
-    }]);
+    }]));
+    setProductErrors(prev => ([...prev, {}]));
   };
 
   const eliminarProducto = (index) => {
     const nuevosProductos = [...productosSeleccionados];
     nuevosProductos.splice(index, 1);
     setProductosSeleccionados(nuevosProductos);
+    const nuevosErrores = [...productErrors];
+    nuevosErrores.splice(index, 1);
+    setProductErrors(nuevosErrores);
   };
 
   const eliminarTodosLosProductos = () => {
@@ -182,6 +190,8 @@ export default function RegistrarCotizacion() {
     }).then((result) => {
       if (result.isConfirmed) {
         setProductosSeleccionados([]);
+        setProductErrors([]);
+        setProductErrors([]);
       }
     });
   };
@@ -201,6 +211,13 @@ export default function RegistrarCotizacion() {
       valorTotal: ''
     };
     setProductosSeleccionados(nuevosProductos);
+    // clear producto error for this row when a selection is made
+    setProductErrors(prev => {
+      const copy = [...prev];
+      copy[index] = { ...(copy[index] || {}) };
+      delete copy[index].producto;
+      return copy;
+    });
   };
 
   const handleChange = (index, e) => {
@@ -217,6 +234,14 @@ export default function RegistrarCotizacion() {
     nuevosProductos[index].valorTotal = subtotal.toFixed(2);
 
     setProductosSeleccionados(nuevosProductos);
+    // clear field-specific error as user types
+    const field = name;
+    setProductErrors(prev => {
+      const copy = [...prev];
+      copy[index] = { ...(copy[index] || {}) };
+      delete copy[index][field];
+      return copy;
+    });
   };
 
   const handleCancelado = () => {
@@ -261,47 +286,51 @@ export default function RegistrarCotizacion() {
 
   // Helpers to reduce cognitive complexity of guardar flow
   const validarClienteYProductos = () => {
-    const inputs = document.querySelectorAll('.cuadroTexto');
-    const nombre = inputs[0]?.value.trim();
-    const ciudad = inputs[1]?.value.trim();
-    const direccion = inputs[2]?.value.trim();
-    const telefono = inputs[3]?.value.trim();
-    const correo = inputs[4]?.value.trim();
-    const fecha = inputs[5]?.value; // YYYY-MM-DD from input[type=date]
+    const newErrors = {};
+    const newProductErrors = productosSeleccionados.map(() => ({}));
 
-    if (!nombre || !ciudad || !direccion || !telefono || !correo || !fecha) {
-      Swal.fire('Error', 'Todos los campos del cliente y la fecha son obligatorios.', 'warning');
-      return null;
-    }
+    const nombre = clienteNombre?.trim();
+    const ciudad = clienteCiudad?.trim();
+    const direccion = clienteDireccion?.trim();
+    const telefono = clienteTelefono?.trim();
+    const correo = clienteCorreo?.trim();
+    const fechaEl = document.getElementById('fecha');
+    const fecha = fechaEl ? fechaEl.value : '';
 
-    // Use deterministic validator to avoid regex backtracking
-    if (!isValidEmail(correo)) {
-      Swal.fire('Error', 'El correo del cliente debe tener un formato válido.', 'warning');
-      return null;
-    }
+    if (!nombre) newErrors.cliente = 'El nombre o razón social es requerido.';
+    if (!ciudad) newErrors.ciudad = 'La ciudad es requerida.';
+    if (!direccion) newErrors.direccion = 'La dirección es requerida.';
+    if (!telefono) newErrors.telefono = 'El teléfono es requerido.';
+    if (!correo) newErrors.correo = 'El correo es requerido.';
+    if (!fecha) newErrors.fecha = 'La fecha es requerida.';
 
-    if (productosSeleccionados.length === 0) {
-      Swal.fire('Error', 'Debes agregar al menos un producto a la cotización.', 'warning');
-      return null;
-    }
+    if (correo && !isValidEmail(correo)) newErrors.correo = 'El correo tiene un formato inválido.';
 
-    // Validación client-side: fecha no puede ser anterior a hoy (comparación por YYYY-MM-DD)
+    if (productosSeleccionados.length === 0) newErrors.productos = 'Debes agregar al menos un producto a la cotización.';
+
+    // fecha no puede ser anterior a hoy
     try {
       const hoy = new Date();
       const hoyStr = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
-      if (fecha < hoyStr) {
-        Swal.fire('Error', 'La fecha de la cotización no puede ser anterior a la fecha actual.', 'warning');
-        return null;
-      }
+      if (fecha && fecha < hoyStr) newErrors.fecha = 'La fecha no puede ser anterior a la fecha actual.';
     } catch (err) {
       console.warn('Error validando fecha localmente:', err);
     }
 
-    for (const prod of productosSeleccionados) {
-      if (!prod.producto || !prod.cantidad || !prod.valorUnitario) {
-        Swal.fire('Error', 'Todos los productos deben tener cantidad y valor unitario.', 'warning');
-        return null;
-      }
+    // productos: validar por fila
+    productosSeleccionados.forEach((p, i) => {
+      if (!p.producto) newProductErrors[i].producto = 'Seleccione un producto.';
+      if (!p.cantidad || Number.parseFloat(p.cantidad) <= 0) newProductErrors[i].cantidad = 'Ingrese una cantidad válida.';
+      if (!p.valorUnitario || Number.parseFloat(p.valorUnitario) <= 0) newProductErrors[i].valorUnitario = 'Valor unitario inválido.';
+      if (p.stock !== undefined && p.cantidad && Number(p.cantidad) > Number(p.stock)) newProductErrors[i].cantidad = 'Cantidad no disponible en stock.';
+    });
+
+    const hasProductRowErrors = newProductErrors.some(obj => Object.keys(obj).length > 0);
+
+    if (Object.keys(newErrors).length > 0 || hasProductRowErrors) {
+      setErrors(newErrors);
+      setProductErrors(newProductErrors);
+      return null;
     }
 
     return { nombre, ciudad, direccion, telefono, correo, fecha };
@@ -376,6 +405,7 @@ export default function RegistrarCotizacion() {
       // (and potential lint rules that require for...of).
       for (const input of allInputs) { if (input) input.value = ''; }
       setProductosSeleccionados([]);
+      setProductErrors([]);
       if (descripcionRef.current) descripcionRef.current.setContent('');
       if (condicionesPagoRef.current) condicionesPagoRef.current.setContent('');
     } catch (err) {
@@ -406,6 +436,9 @@ export default function RegistrarCotizacion() {
       navigate('/ListaDeCotizaciones', { state: { abrirFormato: true, cotizacion: nuevaCot } });
 
       limpiarFormulario();
+      // limpiar errores inline
+      setErrors({});
+      setProductErrors([]);
     } catch (error) {
       console.error('Error en la solicitud de cotización:', error);
       Swal.fire('Error', 'Error de red al guardar cotización.', 'error');
@@ -450,6 +483,7 @@ export default function RegistrarCotizacion() {
                       onChange={(e) => {
                         const q = e.target.value;
                         setClienteNombre(q);
+                        setErrors(prev => { const copy = { ...(prev || {}) }; delete copy.cliente; return copy; });
                         if (q && q.trim().length >= 1) {
                           const ql = q.trim().toLowerCase();
                           const matches = clientes
@@ -471,6 +505,9 @@ export default function RegistrarCotizacion() {
                         setTimeout(() => setShowDropdown(false), 150);
                       }}
                     />
+                    {errors.cliente && (
+                      <div style={{ color: '#ef4444', marginTop: '0.25rem', fontSize: '0.9rem' }}>{errors.cliente}</div>
+                    )}
                     {showDropdown && filteredClientes.length > 0 && (
                       <div className="dropdown-clientes-compacto">
                         {filteredClientes.map((c) => (
@@ -488,6 +525,8 @@ export default function RegistrarCotizacion() {
                               setClienteDireccion(direccion);
                               setClienteTelefono(telefono);
                               setClienteCorreo(correo);
+                              // clear inline errors when a cliente is selected from dropdown
+                              setErrors({});
                               const ciudadEl = document.getElementById('ciudad');
                               if (ciudadEl) ciudadEl.value = ciudad;
                               const direccionEl = document.getElementById('direccion');
@@ -528,8 +567,11 @@ export default function RegistrarCotizacion() {
                     className="cuadroTexto input-compacto"
                     placeholder="Ciudad de residencia"
                     value={clienteCiudad}
-                    onChange={(e) => setClienteCiudad(e.target.value)}
+                      onChange={(e) => { setClienteCiudad(e.target.value); setErrors(prev => { const copy = { ...(prev || {}) }; delete copy.ciudad; return copy; }); }}
                   />
+                    {errors.ciudad && (
+                      <div style={{ color: '#ef4444', marginTop: '0.25rem', fontSize: '0.9rem' }}>{errors.ciudad}</div>
+                    )}
                 </div>
 
                 {/* Campo Dirección */}
@@ -544,8 +586,11 @@ export default function RegistrarCotizacion() {
                     className="cuadroTexto input-compacto"
                     placeholder="Dirección completa"
                     value={clienteDireccion}
-                    onChange={(e) => setClienteDireccion(e.target.value)}
+                      onChange={(e) => { setClienteDireccion(e.target.value); setErrors(prev => { const copy = { ...(prev || {}) }; delete copy.direccion; return copy; }); }}
                   />
+                    {errors.direccion && (
+                      <div style={{ color: '#ef4444', marginTop: '0.25rem', fontSize: '0.9rem' }}>{errors.direccion}</div>
+                    )}
                 </div>
 
                 {/* Campo Teléfono */}
@@ -566,6 +611,7 @@ export default function RegistrarCotizacion() {
                       const valor = e.target.value;
                       const valorFiltrado = valor.replaceAll(/[^0-9+\-() ]/g, '');
                       setClienteTelefono(valorFiltrado);
+                      setErrors(prev => { const copy = { ...(prev || {}) }; delete copy.telefono; return copy; });
                     }}
                     onKeyDown={(e) => {
                       // Prevenir entrada de letras en tiempo real usando onKeyDown (reemplazo de onKeyPress deprecado)
@@ -580,6 +626,9 @@ export default function RegistrarCotizacion() {
                       }
                     }}
                   />
+                  {errors.telefono && (
+                    <div style={{ color: '#ef4444', marginTop: '0.25rem', fontSize: '0.9rem' }}>{errors.telefono}</div>
+                  )}
                 </div>
 
                 {/* Campo Email */}
@@ -595,8 +644,11 @@ export default function RegistrarCotizacion() {
                     className="cuadroTexto input-compacto"
                     placeholder="cliente@ejemplo.com"
                     value={clienteCorreo}
-                    onChange={(e) => setClienteCorreo(e.target.value)}
+                      onChange={(e) => { setClienteCorreo(e.target.value); setErrors(prev => { const copy = { ...(prev || {}) }; delete copy.correo; return copy; }); }}
                   />
+                    {errors.correo && (
+                      <div style={{ color: '#ef4444', marginTop: '0.25rem', fontSize: '0.9rem' }}>{errors.correo}</div>
+                    )}
                 </div>
 
                 {/* Campo Responsable */}
@@ -629,7 +681,11 @@ export default function RegistrarCotizacion() {
                     id='fecha'
                     type="date"
                     className="cuadroTexto input-compacto"
+                    onChange={() => setErrors(prev => { const copy = { ...(prev || {}) }; delete copy.fecha; return copy; })}
                   />
+                  {errors.fecha && (
+                    <div style={{ color: '#ef4444', marginTop: '0.25rem', fontSize: '0.9rem' }}>{errors.fecha}</div>
+                  )}
                 </div>
               </div>
             </div>
@@ -705,6 +761,9 @@ export default function RegistrarCotizacion() {
               </div>
 
               <div className="contenedor-tabla-productos">
+                {errors.productos && (
+                  <div style={{ color: '#ef4444', marginBottom: '0.5rem', fontSize: '0.95rem' }}>{errors.productos}</div>
+                )}
                 <div className="tabla-scroll-compacto">
                   <table className="tabla-productos-compacta">
                     <thead>
@@ -728,6 +787,7 @@ export default function RegistrarCotizacion() {
                               className="cuadroTexto"
                               value={prod.producto}
                               onChange={(e) => handleProductoChange(index, e.target.value)}
+                              style={{ borderColor: (productErrors[index] && productErrors[index].producto) ? '#ef4444' : undefined }}
                             >
                               <option value="">Seleccione un producto</option>
                               {productos.filter(p => p.activo !== false && p.activo !== 'false').map(p => (
@@ -736,6 +796,9 @@ export default function RegistrarCotizacion() {
                                 </option>
                               ))}
                             </select>
+                            {productErrors[index] && productErrors[index].producto && (
+                              <div style={{ color: '#ef4444', marginTop: '0.25rem', fontSize: '0.85rem' }}>{productErrors[index].producto}</div>
+                            )}
                           </td>
                           <td>
                             <input 
@@ -753,9 +816,13 @@ export default function RegistrarCotizacion() {
                               className='cuadroTexto input-cantidad-compacto' 
                               value={prod.cantidad} 
                               onChange={(e) => handleChange(index, e)}
+                              style={{ borderColor: (productErrors[index] && productErrors[index].cantidad) ? '#ef4444' : undefined }}
                             />
                             {prod.cantidad && prod.stock !== undefined && Number(prod.cantidad) > Number(prod.stock) && (
                               <span className="alerta-stock-compacto">cantidad no disponible</span>
+                            )}
+                            {productErrors[index] && productErrors[index].cantidad && (
+                              <div style={{ color: '#ef4444', marginTop: '0.25rem', fontSize: '0.85rem' }}>{productErrors[index].cantidad}</div>
                             )}
                           </td>
                           <td>
@@ -766,7 +833,11 @@ export default function RegistrarCotizacion() {
                               value={prod.valorUnitario} 
                               onChange={(e) => handleChange(index, e)} 
                               readOnly
+                              style={{ borderColor: (productErrors[index] && productErrors[index].valorUnitario) ? '#ef4444' : undefined }}
                             />
+                            {productErrors[index] && productErrors[index].valorUnitario && (
+                              <div style={{ color: '#ef4444', marginTop: '0.25rem', fontSize: '0.85rem' }}>{productErrors[index].valorUnitario}</div>
+                            )}
                           </td>
                           <td>
                             <input 

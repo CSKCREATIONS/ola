@@ -246,7 +246,7 @@ export default function PedidosCancelados() {
                         <i className="fa-solid fa-hashtag icon-gap" style={{ color: '#6366f1' }}></i><span></span>
                       </th>
                       <th>
-                        <i className="fa-solid fa-file-invoice icon-gap" style={{ color: '#6366f1' }}></i><span>IDENTIFICADOR DE PEDIDO</span>
+                        <i className="fa-solid fa-file-invoice icon-gap" style={{ color: '#6366f1' }}></i><span>No. PEDIDO</span>
                       </th>
                       <th>
                         <i className="fa-solid fa-user-pen icon-gap" style={{ color: '#6366f1' }}></i><span>RESPONSABLE</span>

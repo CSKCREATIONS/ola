@@ -177,7 +177,7 @@ const PrintButton = React.memo(function PrintButton({ numeroRemision, getPrintCo
         const scale = Math.max(0.75, A4_HEIGHT_PX / h);
         clone.style.transform = `scale(${scale})`;
         clone.style.transformOrigin = 'top left';
-        clone.style.width = `${(100/scale).toFixed(2)}%`;
+        clone.style.width = `${(100 / scale).toFixed(2)}%`;
       }
       setTimeout(doPrintAndCleanup, 40);
     });
@@ -450,7 +450,7 @@ export default function RemisionPreview({ datos, onClose }) {
                 <h3 style={{ borderBottom: '3px solid #059669', paddingBottom: '0.5rem', color: '#059669', fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '1rem' }}>Entregar a:</h3>
                 <div style={{ lineHeight: '1.8' }}>
                   <p><strong>Cliente:</strong> {clienteResolved?.nombre || datosConDefaults.cliente?.nombre || 'Cliente no especificado'}</p>
-                  <p><strong>Dirección:</strong> {clienteResolved?.direccion || datosConDefaults.cliente?.direccion } {clienteResolved?.ciudad || datosConDefaults.cliente?.ciudad || 'Ciudad no especificada'}</p>
+                  <p><strong>Dirección:</strong> {clienteResolved?.direccion || datosConDefaults.cliente?.direccion} {clienteResolved?.ciudad || datosConDefaults.cliente?.ciudad || 'Ciudad no especificada'}</p>
                   <p><strong>Email:</strong> {clienteResolved?.correo || datosConDefaults.cliente?.correo || 'No especificado'}</p>
                   <p><strong>Teléfono:</strong> {clienteResolved?.telefono || datosConDefaults.cliente?.telefono || 'No especificado'}</p>
                 </div>
@@ -467,30 +467,39 @@ export default function RemisionPreview({ datos, onClose }) {
               </div>
             </div>
 
-            {(datos?.observacion) && (
+            {datosConDefaults.descripcion && (
               <div style={{ marginBottom: '2rem' }}>
-                <h3 style={{ borderBottom: '3px solid #059669', paddingBottom: '0.5rem', color: '#059669', fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '1rem' }}>Observaciones</h3>
-                <div style={{ background: '#ecfdf5', padding: '1rem', borderRadius: '8px', borderLeft: '4px solid #059669', lineHeight: '1.6' }}>
-                  {datos.observacion}
+                <h3 style={{ borderBottom: '3px solid #10b981', paddingBottom: '0.5rem', color: '#10b981', fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '1rem' }}>Descripción</h3>
+                <div style={{ background: '#eff6ff', padding: '1rem', borderRadius: '8px', borderLeft: '4px solid #10b981', lineHeight: '1.6' }}>
+                  {datosConDefaults.descripcion}
                 </div>
               </div>
             )}
 
+
+
             <ProductsTable productos={datosConDefaults.productos} total={totalCalculado} />
 
+
+            {datosConDefaults.condicionesPago && (
+              <div style={{ marginBottom: '2rem' }}>
+              <h3 style={{ borderBottom: '3px solid #10b981', paddingBottom: '0.5rem', color: '#10b981', fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '1rem' }}>Condiciones de Pago</h3>
+              <div style={{ background: '#eff6ff', padding: '1rem', borderRadius: '8px', borderLeft: '4px solid #10b981', lineHeight: '1.6' }}>
+                {datosConDefaults.condicionesPago}
+              </div>
+            </div>
+            )}
+
             {(datosConDefaults.observaciones || datosConDefaults.fechaEntrega) && (
-              <div style={{ marginTop: '2rem', padding: '1.5rem', background: 'linear-gradient(135deg, #f0fdf4, #ecfdf5)', borderRadius: '8px', border: '1px solid #10b981' }}>
-                <h4 style={{ color: '#059669', marginBottom: '1rem', fontSize: '1.1rem', fontWeight: 'bold' }}>Información Adicional</h4>
-                <div style={{ lineHeight: '1.6' }}>
-                  {datosConDefaults.observaciones && (
-                    <div>
-                      <strong>Observaciones:</strong>
-                      <div style={{ marginTop: '0.5rem', padding: '1rem', background: 'white', borderRadius: '6px', border: '1px solid #d1d5db', whiteSpace: 'pre-wrap' }}>
-                        {datosConDefaults.observaciones}
-                      </div>
+
+              <div style={{ lineHeight: '1.6' }}>
+                {datosConDefaults.observaciones && (
+                  <div>
+                    <div style={{ marginTop: '0.5rem', padding: '1rem', background: 'white', borderRadius: '6px', border: '1px solid #d1d5db', whiteSpace: 'pre-wrap' }}>
+                      {datosConDefaults.observaciones}
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             )}
 
