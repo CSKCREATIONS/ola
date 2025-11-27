@@ -715,6 +715,7 @@ export default function ListaDeClientes() {
                           borderBottom: '1px solid #f3f4f6',
                           transition: 'all 0.2s ease'
                         }}
+                        
                         onMouseEnter={(e) => {
                           e.currentTarget.style.backgroundColor = '#f8fafc';
                         }}
