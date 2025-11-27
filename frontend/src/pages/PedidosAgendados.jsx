@@ -258,6 +258,18 @@ export default function PedidosAgendados() {
   const [agendarCorreo, setAgendarCorreo] = useState('');
   const [agendarFechaAg, setAgendarFechaAg] = useState('');
   const [agendarFechaEnt, setAgendarFechaEnt] = useState('');
+  // Errores de validación inline
+  const [errors, setErrors] = useState({});
+  // Errores por producto (array paralelo a `agendarProductos`)
+  const [productErrors, setProductErrors] = useState([]);
+
+  // Limpiar errores al abrir/cerrar el modal para evitar mensajes residuales
+  useEffect(() => {
+    if (mostrarModalAgendar) {
+      setErrors({});
+      setProductErrors([]);
+    }
+  }, [mostrarModalAgendar]);
 
   // Editors (UI only)
   const descripcionRef = useRef(null);
@@ -273,13 +285,16 @@ export default function PedidosAgendados() {
       producto: '',
       nombre: '', descripcion: '', cantidad: '', valorUnitario: '', descuento: '', subtotal: ''
     }]));
+    setProductErrors(prev => ([...prev, {}]));
   };
   const eliminarProductoAgendar = (index) => {
     setAgendarProductos(prev => prev.filter((_, i) => i !== index));
+    setProductErrors(prev => prev.filter((_, i) => i !== index));
   };
   const limpiarProductosAgendados = () => {
     if (agendarProductos.length === 0) return;
     setAgendarProductos([]);
+    setProductErrors([]);
   };
   const handleProductoAgendarChange = (index, e) => {
     const { name, value } = e.target;
@@ -291,6 +306,13 @@ export default function PedidosAgendados() {
       const descNum = Number.parseFloat(next[index].descuento) || 0;
       const subtotal = cantidadNum * valorNum * (1 - descNum / 100);
       next[index].subtotal = subtotal ? subtotal.toFixed(2) : '';
+      // limpiar errores del campo cambiado
+      setProductErrors(prevErrors => {
+        const ne = [...(prevErrors || [])];
+        ne[index] = { ...(ne[index] || {}) };
+        if (ne[index] && ne[index][name]) delete ne[index][name];
+        return ne;
+      });
       return next;
     });
   };
@@ -324,6 +346,12 @@ export default function PedidosAgendados() {
         descuento: '',
         subtotal: ''
       };
+      return next;
+    });
+    // limpiar errores para ese producto
+    setProductErrors(prev => {
+      const next = [...(prev || [])];
+      next[index] = {};
       return next;
     });
   };
@@ -395,6 +423,7 @@ export default function PedidosAgendados() {
   const handleAgendarClienteChange = (e) => {
     const q = e.target.value;
     setAgendarCliente(q);
+    if (errors.cliente) setErrors(prev => ({ ...prev, cliente: undefined }));
     if (q && q.trim().length >= 1) {
       const ql = q.trim().toLowerCase();
       const matches = clientesAgendar
@@ -437,34 +466,36 @@ export default function PedidosAgendados() {
 
   const handleGuardarAgendar = async () => {
     try {
-      // Validaciones básicas (usar condición positiva para evitar negaciones inesperadas)
-      if (!agendarCliente || !agendarCorreo || !agendarTelefono) {
-        Swal.fire('Error', 'Nombre, correo y teléfono del cliente son obligatorios.', 'warning');
-        return;
+      // Validaciones inline: construir objetos de error
+      const newErrors = {};
+      const newProductErrors = [];
+
+      if (!agendarCliente || !agendarCliente.trim()) newErrors.cliente = 'Nombre o razón social es obligatorio.';
+      if (!agendarTelefono || !agendarTelefono.trim()) newErrors.telefono = 'Teléfono es obligatorio.';
+      if (!agendarCorreo || !agendarCorreo.trim()) newErrors.correo = 'Correo es obligatorio.';
+      else if (!isValidEmail(agendarCorreo)) newErrors.correo = 'Formato de correo inválido.';
+      if (!agendarFechaAg) newErrors.fechaAg = 'Fecha de agendamiento es obligatoria.';
+      if (!agendarFechaEnt) newErrors.fechaEnt = 'Fecha de entrega es obligatoria.';
+
+      if (!agendarProductos || agendarProductos.length === 0) {
+        newErrors.productos = 'Agrega al menos un producto al pedido.';
+      } else {
+        agendarProductos.forEach((p, i) => {
+          const pe = {};
+          if (!p.producto) pe.producto = 'Seleccione un producto.';
+          if (!p.cantidad || Number.parseFloat(p.cantidad) <= 0) pe.cantidad = 'Cantidad debe ser mayor a 0.';
+          if (!p.valorUnitario || Number.parseFloat(p.valorUnitario) <= 0) pe.valorUnitario = 'Valor unitario inválido.';
+          newProductErrors[i] = pe;
+        });
       }
 
-      // Validar fechas obligatorias
-      if (!agendarFechaAg || !agendarFechaEnt) {
-        Swal.fire('Error', 'Las fechas de agendamiento y entrega son obligatorias.', 'warning');
+      // Si hay errores, setearlos y no enviar
+      const hasFieldErrors = Object.keys(newErrors).length > 0 || newProductErrors.some(pe => pe && Object.keys(pe).length > 0);
+      if (hasFieldErrors) {
+        setErrors(newErrors);
+        setProductErrors(newProductErrors);
+        // intentar enfocar el primer campo con error
         return;
-      }
-
-      if (!isValidEmail(agendarCorreo)) {
-        Swal.fire('Error', 'El correo del cliente no tiene un formato válido.', 'warning');
-        return;
-      }
-
-      if (agendarProductos.length === 0) {
-        Swal.fire('Error', 'Agrega al menos un producto al pedido.', 'warning');
-        return;
-      }
-
-      // Validar productos mínimos
-      for (const p of agendarProductos) {
-        if (!p.producto || !p.cantidad || !p.valorUnitario) {
-          Swal.fire('Error', 'Cada producto debe tener seleccionado el artículo, la cantidad y el valor unitario.', 'warning');
-          return;
-        }
       }
 
       const clientePayload = {
@@ -516,6 +547,7 @@ export default function PedidosAgendados() {
   const handlePostCreate = async (nuevoPedido) => {
     setMostrarModalAgendar(false);
     setAgendarCliente(''); setAgendarCiudad(''); setAgendarDireccion(''); setAgendarTelefono(''); setAgendarCorreo(''); setAgendarFechaAg(''); setAgendarFechaEnt(''); setAgendarProductos([]);
+    setErrors({}); setProductErrors([]);
     if (descripcionRef.current) descripcionRef.current.setContent('');
     if (condicionesRef.current) condicionesRef.current.setContent('');
 
@@ -869,7 +901,7 @@ export default function PedidosAgendados() {
                         <i className="fa-solid fa-hashtag icon-gap" style={{ color: '#6366f1' }}></i>{' '}
                       </th>
                       <th>
-                        <i className="fa-solid fa-file-invoice icon-gap" style={{ color: '#6366f1' }}></i>{' '}<span>IDENTIFICADOR DE PEDIDO</span>
+                        <i className="fa-solid fa-file-invoice icon-gap" style={{ color: '#6366f1' }}></i>{' '}<span>No. PEDIDO</span>
                       </th>
                       <th>
                         <i className="fa-solid fa-calendar-plus icon-gap" style={{ color: '#6366f1' }}></i>{' '}<span>F. AGENDAMIENTO</span>
@@ -984,21 +1016,26 @@ export default function PedidosAgendados() {
                       <div className="modal-grid">
                         <div className="modal-grid-item">
                           <label htmlFor="agendar-cliente" className="modal-label">
-                            Nombre o Razón Social <span className="required">*</span>
+                            Nombre o Razón Social 
                           </label>
                           <div style={{ position: 'relative' }}>
                             <input
                               id="agendar-cliente"
                               type="text"
                               className="modal-input"
-                              placeholder="Ingrese el nombre completo o razón social"
+                              style={{ border: errors.cliente ? '2px solid #ef4444' : undefined }}
+                              placeholder="Nombre o razón social"
                               value={agendarCliente}
                               onChange={handleAgendarClienteChange}
                               onFocus={(e) => {
                                 if (filteredClientesAgendar.length > 0) setShowDropdownAgendar(true);
                               }}
                               onBlur={() => setTimeout(() => setShowDropdownAgendar(false), 150)}
+                              required
                             />
+                            {errors.cliente && (
+                              <div style={{ color: '#ef4444', marginTop: 6, fontSize: '0.9rem' }}>{errors.cliente}</div>
+                            )}
                             {showDropdownAgendar && filteredClientesAgendar.length > 0 && (
                               <div className="modal-dropdown">
                                 {filteredClientesAgendar.map((c) => (
@@ -1034,6 +1071,7 @@ export default function PedidosAgendados() {
                             placeholder="Ciudad de residencia"
                             value={agendarCiudad}
                             onChange={(e) => setAgendarCiudad(e.target.value)}
+                            required
                           />
                         </div>
 
@@ -1046,12 +1084,13 @@ export default function PedidosAgendados() {
                             placeholder="Dirección completa"
                             value={agendarDireccion}
                             onChange={(e) => setAgendarDireccion(e.target.value)}
+                            required
                           />
                         </div>
 
                         <div className="modal-grid-item">
                           <label htmlFor="agendar-telefono" className="modal-label">
-                            Teléfono <span className="required">*</span>
+                            Teléfono 
                           </label>
                           <input
                             id="agendar-telefono"
@@ -1087,22 +1126,32 @@ export default function PedidosAgendados() {
                                 sanitized = '+' + sanitized.replaceAll('+', '');
                               }
                               setAgendarTelefono(sanitized);
+                                if (errors.telefono) setErrors(prev => ({ ...prev, telefono: undefined }));
                             }}
+                            required
                           />
+                            {errors.telefono && (
+                              <div style={{ color: '#ef4444', marginTop: 6, fontSize: '0.9rem' }}>{errors.telefono}</div>
+                            )}
                         </div>
 
                         <div className="modal-grid-item">
                           <label htmlFor="agendar-correo" className="modal-label">
-                            Correo Electrónico <span className="required">*</span>
+                            Correo Electrónico 
                           </label>
                           <input
                             id="agendar-correo"
                             type="email"
-                            className="modal-input"
+                              className="modal-input"
+                              style={{ border: errors.correo ? '2px solid #ef4444' : undefined }}
                             placeholder="cliente@ejemplo.com"
-                            value={agendarCorreo}
-                            onChange={(e) => setAgendarCorreo(e.target.value)}
+                              value={agendarCorreo}
+                              onChange={(e) => { setAgendarCorreo(e.target.value); if (errors.correo) setErrors(prev => ({ ...prev, correo: undefined })); }}
+                            required
                           />
+                            {errors.correo && (
+                              <div style={{ color: '#ef4444', marginTop: 6, fontSize: '0.9rem' }}>{errors.correo}</div>
+                            )}
                         </div>
 
                         <div className="modal-grid-item">
@@ -1119,9 +1168,14 @@ export default function PedidosAgendados() {
                             id="fecha-agendamiento"
                             type="date"
                             className="modal-input"
+                            style={{ border: errors.fechaAg ? '2px solid #ef4444' : undefined }}
                             value={agendarFechaAg}
-                            onChange={(e) => setAgendarFechaAg(e.target.value)}
+                            onChange={(e) => { setAgendarFechaAg(e.target.value); if (errors.fechaAg) setErrors(prev => ({ ...prev, fechaAg: undefined })); }}
+                            required
                           />
+                          {errors.fechaAg && (
+                            <div style={{ color: '#ef4444', marginTop: 6, fontSize: '0.9rem' }}>{errors.fechaAg}</div>
+                          )}
                         </div>
 
                         <div className="modal-grid-item">
@@ -1130,9 +1184,14 @@ export default function PedidosAgendados() {
                             id="fecha-entrega"
                             type="date"
                             className="modal-input"
+                            style={{ border: errors.fechaEnt ? '2px solid #ef4444' : undefined }}
                             value={agendarFechaEnt}
-                            onChange={(e) => setAgendarFechaEnt(e.target.value)}
+                            onChange={(e) => { setAgendarFechaEnt(e.target.value); if (errors.fechaEnt) setErrors(prev => ({ ...prev, fechaEnt: undefined })); }}
+                            required
                           />
+                          {errors.fechaEnt && (
+                            <div style={{ color: '#ef4444', marginTop: 6, fontSize: '0.9rem' }}>{errors.fechaEnt}</div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1223,6 +1282,10 @@ export default function PedidosAgendados() {
                         </div>
                       </div>
 
+                      {errors.productos && (
+                        <div style={{ color: '#ef4444', margin: '0.5rem 0 1rem 0', fontSize: '0.95rem' }}>{errors.productos}</div>
+                      )}
+
                       <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', overflow: 'hidden' }}>
                         <div style={{ overflowX: 'auto', maxHeight: 360 }}>
                           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -1248,13 +1311,16 @@ export default function PedidosAgendados() {
                                       name="producto"
                                       value={prod.producto || ''}
                                       onChange={(e) => handleProductoSelectAgendar(index, e.target.value)}
-                                      style={{ border: '2px solid #e5e7eb', borderRadius: 6, padding: '8px' }}
+                                      style={{ border: productErrors[index] && productErrors[index].producto ? '2px solid #ef4444' : '2px solid #e5e7eb', borderRadius: 6, padding: '8px' }}
                                     >
                                       <option value="">Seleccione un producto</option>
                                       {productosDisponibles.filter(p => p.activo !== false && p.activo !== 'false').map(p => (
                                         <option key={p._id} value={p._id}>{p.name}</option>
                                       ))}
                                     </select>
+                                    {productErrors[index] && productErrors[index].producto && (
+                                      <div style={{ color: '#ef4444', marginTop: 6, fontSize: '0.85rem' }}>{productErrors[index].producto}</div>
+                                    )}
                                   </td>
                                   <td style={{ padding: '.5rem .75rem' }}>
                                     <input
@@ -1273,8 +1339,11 @@ export default function PedidosAgendados() {
                                       className="cuadroTexto"
                                       value={prod.cantidad}
                                       onChange={(e) => handleProductoAgendarChange(index, e)}
-                                      style={{ border: '2px solid #e5e7eb', borderRadius: 6, textAlign: 'center' }}
+                                      style={{ border: productErrors[index] && productErrors[index].cantidad ? '2px solid #ef4444' : '2px solid #e5e7eb', borderRadius: 6, textAlign: 'center' }}
                                     />
+                                    {productErrors[index] && productErrors[index].cantidad && (
+                                      <div style={{ color: '#ef4444', marginTop: 6, fontSize: '0.85rem' }}>{productErrors[index].cantidad}</div>
+                                    )}
                                   </td>
                                   <td style={{ padding: '.5rem .75rem' }}>
                                     <input
@@ -1284,8 +1353,11 @@ export default function PedidosAgendados() {
                                       value={prod.valorUnitario}
                                       onChange={(e) => handleProductoAgendarChange(index, e)}
                                       readOnly
-                                      style={{ border: '2px solid #e5e7eb', borderRadius: 6, textAlign: 'center' }}
+                                      style={{ border: productErrors[index] && productErrors[index].valorUnitario ? '2px solid #ef4444' : '2px solid #e5e7eb', borderRadius: 6, textAlign: 'center' }}
                                     />
+                                    {productErrors[index] && productErrors[index].valorUnitario && (
+                                      <div style={{ color: '#ef4444', marginTop: 6, fontSize: '0.85rem' }}>{productErrors[index].valorUnitario}</div>
+                                    )}
                                   </td>
                                   <td style={{ padding: '.5rem .75rem' }}>
                                     <input

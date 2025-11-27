@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import Fijo from '../components/Fijo';
 import NavVentas from '../components/NavVentas';
 import html2canvas from 'html2canvas';
@@ -8,6 +8,7 @@ import * as XLSX from 'xlsx';
 import Swal from 'sweetalert2';
 import api from '../api/axiosConfig';
 import RemisionPreview from '../components/RemisionPreview';
+import * as TinyMCE from "@tinymce/tinymce-react";
 
 /* Estilos CSS avanzados para Pedidos Entregados */
 const pedidosEntregadosStyles = `
@@ -138,13 +139,302 @@ if (typeof document !== 'undefined') {
 }
 
 export default function PedidosEntregados() {
+
+  const [user, setUser] = useState(null);
+  useEffect(() => {
+    try {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) setUser(JSON.parse(storedUser));
+    } catch (err) { console.error('Error reading stored user from localStorage:', err); }
+  }, []);
+
+
+
+  const [mostrarModalNuevaRemision, setMostrarModalNuevaRemision] = useState(false);
   const [pedidosEntregados, setPedidosEntregados] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const [remisionPreview, setRemisionPreview] = useState(null);
 
-  // Visual-only modal state for "Nueva remisión" (UI only, no backend logic)
-  const [mostrarModalNuevaRemision, setMostrarModalNuevaRemision] = useState(false);
+  // Estado del formulario de agendamiento (sólo UI)
+  const [remisionarCliente, setRemisionarCliente] = useState('');
+  const [remisionarCiudad, setRemisionarCiudad] = useState('');
+  const [remisionarDireccion, setRemisionarDireccion] = useState('');
+  const [remisionarTelefono, setRemisionarTelefono] = useState('');
+  const [remisionarCorreo, setRemisionarCorreo] = useState('');
+  const [remisionarFechaRem, setRemisionarFechaRem] = useState('');
+  // Simple, deterministic email validator (copied pattern from PedidosAgendados)
+  const isValidEmail = (email) => {
+    if (typeof email !== 'string') return false;
+    const trimmed = email.trim();
+    if (trimmed.length === 0 || trimmed.length > 254) return false;
+    const at = trimmed.indexOf('@');
+    if (at <= 0 || trimmed.includes('@', at + 1)) return false;
+    const local = trimmed.slice(0, at);
+    const domain = trimmed.slice(at + 1);
+    if (!local || !domain) return false;
+    if (local.length > 64 || domain.length > 253) return false;
+    if (local.startsWith('.') || local.endsWith('.') || local.includes('..')) return false;
+    if (domain.includes('..')) return false;
+    const labels = domain.split('.');
+    if (labels.length < 2) return false;
+    const labelAllowed = /^[A-Za-z0-9-]+$/;
+    return labels.every(lab => lab && lab.length <= 63 && !lab.startsWith('-') && !lab.endsWith('-') && labelAllowed.test(lab));
+  };
+    // Guardar remisión: crea documento en collection 'remisions'
+    const handleGuardarRemision = async () => {
+      try {
+          // Ensure user token exists before calling protected endpoint
+          const token = localStorage.getItem('token');
+          if (!token) {
+            Swal.fire('Error', 'Debe iniciar sesión para crear una remisión.', 'warning');
+            return;
+          }
+        const newErrors = {};
+        if (!remisionarCliente || !remisionarCliente.trim()) newErrors.cliente = 'Nombre o razón social es obligatorio.';
+        if (!remisionarTelefono || !remisionarTelefono.trim()) newErrors.telefono = 'Teléfono es obligatorio.';
+        if (!remisionarCorreo || !remisionarCorreo.trim()) newErrors.correo = 'Correo es obligatorio.';
+        else if (!isValidEmail(remisionarCorreo)) newErrors.correo = 'Formato de correo inválido.';
+        if (!remisionarFechaRem) newErrors.fechaRem = 'Fecha de entrega es obligatoria.';
+        if (!remisionarProductos || remisionarProductos.length === 0) newErrors.productos = 'Agrega al menos un producto a la remisión.';
+
+        const newProductErrors = (remisionarProductos || []).map(p => ({}));
+        (remisionarProductos || []).forEach((p, i) => {
+          if (!p.producto && !p.descripcion && !p.nombre) newProductErrors[i].producto = 'Ingrese nombre o seleccione un producto.';
+          if (!p.cantidad || Number.parseFloat(p.cantidad) <= 0) newProductErrors[i].cantidad = 'Cantidad debe ser mayor a 0.';
+          if (!p.valorUnitario && !p.precioUnitario) newProductErrors[i].valorUnitario = 'Valor unitario inválido.';
+        });
+
+        const hasProductRowErrors = newProductErrors.some(pe => Object.keys(pe).length > 0);
+        if (Object.keys(newErrors).length > 0 || hasProductRowErrors) {
+          setErrors(newErrors);
+          setProductErrors(newProductErrors);
+          return;
+        }
+
+        const clientePayload = {
+          nombre: remisionarCliente,
+          ciudad: remisionarCiudad || '',
+          direccion: remisionarDireccion || '',
+          telefono: remisionarTelefono || '',
+          correo: (remisionarCorreo || '').toLowerCase().trim(),
+          esCliente: true,
+          operacion: 'compra'
+        };
+
+        const productosPayload = (remisionarProductos || []).map(p => ({
+          producto: p.producto || null, // ID del producto seleccionado para manejo de stock en backend
+          nombre: p.nombre || p.descripcion || '',
+          cantidad: Number.parseFloat(p.cantidad || 0) || 0,
+          valorUnitario: Number.parseFloat(p.valorUnitario || p.precioUnitario || 0) || 0,
+          descripcion: p.descripcion || '',
+          codigo: p.codigo || ''
+        }));
+
+        const body = {
+          cliente: clientePayload,
+          productos: productosPayload,
+          fechaEntrega: remisionarFechaRem,
+          descripcion: descripcionRef.current?.getContent?.({ format: 'html' }) || '',
+          condicionesPago: condicionesRef.current?.getContent?.({ format: 'html' }) || ''
+        };
+
+        let res;
+        try {
+          res = await api.post('/api/remisiones', body);
+        } catch (requestErr) {
+          console.error('Request error creating remision:', requestErr);
+          const serverMsg = requestErr?.response?.data?.message || requestErr?.response?.data || requestErr.message;
+          Swal.fire('Error', serverMsg || 'Error de red al guardar remisión.', 'error');
+          return;
+        }
+
+        if (res && res.status >= 200 && res.status < 300) {
+          const data = res.data || res;
+          Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Remisión creada', showConfirmButton: false, timer: 1800, timerProgressBar: true });
+          // limpiar y cerrar modal
+          setMostrarModalNuevaRemision(false);
+          setRemisionarCliente(''); setRemisionarCiudad(''); setRemisionarDireccion(''); setRemisionarTelefono(''); setRemisionarCorreo(''); setRemisionarFechaRem(''); setRemisionarProductos([]);
+          setErrors({}); setProductErrors([]);
+          if (descripcionRef.current) descripcionRef.current.setContent('');
+          if (condicionesRef.current) condicionesRef.current.setContent('');
+          // recargar listado
+          try { await cargarRemisionesEntregadas(); } catch (e) { /* non-blocking */ }
+        } else {
+          Swal.fire('Error', res.data?.message || 'No se pudo crear la remisión', 'error');
+        }
+      } catch (err) {
+        console.error('Error guardando remisión:', err);
+        Swal.fire('Error', err?.response?.data?.message || 'Error de red al guardar remisión.', 'error');
+      }
+    };
+  // Errores de validación inline
+  const [errors, setErrors] = useState({});
+  // Errores por producto (array paralelo a `agendarProductos`)
+  const [productErrors, setProductErrors] = useState([]);
+
+  // Limpiar errores al abrir/cerrar el modal para evitar mensajes residuales
+  useEffect(() => {
+    if (mostrarModalNuevaRemision) {
+      setErrors({});
+      setProductErrors([]);
+    }
+  }, [mostrarModalNuevaRemision]);
+
+  // Editors (UI only)
+  const descripcionRef = useRef(null);
+  const condicionesRef = useRef(null);
+
+  // Productos (UI only dentro del modal)
+  const [remisionarProductos, setRemisionarProductos] = useState([]);
+  const [productosDisponibles, setProductosDisponibles] = useState([]);
+  const agregarProductoRemisionar = () => {
+    const uid = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`;
+    setRemisionarProductos(prev => ([...prev, {
+      uid,
+      producto: '',
+      nombre: '', descripcion: '', cantidad: '', valorUnitario: '', descuento: '', subtotal: ''
+    }]));
+    setProductErrors(prev => ([...prev, {}]));
+  };
+  const eliminarProductoRemisionar = (index) => {
+    setRemisionarProductos(prev => prev.filter((_, i) => i !== index));
+    setProductErrors(prev => prev.filter((_, i) => i !== index));
+  };
+  const limpiarProductosRemisionados = () => {
+    if (remisionarProductos.length === 0) return;
+    setRemisionarProductos([]);
+    setProductErrors([]);
+  };
+  const handleProductoRemisionarChange = (index, e) => {
+    const { name, value } = e.target;
+    setRemisionarProductos(prev => {
+      const next = [...prev];
+      next[index] = { ...next[index], [name]: value };
+      const cantidadNum = Number.parseFloat(next[index].cantidad) || 0;
+      const valorNum = Number.parseFloat(next[index].valorUnitario) || 0;
+      const descNum = Number.parseFloat(next[index].descuento) || 0;
+      const subtotal = cantidadNum * valorNum * (1 - descNum / 100);
+      next[index].subtotal = subtotal ? subtotal.toFixed(2) : '';
+      // limpiar errores del campo cambiado
+      setProductErrors(prevErrors => {
+        const ne = [...(prevErrors || [])];
+        ne[index] = { ...(ne[index] || {}) };
+        if (ne[index] && ne[index][name]) delete ne[index][name];
+        return ne;
+      });
+      return next;
+    });
+  };
+
+  // Cargar productos activos para el select (igual que RegistrarCotizacion)
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        const res = await api.get('/api/products');
+        const lista = res.data?.data || res.data || [];
+        setProductosDisponibles(Array.isArray(lista) ? lista : []);
+      } catch (err) {
+        console.error('Error al cargar productos disponibles (remisionar):', err);
+      }
+    };
+    loadProducts();
+  }, []);
+
+  const handleProductoSelectRemisionar = (index, productId) => {
+    const producto = productosDisponibles.find(p => (p._id || p.id) === productId);
+    setRemisionarProductos(prev => {
+      const next = [...prev];
+      next[index] = {
+        ...next[index],
+        producto: productId,
+        nombre: producto?.name || '',
+        descripcion: producto?.description || next[index].descripcion || '',
+        valorUnitario: (producto?.price ?? next[index].valorUnitario) || '',
+        stock: producto?.stock ?? next[index].stock ?? undefined,
+        cantidad: '',
+        descuento: '',
+        subtotal: ''
+      };
+      return next;
+    });
+    // limpiar errores para ese producto
+    setProductErrors(prev => {
+      const next = [...(prev || [])];
+      next[index] = {};
+      return next;
+    });
+  };
+
+  // Autocompletado de cliente (igual a RegistrarCotizacion)
+  const [clientesRemisionar, setClientesRemisionar] = useState([]);
+  const [filteredClientesRemisionar, setFilteredClientesRemisionar] = useState([]);
+  const [showDropdownRemisionar, setShowDropdownRemisionar] = useState(false);
+
+  // Cargar clientes y prospectos (deduplicados) para autocompletar
+  useEffect(() => {
+    const deduplicateClientes = (todos) => {
+      const dedupMap = new Map();
+      for (const c of todos) {
+        const key = ((c.correo || '').toLowerCase().trim()) || c._id;
+        if (dedupMap.has(key)) {
+          const existente = dedupMap.get(key);
+          if (existente.esCliente === false && c.esCliente) dedupMap.set(key, c);
+        } else {
+          dedupMap.set(key, c);
+        }
+      }
+      return Array.from(dedupMap.values()).sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
+    };
+
+    const cargarClientesYProspectos = async () => {
+      try {
+        const [clientesRes, prospectosRes] = await Promise.all([
+          api.get('/api/clientes'),
+          api.get('/api/clientes/prospectos')
+        ]);
+
+        const listaClientes = clientesRes.data?.data || clientesRes.data || [];
+        const listaProspectos = prospectosRes.data?.data || prospectosRes.data || [];
+
+        const normalizar = (arr, esClienteFlag) => (Array.isArray(arr) ? arr.map(c => ({ ...c, esCliente: !!esClienteFlag })) : []);
+        const todos = [...normalizar(listaClientes, true), ...normalizar(listaProspectos, false)];
+
+        const resultado = deduplicateClientes(todos);
+        setClientesRemisionar(resultado);
+      } catch (err) {
+        console.error('Error al cargar clientes/prospectos (remisionar):', err);
+      }
+    };
+    cargarClientesYProspectos();
+  }, []);
+
+  const handleDropdownSelectClienteRemisionar = (c) => {
+    setRemisionarCliente(c.nombre || '');
+    setRemisionarCiudad(c.ciudad || '');
+    setRemisionarDireccion(c.direccion || '');
+    setRemisionarTelefono(c.telefono || '');
+    setRemisionarCorreo(c.correo || '');
+    setShowDropdownRemisionar(false);
+  };
+
+  const handleRemisionarClienteChange = (e) => {
+    const q = e.target.value;
+    setRemisionarCliente(q);
+    if (errors.cliente) setErrors(prev => ({ ...prev, cliente: undefined }));
+    if (q && q.trim().length >= 1) {
+      const ql = q.trim().toLowerCase();
+      const matches = clientesRemisionar
+        .filter(c => (c?.nombre || '').toLowerCase().includes(ql))
+        .slice(0, 10);
+      setFilteredClientesRemisionar(matches);
+      setShowDropdownRemisionar(matches.length > 0);
+    } else {
+      setFilteredClientesRemisionar([]);
+      setShowDropdownRemisionar(false);
+    }
+  };
+
   const indexOfFirstItem = (currentPage - 1) * itemsPerPage;
   const currentItems = pedidosEntregados.slice(indexOfFirstItem, indexOfFirstItem + itemsPerPage);
   const totalPages = Math.ceil(pedidosEntregados.length / itemsPerPage);
@@ -281,6 +571,7 @@ export default function PedidosEntregados() {
                 >
                   <i className="fa-solid fa-file-pdf"></i><span>Exportar PDF</span>
                 </button>
+
                 <button
                   onClick={() => setMostrarModalNuevaRemision(true)}
                   className="export-btn create"
@@ -532,8 +823,510 @@ export default function PedidosEntregados() {
               />
             )}
 
-            
-            
+
+
+
+            {mostrarModalNuevaRemision && (
+              <div className="modal-overlay">
+                <div className="modal-lg">
+                  <div className="modal-header">
+                    <h5 className="modal-title">Nueva remisión</h5>
+                    <button
+                      className="modal-close"
+                      onClick={() => setMostrarModalNuevaRemision(false)}
+                    >
+                      &times;
+                    </button>
+                  </div>
+                  <div className="modal-body">
+                    {/* Sección: Información del Cliente */}
+                    <div className="modal-section">
+                      <div className="modal-section-header">
+                        <div className="modal-section-icon blue">
+                          <i className="fa-solid fa-user"></i>
+                        </div>
+                        <h4 className="modal-section-title">Información del Cliente</h4>
+                      </div>
+
+                      <div className="modal-grid">
+                        <div className="modal-grid-item">
+                          <label htmlFor="remisionar-cliente" className="modal-label">
+                            Nombre o Razón Social
+                          </label>
+                          <div style={{ position: 'relative' }}>
+                            <input
+                              id="remisionar-cliente"
+                              type="text"
+                              className="modal-input"
+                              style={{ border: errors.cliente ? '2px solid #ef4444' : undefined }}
+                              placeholder="Nombre o razón social"
+                              value={remisionarCliente}
+
+                                onFocus={(e) => {
+                                  if (filteredClientesRemisionar.length > 0) setShowDropdownRemisionar(true);
+                                }}
+                                onChange={handleRemisionarClienteChange}
+                              onBlur={() => setTimeout(() => setShowDropdownRemisionar(false), 150)}
+                              required
+                            />
+                            {errors.cliente && (
+                              <div style={{ color: '#ef4444', marginTop: 6, fontSize: '0.9rem' }}>{errors.cliente}</div>
+                            )}
+                            {showDropdownRemisionar && filteredClientesRemisionar.length > 0 && (
+                              <div className="modal-dropdown">
+                                {filteredClientesRemisionar.map((c) => (
+                                  <button
+                                    type="button"
+                                    key={c._id}
+                                    onMouseDown={(ev) => { ev.preventDefault(); }}
+                                    onClick={() => handleDropdownSelectClienteRemisionar(c)}
+                                    className="modal-dropdown-item"
+                                  >
+                                    <span className="dropdown-item-main">
+                                      {c.nombre}
+                                      {!c.esCliente && (
+                                        <span className="prospect-badge">PROSPECTO</span>
+                                      )}
+                                    </span>
+                                    <span className="dropdown-item-sub">
+                                      {c.ciudad || 'Ciudad no especificada'}
+                                    </span>
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="modal-grid-item">
+                          <label htmlFor="remisionar-ciudad" className="modal-label">Ciudad</label>
+                          <input
+                            id="remisionar-ciudad"
+                            type="text"
+                            className="modal-input"
+                            placeholder="Ciudad de residencia"
+                            value={remisionarCiudad}
+                            onChange={(e) => setRemisionarCiudad(e.target.value)}
+                            required
+                          />
+                        </div>
+
+                        <div className="modal-grid-item">
+                          <label htmlFor="remisionar-direccion" className="modal-label">Dirección</label>
+                          <input
+                            id="remisionar-direccion"
+                            type="text"
+                            className="modal-input"
+                            placeholder="Dirección completa"
+                            value={remisionarDireccion}
+                            onChange={(e) => setRemisionarDireccion(e.target.value)}
+                            required
+                          />
+                        </div>
+
+                        <div className="modal-grid-item">
+                          <label htmlFor="remisionar-telefono" className="modal-label">
+                            Teléfono
+                          </label>
+                          <input
+                            id="remisionar-telefono"
+                            type="tel"
+                            className="modal-input"
+                            placeholder="+57 000 000 0000"
+                            value={remisionarTelefono}
+                            inputMode="tel"
+                            autoComplete="tel"
+                            pattern="^[+]?\d[\d ]{3,}$"
+                            onKeyDown={(e) => {
+                              // Bloquear letras directamente al tipear
+                              if (/^[a-zA-Z]$/.test(e.key)) {
+                                e.preventDefault();
+                              }
+                            }}
+                            onPaste={(e) => {
+                              // Sanitizar contenido pegado eliminando letras y símbolos no permitidos
+                              const pasted = (e.clipboardData.getData('text') || '').replaceAll(/[^\d+ ]/g, '');
+                              e.preventDefault();
+                              setRemisionarTelefono(prev => (prev + pasted)
+                                .replaceAll(/(?!^)[+]/g, '')
+                                .replaceAll(/[^\d+ ]/g, ''));
+                            }}
+                            onChange={(e) => {
+                              const raw = e.target.value;
+                              // Permitir sólo dígitos, espacios y un '+' inicial opcional
+                              let sanitized = raw.replaceAll(/[^\d+ ]/g, '');
+                              // Si hay más de un '+', conservar sólo el primero al inicio
+                              sanitized = sanitized.replaceAll(/(?!^)\+/g, '');
+                              // Si '+' aparece y no está al inicio, moverlo al inicio
+                              if (/\+/.test(sanitized) && sanitized[0] !== '+') {
+                                sanitized = '+' + sanitized.replaceAll('+', '');
+                              }
+                              setRemisionarTelefono(sanitized);
+                              if (errors.telefono) setErrors(prev => ({ ...prev, telefono: undefined }));
+                            }}
+                            required
+                          />
+                          {errors.telefono && (
+                            <div style={{ color: '#ef4444', marginTop: 6, fontSize: '0.9rem' }}>{errors.telefono}</div>
+                          )}
+                        </div>
+
+                        <div className="modal-grid-item">
+                          <label htmlFor="remisionar-correo" className="modal-label">
+                            Correo Electrónico
+                          </label>
+                          <input
+                            id="remisionar-correo"
+                            type="email"
+                            className="modal-input"
+                            style={{ border: errors.correo ? '2px solid #ef4444' : undefined }}
+                            placeholder="cliente@ejemplo.com"
+                            value={remisionarCorreo}
+                            onChange={(e) => { setRemisionarCorreo(e.target.value); if (errors.correo) setErrors(prev => ({ ...prev, correo: undefined })); }}
+                            required
+                          />
+                          {errors.correo && (
+                            <div style={{ color: '#ef4444', marginTop: 6, fontSize: '0.9rem' }}>{errors.correo}</div>
+                          )}
+                        </div>
+
+                        <div className="modal-grid-item">
+                          <div className="modal-label">Responsable</div>
+                          <div className="modal-readonly">
+                            <i className="fa-solid fa-user-tie"></i>
+                            <span>{user ? `${user.firstName || ''} ${user.surname || ''}` : ''}</span>
+                          </div>
+                        </div>
+
+
+
+                        <div className="modal-grid-item">
+                          <label htmlFor="fecha-remision" className="modal-label">Fecha de entrega</label>
+                          <input
+                            id="fecha-remision"
+                            type="date"
+                            className="modal-input"
+                            style={{ border: errors.fechaRem ? '2px solid #ef4444' : undefined }}
+                            value={remisionarFechaRem}
+                            onChange={(e) => { setRemisionarFechaRem(e.target.value); if (errors.fechaRem) setErrors(prev => ({ ...prev, fechaRem: undefined })); }}
+                            required
+                          />
+                          {errors.fechaRem && (
+                            <div style={{ color: '#ef4444', marginTop: 6, fontSize: '0.9rem' }}>{errors.fechaRem}</div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Sección: Descripción */}
+                    <div style={{
+                      background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+                      borderRadius: '14px',
+                      padding: '1.25rem',
+                      border: '1px solid #e2e8f0',
+                      marginBottom: '1rem'
+                    }}>
+                      <div style={{
+                        borderBottom: '2px solid #e2e8f0',
+                        paddingBottom: '.75rem',
+                        marginBottom: '1rem',
+                        display: 'flex', alignItems: 'center', gap: '.75rem'
+                      }}>
+                        <div style={{ width: 36, height: 36, borderRadius: 10, background: 'linear-gradient(135deg, #10b981, #059669)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+                          <i className="fa-solid fa-edit"></i>
+                        </div>
+                        <h4 style={{ margin: 0, fontWeight: 600, color: '#1e293b' }}>Descripción de la remisión</h4>
+                      </div>
+                      <div style={{ background: '#fff', borderRadius: 10, padding: '0.75rem', border: '2px solid #e5e7eb' }}>
+                        <TinyMCE.Editor
+                          id="remisionar-descripcion"
+                          onInit={(evt, editor) => (descripcionRef.current = editor)}
+                          apiKey="bjhw7gemroy70lt4bgmfvl29zid7pmrwyrtx944dmm4jq39w"
+                          textareaName="Descripcion"
+                          init={{ height: 220, menubar: false }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Sección de productos (UI) */}
+                    <div style={{
+                      background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+                      borderRadius: '14px',
+                      padding: '1.25rem',
+                      border: '1px solid #e2e8f0',
+                      marginTop: '1rem',
+                      marginBottom: '1rem'
+                    }}>
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        borderBottom: '2px solid #e2e8f0',
+                        paddingBottom: '.75rem',
+                        marginBottom: '1rem'
+                      }}>
+                        <h4 style={{ margin: 0, fontWeight: 600, color: '#1e293b', display: 'flex', alignItems: 'center', gap: '.75rem' }}>
+                          <div style={{ width: 36, height: 36, borderRadius: 10, background: 'linear-gradient(135deg, #f59e0b, #d97706)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+                            <i className="fa-solid fa-box"></i>
+                          </div>
+                          Productos a remisionar
+                        </h4>
+                        <div style={{ display: 'flex', gap: '.5rem' }}>
+                          <button
+                            type="button"
+                            onClick={agregarProductoRemisionar}
+                            style={{
+                              padding: '.6rem 1rem',
+                              border: 'none',
+                              borderRadius: '10px',
+                              background: 'linear-gradient(135deg, #10b981, #059669)',
+                              color: '#fff', fontWeight: 600, cursor: 'pointer'
+                            }}
+                          >
+                            <i className="fa-solid fa-plus" style={{ marginRight: 8 }}></i>{' '}
+                            Agregar Producto
+                          </button>
+                          {remisionarProductos.length > 0 && (
+                            <button
+                              type="button"
+                              onClick={limpiarProductosRemisionados}
+                              style={{
+                                padding: '.6rem 1rem',
+                                borderRadius: '10px',
+                                border: '2px solid #ef4444',
+                                background: '#fff', color: '#ef4444', fontWeight: 600, cursor: 'pointer'
+                              }}
+                            >
+                              <i className="fa-solid fa-trash" style={{ marginRight: 8 }}></i>{' '}
+                              Limpiar Todo
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {errors.productos && (
+                        <div style={{ color: '#ef4444', margin: '0.5rem 0 1rem 0', fontSize: '0.95rem' }}>{errors.productos}</div>
+                      )}
+
+                      <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+                        <div style={{ overflowX: 'auto', maxHeight: 360 }}>
+                          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                            <thead>
+                              <tr style={{ background: 'linear-gradient(135deg, #f8fafc, #e2e8f0)' }}>
+                                <th style={{ padding: '0.9rem 0.75rem', textAlign: 'left', fontWeight: 600, color: '#374151', fontSize: '.9rem', borderBottom: '2px solid #e2e8f0' }}>#</th>
+                                <th style={{ padding: '0.9rem 0.75rem', textAlign: 'left', fontWeight: 600, color: '#374151', fontSize: '.9rem', borderBottom: '2px solid #e2e8f0', minWidth: 160 }}>Producto</th>
+                                <th style={{ padding: '0.9rem 0.75rem', textAlign: 'left', fontWeight: 600, color: '#374151', fontSize: '.9rem', borderBottom: '2px solid #e2e8f0', minWidth: 150 }}>Descripción</th>
+                                <th style={{ padding: '0.9rem 0.75rem', textAlign: 'center', fontWeight: 600, color: '#374151', fontSize: '.9rem', borderBottom: '2px solid #e2e8f0' }}>Cantidad</th>
+                                <th style={{ padding: '0.9rem 0.75rem', textAlign: 'center', fontWeight: 600, color: '#374151', fontSize: '.9rem', borderBottom: '2px solid #e2e8f0' }}>Valor Unit.</th>
+                                <th style={{ padding: '0.9rem 0.75rem', textAlign: 'center', fontWeight: 600, color: '#374151', fontSize: '.9rem', borderBottom: '2px solid #e2e8f0' }}>% Desc.</th>
+                                <th style={{ padding: '0.9rem 0.75rem', textAlign: 'center', fontWeight: 600, color: '#374151', fontSize: '.9rem', borderBottom: '2px solid #e2e8f0' }}>Subtotal</th>
+                                <th style={{ padding: '0.9rem 0.75rem', textAlign: 'center', fontWeight: 600, color: '#374151', fontSize: '.9rem', borderBottom: '2px solid #e2e8f0' }}>Acciones</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {remisionarProductos.map((prod, index) => (
+                                <tr key={prod.uid || index} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                                  <td style={{ padding: '.8rem .75rem', color: '#64748b', fontWeight: 500 }}>{index + 1}</td>
+                                  <td style={{ padding: '.5rem .75rem' }}>
+                                    <select
+                                      className="cuadroTexto"
+                                      name="producto"
+                                      value={prod.producto || ''}
+                                      onChange={(e) => handleProductoSelectRemisionar(index, e.target.value)}
+                                      style={{ border: productErrors[index] && productErrors[index].producto ? '2px solid #ef4444' : '2px solid #e5e7eb', borderRadius: 6, padding: '8px' }}
+                                    >
+                                      <option value="">Seleccione un producto</option>
+                                      {productosDisponibles.filter(p => p.activo !== false && p.activo !== 'false').map(p => (
+                                        <option key={p._id} value={p._id}>{p.name}</option>
+                                      ))}
+                                    </select>
+                                    {productErrors[index] && productErrors[index].producto && (
+                                      <div style={{ color: '#ef4444', marginTop: 6, fontSize: '0.85rem' }}>{productErrors[index].producto}</div>
+                                    )}
+                                  </td>
+                                  <td style={{ padding: '.5rem .75rem' }}>
+                                    <input
+                                      type="text"
+                                      name="descripcion"
+                                      className="cuadroTexto"
+                                      value={prod.descripcion}
+                                      onChange={(e) => handleProductoRemisionarChange(index, e)}
+                                      style={{ border: '2px solid #e5e7eb', borderRadius: 6 }}
+                                    />
+                                  </td>
+                                  <td style={{ padding: '.5rem .75rem' }}>
+                                    <input
+                                      type="number"
+                                      name="cantidad"
+                                      className="cuadroTexto"
+                                      value={prod.cantidad}
+                                      onChange={(e) => handleProductoRemisionarChange(index, e)}
+                                      style={{ border: productErrors[index] && productErrors[index].cantidad ? '2px solid #ef4444' : '2px solid #e5e7eb', borderRadius: 6, textAlign: 'center' }}
+                                    />
+                                    {productErrors[index] && productErrors[index].cantidad && (
+                                      <div style={{ color: '#ef4444', marginTop: 6, fontSize: '0.85rem' }}>{productErrors[index].cantidad}</div>
+                                    )}
+                                  </td>
+                                  <td style={{ padding: '.5rem .75rem' }}>
+                                    <input
+                                      type="number"
+                                      name="valorUnitario"
+                                      className="cuadroTexto"
+                                      value={prod.valorUnitario}
+                                      onChange={(e) => handleProductoRemisionarChange(index, e)}
+                                      readOnly
+                                      style={{ border: productErrors[index] && productErrors[index].valorUnitario ? '2px solid #ef4444' : '2px solid #e5e7eb', borderRadius: 6, textAlign: 'center' }}
+                                    />
+                                    {productErrors[index] && productErrors[index].valorUnitario && (
+                                      <div style={{ color: '#ef4444', marginTop: 6, fontSize: '0.85rem' }}>{productErrors[index].valorUnitario}</div>
+                                    )}
+                                  </td>
+                                  <td style={{ padding: '.5rem .75rem' }}>
+                                    <input
+                                      type="number"
+                                      name="descuento"
+                                      className="cuadroTexto"
+                                      value={prod.descuento}
+                                      onChange={(e) => handleProductoRemisionarChange(index, e)}
+                                      style={{ border: '2px solid #e5e7eb', borderRadius: 6, textAlign: 'center' }}
+                                    />
+                                  </td>
+                                  <td style={{ padding: '.5rem .75rem' }}>
+                                    <input
+                                      type="number"
+                                      name="subtotal"
+                                      className="cuadroTexto"
+                                      value={prod.subtotal}
+                                      readOnly
+                                      style={{ border: '2px solid #e5e7eb', borderRadius: 6, textAlign: 'center', backgroundColor: '#f8fafc', fontWeight: 600, color: '#059669' }}
+                                    />
+                                  </td>
+                                  <td style={{ padding: '.5rem .75rem', textAlign: 'center' }}>
+                                    <button
+                                      type="button"
+                                      onClick={() => eliminarProductoRemisionar(index)}
+                                      style={{
+                                        padding: '.5rem', border: 'none', borderRadius: 6, background: '#ef4444', color: '#fff', cursor: 'pointer', width: '2rem', height: '2rem'
+                                      }}
+                                    >
+                                      <i className="fa-solid fa-trash"></i>
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))}
+
+                              {remisionarProductos.length === 0 && (
+                                <tr>
+                                  <td colSpan={8} style={{ padding: '1.25rem', textAlign: 'center', color: '#64748b', fontStyle: 'italic' }}>
+                                    No hay productos agregados. Haga clic en "Agregar Producto" para comenzar.
+                                  </td>
+                                </tr>
+                              )}
+
+                              {remisionarProductos.length > 0 && (
+                                <tr style={{ background: 'linear-gradient(135deg, #f8fafc, #e2e8f0)' }}>
+                                  <td colSpan={6} style={{ padding: '0.9rem .75rem', fontWeight: 700, textAlign: 'right', color: '#1e293b' }}>Total General:</td>
+                                  <td style={{ padding: '0.9rem .75rem', fontWeight: 700, textAlign: 'center', color: '#059669' }}>
+                                    {remisionarProductos.reduce((acc, p) => acc + (Number.parseFloat(p.subtotal) || 0), 0).toLocaleString('es-CO', { minimumFractionDigits: 2 })}
+                                  </td>
+                                  <td></td>
+                                </tr>
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Sección: Condiciones/Observaciones */}
+                    <div style={{
+                      background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+                      borderRadius: '14px',
+                      padding: '1.25rem',
+                      border: '1px solid #e2e8f0',
+                      marginBottom: '1rem'
+                    }}>
+                      <div style={{ borderBottom: '2px solid #e2e8f0', paddingBottom: '.75rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '.75rem' }}>
+                        <div style={{ width: 36, height: 36, borderRadius: 10, background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+                          <i className="fa-solid fa-clipboard-list"></i>
+                        </div>
+                        <h4 style={{ margin: 0, fontWeight: 600, color: '#1e293b' }}>Condiciones de pago</h4>
+                      </div>
+                      <div style={{ background: '#fff', borderRadius: 10, padding: '0.75rem', border: '2px solid #e5e7eb' }}>
+                        <TinyMCE.Editor
+                          id="remisionar-condiciones"
+                          onInit={(evt, editor) => (condicionesRef.current = editor)}
+                          apiKey="bjhw7gemroy70lt4bgmfvl29zid7pmrwyrtx944dmm4jq39w"
+                          textareaName="Condiciones"
+                          init={{ height: 260, menubar: false }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Botones de acción (sin lógica) */}
+                    <div style={{
+                      background: '#fff',
+                      borderRadius: '12px',
+                      padding: '1rem',
+                      border: '1px solid #e2e8f0',
+                      display: 'flex',
+                      justifyContent: 'flex-end',
+                      gap: '.75rem'
+                    }}>
+                      <button
+                        type="button"
+                        onClick={() => setMostrarModalNuevaRemision(false)}
+                        style={{
+                          padding: '0.7rem 1.25rem',
+                          border: '2px solid #e5e7eb',
+                          borderRadius: '10px',
+                          background: '#fff',
+                          color: '#374151',
+                          fontWeight: 600,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Cancelar
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleGuardarRemision}
+                        style={{
+                          padding: '0.7rem 1.4rem',
+                          borderRadius: '10px',
+                          border: 'none',
+                          background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+                          color: '#fff',
+                          fontWeight: 600,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Remisionar
+                      </button>
+
+                      <button
+                        type="button"
+                        style={{
+                          padding: '0.7rem 1.4rem',
+                          borderRadius: '10px',
+                          border: 'none',
+                          background: 'linear-gradient(135deg, #10b981, #059669)',
+                          color: '#fff',
+                          fontWeight: 600,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Remisionar y Enviar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+
+
 
           </div>
         </div>

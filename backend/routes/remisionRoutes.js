@@ -19,6 +19,13 @@ router.get('/estadisticas',
   remisionController.getEstadisticasRemisiones
 );
 
+// Crear remisión
+router.post('/',
+  verifyToken,
+  checkPermission('remisiones.crear'),
+  remisionController.createRemision
+);
+
 
 
 // Obtener una remisión por ID

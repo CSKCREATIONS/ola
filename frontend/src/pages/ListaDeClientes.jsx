@@ -728,7 +728,7 @@ export default function ListaDeClientes() {
                         <td style={{ padding: '16px 12px' }}>
                           {Array.isArray(remisionesMap[cliente._id]) && remisionesMap[cliente._id].length > 0 ? (
                             <div>
-                              {remisionesMap[cliente._id].slice(0, 3).map(rm => (
+                              {remisionesMap[cliente._id].slice(0, 2).map(rm => (
 
                                 <button
                                   key={rm._id}
