@@ -1,15 +1,21 @@
 /* global globalThis */
 import axios from 'axios';
 
-// Prefer environment variable set at build time (REACT_APP_API_URL)
-// Fallback: if running in browser, infer API host from window.location safely
+// Prefer runtime detection of the browser host so the client issues
+// same-origin requests (avoids mixed-content and unreachable Docker hostnames).
+// Fallback to the build-time env var or localhost when not running in a browser.
 const getBaseURL = () => {
+  if (globalThis.window?.location) {
+    const { protocol, hostname, port } = globalThis.window.location;
+    // Include port only when explicit and non-default for the protocol
+    const hasNonDefaultPort = port && ((protocol === 'https:' && port !== '443') || (protocol === 'http:' && port !== '80'));
+    const portPart = hasNonDefaultPort ? `:${port}` : '';
+    return `${protocol}//${hostname}${portPart}`;
+  }
+
+  // Build-time override (kept for server-side rendering or special builds)
   if (process.env.REACT_APP_API_URL) return process.env.REACT_APP_API_URL;
 
-  if (globalThis.window?.location) {
-    const { protocol, hostname } = globalThis.window.location;
-    return `${protocol}//${hostname}:5000`;
-  }
   return 'http://localhost:5000';
 };
 
