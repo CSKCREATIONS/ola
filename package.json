@@ -1,0 +1,22 @@
+{
+  "name": "pruebas",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CSKCREATIONS/ola.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/CSKCREATIONS/ola/issues"
+  },
+  "homepage": "https://github.com/CSKCREATIONS/ola#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.57.0",
+    "@types/node": "^24.10.1"
+  }
+}
