@@ -24,6 +24,13 @@ test('crear-usuario', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Usuario creado correctamente' })).toBeVisible();
 });
 
+//intentar crear usuario pero ya es existente an la base de datos
+test('crear-usuario-existente', async ({ page }) => {
+  await page.goto('/');
+  
+})
+
+
 //deshabilitar usuario 'jla185' luze@gmail.com
 test('deshabilitar-usuario', async ({ page }) => {
   await page.goto('/');
