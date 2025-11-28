@@ -35,7 +35,7 @@
 - `proveedores.activar` - Activar proveedores
 
 ### 🛒 MÓDULO COMPRAS (2 permisos)
-- `hcompras.ver` - Ver historial de compras
+- `compras.ver` - Ver historial de compras
 - `compras.crear` - Registrar nuevas compras
 
 ### 📋 MÓDULO ÓRDENES DE COMPRA (5 permisos)

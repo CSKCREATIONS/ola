@@ -21,7 +21,7 @@ router.post('/',
 
 router.get('/',
   verifyToken,
-  checkPermission('hcompras.ver'),
+  checkPermission('compras.ver'),
   obtenerTodasLasCompras
 );
 

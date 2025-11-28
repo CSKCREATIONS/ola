@@ -18,7 +18,7 @@ export default function NavCompras() {
       const usuario = JSON.parse(storedUser);
       if (usuario.permissions) {
         setPuedeVerOrdenes(usuario.permissions.includes('ordenesCompra.ver'));
-        setPuedeVerHCompras(usuario.permissions.includes('hcompras.ver'));
+        setPuedeVerHCompras(usuario.permissions.includes('compras.ver'));
         setPuedeVerProveedores(usuario.permissions.includes('proveedores.ver'));
         setPuedeVerReportesCompras(usuario.permissions.includes('reportesCompras.ver'));
       }

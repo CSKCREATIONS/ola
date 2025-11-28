@@ -33,7 +33,7 @@ module.exports = {
     ACTIVAR: 'proveedores.activar'
   },
   COMPRAS: {
-    VER: 'hcompras.ver',
+    VER: 'compras.ver',
     CREAR: 'compras.crear',
     VERREPORTES: 'reportesCompras.ver'
   },

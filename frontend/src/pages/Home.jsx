@@ -23,11 +23,11 @@ const usePermisos = () => {
         // Compras
         compras:
           has('proveedores.ver') ||
-          has('hcompras.ver') ||
+          has('compras.ver') ||
           has('reportesCompras.ver') ||
           has('ordenesCompra.ver'),
         proveedores: has('proveedores.ver'),
-        hcompras: has('hcompras.ver'),
+        hcompras: has('compras.ver'),
         reportesCompras: has('reportesCompras.ver'),
         ordenesCompra: has('ordenesCompra.ver'),
 

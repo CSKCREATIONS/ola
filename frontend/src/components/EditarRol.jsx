@@ -17,7 +17,7 @@ const MODULE_PERMISSIONS = {
       'roles.deshabilitar'
    ],
    compras: [
-      'hcompras.ver',
+      'compras.ver',
       'compras.crear',
       'proveedores.ver',
       'proveedores.crear',
@@ -463,7 +463,7 @@ export default function EditarRol({ rol }) {
                         <div style={{ backgroundColor: 'white', padding: '1.25rem', borderRadius: '10px', border: '1px solid #d1fae5' }}>
                            <PermissionsGrid
                               items={[
-                                 { key: 'hcompras.ver', label: 'Historial de compras' },
+                                 { key: 'compras.ver', label: 'Historial de compras' },
                                  { key: 'compras.crear', label: 'Registrar compras' },
                                  { key: 'proveedores.ver', label: 'Catálogo de proveedores' },
                                  { key: 'proveedores.crear', label: 'Crear proveedores' },

@@ -86,7 +86,7 @@ ModuleCard.defaultProps = {
    border: undefined,
    color: undefined,
    checked: false,
-   onChange: () => {},
+   onChange: () => { },
    iconClass: ''
 };
 
@@ -105,7 +105,7 @@ PermissionCheckbox.propTypes = {
 
 PermissionCheckbox.defaultProps = {
    checked: false,
-   onChange: () => {}
+   onChange: () => { }
 };
 
 const PermissionRadioAll = ({ onClick, checked }) => (
@@ -121,36 +121,36 @@ PermissionRadioAll.propTypes = {
 };
 
 PermissionRadioAll.defaultProps = {
-   onClick: () => {},
+   onClick: () => { },
    checked: false
 };
 
 /* ---------- Permission sets ---------- */
 const permisosUsuarios = [
-   'usuarios.crear','usuarios.editar','usuarios.deshabilitar','usuarios.eliminar'
+   'usuarios.crear', 'usuarios.editar', 'usuarios.deshabilitar', 'usuarios.eliminar'
 ];
 
 const permisosRoles = [
-   'roles.ver','roles.crear','roles.editar','roles.deshabilitar'
+   'roles.ver', 'roles.crear', 'roles.editar', 'roles.deshabilitar'
 ];
 
 const permisosCompras = [
-   'hcompras.ver','compras.crear','proveedores.ver','proveedores.crear','proveedores.editar',
-   'proveedores.inactivar','proveedores.activar','ordenesCompra.ver','ordenes.generar',
-   'ordenes.editar','ordenes.eliminar','ordenes.aprobar','reportesCompras.ver'
+   'compras.ver', 'compras.crear', 'proveedores.ver', 'proveedores.crear', 'proveedores.editar',
+   'proveedores.inactivar', 'proveedores.activar', 'ordenesCompra.ver', 'ordenes.generar',
+   'ordenes.editar', 'ordenes.eliminar', 'ordenes.aprobar', 'reportesCompras.ver'
 ];
 
 const permisosProductos = [
-   'productos.ver','productos.crear','productos.editar','productos.inactivar',
-   'categorias.ver','categorias.crear','categorias.editar','categorias.inactivar','reportesProductos.ver'
+   'productos.ver', 'productos.crear', 'productos.editar', 'productos.inactivar',
+   'categorias.ver', 'categorias.crear', 'categorias.editar', 'categorias.inactivar', 'reportesProductos.ver'
 ];
 
 const permisosVentas = [
-   'pedidos.agendar','pedidos.ver','pedidos.remisionar','pedidos.enviar',
-   'pedidosAgendados.ver','pedidosCancelados.ver', 'cotizaciones.ver','cotizaciones.crear','cotizaciones.editar',
-   'cotizaciones.eliminar','cotizaciones.enviar','cotizaciones.remisionar',
-   'remisiones.ver','remisiones.crear','remisiones.editar','remisiones.eliminar','remisiones.enviar',
-   'clientes.ver','clientes.crear','clientes.editar','clientes.inactivar','prospectos.ver',
+   'pedidos.agendar', 'pedidos.ver', 'pedidos.remisionar', 'pedidos.enviar',
+   'pedidosAgendados.ver', 'pedidosCancelados.ver', 'cotizaciones.ver', 'cotizaciones.crear', 'cotizaciones.editar',
+   'cotizaciones.eliminar', 'cotizaciones.enviar', 'cotizaciones.remisionar',
+   'remisiones.ver', 'remisiones.crear', 'remisiones.editar', 'remisiones.eliminar', 'remisiones.enviar',
+   'clientes.ver', 'clientes.crear', 'clientes.editar', 'clientes.inactivar', 'prospectos.ver',
    'reportesVentas.ver'
 ];
 
@@ -162,6 +162,7 @@ export default function AgregarRol() {
 
    const [mostrarUsuarios, setMostrarUsuarios] = useState(false);
    const [mostrarListaUsuarios, setMostrarListaUsuarios] = useState(false);
+   const [mostrarOrdenesCompra, setMostrarOrdenesCompra] = useState(false);
    const [mostrarListaRoles, setMostrarListaRoles] = useState(false);
    const [mostrarCompras, setMostrarCompras] = useState(false);
    const [mostrarProductos, setMostrarProductos] = useState(false);
@@ -337,7 +338,7 @@ export default function AgregarRol() {
                            <h4>Permisos módulo usuarios</h4>
                            <div style={{ display: 'flex', gap: 24, marginTop: 12, flexWrap: 'wrap' }}>
                               <div style={{ minWidth: 260 }}>
-                                 <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontWeight: 600 }}>
+                                 <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
                                     <input
                                        className="input-gap"
                                        type="checkbox"
@@ -355,7 +356,7 @@ export default function AgregarRol() {
                                     <span>Lista de usuarios</span>
                                  </label>
 
-                                 <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontWeight: 600, marginTop: 12 }}>
+                                 <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', marginTop: 12 }}>
                                     <input
                                        className="input-gap"
                                        type="checkbox"
@@ -404,23 +405,50 @@ export default function AgregarRol() {
                            <h4>Permisos módulo compras</h4>
                            <div style={{ display: 'flex', gap: 24, marginTop: 12, flexWrap: 'wrap' }}>
                               <div style={{ minWidth: 260 }}>
-                                 <PermissionCheckbox checked={permisos.includes('hcompras.ver')} onChange={() => togglePermiso('hcompras.ver')} label="Historial de compras" />
+                                 <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                                    <input
+                                       className="input-gap"
+                                       type="checkbox"
+                                       checked={permisos.includes('ordenesCompra.ver')}
+                                       onChange={(e) => {
+                                          const isChecked = e.target.checked;
+                                          togglePermiso('ordenesCompra.ver');
+                                          setMostrarOrdenesCompra(prev => !prev);
+                                          if (!isChecked) {
+                                             setPermisos(prev => prev.filter(p => !p.startsWith('ordenes.')));
+                                             setMostrarOrdenesCompra(false);
+                                          }
+                                       }}
+                                    />
+                                    <span>Órdenes de compra</span>
+                                 </label>
+
+
+
+                                 <PermissionCheckbox checked={permisos.includes('reportesCompras.ver')} onChange={() => togglePermiso('reportesCompras.ver')} label="Ver reportes" />
+                                 <PermissionRadioAll onClick={() => toggleGrupoPermisos(permisosCompras)} checked={permisosCompras.every(p => permisos.includes(p))} />
+                              </div>
+
+                              <div style={{ minWidth: 260 }}>
+                                 <PermissionCheckbox checked={permisos.includes('compras.ver')} onChange={() => togglePermiso('compras.ver')} label="Historial de compras" />
                                  <PermissionCheckbox checked={permisos.includes('compras.crear')} onChange={() => togglePermiso('compras.crear')} label="Registrar compras" />
+
                                  <PermissionCheckbox checked={permisos.includes('proveedores.ver')} onChange={() => togglePermiso('proveedores.ver')} label="Catálogo de proveedores" />
                                  <PermissionCheckbox checked={permisos.includes('proveedores.crear')} onChange={() => togglePermiso('proveedores.crear')} label="Crear proveedores" />
                                  <PermissionCheckbox checked={permisos.includes('proveedores.editar')} onChange={() => togglePermiso('proveedores.editar')} label="Editar proveedores" />
                                  <PermissionCheckbox checked={permisos.includes('proveedores.inactivar')} onChange={() => togglePermiso('proveedores.inactivar')} label="Inactivar proveedores" />
                                  <PermissionCheckbox checked={permisos.includes('proveedores.activar')} onChange={() => togglePermiso('proveedores.activar')} label="Activar proveedores" />
                               </div>
-                              <div style={{ minWidth: 260 }}>
-                                 <PermissionCheckbox checked={permisos.includes('ordenesCompra.ver')} onChange={() => togglePermiso('ordenesCompra.ver')} label="Ver órdenes de compra" />
-                                 <PermissionCheckbox checked={permisos.includes('ordenes.generar')} onChange={() => togglePermiso('ordenes.generar')} label="Generar órdenes" />
-                                 <PermissionCheckbox checked={permisos.includes('ordenes.editar')} onChange={() => togglePermiso('ordenes.editar')} label="Editar órdenes" />
-                                 <PermissionCheckbox checked={permisos.includes('ordenes.eliminar')} onChange={() => togglePermiso('ordenes.eliminar')} label="Eliminar órdenes" />
-                                 <PermissionCheckbox checked={permisos.includes('ordenes.aprobar')} onChange={() => togglePermiso('ordenes.aprobar')} label="Aprobar órdenes" />
-                                 <PermissionCheckbox checked={permisos.includes('reportesCompras.ver')} onChange={() => togglePermiso('reportesCompras.ver')} label="Ver reportes" />
-                                 <PermissionRadioAll onClick={() => toggleGrupoPermisos(permisosCompras)} checked={permisosCompras.every(p => permisos.includes(p))} />
-                              </div>
+
+                              {mostrarOrdenesCompra && (
+                                 <div id="ordenes-de-compra" style={{ minWidth: 320 }}>
+                                    <h5 style={{ margin: '0 0 .5rem 0', fontWeight: 600, color: '#374151' }}>Permisos para Órdenes de compra</h5>
+                                    <PermissionCheckbox checked={permisos.includes('ordenes.generar')} onChange={() => togglePermiso('ordenes.generar')} label="Generar órdenes" />
+                                    <PermissionCheckbox checked={permisos.includes('ordenes.editar')} onChange={() => togglePermiso('ordenes.editar')} label="Editar órdenes" />
+                                    <PermissionCheckbox checked={permisos.includes('ordenes.eliminar')} onChange={() => togglePermiso('ordenes.eliminar')} label="Eliminar órdenes" />
+                                    <PermissionCheckbox checked={permisos.includes('ordenes.aprobar')} onChange={() => togglePermiso('ordenes.aprobar')} label="Aprobar órdenes" />
+                                 </div>
+                              )}
                            </div>
                         </section>
                      )}
@@ -467,7 +495,7 @@ export default function AgregarRol() {
                                  <PermissionCheckbox checked={permisos.includes('pedidos.remisionar')} onChange={() => togglePermiso('pedidos.remisionar')} label="Remisionar pedidos" />
                                  <PermissionCheckbox checked={permisos.includes('pedidos.enviar')} onChange={() => togglePermiso('pedidos.enviar')} label="Enviar pedidos" />
                                  <PermissionCheckbox checked={permisos.includes('pedidosAgendados.ver')} onChange={() => togglePermiso('pedidosAgendados.ver')} label="Pedidos agendados" />
-                                 
+
                                  <PermissionCheckbox checked={permisos.includes('pedidosCancelados.ver')} onChange={() => togglePermiso('pedidosCancelados.ver')} label="Pedidos cancelados" />
                               </div>
 
