@@ -187,6 +187,46 @@ export default function PedidosEntregados() {
     return labels.every(lab => lab && lab.length <= 63 && !lab.startsWith('-') && !lab.endsWith('-') && labelAllowed.test(lab));
   };
     // Guardar remisión: crea documento en collection 'remisions'
+    // Helpers para reducir complejidad cognitiva
+    const buildClientePayload = () => ({
+      nombre: remisionarCliente,
+      ciudad: remisionarCiudad || '',
+      direccion: remisionarDireccion || '',
+      telefono: remisionarTelefono || '',
+      correo: (remisionarCorreo || '').toLowerCase().trim(),
+      esCliente: true,
+      operacion: 'compra'
+    });
+
+    const buildProductosPayload = () => (remisionarProductos || []).map(p => ({
+      producto: p.producto || null,
+      nombre: p.nombre || p.descripcion || '',
+      cantidad: Number.parseFloat(p.cantidad || 0) || 0,
+      valorUnitario: Number.parseFloat(p.valorUnitario || p.precioUnitario || 0) || 0,
+      descripcion: p.descripcion || '',
+      codigo: p.codigo || ''
+    }));
+
+    const validateRemisionInputs = () => {
+      const newErrors = {};
+      if (!remisionarCliente || !remisionarCliente.trim()) newErrors.cliente = 'Nombre o razón social es obligatorio.';
+      if (!remisionarTelefono || !remisionarTelefono.trim()) newErrors.telefono = 'Teléfono es obligatorio.';
+      if (!remisionarCorreo || !remisionarCorreo.trim()) newErrors.correo = 'Correo es obligatorio.';
+      else if (!isValidEmail(remisionarCorreo)) newErrors.correo = 'Formato de correo inválido.';
+      if (!remisionarFechaRem) newErrors.fechaRem = 'Fecha de entrega es obligatoria.';
+      if (!remisionarProductos || remisionarProductos.length === 0) newErrors.productos = 'Agrega al menos un producto a la remisión.';
+
+      const newProductErrors = (remisionarProductos || []).map(() => ({}));
+      let i = 0;
+      for (const p of (remisionarProductos || [])) {
+        if (!p.producto && !p.descripcion && !p.nombre) newProductErrors[i].producto = 'Ingrese nombre o seleccione un producto.';
+        if (!p.cantidad || Number.parseFloat(p.cantidad) <= 0) newProductErrors[i].cantidad = 'Cantidad debe ser mayor a 0.';
+        if (!p.valorUnitario && !p.precioUnitario) newProductErrors[i].valorUnitario = 'Valor unitario inválido.';
+        i++;
+      }
+      return { newErrors, newProductErrors };
+    };
+
     const handleGuardarRemision = async () => {
       try {
           // Ensure user token exists before calling protected endpoint
@@ -195,20 +235,7 @@ export default function PedidosEntregados() {
             Swal.fire('Error', 'Debe iniciar sesión para crear una remisión.', 'warning');
             return;
           }
-        const newErrors = {};
-        if (!remisionarCliente || !remisionarCliente.trim()) newErrors.cliente = 'Nombre o razón social es obligatorio.';
-        if (!remisionarTelefono || !remisionarTelefono.trim()) newErrors.telefono = 'Teléfono es obligatorio.';
-        if (!remisionarCorreo || !remisionarCorreo.trim()) newErrors.correo = 'Correo es obligatorio.';
-        else if (!isValidEmail(remisionarCorreo)) newErrors.correo = 'Formato de correo inválido.';
-        if (!remisionarFechaRem) newErrors.fechaRem = 'Fecha de entrega es obligatoria.';
-        if (!remisionarProductos || remisionarProductos.length === 0) newErrors.productos = 'Agrega al menos un producto a la remisión.';
-
-        const newProductErrors = (remisionarProductos || []).map(p => ({}));
-        (remisionarProductos || []).forEach((p, i) => {
-          if (!p.producto && !p.descripcion && !p.nombre) newProductErrors[i].producto = 'Ingrese nombre o seleccione un producto.';
-          if (!p.cantidad || Number.parseFloat(p.cantidad) <= 0) newProductErrors[i].cantidad = 'Cantidad debe ser mayor a 0.';
-          if (!p.valorUnitario && !p.precioUnitario) newProductErrors[i].valorUnitario = 'Valor unitario inválido.';
-        });
+        const { newErrors, newProductErrors } = validateRemisionInputs();
 
         const hasProductRowErrors = newProductErrors.some(pe => Object.keys(pe).length > 0);
         if (Object.keys(newErrors).length > 0 || hasProductRowErrors) {
@@ -217,24 +244,8 @@ export default function PedidosEntregados() {
           return;
         }
 
-        const clientePayload = {
-          nombre: remisionarCliente,
-          ciudad: remisionarCiudad || '',
-          direccion: remisionarDireccion || '',
-          telefono: remisionarTelefono || '',
-          correo: (remisionarCorreo || '').toLowerCase().trim(),
-          esCliente: true,
-          operacion: 'compra'
-        };
-
-        const productosPayload = (remisionarProductos || []).map(p => ({
-          producto: p.producto || null, // ID del producto seleccionado para manejo de stock en backend
-          nombre: p.nombre || p.descripcion || '',
-          cantidad: Number.parseFloat(p.cantidad || 0) || 0,
-          valorUnitario: Number.parseFloat(p.valorUnitario || p.precioUnitario || 0) || 0,
-          descripcion: p.descripcion || '',
-          codigo: p.codigo || ''
-        }));
+        const clientePayload = buildClientePayload();
+        const productosPayload = buildProductosPayload();
 
         const body = {
           cliente: clientePayload,
@@ -247,9 +258,9 @@ export default function PedidosEntregados() {
         let res;
         try {
           res = await api.post('/api/remisiones', body);
-        } catch (requestErr) {
-          console.error('Request error creating remision:', requestErr);
-          const serverMsg = requestErr?.response?.data?.message || requestErr?.response?.data || requestErr.message;
+        } catch (error_) {
+          console.error('Request error creating remision:', error_);
+          const serverMsg = error_?.response?.data?.message || error_?.response?.data || error_.message;
           Swal.fire('Error', serverMsg || 'Error de red al guardar remisión.', 'error');
           return;
         }
@@ -265,8 +276,8 @@ export default function PedidosEntregados() {
           setMostrarModalNuevaRemision(false);
           setRemisionarCliente(''); setRemisionarCiudad(''); setRemisionarDireccion(''); setRemisionarTelefono(''); setRemisionarCorreo(''); setRemisionarFechaRem(''); setRemisionarProductos([]);
           setErrors({}); setProductErrors([]);
-          if (descripcionRef.current) descripcionRef.current.setContent('');
-          if (condicionesRef.current) condicionesRef.current.setContent('');
+          descripcionRef.current?.setContent('');
+          condicionesRef.current?.setContent('');
 
           // Agregar al listado local si no existe y abrir vista previa (con datos completos)
           if (nuevaRemision && nuevaRemision._id) {
