@@ -151,10 +151,11 @@ async function mapProductosConNombre(productos = []) {
     if (prod.producto?.id) {
       productoInfo = await Producto.findById(prod.producto.id).lean();
     }
+    const nombreProducto = productoInfo ? productoInfo.name : prod.producto?.name;
     return {
       producto: {
         id: prod.producto?.id,
-        name: productoInfo ? productoInfo.name : prod.producto?.name
+        name: nombreProducto
       },
       descripcion: prod.descripcion,
       cantidad: prod.cantidad,
@@ -321,49 +322,43 @@ exports.createCotizacion = async (req, res) => {
 
 
 // Obtener todas las cotizaciones
+// Helper to fetch cotizaciones with safe optional population to reduce complexity in controller
+async function fetchCotizacionesWithFallback() {
+  try {
+    return await Cotizacion.find()
+      .populate('cliente.referencia', 'nombre correo telefono ciudad esCliente')
+      .populate({
+        path: 'productos.producto.id',
+        model: 'Product',
+        select: 'name price description',
+        options: { strictPopulate: false }
+      })
+      .sort({ createdAt: -1 });
+  } catch (populateError) {
+    console.warn('Error with populate, fetching without product population:', populateError.message);
+    return await Cotizacion.find()
+      .populate('cliente.referencia', 'nombre correo telefono ciudad esCliente')
+      .sort({ createdAt: -1 });
+  }
+}
+
 exports.getCotizaciones = async (req, res) => {
   try {
-    // First, try to get cotizaciones without populate to avoid casting errors
-    let cotizaciones;
-    
-    try {
-      cotizaciones = await Cotizacion.find()
-        .populate('cliente.referencia', 'nombre correo telefono ciudad esCliente')
-        .populate({
-          path: 'productos.producto.id',
-          model: 'Product',
-          select: 'name price description',
-          options: { strictPopulate: false } // Allow population even if some refs are missing
-        })
-        .sort({ createdAt: -1 });
-    } catch (populateError) {
-      console.warn('Error with populate, fetching without product population:', populateError.message);
-      
-      // Fallback: get cotizaciones without product population
-      cotizaciones = await Cotizacion.find()
-        .populate('cliente.referencia', 'nombre correo telefono ciudad esCliente')
-        .sort({ createdAt: -1 });
-    }
-
-    // Normalize product entries for each cotización
+    const cotizaciones = await fetchCotizacionesWithFallback();
     const processedCotizaciones = cotizaciones.map(cotizacion => {
       const cotObj = (typeof cotizacion.toObject === 'function') ? cotizacion.toObject() : structuredClone(cotizacion);
       cotObj.productos = normalizeCotizacionProductos(cotObj.productos);
       return cotObj;
     });
-
     res.json(processedCotizaciones);
   } catch (err) {
     console.error('[ERROR getCotizaciones]', err);
-    
-    // Handle specific casting errors
     if (err.name === 'CastError' && err.kind === 'ObjectId') {
       return res.status(400).json({ 
         message: 'Error en formato de datos de las cotizaciones',
         error: 'CAST_ERROR'
       });
     }
-    
     res.status(500).json({ message: 'Error al obtener cotizaciones' });
   }
 };
@@ -421,59 +416,15 @@ exports.updateCotizacion = async (req, res) => {
     // No permitir cambiar el código ni el _id
     const { codigo, _id, ...rest } = req.body;
 
-    // Si se actualiza cliente, actualizar también en la colección Cliente
+    // Actualiza datos de cliente si corresponde
     if (rest.cliente?.referencia) {
-      const clienteId = rest.cliente.referencia;
-      // Solo actualiza si hay datos nuevos
-      await Cliente.findByIdAndUpdate(
-        clienteId,
-        {
-          nombre: rest.cliente.nombre,
-          ciudad: rest.cliente.ciudad,
-          direccion: rest.cliente.direccion,
-          telefono: rest.cliente.telefono,
-          correo: rest.cliente.correo,
-          esCliente: rest.cliente.esCliente
-        },
-        { new: true }
-      );
+      await actualizarClienteDesdeRest(rest);
     }
 
-    // Si se intenta cambiar la fecha desde el cliente, normalizar y validar
-    if (rest.fecha || rest.fechaString) {
-      const fechaRaw = rest.fechaString || rest.fecha;
-      // DEBUG: mostrar dato entrante al intentar actualizar la fecha
-      console.log('DEBUG updateCotizacion - incoming fechaRaw:', fechaRaw, 'rest.fecha (type):', typeof rest.fecha, 'rest.fechaString:', rest.fechaString);
-      if (typeof fechaRaw === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(fechaRaw)) {
-        const [yy, mm, dd] = fechaRaw.split('-').map(n => Number.parseInt(n, 10));
-        const candidateDate = new Date(Date.UTC(yy, mm - 1, dd, 0, 0, 0));
-        const candidateFechaString = fechaRaw;
-
-        const now = new Date();
-        const todayUtcStart = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0);
-        const allowedStart = todayUtcStart - (24 * 60 * 60 * 1000); // permitir 24h de tolerancia
-        if (candidateDate.getTime() < allowedStart) {
-          return res.status(400).json({ message: 'No se puede actualizar la cotización a una fecha anterior a hoy.' });
-        }
-
-        rest.fecha = candidateDate;
-        rest.fechaString = candidateFechaString;
-        console.log('DEBUG updateCotizacion - set fechaString:', rest.fechaString, 'fecha:', rest.fecha.toISOString());
-      } else if (rest.fecha && !Number.isNaN(new Date(rest.fecha).getTime())) {
-        const tmp = new Date(rest.fecha);
-        // Usar componentes UTC para evitar shifts por zona horaria
-        const candidateDate = new Date(Date.UTC(tmp.getUTCFullYear(), tmp.getUTCMonth(), tmp.getUTCDate(), 0, 0, 0));
-        // Validación con tolerancia de 24h
-        const now2 = new Date();
-        const todayUtcStart2 = Date.UTC(now2.getUTCFullYear(), now2.getUTCMonth(), now2.getUTCDate(), 0, 0, 0);
-        const allowedStart2 = todayUtcStart2 - (24 * 60 * 60 * 1000);
-        if (candidateDate.getTime() < allowedStart2) {
-          return res.status(400).json({ message: 'No se puede actualizar la cotización a una fecha anterior a hoy.' });
-        }
-        rest.fecha = candidateDate;
-        rest.fechaString = candidateDate.toISOString().slice(0, 10);
-        console.log('DEBUG updateCotizacion - set fechaString(from Date):', rest.fechaString, 'fecha:', rest.fecha.toISOString());
-      }
+    // Normalizar/validar fecha si se envía
+    const fechaValidation = normalizarYValidarFechaUpdate(rest);
+    if (!fechaValidation.ok) {
+      return res.status(400).json({ message: fechaValidation.message });
     }
 
     const cotizacion = await Cotizacion.findByIdAndUpdate(
@@ -487,6 +438,60 @@ exports.updateCotizacion = async (req, res) => {
     res.status(500).json({ message: 'Error al actualizar cotización', error: error.message });
   }
 };
+
+// Helper: actualizar datos del cliente cuando se provee referencia
+async function actualizarClienteDesdeRest(rest) {
+  const clienteId = rest.cliente.referencia;
+  await Cliente.findByIdAndUpdate(
+    clienteId,
+    {
+      nombre: rest.cliente.nombre,
+      ciudad: rest.cliente.ciudad,
+      direccion: rest.cliente.direccion,
+      telefono: rest.cliente.telefono,
+      correo: rest.cliente.correo,
+      esCliente: rest.cliente.esCliente
+    },
+    { new: true }
+  );
+}
+
+// Helper: normaliza y valida los campos de fecha en update
+function normalizarYValidarFechaUpdate(rest) {
+  if (!(rest.fecha || rest.fechaString)) return { ok: true };
+  const fechaRaw = rest.fechaString || rest.fecha;
+  console.log('DEBUG updateCotizacion - incoming fechaRaw:', fechaRaw, 'rest.fecha (type):', typeof rest.fecha, 'rest.fechaString:', rest.fechaString);
+  const toleranceMs = 24 * 60 * 60 * 1000;
+  const now = new Date();
+  const todayUtcStart = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0);
+  const allowedStart = todayUtcStart - toleranceMs;
+
+  if (typeof fechaRaw === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(fechaRaw)) {
+    const [yy, mm, dd] = fechaRaw.split('-').map(n => Number.parseInt(n, 10));
+    const candidateDate = new Date(Date.UTC(yy, mm - 1, dd, 0, 0, 0));
+    if (candidateDate.getTime() < allowedStart) {
+      return { ok: false, message: 'No se puede actualizar la cotización a una fecha anterior a hoy.' };
+    }
+    rest.fecha = candidateDate;
+    rest.fechaString = fechaRaw;
+    console.log('DEBUG updateCotizacion - set fechaString:', rest.fechaString, 'fecha:', rest.fecha.toISOString());
+    return { ok: true };
+  }
+
+  if (rest.fecha && !Number.isNaN(new Date(rest.fecha).getTime())) {
+    const tmp = new Date(rest.fecha);
+    const candidateDate = new Date(Date.UTC(tmp.getUTCFullYear(), tmp.getUTCMonth(), tmp.getUTCDate(), 0, 0, 0));
+    if (candidateDate.getTime() < allowedStart) {
+      return { ok: false, message: 'No se puede actualizar la cotización a una fecha anterior a hoy.' };
+    }
+    rest.fecha = candidateDate;
+    rest.fechaString = candidateDate.toISOString().slice(0, 10);
+    console.log('DEBUG updateCotizacion - set fechaString(from Date):', rest.fechaString, 'fecha:', rest.fecha.toISOString());
+    return { ok: true };
+  }
+
+  return { ok: true };
+}
 
 // Eliminar cotización
 exports.deleteCotizacion = async (req, res) => {
@@ -669,18 +674,16 @@ exports.enviarCotizacionPorCorreo = async (req, res) => {
 
     // Try to inline CSS for email clients using `juice` if available
     let htmlParaEnviar = htmlCompleto;
-    try {
-      const juice = require('juice');
+    let juice;
+    try { juice = require('juice'); } catch (error_) { juice = null; }
+    if (juice) {
       try {
         htmlParaEnviar = juice(htmlCompleto);
         console.log('✅ CSS inlined usando juice para el cuerpo del correo');
-      } catch (inlineErr) {
-        console.warn('⚠️ No se pudo inlinear HTML con juice, se enviará HTML original:', inlineErr.message || inlineErr);
+      } catch (error_) {
+        console.warn('⚠️ No se pudo inlinear HTML con juice, se enviará HTML original:', error_?.message || error_);
         htmlParaEnviar = htmlCompleto;
       }
-    } catch (e) {
-      console.log('ℹ️ Paquete `juice` no disponible, enviando HTML sin inlining');
-      htmlParaEnviar = htmlCompleto;
     }
 
     // Show debug info
@@ -1181,11 +1184,108 @@ async function resolverClienteId(cotizacion) {
   return clienteExistente._id;
 }
 
+// Internal helpers to reduce cognitive complexity for remisionarCotizacion
+async function safeAbortAndEndSession(session) {
+  if (!session) return;
+  try { await session.abortTransaction(); } catch (error_) { console.warn('Abort transacción falló:', error_?.message || error_); }
+  try { session.endSession(); } catch (error_) { console.warn('End session falló:', error_?.message || error_); }
+}
+
+async function descontarStockConTransaccion(cotizacion) {
+  let session = null;
+  try {
+    session = await mongoose.startSession();
+    session.startTransaction();
+    for (const prod of cotizacion.productos || []) {
+      const prodId = prod.producto?.id || prod.producto;
+      if (!prodId) continue;
+      const productoDoc = await Product.findById(prodId).session(session);
+      if (!productoDoc) continue;
+      const cantidadReq = Number(prod.cantidad || 0);
+      if (productoDoc.stock < cantidadReq) {
+        await safeAbortAndEndSession(session);
+        return { ok: false, message: `Stock insuficiente para ${productoDoc.name}. Stock actual: ${productoDoc.stock}, requerido: ${cantidadReq}` };
+      }
+      productoDoc.stock = productoDoc.stock - cantidadReq;
+      await productoDoc.save({ session });
+      console.log(`📦 Stock descontado (cotización->remisión): ${productoDoc.name} - nuevo stock: ${productoDoc.stock}`);
+    }
+    await session.commitTransaction();
+    session.endSession();
+    return { ok: true };
+  } catch (error_) {
+    await safeAbortAndEndSession(session);
+    throw error_;
+  }
+}
+
+async function verificarStockCompleto(cotizacion) {
+  for (const prod of cotizacion.productos || []) {
+    const prodId = prod.producto?.id || prod.producto;
+    if (!prodId) continue;
+    const productoDoc = await Product.findById(prodId);
+    if (!productoDoc) continue;
+    const cantidadReq = Number(prod.cantidad || 0);
+    if (productoDoc.stock < cantidadReq) {
+      return `Stock insuficiente para ${productoDoc.name}. Stock actual: ${productoDoc.stock}, requerido: ${cantidadReq}`;
+    }
+  }
+  return null;
+}
+
+async function descontarStockSecuencial(cotizacion) {
+  for (const prod of cotizacion.productos || []) {
+    const prodId = prod.producto?.id || prod.producto;
+    if (!prodId) continue;
+    const productoDoc = await Product.findById(prodId);
+    if (!productoDoc) continue;
+    const cantidadReq = Number(prod.cantidad || 0);
+    productoDoc.stock = productoDoc.stock - cantidadReq;
+    await productoDoc.save();
+    console.log(`📦 Stock descontado (cotización->remisión fallback): ${productoDoc.name} - nuevo stock: ${productoDoc.stock}`);
+  }
+}
+
+async function actualizarPedidoRelacionado(cotizacion, observacionesTexto) {
+  const Pedido = require('../models/Pedido');
+  const pedidoRef = cotizacion.pedidoReferencia || cotizacion.pedidoreferencia || cotizacion.pedidoreferencia || null;
+  if (!pedidoRef) return observacionesTexto;
+  try {
+    const pedidoDoc = await Pedido.findById(pedidoRef).lean();
+    if (pedidoDoc) {
+      await Pedido.findByIdAndUpdate(pedidoDoc._id, { estado: 'entregado' });
+      const pedidoIdent = pedidoDoc.numeroPedido || String(pedidoDoc._id);
+      return `${observacionesTexto} y pedido  ${pedidoIdent}.`;
+    }
+  } catch (error_) {
+    console.warn('No se pudo actualizar el pedido relacionado:', error_?.message || error_);
+  }
+  return observacionesTexto;
+}
+
+async function asegurarClienteReal(clienteId) {
+  try {
+    await Cliente.updateOne({ _id: clienteId, esCliente: false }, { $set: { esCliente: true } });
+  } catch (error_) {
+    console.warn('No se pudo actualizar esCliente a true para el cliente:', error_?.message || error_);
+  }
+}
+
+async function postCrearRemisionUpdates(clienteId, nuevaRemision, cotizacionId, numeroRemision) {
+  try { await Cliente.findByIdAndUpdate(clienteId, { operacion: 'compra' }); }
+  catch (error_) { console.warn('No se pudo actualizar operacion a compra tras remisión:', error_?.message || error_); }
+
+  await Cotizacion.findByIdAndUpdate(cotizacionId, {
+    estado: 'Remisionada',
+    remisionReferencia: nuevaRemision._id,
+    codigoRemision: numeroRemision
+  });
+}
+
 // Convertir cotización a remisión — crea solo un documento en la colección 'remisions'
 exports.remisionarCotizacion = async (req, res) => {
   try {
     const { cotizacionId, fechaEntrega, observaciones } = req.body;
-
     const cotizacion = await Cotizacion.findById(cotizacionId).populate('cliente.referencia');
     if (!cotizacion) {
       return res.status(404).json({ message: 'Cotización no encontrada' });
@@ -1201,117 +1301,29 @@ exports.remisionarCotizacion = async (req, res) => {
       return res.status(400).json({ message: 'No se pudo resolver el cliente para crear la remisión' });
     }
 
-    // Asegurar que el cliente esté marcado como cliente real
+    await asegurarClienteReal(clienteId);
+
+    // Descontar stock con transacción o fallback
     try {
-      await Cliente.updateOne({ _id: clienteId, esCliente: false }, { $set: { esCliente: true } });
-    } catch (e) {
-      console.warn('No se pudo actualizar esCliente a true para el cliente:', e?.message || e);
-    }
-
-    // Antes de crear la remisión, intentar descontar el stock de los productos mencionados.
-    // Preferimos usar transacciones si la deployment lo permite; si no (por ejemplo, servidor mongod standalone),
-    // hacemos un flujo de comprobación-antes-decremento sin sesión como fallback.
-    let usedTransaction = false;
-    try {
-      let session = null;
-      try {
-        session = await mongoose.startSession();
-        session.startTransaction();
-        usedTransaction = true;
-
-        for (const prod of cotizacion.productos || []) {
-          const prodId = prod.producto?.id || prod.producto;
-          if (!prodId) continue;
-          const productoDoc = await Product.findById(prodId).session(session);
-          if (!productoDoc) continue; // omitimos si no existe el producto
-          const cantidadReq = Number(prod.cantidad || 0);
-          if (productoDoc.stock < cantidadReq) {
-            await session.abortTransaction();
-            session.endSession();
-            return res.status(400).json({ message: `Stock insuficiente para ${productoDoc.name}. Stock actual: ${productoDoc.stock}, requerido: ${cantidadReq}` });
-          }
-          productoDoc.stock = productoDoc.stock - cantidadReq;
-          await productoDoc.save({ session });
-          console.log(`📦 Stock descontado (cotización->remisión): ${productoDoc.name} - nuevo stock: ${productoDoc.stock}`);
-        }
-
-        await session.commitTransaction();
-        session.endSession();
-      } catch (txErr) {
-        // Si el error indica que las transacciones no están soportadas, haremos fallback.
-        if (session) {
-          try { await session.abortTransaction(); } catch (e) { /* ignore */ }
-          try { session.endSession(); } catch (e) { /* ignore */ }
-        }
-        // Re-throw para ser capturado por el outer catch y ejecutar fallback
-        throw txErr;
+      const txResult = await descontarStockConTransaccion(cotizacion);
+      if (!txResult.ok) {
+        return res.status(400).json({ message: txResult.message });
       }
-    } catch (errStart) {
-      // Si el error es por "Transaction numbers are only allowed..." u otro que impida usar transacciones,
-      // hacemos un flujo no-transaccional: primero verificamos que todo el stock sea suficiente, y si es así,
-      // decrementamos secuencialmente.
-      console.warn('Transacciones no disponibles o fallo al iniciar session, usando fallback no-transaccional para decrementar stock:', errStart?.message || errStart);
-
-      // 1) Verificar disponibilidad de stock para todos los productos
-      for (const prod of cotizacion.productos || []) {
-        const prodId = prod.producto?.id || prod.producto;
-        if (!prodId) continue;
-        const productoDoc = await Product.findById(prodId);
-        if (!productoDoc) continue;
-        const cantidadReq = Number(prod.cantidad || 0);
-        if (productoDoc.stock < cantidadReq) {
-          return res.status(400).json({ message: `Stock insuficiente para ${productoDoc.name}. Stock actual: ${productoDoc.stock}, requerido: ${cantidadReq}` });
-        }
-      }
-
-      // 2) Decrementar secuencialmente (no transaccional)
+    } catch (error_) {
+      console.warn('Transacciones no disponibles o fallo al iniciar session, usando fallback no-transaccional para decrementar stock:', error_?.message || error_);
+      const stockMsg = await verificarStockCompleto(cotizacion);
+      if (stockMsg) return res.status(400).json({ message: stockMsg });
       try {
-        for (const prod of cotizacion.productos || []) {
-          const prodId = prod.producto?.id || prod.producto;
-          if (!prodId) continue;
-          const productoDoc = await Product.findById(prodId);
-          if (!productoDoc) continue;
-          const cantidadReq = Number(prod.cantidad || 0);
-          productoDoc.stock = productoDoc.stock - cantidadReq;
-          await productoDoc.save();
-          console.log(`📦 Stock descontado (cotización->remisión fallback): ${productoDoc.name} - nuevo stock: ${productoDoc.stock}`);
-        }
-      } catch (errFallback) {
-        console.error('Error actualizando stock en fallback no-transaccional:', errFallback);
-        return res.status(500).json({ message: 'Error al actualizar stock (fallback)', error: errFallback.message });
+        await descontarStockSecuencial(cotizacion);
+      } catch (error_) {
+        console.error('Error actualizando stock en fallback no-transaccional:', error_);
+        return res.status(500).json({ message: 'Error al actualizar stock (fallback)', error: error_.message });
       }
     }
 
     const Remision = require('../models/Remision');
-    // Construir observaciones y, si existe, actualizar el pedido relacionado
     let observacionesTexto = `Remisión generada desde cotización ${cotizacion.codigo}. ${observaciones || ''}`;
-
-    const Pedido = require('../models/Pedido');
-    const pedidoRef = cotizacion.pedidoReferencia || cotizacion.pedidoreferencia || cotizacion.pedidoreferencia || null;
-    if (pedidoRef) {
-      try {
-        const pedidoDoc = await Pedido.findById(pedidoRef).lean();
-        if (pedidoDoc) {
-          // Actualizar estado del pedido a 'entregado'
-          await Pedido.findByIdAndUpdate(pedidoDoc._id, { estado: 'entregado' });
-          const pedidoIdent = pedidoDoc.numeroPedido || String(pedidoDoc._id);
-          observacionesTexto += ` y pedido  ${pedidoIdent}.`;
-        }
-      } catch (err) {
-        console.warn('No se pudo actualizar el pedido relacionado:', err?.message || err);
-      }
-    }
-
-    if (!clienteId) {
-      return res.status(400).json({ message: 'No se pudo resolver el cliente para crear la remisión' });
-    }
-
-    // Asegurar que el cliente esté marcado como cliente real (esCliente: true)
-    try {
-      await Cliente.updateOne({ _id: clienteId, esCliente: false }, { $set: { esCliente: true } });
-    } catch (e) {
-      console.warn('No se pudo actualizar esCliente a true para el cliente:', e?.message || e);
-    }
+    observacionesTexto = await actualizarPedidoRelacionado(cotizacion, observacionesTexto);
 
     const nuevaRemision = new Remision({
       numeroRemision,
@@ -1331,18 +1343,7 @@ exports.remisionarCotizacion = async (req, res) => {
 
     await nuevaRemision.save();
 
-    // Al crear una remisión, la operación del cliente pasa a 'compra'
-    try {
-      await Cliente.findByIdAndUpdate(clienteId, { operacion: 'compra' });
-    } catch (error_) {
-      console.warn('No se pudo actualizar operacion a compra tras remisión:', error_?.message || error_);
-    }
-
-    await Cotizacion.findByIdAndUpdate(cotizacionId, {
-      estado: 'Remisionada',
-      remisionReferencia: nuevaRemision._id,
-      codigoRemision: numeroRemision
-    });
+    await postCrearRemisionUpdates(clienteId, nuevaRemision, cotizacionId, numeroRemision);
 
     const remisionCompleta = await Remision.findById(nuevaRemision._id)
       .populate('responsable', 'username firstName surname');
