@@ -392,6 +392,7 @@ export default function RemisionPreview({ datos, onClose }) {
         correoDestino: correo,
         asunto, mensaje
       });
+      
       if (response && response.status >= 200 && response.status < 300) {
         const Swal = (await import('sweetalert2')).default;
         Swal.fire({ icon: 'success', title: 'Remisión enviada', text: 'La remisión ha sido enviada exitosamente por correo' });

@@ -191,7 +191,6 @@ export default function RegistrarCotizacion() {
       if (result.isConfirmed) {
         setProductosSeleccionados([]);
         setProductErrors([]);
-        setProductErrors([]);
       }
     });
   };
@@ -214,8 +213,10 @@ export default function RegistrarCotizacion() {
     // clear producto error for this row when a selection is made
     setProductErrors(prev => {
       const copy = [...prev];
-      copy[index] = { ...(copy[index] || {}) };
-      delete copy[index].producto;
+      if (copy[index]) {
+        copy[index] = { ...copy[index] };
+        delete copy[index].producto;
+      }
       return copy;
     });
   };
@@ -238,8 +239,10 @@ export default function RegistrarCotizacion() {
     const field = name;
     setProductErrors(prev => {
       const copy = [...prev];
-      copy[index] = { ...(copy[index] || {}) };
-      delete copy[index][field];
+      if (copy[index]) {
+        copy[index] = { ...copy[index] };
+        delete copy[index][field];
+      }
       return copy;
     });
   };
@@ -317,13 +320,15 @@ export default function RegistrarCotizacion() {
       console.warn('Error validando fecha localmente:', err);
     }
 
-    // productos: validar por fila
-    productosSeleccionados.forEach((p, i) => {
-      if (!p.producto) newProductErrors[i].producto = 'Seleccione un producto.';
-      if (!p.cantidad || Number.parseFloat(p.cantidad) <= 0) newProductErrors[i].cantidad = 'Ingrese una cantidad válida.';
-      if (!p.valorUnitario || Number.parseFloat(p.valorUnitario) <= 0) newProductErrors[i].valorUnitario = 'Valor unitario inválido.';
-      if (p.stock !== undefined && p.cantidad && Number(p.cantidad) > Number(p.stock)) newProductErrors[i].cantidad = 'Cantidad no disponible en stock.';
-    });
+    // productos: validar por fila (usar for...of en lugar de .forEach)
+    let idx = 0;
+    for (const p of productosSeleccionados) {
+      if (!p.producto) newProductErrors[idx].producto = 'Seleccione un producto.';
+      if (!p.cantidad || Number.parseFloat(p.cantidad) <= 0) newProductErrors[idx].cantidad = 'Ingrese una cantidad válida.';
+      if (!p.valorUnitario || Number.parseFloat(p.valorUnitario) <= 0) newProductErrors[idx].valorUnitario = 'Valor unitario inválido.';
+      if (p.stock !== undefined && p.cantidad && Number(p.cantidad) > Number(p.stock)) newProductErrors[idx].cantidad = 'Cantidad no disponible en stock.';
+      idx++;
+    }
 
     const hasProductRowErrors = newProductErrors.some(obj => Object.keys(obj).length > 0);
 
