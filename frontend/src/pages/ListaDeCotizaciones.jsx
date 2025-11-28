@@ -141,6 +141,7 @@ export default function ListaDeCotizaciones() {
       // Usar los componentes UTC para evitar shifts por zona horaria
       return new Date(Date.UTC(tmp.getUTCFullYear(), tmp.getUTCMonth(), tmp.getUTCDate(), 0, 0, 0));
     } catch (e) {
+      console.warn('parseApiDate: invalid input', e);
       return null;
     }
   };
@@ -229,6 +230,66 @@ export default function ListaDeCotizaciones() {
   };
 
   // Agendar una cotización como pedido (extraído para evitar nesting profundo en JSX)
+  // Helper: resolve cliente id from different possible shapes
+  const resolveClienteId = (cotizacion, cot) => {
+    if (!cotizacion && !cot) return null;
+    // prefer populated referencia id
+    if (cotizacion?.cliente?.referencia?._id) return cotizacion.cliente.referencia._id;
+    if (cotizacion?.cliente?.referencia) return cotizacion.cliente.referencia;
+    if (cot?.cliente?._id) return cot.cliente._id;
+    if (cot?.cliente?.referencia?._id) return cot.cliente.referencia._id;
+    if (cot?.cliente?.referencia) return cot.cliente.referencia;
+    return null;
+  };
+
+  // Helper: extract product id from product entry
+  const getProductIdFromProductEntry = (p) => {
+    if (!p) return null;
+    if (p.producto?.id) return (p.producto.id._id || p.producto.id);
+    if (p.producto) return p.producto;
+    return null;
+  };
+
+  // Helper: map productos to formato pedido
+  const mapProductosParaPedido = (productosArray) => {
+    return (productosArray || []).map(p => {
+      const productId = getProductIdFromProductEntry(p);
+      if (!productId) return null;
+      const cantidadNum = Number(p?.cantidad);
+      const precioRaw = p?.valorUnitario ?? p?.producto?.price;
+      const precioNum = Number(precioRaw);
+      return {
+        product: productId,
+        cantidad: Number.isFinite(cantidadNum) && cantidadNum > 0 ? cantidadNum : 1,
+        precioUnitario: Number.isFinite(precioNum) ? precioNum : 0,
+      };
+    }).filter(Boolean);
+  };
+
+  // Helper: compute min/default dates for Swal
+  const computeMinAndDefaultDate = (cotizacion) => {
+    let baseRaw;
+    if (cotizacion && cotizacion.createdAt) baseRaw = cotizacion.createdAt;
+    else if (cotizacion && cotizacion.fechaString) baseRaw = cotizacion.fechaString;
+    else if (cotizacion && cotizacion.fecha) baseRaw = cotizacion.fecha;
+    else baseRaw = new Date();
+
+    const baseDate = parseApiDate(baseRaw) || new Date(baseRaw);
+    const minDateStr = baseDate.toISOString().slice(0, 10);
+
+    let defaultDate;
+    if (cotizacion && cotizacion.fechaString) {
+      defaultDate = cotizacion.fechaString;
+    } else if (cotizacion && cotizacion.fecha) {
+      const parsed = parseApiDate(cotizacion.fecha);
+      defaultDate = parsed ? parsed.toISOString().slice(0, 10) : minDateStr;
+    } else {
+      defaultDate = minDateStr;
+    }
+
+    return { minDateStr, defaultDate };
+  };
+
   const agendarCotizacion = async (cot) => {
     try {
       const res = await api.get(`/api/cotizaciones/${cot._id}`);
@@ -244,118 +305,30 @@ export default function ListaDeCotizaciones() {
       });
       if (!confirm.isConfirmed) return;
 
-      const clienteId = (
-        cotizacion?.cliente?.referencia?._id ||
-        cotizacion?.cliente?.referencia ||
-        cot?.cliente?._id ||
-        cot?.cliente?.referencia?._id ||
-        cot?.cliente?.referencia
-      );
+      const clienteId = resolveClienteId(cotizacion, cot);
 
       // Mapear productos al formato de pedido
-      const productosPedido = (cotizacion.productos || []).map(p => {
-        const productId = (p?.producto?.id && (p.producto.id._id || p.producto.id)) || p?.producto;
-        if (!productId) return null;
-        const cantidadNum = Number(p?.cantidad);
-        const precioRaw = p?.valorUnitario ?? p?.producto?.price;
-        const precioNum = Number(precioRaw);
-        return {
-          product: productId,
-          cantidad: Number.isFinite(cantidadNum) && cantidadNum > 0 ? cantidadNum : 1,
-          precioUnitario: Number.isFinite(precioNum) ? precioNum : 0,
-        };
-      }).filter(Boolean);
+      const productosPedido = mapProductosParaPedido(cotizacion.productos);
 
       if (productosPedido.length === 0) {
         return Swal.fire('Error', 'La cotización no tiene productos.', 'warning');
       }
 
       // Pedir al usuario la fecha de entrega y campos opcionales (descripcion, condiciones de pago)
-      const baseRaw = cotizacion.createdAt ? cotizacion.createdAt : (cotizacion.fechaString ? cotizacion.fechaString : (cotizacion.fecha ? cotizacion.fecha : new Date()));
-      const baseDate = parseApiDate(baseRaw) || new Date(baseRaw);
-      const minDateStr = baseDate.toISOString().slice(0, 10);
-      const defaultDate = cotizacion.fechaString ? cotizacion.fechaString : (cotizacion.fecha ? parseApiDate(cotizacion.fecha)?.toISOString().slice(0,10) || minDateStr : minDateStr); // YYYY-MM-DD
+      const { minDateStr, defaultDate } = computeMinAndDefaultDate(cotizacion);
 
-      const { value: formValues } = await Swal.fire({
-        title: 'Agendar como pedido',
-        html:
-          `<div style="display:flex;flex-direction:column;gap:8px;text-align:left">
-             <label style="font-weight:600">Fecha de entrega</label>
-             <input id="swal-fecha" type="date" class="swal2-input" value="${defaultDate}" min="${minDateStr}" />
-             <label style="font-weight:600">Descripción (opcional)</label>
-             <input id="swal-descripcion" type="text" class="swal2-input" placeholder="Descripción del pedido (no obligatorio)" />
-             <label style="font-weight:600">Condiciones de Pago (opcional)</label>
-             <input id="swal-condiciones" type="text" class="swal2-input" placeholder="Ej: 50% anticipo, 50% contra entrega" />
-           </div>`,
-        showCancelButton: true,
-        focusConfirm: false,
-        confirmButtonText: 'Confirmar',
-        cancelButtonText: 'Cancelar',
-        preConfirm: () => {
-          const fechaSeleccionada = document.getElementById('swal-fecha')?.value;
-          const descripcion = document.getElementById('swal-descripcion')?.value || '';
-          const condicionesPago = document.getElementById('swal-condiciones')?.value || '';
-
-          if (!fechaSeleccionada) {
-            Swal.showValidationMessage('Por favor seleccione la fecha de entrega');
-            return false;
-          }
-
-          // Validar que la fecha no sea anterior a la fecha de registro/fecha de la cotización
-          try {
-            const sel = new Date(fechaSeleccionada);
-            const minDate = new Date(minDateStr + 'T00:00:00');
-            if (sel < minDate) {
-              Swal.showValidationMessage(`La fecha no puede ser anterior a ${minDateStr}`);
-              return false;
-            }
-          } catch (err) {
-            Swal.showValidationMessage('Fecha inválida');
-            return false;
-          }
-
-          return { fechaSeleccionada, descripcion, condicionesPago };
-        }
-      });
-
+      const formValues = await promptFechaDescripcion(minDateStr, defaultDate);
       if (!formValues) return;
 
       Swal.fire({ title: 'Agendando...', allowOutsideClick: false, allowEscapeKey: false, showConfirmButton: false, didOpen: () => Swal.showLoading() });
 
       const fechaEntrega = new Date(formValues.fechaSeleccionada).toISOString();
 
-      const pedidoRes = await api.post('/api/pedidos', {
-        cliente: clienteId,
-        productos: productosPedido,
-        fechaEntrega,
-        descripcion: formValues.descripcion || '',
-        condicionesPago: formValues.condicionesPago || '',
-        observacion: `Agendado desde cotización ${cotizacion.codigo}`,
-        cotizacionReferenciada: cotizacion._id,
-        cotizacionCodigo: cotizacion.codigo
-      });
-      const pedidoResult = pedidoRes.data || pedidoRes;
-      const nuevoPedido = pedidoResult.data || pedidoResult.pedido || pedidoResult;
+      const nuevoPedido = await crearPedidoDesdeCotizacion({ clienteId, productosPedido, fechaEntrega, formValues, cotizacion });
 
       // Si el cliente existe en la colección 'clientes', actualizar solo el campo 'operacion'
       // cuando su flag 'esCliente' sea false. No modificar 'esCliente'.
-      try {
-        const clienteRefId = (clienteId && (clienteId._id || clienteId)) || clienteId;
-        if (clienteRefId) {
-          const clienteRes = await api.get(`/api/clientes/${clienteRefId}`);
-          const clienteData = clienteRes.data || clienteRes;
-          const clienteDoc = clienteData.data || clienteData;
-          if (clienteDoc) {
-            const esClienteFlag = clienteDoc.esCliente === true || String(clienteDoc.esCliente).toLowerCase() === 'true';
-            if (!esClienteFlag) {
-              // Actualizar solo 'operacion' a 'agenda'
-              await api.put(`/api/clientes/${clienteRefId}`, { operacion: 'agenda' });
-            }
-          }
-        }
-      } catch (err) {
-        console.warn('No se pudo actualizar el campo operacion del cliente:', err);
-      }
+      await actualizarOperacionClienteSiCorresponde(clienteId);
 
       // Actualizar el estado local de la cotización (usar campo 'estado')
       setCotizaciones(prev => prev.map(c =>
@@ -401,6 +374,86 @@ export default function ListaDeCotizaciones() {
     } catch (err) {
       console.error('Error loading cotizacion for edit:', err);
       Swal.fire('Error', 'No se pudo cargar la cotización completa.', 'error');
+    }
+  };
+
+  // Helper: prompt para fecha, descripcion y condiciones usando Swal
+  const promptFechaDescripcion = async (minDateStr, defaultDate) => {
+    const { value: formValues } = await Swal.fire({
+      title: 'Agendar como pedido',
+      html:
+        `<div style="display:flex;flex-direction:column;gap:8px;text-align:left">
+           <label style="font-weight:600">Fecha de entrega</label>
+           <input id="swal-fecha" type="date" class="swal2-input" value="${defaultDate}" min="${minDateStr}" />
+           <label style="font-weight:600">Descripción (opcional)</label>
+           <input id="swal-descripcion" type="text" class="swal2-input" placeholder="Descripción del pedido (no obligatorio)" />
+           <label style="font-weight:600">Condiciones de Pago (opcional)</label>
+           <input id="swal-condiciones" type="text" class="swal2-input" placeholder="Ej: 50% anticipo, 50% contra entrega" />
+         </div>`,
+      showCancelButton: true,
+      focusConfirm: false,
+      confirmButtonText: 'Confirmar',
+      cancelButtonText: 'Cancelar',
+      preConfirm: async () => {
+        const fechaSeleccionada = document.getElementById('swal-fecha')?.value;
+        const descripcion = document.getElementById('swal-descripcion')?.value || '';
+        const condicionesPago = document.getElementById('swal-condiciones')?.value || '';
+
+        if (!fechaSeleccionada) {
+          Swal.showValidationMessage('Por favor seleccione la fecha de entrega');
+          throw new Error('fecha missing');
+        }
+
+        // Validar que la fecha no sea anterior a la fecha de registro/fecha de la cotización
+        try {
+          const sel = new Date(fechaSeleccionada);
+          const minDate = new Date(minDateStr + 'T00:00:00');
+          if (sel < minDate) {
+            Swal.showValidationMessage(`La fecha no puede ser anterior a ${minDateStr}`);
+            throw new Error('fecha anterior');
+          }
+        } catch (err) {
+          Swal.showValidationMessage('Fecha inválida');
+          throw err;
+        }
+
+        return { fechaSeleccionada, descripcion, condicionesPago };
+      }
+    });
+    return formValues;
+  };
+
+  // Helper: crear pedido a partir de cotización (API call)
+  const crearPedidoDesdeCotizacion = async ({ clienteId, productosPedido, fechaEntrega, formValues, cotizacion }) => {
+    const pedidoRes = await api.post('/api/pedidos', {
+      cliente: clienteId,
+      productos: productosPedido,
+      fechaEntrega,
+      descripcion: formValues.descripcion || '',
+      condicionesPago: formValues.condicionesPago || '',
+      observacion: `Agendado desde cotización ${cotizacion.codigo}`,
+      cotizacionReferenciada: cotizacion._id,
+      cotizacionCodigo: cotizacion.codigo
+    });
+    const pedidoResult = pedidoRes.data || pedidoRes;
+    return pedidoResult.data || pedidoResult.pedido || pedidoResult;
+  };
+
+  // Helper: actualiza campo operacion del cliente si corresponde
+  const actualizarOperacionClienteSiCorresponde = async (clienteId) => {
+    try {
+      const clienteRefId = (clienteId && (clienteId._id || clienteId)) || clienteId;
+      if (!clienteRefId) return;
+      const clienteRes = await api.get(`/api/clientes/${clienteRefId}`);
+      const clienteData = clienteRes.data || clienteRes;
+      const clienteDoc = clienteData.data || clienteData;
+      if (!clienteDoc) return;
+      const esClienteFlag = clienteDoc.esCliente === true || String(clienteDoc.esCliente).toLowerCase() === 'true';
+      if (!esClienteFlag) {
+        await api.put(`/api/clientes/${clienteRefId}`, { operacion: 'agenda' });
+      }
+    } catch (err) {
+      console.warn('No se pudo actualizar el campo operacion del cliente:', err);
     }
   };
 
@@ -519,7 +572,14 @@ export default function ListaDeCotizaciones() {
   const [filtroEnviado, setFiltroEnviado] = useState('');
 
   const cotizacionesFiltradas = cotizaciones.filter(cot => {
-    const fechaCompare = cot.fechaString ? cot.fechaString : (cot.fecha ? parseApiDate(cot.fecha)?.toISOString().slice(0, 10) : null);
+    let fechaCompare = null;
+    if (cot?.fechaString) fechaCompare = cot.fechaString;
+    else if (cot?.fecha) {
+      const parsed = parseApiDate(cot.fecha);
+      fechaCompare = parsed ? parsed.toISOString().slice(0, 10) : null;
+    } else {
+      fechaCompare = null;
+    }
     const coincideFecha = !filtroFecha || fechaCompare === filtroFecha;
     const coincideCliente = !filtroCliente || cot.cliente?.nombre?.toLowerCase().includes(filtroCliente.toLowerCase());
     const coincideEnviado = !filtroEnviado ||
