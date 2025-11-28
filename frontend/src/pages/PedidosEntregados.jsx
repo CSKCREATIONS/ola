@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Fijo from '../components/Fijo';
 import NavVentas from '../components/NavVentas';
 import html2canvas from 'html2canvas';
@@ -151,6 +152,10 @@ export default function PedidosEntregados() {
 
 
   const [mostrarModalNuevaRemision, setMostrarModalNuevaRemision] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [pendingHighlightId, setPendingHighlightId] = useState(null);
+  const [blinkRemisionId, setBlinkRemisionId] = useState(null);
   const [pedidosEntregados, setPedidosEntregados] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -250,16 +255,42 @@ export default function PedidosEntregados() {
         }
 
         if (res && res.status >= 200 && res.status < 300) {
-          const data = res.data || res;
+          const raw = res?.data || res;
+          let nuevaRemision = raw?.remision || raw?.data || raw;
+          if (nuevaRemision && nuevaRemision.remision) nuevaRemision = nuevaRemision.remision;
+
           Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Remisión creada', showConfirmButton: false, timer: 1800, timerProgressBar: true });
+
           // limpiar y cerrar modal
           setMostrarModalNuevaRemision(false);
           setRemisionarCliente(''); setRemisionarCiudad(''); setRemisionarDireccion(''); setRemisionarTelefono(''); setRemisionarCorreo(''); setRemisionarFechaRem(''); setRemisionarProductos([]);
           setErrors({}); setProductErrors([]);
           if (descripcionRef.current) descripcionRef.current.setContent('');
           if (condicionesRef.current) condicionesRef.current.setContent('');
-          // recargar listado
-          try { await cargarRemisionesEntregadas(); } catch (e) { /* non-blocking */ }
+
+          // Agregar al listado local si no existe y abrir vista previa (con datos completos)
+          if (nuevaRemision && nuevaRemision._id) {
+            let fullRemision = nuevaRemision;
+            try {
+              const fres = await api.get(`/api/remisiones/${nuevaRemision._id}`);
+              const fdata = fres.data || fres;
+              fullRemision = fdata.remision || fdata || nuevaRemision;
+            } catch (e) {
+              console.warn('No se pudo hidratar remisión recién creada. Usando datos de respuesta.', e);
+            }
+
+            setPedidosEntregados(prev => {
+              const exists = prev.some(r => r._id === (fullRemision._id || nuevaRemision._id));
+              if (exists) return prev;
+              const merged = [fullRemision, ...prev];
+              return merged.sort((a, b) => new Date(b.fechaRemision || b.updatedAt || b.createdAt || 0) - new Date(a.fechaRemision || a.updatedAt || a.createdAt || 0));
+            });
+            setRemisionPreview(fullRemision);
+            setPendingHighlightId(fullRemision._id || nuevaRemision._id);
+          }
+
+          // Refrescar del servidor en segundo plano (mejora consistencia)
+          try { cargarRemisionesEntregadas(); } catch (e) { /* non-blocking */ }
         } else {
           Swal.fire('Error', res.data?.message || 'No se pudo crear la remisión', 'error');
         }
@@ -442,6 +473,74 @@ export default function PedidosEntregados() {
   useEffect(() => {
     cargarRemisionesEntregadas();
   }, []);
+
+  // Efecto para procesar estado proveniente de navegación (CotizacionPreview/PedidosAgendados)
+  useEffect(() => {
+    try {
+      const navState = location?.state;
+      if (navState?.autoPreviewRemision) {
+        const nueva = navState.autoPreviewRemision;
+        const openWith = async (doc) => {
+          setPedidosEntregados(prev => {
+            const exists = prev.some(r => r._id === doc._id);
+            if (!exists) {
+              const merged = [doc, ...prev];
+              return merged.sort((a, b) => new Date(b.fechaRemision || b.updatedAt || b.createdAt || 0) - new Date(a.fechaRemision || a.updatedAt || a.createdAt || 0));
+            }
+            return prev;
+          });
+          setRemisionPreview(doc);
+          setPendingHighlightId(doc._id);
+        };
+
+        if (nueva?._id) {
+          // Intentar hidratar la remisión navegada
+          (async () => {
+            try {
+              const fres = await api.get(`/api/remisiones/${nueva._id}`);
+              const fdata = fres.data || fres;
+              const fullDoc = fdata.remision || fdata || nueva;
+              await openWith(fullDoc);
+            } catch (e) {
+              console.warn('No se pudo hidratar remisión navegada. Usando objeto recibido.', e);
+              await openWith(nueva);
+            }
+          })();
+        } else {
+          // Sin _id; usar lo que llegó
+          openWith(nueva);
+        }
+        if (navState.toast) {
+          Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: navState.toast, showConfirmButton: false, timer: 2000, timerProgressBar: true });
+        }
+        // Limpiar el estado de navegación para evitar reprocesos en refresh
+        navigate('/PedidosEntregados', { replace: true });
+      }
+    } catch (e) {
+      console.error('Error procesando estado de navegación remision:', e);
+    }
+  }, [location?.state]);
+
+  // Activar parpadeo cuando se cierra la vista previa
+  const handleCloseRemisionPreview = () => {
+    setRemisionPreview(null);
+    if (pendingHighlightId) setBlinkRemisionId(pendingHighlightId);
+  };
+
+  // Inyectar estilos de animación una vez que se necesiten
+  useEffect(() => {
+    if (blinkRemisionId) {
+      if (!document.getElementById('blink-style')) {
+        const styleEl = document.createElement('style');
+        styleEl.id = 'blink-style';
+        styleEl.textContent = '@keyframes rowBlink {0%{background-color:#ffffff;}50%{background-color:#fef9c3;}100%{background-color:#ffffff;}} .blink-row{animation:rowBlink 1.2s ease-in-out 6;}';
+        document.head.appendChild(styleEl);
+      }
+      // Remover efecto después de su duración (~1.2s * 6 ≈ 7.2s)
+      const timeout = setTimeout(() => setBlinkRemisionId(null), 7500);
+      return () => clearTimeout(timeout);
+    }
+  }, [blinkRemisionId]);
   const cargarRemisionesEntregadas = async () => {
     try {
       // Usar el endpoint del controlador de remisiones. Cargar todas las remisiones (sin filtrar)
@@ -714,7 +813,7 @@ export default function PedidosEntregados() {
                   </thead>
                   <tbody>
                     {currentItems.map((remision, index) => (
-                      <tr key={remision._id}>
+                      <tr key={remision._id} className={remision._id === blinkRemisionId ? 'blink-row' : ''}>
                         <td style={{ fontWeight: '600', color: '#6366f1' }}>
                           {indexOfFirstItem + index + 1}
                         </td>
@@ -819,7 +918,7 @@ export default function PedidosEntregados() {
             {remisionPreview && (
               <RemisionPreview
                 datos={remisionPreview}
-                onClose={() => setRemisionPreview(null)}
+                onClose={handleCloseRemisionPreview}
               />
             )}
 

@@ -320,9 +320,11 @@ export default function ListaDeCotizaciones() {
 
       if (!formValues) return;
 
+      Swal.fire({ title: 'Agendando...', allowOutsideClick: false, allowEscapeKey: false, showConfirmButton: false, didOpen: () => Swal.showLoading() });
+
       const fechaEntrega = new Date(formValues.fechaSeleccionada).toISOString();
 
-      await api.post('/api/pedidos', {
+      const pedidoRes = await api.post('/api/pedidos', {
         cliente: clienteId,
         productos: productosPedido,
         fechaEntrega,
@@ -332,6 +334,8 @@ export default function ListaDeCotizaciones() {
         cotizacionReferenciada: cotizacion._id,
         cotizacionCodigo: cotizacion.codigo
       });
+      const pedidoResult = pedidoRes.data || pedidoRes;
+      const nuevoPedido = pedidoResult.data || pedidoResult.pedido || pedidoResult;
 
       // Si el cliente existe en la colección 'clientes', actualizar solo el campo 'operacion'
       // cuando su flag 'esCliente' sea false. No modificar 'esCliente'.
@@ -358,8 +362,14 @@ export default function ListaDeCotizaciones() {
         c._id === cot._id ? { ...c, estado: 'Agendada' } : c
       ));
 
-      await Swal.fire('Agendado', 'La cotización fue agendada como pedido.', 'success');
-      navigate('/PedidosAgendados');
+      // Navegar a PedidosAgendados con estado para auto abrir preview del nuevo pedido y parpadear fila
+      navigate('/PedidosAgendados', {
+        state: {
+          autoPreviewPedido: nuevoPedido,
+          highlightPedidoId: nuevoPedido?._id,
+          toast: 'cotizacion agendada'
+        }
+      });
     } catch (error) {
       console.error(error);
       Swal.fire('Error', error.message || 'Hubo un problema al agendar la cotización', 'error');

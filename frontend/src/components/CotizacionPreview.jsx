@@ -56,7 +56,7 @@ async function openRemisionSwal(datos) {
               <span>Fecha de Entrega</span> <span style="color: #ef4444;">*</span>
             </label>
             <input type="date" id="fechaEntrega" value="${fechaDefault}" style="width:100%; padding:12px; border-radius:8px; border:2px solid #e5e7eb; background:#f9fafb;" />
-            <small style="color:#6b7280; font-size:12px; display:block; margin-top:4px;">Fecha en que se realizó/realizará la entrega de los productos</small>
+            <small style="color:#6b7280; font-size:12px; display:block; margin-top:4px;">Fecha de entrega de los productos</small>
           </div>
           <div style="margin-bottom: 16px;">
             <label for="observaciones" style="display:block; margin-bottom:8px; font-weight:bold; color:#374151; font-size:14px;">
@@ -221,7 +221,7 @@ export default function CotizacionPreview({ datos, onClose, onEmailSent, onRemis
       const formValues = await openRemisionSwal(datos);
       if (!formValues) return;
 
-      Swal.fire({ title: 'Procesando...', text: 'Convirtiendo cotización a pedido', allowOutsideClick: false, allowEscapeKey: false, showConfirmButton: false, didOpen: () => Swal.showLoading() });
+      Swal.fire({ title: 'remisionando cotización...', allowOutsideClick: false, allowEscapeKey: false, showConfirmButton: false, didOpen: () => Swal.showLoading() });
 
       const res = await api.post(`/api/cotizaciones/${datos._id}/remisionar`, {
         cotizacionId: datos._id,
@@ -232,22 +232,19 @@ export default function CotizacionPreview({ datos, onClose, onEmailSent, onRemis
       const result = res.data || res;
 
       if (res.status >= 200 && res.status < 300) {
-        Swal.fire({
-          icon: 'success',
-          title: '¡Cotización Remisionada!',
-          showDenyButton: true,
-          showCancelButton: true,
-          cancelButtonText: 'Cerrar',
-          confirmButtonColor: '#10b981',
-          denyButtonColor: '#3b82f6'
-        }).then((swalResult) => {
-          if (swalResult.isConfirmed) navigate('/PedidosEntregados');
-          else if (swalResult.isDenied) navigate('/ListaDeRemisiones');
-        });
-
-        try { if (onRemisionCreated) onRemisionCreated(datos._id, result); } catch (e) { console.error('Error calling onRemisionCreated callback:', e); }
-
+        // Extraer documento de remisión creado (esperado en result.remision)
+        const nuevaRemision = result.remision || result.data || result;
+        // Cerrar la vista previa actual
         onClose();
+        // Navegar a PedidosEntregados con estado para auto abrir RemisionPreview y mostrar toast
+        try { if (onRemisionCreated) onRemisionCreated(datos._id, result); } catch (e) { console.error('Error calling onRemisionCreated callback:', e); }
+        navigate('/PedidosEntregados', {
+          state: {
+            autoPreviewRemision: nuevaRemision,
+            highlightRemisionId: nuevaRemision?._id,
+            toast: 'cotizacion remisionada'
+          }
+        });
       } else {
         throw new Error(result.message || 'Error al remisionar');
       }

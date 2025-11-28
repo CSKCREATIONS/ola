@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Fijo from '../components/Fijo';
 import NavVentas from '../components/NavVentas';
 import Swal from 'sweetalert2';
@@ -240,6 +241,10 @@ export default function PedidosAgendados() {
   const [cotizacionPreview, setCotizacionPreview] = useState(null);
   const [remisionPreviewData, setRemisionPreviewData] = useState(null);
   const [showRemisionPreview, setShowRemisionPreview] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [pendingHighlightId, setPendingHighlightId] = useState(null);
+  const [blinkPedidoId, setBlinkPedidoId] = useState(null);
 
   // Usuario autenticado (para mostrar en Responsable)
   const [user, setUser] = useState(null);
@@ -589,6 +594,54 @@ export default function PedidosAgendados() {
 
   useEffect(() => { fetchPedidosAgendados(); }, []);
 
+  // Procesar navegación desde ListaDeCotizaciones: auto preview + toast + preparar parpadeo
+  useEffect(() => {
+    try {
+      const navState = location?.state;
+      if (navState?.autoPreviewPedido) {
+        const nuevo = navState.autoPreviewPedido;
+        // Insertar el pedido si no existe aún
+        setPedidos(prev => {
+          const exists = prev.some(p => p._id === nuevo._id);
+            if (!exists) {
+              const merged = [nuevo, ...prev];
+              return merged.sort((a, b) => new Date(b.createdAt || b.fechaCreacion || 0) - new Date(a.createdAt || a.fechaCreacion || 0));
+            }
+            return prev;
+        });
+        setCotizacionPreview(nuevo);
+        setPendingHighlightId(nuevo._id);
+        if (navState.toast) {
+          Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: navState.toast, showConfirmButton: false, timer: 2000, timerProgressBar: true });
+        }
+        // Limpiar estado de navegación para evitar reprocesos
+        navigate('/PedidosAgendados', { replace: true });
+      }
+    } catch (e) {
+      console.error('Error procesando estado de navegación pedido agendado:', e);
+    }
+  }, [location?.state]);
+
+  // Handler para cierre del preview que activa parpadeo de fila
+  const handleClosePedidoPreview = () => {
+    setCotizacionPreview(null);
+    if (pendingHighlightId) setBlinkPedidoId(pendingHighlightId);
+  };
+
+  // Inyectar estilos de animación para parpadeo
+  useEffect(() => {
+    if (blinkPedidoId) {
+      if (!document.getElementById('blink-style-pedidos')) {
+        const styleEl = document.createElement('style');
+        styleEl.id = 'blink-style-pedidos';
+        styleEl.textContent = '@keyframes rowBlinkPedido {0%{background-color:#ffffff;}50%{background-color:#fef9c3;}100%{background-color:#ffffff;}} .blink-row-pedido{animation:rowBlinkPedido 1.2s ease-in-out 6;}';
+        document.head.appendChild(styleEl);
+      }
+      const timeout = setTimeout(() => setBlinkPedidoId(null), 7500);
+      return () => clearTimeout(timeout);
+    }
+  }, [blinkPedidoId]);
+
   const exportarPDF = () => {
     const elementosNoExport = document.querySelectorAll('.no-export');
     for (const el of elementosNoExport) {
@@ -713,22 +766,21 @@ export default function PedidosAgendados() {
         setCotizacionPreview(null);
         // Obtener objeto remisión desde la respuesta
         const remision = res?.data?.remision || res?.data?.data?.remision || null;
+        // Navegar a PedidosEntregados para renderizar allí la RemisionPreview y parpadeo
         if (remision) {
-          setRemisionPreviewData(remision);
-          setShowRemisionPreview(true);
-          // Toast informativo
-          Swal.fire({
-            toast: true,
-            position: 'top-end',
-            icon: 'success',
-            title: `Pedido ${remision.codigoPedido || ''} remisionado`,
-            showConfirmButton: false,
-            timer: 2500,
-            timerProgressBar: true
+          Swal.fire({ title: 'Remisionando pedido',allowOutsideClick: false, allowEscapeKey: false, showConfirmButton: false, didOpen: () => Swal.showLoading() });
+          navigate('/PedidosEntregados', {
+            state: {
+              autoPreviewRemision: remision,
+              highlightRemisionId: remision._id,
+              toast: 'Pedido remisionado'
+            }
           });
         } else {
-          // Fallback si no llegó el objeto completo
-          await Swal.fire('Remisión creada', 'La remisión se ha creado correctamente.', 'success');
+          // Si no llegó el objeto completo, al menos mostrar toast en destino
+          navigate('/PedidosEntregados', {
+            state: { toast: 'pedido remisionado' }
+          });
         }
       } else {
         throw new Error(data.message || 'No se pudo crear la remisión');
@@ -770,7 +822,7 @@ export default function PedidosAgendados() {
 
   // Componente helper para una fila de pedido (reduce anidamiento en JSX principal)
   const PedidoRow = ({ pedido, index, indexOfFirstItem }) => (
-    <tr key={pedido._id}>
+    <tr key={pedido._id} className={pedido._id === blinkPedidoId ? 'blink-row-pedido' : ''}>
       <td style={{ fontWeight: '600', color: '#6366f1' }}>{indexOfFirstItem + index + 1}</td>
       <td>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -975,7 +1027,7 @@ export default function PedidosAgendados() {
             {cotizacionPreview && (
               <PedidoAgendadoPreview
                 datos={cotizacionPreview}
-                onClose={() => setCotizacionPreview(null)}
+                onClose={handleClosePedidoPreview}
                 onEmailSent={handleEmailSent}
                 onRemisionar={() => remisionarPedido(cotizacionPreview._id)}
               />
