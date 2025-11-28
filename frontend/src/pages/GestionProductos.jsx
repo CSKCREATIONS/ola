@@ -639,7 +639,15 @@ const GestionProductos = () => {
       setModalVisible(false);
       loadProductos();
     } catch (err) {
-      Swal.fire('Error', err.message || 'Error al guardar el producto', 'error');
+      const backendMsg = err?.response?.data?.message || err.message || 'Error al guardar el producto';
+
+      // Mostrar modal específico cuando el backend indica nombre duplicado
+      if (/ya existe/i.test(backendMsg) || /producto con ese nombre/i.test(backendMsg) || /duplicate key/i.test(backendMsg)) {
+        Swal.fire('Error', 'Ya existe un producto con ese nombre', 'error');
+        return;
+      }
+
+      Swal.fire('Error', 'Ya existe un producto con ese nombre', 'error');
     }
   };
 
