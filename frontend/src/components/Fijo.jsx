@@ -126,7 +126,7 @@ export default function Fijo() {
       setPuedeGenerarOrden(has('ordenes.generar'));
       setPuedeGenerarOrden(has('ordenes.generar'));
       setPuedeVerOrdenes(has('ordenesCompra.ver'));
-      setPuedeVerHCompras(has('hcompras.ver'));
+      setPuedeVerHCompras(has('compras.ver'));
       setPuedeVerProveedores(has('proveedores.ver'));
       setPuedeVerReportesCompras(has('reportesCompras.ver'));
       setPuedeVerCategorias(has('categorias.ver'));

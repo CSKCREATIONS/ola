@@ -115,7 +115,7 @@ const App = () => {
             path='/HistorialCompras'
             element={
               <PrivateRoute>
-                <PermisoRoute permiso="hcompras.ver">
+                <PermisoRoute permiso="compras.ver">
                   <HistorialCompras />
                 </PermisoRoute>
               </PrivateRoute>

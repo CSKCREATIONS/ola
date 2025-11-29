@@ -96,7 +96,7 @@ async function openRemisionSwal(datos) {
         return { valid: false };
       }
       const fechaSeleccionada = new Date(fechaEntrega);
-      const hoy = new Date(); hoy.setHours(0,0,0,0);
+      const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
       if (fechaSeleccionada < hoy) {
         Swal.showValidationMessage(`<div style="text-align:left;color:#dc2626;"><i class="fa-solid fa-calendar-xmark"></i> <strong>La fecha de entrega no puede ser anterior a hoy</strong><br><small>Por favor seleccione una fecha válida</small></div>`);
         return { valid: false };
@@ -157,7 +157,7 @@ SendEmailModal.defaultProps = {
   mensaje: '',
 };
 
-export default function CotizacionPreview({ datos, onClose, onEmailSent, onRemisionCreated }) {
+export default function CotizacionPreview({ datos, onClose, onEmailSent, onRemisionCreated, onEdit }) {
   const navigate = useNavigate();
   const usuario = getStoredUser();
   const [showEnviarModal, setShowEnviarModal] = useState(false);
@@ -290,7 +290,7 @@ export default function CotizacionPreview({ datos, onClose, onEmailSent, onRemis
       #print-root, #print-root * { visibility: visible !important; }
       #print-root { position: fixed; inset: 0; margin:0; padding:0; background:#fff; }
       table { page-break-inside: avoid; } }`;
-      
+
     document.head.appendChild(style);
     const A4_HEIGHT_PX = 1122;
     const doPrintAndCleanup = () => {
@@ -320,7 +320,7 @@ export default function CotizacionPreview({ datos, onClose, onEmailSent, onRemis
         const scale = Math.max(0.75, A4_HEIGHT_PX / h);
         clone.style.transform = `scale(${scale})`;
         clone.style.transformOrigin = 'top left';
-        clone.style.width = `${(100/scale).toFixed(2)}%`;
+        clone.style.width = `${(100 / scale).toFixed(2)}%`;
       }
       setTimeout(doPrintAndCleanup, 40);
     });
@@ -343,7 +343,16 @@ export default function CotizacionPreview({ datos, onClose, onEmailSent, onRemis
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             {datos.tipo !== 'pedido' && !isRemisionada && (
               <button
-                onClick={() => { onClose(); navigate('/RegistrarCotizacion', { state: { datos } }); }}
+                onClick={() => {
+                  if (typeof onEdit === 'function') {
+                    // prefer parent handler to fetch and open edit modal
+                    try { onEdit(datos); } catch (e) { console.error('onEdit error', e); }
+                  } else {
+                    // fallback: close preview and navigate to RegistrarCotizacion
+                    onClose();
+                    navigate('/RegistrarCotizacion', { state: { datos } });
+                  }
+                }}
                 style={buttonBaseStyle}
                 {...hoverHandlers}
               >
@@ -529,10 +538,12 @@ CotizacionPreview.propTypes = {
   onClose: PropTypes.func,
   onEmailSent: PropTypes.func,
   onRemisionCreated: PropTypes.func,
+  onEdit: PropTypes.func,
 };
 
 CotizacionPreview.defaultProps = {
-  onClose: () => {},
-  onEmailSent: () => {},
-  onRemisionCreated: () => {},
+  onClose: () => { },
+  onEmailSent: () => { },
+  onRemisionCreated: () => { },
+  onEdit: null,
 };

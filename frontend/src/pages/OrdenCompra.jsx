@@ -20,6 +20,9 @@ import { isValidEmail } from '../utils/emailHelpers';
 const advancedStyles = `
   /* minimal advanced styles for orden compra */
   .orden-compra-advanced-table { box-shadow: 0 6px 20px rgba(0,0,0,0.06); }
+  /* Ensure SweetAlert2 popups appear above modals */
+  .swal2-container { z-index: 2147483647 !important; }
+  .swal2-popup { z-index: 2147483648 !important; }
 `;
 
 const calcularTotalesProductos = (productos = [], ivaPercent = 0) => {
@@ -105,13 +108,21 @@ async function fetchProductosPorProveedorHelper(proveedorId, setProductosProveed
         if (p.proveedor && (p.proveedor._id || p.proveedor.id)) return String(p.proveedor._id || p.proveedor.id) === String(proveedorId);
         return false;
       });
-      setProductosProveedor(filtered);
+      // If provider has no products, fall back to showing all products so user can still add items
+      if (filtered.length > 0) {
+        setProductosProveedor(filtered);
+      } else {
+        setProductosProveedor(allProducts);
+      }
+      return { filtered, allProducts };
     } else {
       setProductosProveedor(allProducts);
+      return { filtered: allProducts, allProducts };
     }
   } catch (error_) {
     console.error('fetchProductosPorProveedorHelper error', error_);
     setProductosProveedor([]);
+    return { filtered: [], allProducts: [] };
   } finally {
     setCargandoProductos(false);
   }
@@ -444,6 +455,13 @@ async function enviarOrdenPorCorreoHelper(orden) {
 
       await api.post(`/api/ordenes-compra/${orden._id}/enviar-email`, { destinatario: formValues.email, asunto: formValues.asunto, mensaje: formValues.mensaje || 'Orden de compra adjunta' });
 
+      // Intentar persistir la marca de 'enviado' en el backend (PUT /:id)
+      try {
+        await api.put(`/api/ordenes-compra/${orden._id}`, { enviado: true });
+      } catch (persistErr) {
+        console.warn('No se pudo persistir "enviado" en backend:', persistErr);
+      }
+
       // Success modal - ensure it overlays
       Swal.fire({
         icon: 'success',
@@ -459,6 +477,8 @@ async function enviarOrdenPorCorreoHelper(orden) {
           } catch (e) { /* ignore */ }
         }
       });
+
+      return true;
     } catch (error) {
       console.error('Error al enviar correo:', error);
       Swal.fire({
@@ -482,6 +502,7 @@ export default function OrdenCompra() {
   const [ordenes, setOrdenes] = useState([]);
   const [proveedores, setProveedores] = useState([]);
   const [productosProveedor, setProductosProveedor] = useState([]);
+  const [proveedorSinProductos, setProveedorSinProductos] = useState(false);
   const [ordenSeleccionada, setOrdenSeleccionada] = useState(null);
   const [modalDetallesVisible, setModalDetallesVisible] = useState(false);
   const [modalAgregarVisible, setModalAgregarVisible] = useState(false);
@@ -554,7 +575,15 @@ export default function OrdenCompra() {
 
   // Delegador: obtener productos por proveedor
   const fetchProductosPorProveedor = async (proveedorId) => {
-    await fetchProductosPorProveedorHelper(proveedorId, setProductosProveedor, setCargandoProductos);
+    const res = await fetchProductosPorProveedorHelper(proveedorId, setProductosProveedor, setCargandoProductos);
+    if (proveedorId) {
+      // If filtered exists and is empty, mark provider as having no associated products
+      const filtered = res && res.filtered ? res.filtered : [];
+      setProveedorSinProductos(Array.isArray(filtered) && filtered.length === 0);
+    } else {
+      setProveedorSinProductos(false);
+    }
+    return res;
   };
 
   useEffect(() => {
@@ -732,21 +761,27 @@ export default function OrdenCompra() {
 
   // Función para marcar/desmarcar orden como enviada
   const toggleEnviado = async (id, estadoActual) => {
+    // No permitimos revertir una orden ya enviada desde el toggle.
+    if (estadoActual) {
+      Swal.fire('Info', 'La orden ya fue enviada y no puede volver a marcarse como NO.', 'info');
+      return;
+    }
+
     try {
       // El backend no expone PATCH /:id, pero sí PUT /:id (editarOrden).
       // Usamos PUT para enviar el cambio parcial de `enviado`.
       const res = await api.put(`/api/ordenes-compra/${id}`, {
+<<<<<<< HEAD
+        enviado: true
+=======
         enviado: !estadoActual
+>>>>>>> d4d68fdc4c4e800ff36185214ea5450f8c612798
       });
       const data = res.data || res;
       if (data.success) {
-        Swal.fire({
-          icon: 'success',
-          title: estadoActual ? 'Orden marcada como no enviada' : 'Orden marcada como enviada',
-          showConfirmButton: false,
-          timer: 1500
-        });
-        fetchOrdenes();
+        Swal.fire({ icon: 'success', title: 'Orden marcada como enviada', showConfirmButton: false, timer: 1500 });
+        // Actualizamos localmente para reflejar inmediatamente el cambio
+        setOrdenes(prev => prev.map(o => o._id === id ? { ...o, enviado: true } : o));
       } else {
         Swal.fire('Error', data.message || 'No se pudo actualizar', 'error');
       }
@@ -924,8 +959,17 @@ export default function OrdenCompra() {
 
   // Función para enviar orden por correo
   const enviarOrdenPorCorreo = async () => {
-    // Delegate to top-level helper to keep component simple
-    await enviarOrdenPorCorreoHelper(ordenSeleccionada);
+    if (!ordenSeleccionada) {
+      Swal.fire('Error', 'No hay orden seleccionada', 'error');
+      return;
+    }
+
+    const enviadoOk = await enviarOrdenPorCorreoHelper(ordenSeleccionada);
+    if (enviadoOk) {
+      // Actualizar estado local para que no vuelva a mostrarse el botón
+      setOrdenes(prev => prev.map(o => o._id === ordenSeleccionada._id ? { ...o, enviado: true } : o));
+      setOrdenSeleccionada(prev => prev ? { ...prev, enviado: true } : prev);
+    }
   };
 
   const guardarOrden = async () => {
@@ -1243,13 +1287,11 @@ export default function OrdenCompra() {
                           )}
                         </td>
                         <td style={{ textAlign: 'center' }}>
-                          <button
-                            onClick={() => toggleEnviado(orden._id, orden.enviado)}
-                            className={`action-btn ${orden.enviado ? 'edit' : 'delete'}`}
-                            style={{ minWidth: '50px' }}
-                          >
-                            {orden.enviado ? 'Sí' : 'No'}
-                          </button>
+                          {orden.enviado ? (
+                            <span style={{ display: 'inline-block', padding: '6px 10px', borderRadius: 8, background: '#ecfdf5', color: '#065f46', fontWeight: 700 }}>Sí</span>
+                          ) : (
+                            <span style={{ display: 'inline-block', padding: '6px 10px', borderRadius: 8, background: '#fff1f2', color: '#7f1d1d', fontWeight: 700 }}>No</span>
+                          )}
                         </td>
                         <td>
                           <div className="action-buttons">
@@ -1365,6 +1407,12 @@ export default function OrdenCompra() {
                         <div style={{ marginTop: '0.75rem' }}>
                           {nuevaOrden.proveedorId ? (
                             <>
+                              {proveedorSinProductos && (
+                                <div style={{ padding: '0.75rem', background: '#fff6f0', border: '1px solid #ffedd5', borderRadius: 8, marginBottom: '0.5rem', color: '#9a3412' }}>
+                                  Este proveedor no tiene productos asociados.
+                                </div>
+                              )}
+
                               <select value={productoTemp.productoId || ''} onChange={handleProductoChange} className="form-input-profesional">
                                 <option value="">Seleccione un producto</option>
                                 {productosProveedor.length > 0 ? productosProveedor.map(prod => (
@@ -1461,8 +1509,8 @@ export default function OrdenCompra() {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div style={{ color: '#7f8c8d' }}>{nuevaOrden.productos.length} producto(s)</div>
                       <div style={{ display: 'flex', gap: '0.6rem' }}>
-                        <button className="btn-profesional" onClick={cerrarModalAgregar} style={{ background: '#95a5a6', color: 'white',borderRadius: '8px', padding: '15px' }}><i className="fa-solid fa-times"></i> Cancelar</button>
-                        <button style={{ background: '#10b981', color: 'white', borderRadius: '8px', padding: '15px' }} onClick={guardarOrden} disabled={nuevaOrden.productos.length === 0}><i className="fa-solid fa-check"></i> Guardar Orden</button>
+                        <button className="btn-profesional" onClick={cerrarModalAgregar} style={{ background: '#95a5a6', color: 'white', borderRadius: '8px', padding: '15px' }}><i className="fa-solid fa-times"></i> Cancelar</button>
+                        <button style={{ background: '#10b981', color: 'white', borderRadius: '8px', padding: '15px' }} onClick={guardarOrden}><i className="fa-solid fa-check"></i> Guardar Orden</button>
                       </div>
                     </div>
                   </div>
