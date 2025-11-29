@@ -83,6 +83,10 @@ const ordenCompraSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   },
+  enviado: {
+    type: Boolean,
+    default: false
+  },
   estado: {
     type: String,
     enum: ['Pendiente', 'Completada', 'Cancelada'],
