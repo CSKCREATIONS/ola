@@ -335,6 +335,22 @@ export default function RegistrarCotizacion() {
     if (Object.keys(newErrors).length > 0 || hasProductRowErrors) {
       setErrors(newErrors);
       setProductErrors(newProductErrors);
+      // Mostrar resumen de errores para retroalimentación inmediata
+      try {
+        const resumen = [];
+        for (const k of Object.keys(newErrors)) resumen.push(newErrors[k]);
+        newProductErrors.forEach((pe, i) => {
+          if (pe && Object.keys(pe).length > 0) {
+            for (const kk of Object.keys(pe)) resumen.push(`Producto ${i + 1}: ${pe[kk]}`);
+          }
+        });
+        if (resumen.length > 0) {
+          Swal.fire({ icon: 'warning', title: 'Errores en el formulario', html: resumen.map(r => `<div style="text-align:left;margin:4px 0">• ${r}</div>`).join(''), confirmButtonText: 'Corregir' });
+        }
+      } catch (swErr) {
+        console.warn('No se pudo mostrar resumen de errores:', swErr);
+      }
+
       return null;
     }
 
@@ -981,17 +997,17 @@ export default function RegistrarCotizacion() {
             {/* Botones Finales */}
             <div className="seccion-compacta">
               <div className="botones-finales-compactos">
-                <button onClick={handleCancelado} className="btn-cancelar-compacto">
+                <button type="button" onClick={handleCancelado} className="btn-cancelar-compacto">
                   <i className="fa-solid fa-times"></i>
                   <span>Cancelar</span>
                 </button>
                 
-                <button onClick={() => handleGuardarCotizacion(false, true)} className="btn-guardar-compacto">
+                <button type="button" onClick={() => handleGuardarCotizacion(false, true)} className="btn-guardar-compacto">
                   <i className="fa-solid fa-save"></i>
                   <span>Guardar</span>
                 </button>
                 
-                <button onClick={() => handleGuardarCotizacion(true, true)} className="btn-enviar-compacto">
+                <button type="button" onClick={() => handleGuardarCotizacion(true, true)} className="btn-enviar-compacto">
                   <i className="fa-solid fa-paper-plane"></i>
                   <span>Guardar y Enviar</span>
                 </button>

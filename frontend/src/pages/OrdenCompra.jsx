@@ -733,7 +733,9 @@ export default function OrdenCompra() {
   // Función para marcar/desmarcar orden como enviada
   const toggleEnviado = async (id, estadoActual) => {
     try {
-      const res = await api.patch(`/api/ordenes-compra/${id}`, {
+      // El backend no expone PATCH /:id, pero sí PUT /:id (editarOrden).
+      // Usamos PUT para enviar el cambio parcial de `enviado`.
+      const res = await api.put(`/api/ordenes-compra/${id}`, {
         enviado: !estadoActual
       });
       const data = res.data || res;
