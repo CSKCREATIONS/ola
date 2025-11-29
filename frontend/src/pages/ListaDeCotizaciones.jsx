@@ -11,7 +11,6 @@ import '../cotizaciones-modal.css';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import CotizacionPreview from '../components/CotizacionPreview';
-import Modal from '../components/Modal';
 import { calcularSubtotalProducto, calcularTotales } from '../utils/calculations';
 import { formatCurrency, formatDate } from '../utils/formatters';
 import DeleteButton from '../components/DeleteButton';
@@ -26,6 +25,71 @@ export default function ListaDeCotizaciones() {
   const [blinkOn, setBlinkOn] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+
+
+  // Agrega estos estilos y funciones al componente
+  const styles = {
+    inputBase: {
+      width: '100%',
+      padding: '0.875rem 1rem',
+      border: '2px solid #e5e7eb',
+      borderRadius: '10px',
+      fontSize: '0.95rem',
+      transition: 'all 0.3s ease',
+      backgroundColor: '#ffffff',
+      fontFamily: 'inherit',
+      boxSizing: 'border-box'
+    },
+    label: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.5rem',
+      marginBottom: '0.5rem',
+      fontWeight: '600',
+      color: '#374151',
+      fontSize: '0.95rem'
+    }
+  };
+
+  const applyFocus = (e, color = '#3b82f6', shadowColor = 'rgba(59, 130, 246, 0.1)') => {
+    e.target.style.borderColor = color;
+    e.target.style.boxShadow = `0 0 0 3px ${shadowColor}`;
+  };
+
+  const applyBlur = (e) => {
+    e.target.style.borderColor = '#e5e7eb';
+    e.target.style.boxShadow = 'none';
+  };
+
+  // Helper: quita etiquetas HTML y decodifica entidades para mostrar texto plano
+  const stripHtml = (html) => {
+    if (!html && html !== 0) return '';
+    try {
+      // Usar el DOM para decodificar entidades y eliminar etiquetas (funciona en el navegador)
+      const tmp = document.createElement('div');
+      tmp.innerHTML = String(html);
+      return tmp.textContent || tmp.innerText || '';
+    } catch (e) {
+      // Fallback simple: eliminar tags con regex (no decodifica entidades)
+      return String(html).replace(/<[^>]*>/g, '');
+    }
+  };
+
+  // Componente Field (igual al del segundo modal)
+  function Field({ id, label, iconClass, children }) {
+    return (
+      <div>
+        <label htmlFor={id} style={styles.label}>
+          <i className={iconClass} style={{ color: '#3b82f6', fontSize: '0.875rem' }} aria-hidden="true"></i>
+          <span>{label}</span>
+        </label>
+        {children}
+      </div>
+    );
+  }
+
+
+
 
   const exportToExcel = (listaCotizaciones) => {
     if (!listaCotizaciones || listaCotizaciones.length === 0) {
@@ -77,7 +141,7 @@ export default function ListaDeCotizaciones() {
         const cotRes = await api.get('/api/cotizaciones');
         const cotData = cotRes.data || [];
 
-        
+
 
         const prodRes = await api.get('/api/products');
         const prodData = prodRes.data?.data || prodRes.data || [];
@@ -395,26 +459,29 @@ export default function ListaDeCotizaciones() {
       confirmButtonText: 'Confirmar',
       cancelButtonText: 'Cancelar',
       preConfirm: async () => {
-        const fechaSeleccionada = document.getElementById('swal-fecha')?.value;
+        let fechaSeleccionada = document.getElementById('swal-fecha')?.value;
         const descripcion = document.getElementById('swal-descripcion')?.value || '';
         const condicionesPago = document.getElementById('swal-condiciones')?.value || '';
-
+        // Si el usuario dejó vacío, usar la fecha actual (permite 'poner la fecha actual')
         if (!fechaSeleccionada) {
-          Swal.showValidationMessage('Por favor seleccione la fecha de entrega');
-          throw new Error('fecha missing');
+          fechaSeleccionada = new Date().toISOString().slice(0, 10);
         }
 
-        // Validar que la fecha no sea anterior a la fecha de registro/fecha de la cotización
+        // Validar usando comparacion de cadenas YYYY-MM-DD para evitar efectos de zona horaria
         try {
-          const sel = new Date(fechaSeleccionada);
-          const minDate = new Date(minDateStr + 'T00:00:00');
-          if (sel < minDate) {
+          if (typeof fechaSeleccionada !== 'string' || fechaSeleccionada.length < 10) {
+            Swal.showValidationMessage('Fecha inválida');
+            return false;
+          }
+          // formato minimo: 'YYYY-MM-DD'
+          const selStr = fechaSeleccionada.slice(0, 10);
+          if (selStr < minDateStr) {
             Swal.showValidationMessage(`La fecha no puede ser anterior a ${minDateStr}`);
-            throw new Error('fecha anterior');
+            return false;
           }
         } catch (err) {
           Swal.showValidationMessage('Fecha inválida');
-          throw err;
+          return false;
         }
 
         return { fechaSeleccionada, descripcion, condicionesPago };
@@ -463,7 +530,6 @@ export default function ListaDeCotizaciones() {
     // Mostrar loading
     Swal.fire({
       title: 'Guardando cambios...',
-      text: 'Por favor espera mientras se actualiza la cotización',
       icon: 'info',
       allowOutsideClick: false,
       showConfirmButton: false,
@@ -495,17 +561,20 @@ export default function ListaDeCotizaciones() {
       );
       setCotizaciones(nuevasCotizaciones);
 
-      // Cerrar modal
+      // Cerrar modal y abrir la vista previa con la cotización actualizada
       setModoEdicion(false);
-      setCotizacionSeleccionada(null);
+      const previewData = { ...updatedData, ...cotizacionConSubtotales };
+      setCotizacionSeleccionada(previewData);
+      setMostrarPreview(true);
 
-      // Mostrar éxito
-      await Swal.fire({
-        title: '¡Guardado!',
-        text: 'La cotización ha sido actualizada correctamente',
+      // Mostrar toast indicando que la cotización fue editada
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
         icon: 'success',
-        timer: 2000,
-        showConfirmButton: false
+        title: 'Cotización editada',
+        showConfirmButton: false,
+        timer: 2000
       });
 
     } catch (error) {
@@ -540,31 +609,14 @@ export default function ListaDeCotizaciones() {
   };
 
   const eliminarProducto = (index) => {
-    Swal.fire({
-      title: '¿Eliminar producto?',
-      text: 'Esta acción no se puede deshacer',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#dc3545'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        const nuevosProductos = cotizacionSeleccionada.productos.filter((_, i) => i !== index);
-        setCotizacionSeleccionada({
-          ...cotizacionSeleccionada,
-          productos: nuevosProductos
-        });
 
-        Swal.fire({
-          title: 'Eliminado',
-          text: 'El producto ha sido eliminado',
-          icon: 'success',
-          timer: 1500,
-          showConfirmButton: false
-        });
-      }
+    const nuevosProductos = cotizacionSeleccionada.productos.filter((_, i) => i !== index);
+    setCotizacionSeleccionada({
+      ...cotizacionSeleccionada,
+      productos: nuevosProductos
     });
+
+
   };
 
   const [filtroFecha, setFiltroFecha] = useState('');
@@ -1365,390 +1417,657 @@ export default function ListaDeCotizaciones() {
           onClose={closePreviewAndBlink}
           onEmailSent={handleEmailSent}
           onRemisionCreated={handleRemisionCreated}
+          onEdit={(datos) => {
+            try {
+              // Close preview first
+              setMostrarPreview(false);
+              // Use existing handler to fetch full cotizacion and open edit modal
+              handleEditCotizacion(datos);
+            } catch (e) {
+              console.error('Error opening edit modal from preview:', e);
+            }
+          }}
         />
       )}
 
       {/* Modal de Edición */}
       {modoEdicion && cotizacionSeleccionada && (
-        <Modal isOpen={modoEdicion} onClose={closeModal} title={`Editar Cotización`} className="modal-content-large cotizacion-modal-container">
-          <div style={{ marginBottom: '8px' }}>
-            <div className="header-info">
-              <span className="cotizacion-codigo">#{cotizacionSeleccionada.codigo}</span>
-              <span className="fecha-cotizacion" style={{ marginLeft: '12px' }}>
-                <i aria-hidden={true} className="fa-solid fa-calendar"></i>
-                  <span style={{ marginLeft: '6px' }}>{formatDate(cotizacionSeleccionada)}</span>
-              </span>
-            </div>
-          </div>
+        <div
+          id="editCotizacionModal"
+          aria-hidden="true"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.6)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            backdropFilter: 'blur(4px)',
+            margin: 0,
+            padding: 0
+          }}
+          onClick={(e) => { if (e.target.id === 'editCotizacionModal') closeModal(); }}
+        >
+          <dialog aria-modal="true" aria-labelledby="edit-cotizacion-title" style={{
+            backgroundColor: 'white',
+            borderRadius: '20px',
+            maxWidth: '1200px',
+            width: '95%',
+            maxHeight: '95vh',
+            height: '95vh',
+            overflow: 'hidden',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+            animation: 'modalSlideIn 0.3s ease-out',
+            margin: 0,
+            padding: 0,
+            position: 'relative',
+            display: 'flex',
+            flexDirection: 'column',
+            border: 'none'
+          }} open>
+            <form style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+              {/* Header */}
+              <div style={{
+                background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+                color: 'white',
+                padding: '2rem',
+                borderRadius: '20px 20px 0 0'
+              }}>
+                <h3 id="edit-cotizacion-title" style={{ margin: 0, fontSize: '1.5rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <div style={{ width: '50px', height: '50px', borderRadius: '12px', background: 'rgba(255, 255, 255, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <i className="fa-solid fa-file-contract" style={{ fontSize: '1.5rem' }} aria-hidden="true"></i>
+                  </div>
+                  <span>Editar Cotización</span>
+                </h3>
+                <div style={{ margin: '0.5rem 0 0 4rem', opacity: 0.9, fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <i className="fa-solid fa-hashtag" aria-hidden="true"></i>
+                    <strong>{cotizacionSeleccionada.codigo}</strong>
+                  </span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <i className="fa-solid fa-calendar" aria-hidden="true"></i>
+                    <span>{formatDate(cotizacionSeleccionada)}</span>
+                  </span>
+                </div>
+              </div>
 
-          <div className="modal-body">
-            <div className="form-section">
-              <div className="section-title">
-                <i aria-hidden={true} className="fa-solid fa-user-circle"></i>
-                <h4>Información del Cliente</h4>
-              </div>
-              <div className="form-row" style={{ display: 'flex', gap: '15px', alignItems: 'end' }}>
-                <div className="form-group" style={{ flex: '1' }}>
-                  <label htmlFor="input-lista-cot-1"><i aria-hidden={true} className="fa-solid fa-id-badge"></i> <span>Nombre Completo *</span></label>
-                  <input id="input-lista-cot-1"
-                    type="text"
-                    placeholder="Ingrese el nombre completo del cliente"
-                    value={cotizacionSeleccionada.cliente?.nombre || ''}
-                    onChange={(e) => setCotizacionSeleccionada({
-                      ...cotizacionSeleccionada,
-                      cliente: { ...cotizacionSeleccionada.cliente, nombre: e.target.value }
-                    })}
-                    required
-                  />
-                </div>
-                <div className="form-group" style={{ flex: '1' }}>
-                  <label htmlFor="input-lista-cot-2"><i aria-hidden={true} className="fa-solid fa-at"></i> <span>Correo Electrónico *</span></label>
-                  <input id="input-lista-cot-2"
-                    type="email"
-                    placeholder="cliente@ejemplo.com"
-                    value={cotizacionSeleccionada.cliente?.correo || ''}
-                    onChange={(e) => setCotizacionSeleccionada({
-                      ...cotizacionSeleccionada,
-                      cliente: { ...cotizacionSeleccionada.cliente, correo: e.target.value }
-                    })}
-                    required
-                  />
-                </div>
-                <div className="form-group" style={{ flex: '1' }}>
-                  <label htmlFor="input-lista-cot-3"><i aria-hidden={true} className="fa-solid fa-mobile-screen-button"></i> <span>Teléfono</span></label>
-                  <input id="input-lista-cot-3"
-                    type="tel"
-                    placeholder="+57 300 123 4567"
-                    value={cotizacionSeleccionada.cliente?.telefono || ''}
-                    onChange={(e) => setCotizacionSeleccionada({
-                      ...cotizacionSeleccionada,
-                      cliente: { ...cotizacionSeleccionada.cliente, telefono: e.target.value }
-                    })}
-                  />
-                </div>
-                <div className="form-group" style={{ flex: '1' }}>
-                  <label htmlFor="input-lista-cot-4"><i aria-hidden={true} className="fa-solid fa-map-location-dot"></i> <span>Ciudad</span></label>
-                  <input id="input-lista-cot-4"
-                    type="text"
-                    placeholder="Ciudad"
-                    value={cotizacionSeleccionada.cliente?.ciudad || ''}
-                    onChange={(e) => setCotizacionSeleccionada({
-                      ...cotizacionSeleccionada,
-                      cliente: { ...cotizacionSeleccionada.cliente, ciudad: e.target.value }
-                    })}
-                  />
-                </div>
-              </div>
-              <div className="form-group" style={{ marginTop: '15px' }}>
-                <label htmlFor="input-lista-cot-5"><i aria-hidden={true} className="fa-solid fa-location-arrow"></i> <span>Dirección Completa</span></label>
-                <input id="input-lista-cot-5"
-                  type="text"
-                  placeholder="Calle, número, barrio, referencias adicionales"
-                  value={cotizacionSeleccionada.cliente?.direccion || ''}
-                  onChange={(e) => setCotizacionSeleccionada({
-                    ...cotizacionSeleccionada,
-                    cliente: { ...cotizacionSeleccionada.cliente, direccion: e.target.value }
-                  })}
-                />
-              </div>
-            </div>
+              {/* Body */}
+              <div style={{
+                flex: 1,
+                minHeight: 0,
+                overflowY: 'auto',
+                padding: '2rem',
+                backgroundColor: '#f8fafc'
+              }}>
+                {/* Información del Cliente */}
+                <div style={{
+                  background: 'white',
+                  padding: '1.5rem',
+                  borderRadius: '12px',
+                  marginBottom: '1.5rem',
+                  border: '1px solid #e2e8f0',
+                  borderLeft: '4px solid #3b82f6'
+                }}>
+                  <h4 style={{ margin: '0 0 1.5rem 0', color: '#1e293b', fontSize: '1.05rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <i className="fa-solid fa-user-circle" style={{ color: '#3b82f6' }} aria-hidden="true"></i>
+                    <span>Información del Cliente</span>
+                  </h4>
 
-            <div className="form-section">
-              <div className="section-title">
-                <i aria-hidden={true} className="fa-solid fa-file-contract"></i>
-                <h4>Detalles de la Cotización</h4>
-              </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="input-lista-cot-6"><i aria-hidden={true} className="fa-solid fa-file-text"></i> <span>Descripción del Proyecto</span></label>
-                  <textarea id="input-lista-cot-6"
-                    placeholder="Detalle los servicios o productos incluidos en esta cotización..."
-                    value={cotizacionSeleccionada.descripcion || ''}
-                    onChange={(e) => setCotizacionSeleccionada({
-                      ...cotizacionSeleccionada,
-                      descripcion: e.target.value
-                    })}
-                    rows="4"
-                  />
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
+                    <Field id="input-lista-cot-1" label="Nombre Completo *" iconClass="fa-solid fa-id-badge">
+                      <input id="input-lista-cot-1"
+                        type="text"
+                        placeholder="Ingrese el nombre completo del cliente"
+                        value={cotizacionSeleccionada.cliente?.nombre || ''}
+                        onChange={(e) => setCotizacionSeleccionada({
+                          ...cotizacionSeleccionada,
+                          cliente: { ...cotizacionSeleccionada.cliente, nombre: e.target.value }
+                        })}
+                        required
+                        style={styles.inputBase}
+                        onFocus={(e) => applyFocus(e, '#3b82f6', 'rgba(59, 130, 246, 0.1)')}
+                        onBlur={applyBlur}
+                      />
+                    </Field>
+
+                    <Field id="input-lista-cot-2" label="Correo Electrónico *" iconClass="fa-solid fa-at">
+                      <input id="input-lista-cot-2"
+                        type="email"
+                        placeholder="cliente@ejemplo.com"
+                        value={cotizacionSeleccionada.cliente?.correo || ''}
+                        onChange={(e) => setCotizacionSeleccionada({
+                          ...cotizacionSeleccionada,
+                          cliente: { ...cotizacionSeleccionada.cliente, correo: e.target.value }
+                        })}
+                        required
+                        style={styles.inputBase}
+                        onFocus={(e) => applyFocus(e, '#3b82f6', 'rgba(59, 130, 246, 0.1)')}
+                        onBlur={applyBlur}
+                      />
+                    </Field>
+
+                    <Field id="input-lista-cot-3" label="Teléfono" iconClass="fa-solid fa-mobile-screen-button">
+                      <input id="input-lista-cot-3"
+                        type="tel"
+                        placeholder="+57 300 123 4567"
+                        value={cotizacionSeleccionada.cliente?.telefono || ''}
+                        onChange={(e) => setCotizacionSeleccionada({
+                          ...cotizacionSeleccionada,
+                          cliente: { ...cotizacionSeleccionada.cliente, telefono: e.target.value }
+                        })}
+                        style={styles.inputBase}
+                        onFocus={(e) => applyFocus(e, '#3b82f6', 'rgba(59, 130, 246, 0.1)')}
+                        onBlur={applyBlur}
+                      />
+                    </Field>
+
+                    <Field id="input-lista-cot-4" label="Ciudad" iconClass="fa-solid fa-map-location-dot">
+                      <input id="input-lista-cot-4"
+                        type="text"
+                        placeholder="Ciudad"
+                        value={cotizacionSeleccionada.cliente?.ciudad || ''}
+                        onChange={(e) => setCotizacionSeleccionada({
+                          ...cotizacionSeleccionada,
+                          cliente: { ...cotizacionSeleccionada.cliente, ciudad: e.target.value }
+                        })}
+                        style={styles.inputBase}
+                        onFocus={(e) => applyFocus(e, '#3b82f6', 'rgba(59, 130, 246, 0.1)')}
+                        onBlur={applyBlur}
+                      />
+                    </Field>
+                  </div>
+
+                  <Field id="input-lista-cot-5" label="Dirección Completa" iconClass="fa-solid fa-location-arrow">
+                    <input id="input-lista-cot-5"
+                      type="text"
+                      placeholder="Calle, número, barrio, referencias adicionales"
+                      value={cotizacionSeleccionada.cliente?.direccion || ''}
+                      onChange={(e) => setCotizacionSeleccionada({
+                        ...cotizacionSeleccionada,
+                        cliente: { ...cotizacionSeleccionada.cliente, direccion: e.target.value }
+                      })}
+                      style={styles.inputBase}
+                      onFocus={(e) => applyFocus(e, '#3b82f6', 'rgba(59, 130, 246, 0.1)')}
+                      onBlur={applyBlur}
+                    />
+                  </Field>
                 </div>
-                <div className="form-group">
-                  <label htmlFor="input-lista-cot-7"><i aria-hidden={true} className="fa-solid fa-hand-holding-dollar"></i> <span>Condiciones de Pago</span></label>
-                  <textarea id="input-lista-cot-7"
-                    placeholder="Ej: 50% anticipo al firmar contrato, 50% contra entrega final..."
-                    value={cotizacionSeleccionada.condicionesPago || ''}
-                    onChange={(e) => setCotizacionSeleccionada({
-                      ...cotizacionSeleccionada,
-                      condicionesPago: e.target.value
-                    })}
-                    rows="4"
-                  />
-                </div>
-              </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="cotizacion-enviadoCorreo-checkbox"><i aria-hidden={true} className="fa-solid fa-envelope"></i> <span>Estado de Envío</span></label>
-                  <div className="checkbox-group">
-                    <label className="checkbox-label">
+
+                {/* Detalles de la Cotización */}
+                <div style={{
+                  background: 'white',
+                  padding: '1.5rem',
+                  borderRadius: '12px',
+                  marginBottom: '1.5rem',
+                  border: '1px solid #e2e8f0',
+                  borderLeft: '4px solid #10b981'
+                }}>
+                  <h4 style={{ margin: '0 0 1.5rem 0', color: '#1e293b', fontSize: '1.05rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <i className="fa-solid fa-file-contract" style={{ color: '#10b981' }} aria-hidden="true"></i>
+                    <span>Detalles de la Cotización</span>
+                  </h4>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                    <Field id="input-lista-cot-6" label="Descripción" iconClass="fa-solid fa-file-text">
+                      <textarea id="input-lista-cot-6"
+                        placeholder="Detalle los servicios o productos incluidos en esta cotización..."
+                        value={stripHtml(cotizacionSeleccionada?.descripcion) || ''}
+                        onChange={(e) => setCotizacionSeleccionada({
+                          ...cotizacionSeleccionada,
+                          descripcion: e.target.value
+                        })}
+                        rows="4"
+                        style={{ ...styles.inputBase, resize: 'vertical', minHeight: '100px' }}
+                        onFocus={(e) => applyFocus(e, '#10b981', 'rgba(16, 185, 129, 0.1)')}
+                        onBlur={applyBlur}
+                      />
+                    </Field>
+
+                    <Field id="input-lista-cot-7" label="Condiciones de Pago" iconClass="fa-solid fa-hand-holding-dollar">
+                      <textarea id="input-lista-cot-7"
+                        placeholder="Ej: 50% anticipo al firmar contrato, 50% contra entrega final..."
+                        value={stripHtml(cotizacionSeleccionada?.condicionesPago) || ''}
+                        onChange={(e) => setCotizacionSeleccionada({
+                          ...cotizacionSeleccionada,
+                          condicionesPago: e.target.value
+                        })}
+                        rows="4"
+                        style={{ ...styles.inputBase, resize: 'vertical', minHeight: '100px' }}
+                        onFocus={(e) => applyFocus(e, '#10b981', 'rgba(16, 185, 129, 0.1)')}
+                        onBlur={applyBlur}
+                      />
+                    </Field>
+                  </div>
+
+                  <Field id="cotizacion-enviadoCorreo-checkbox" label="Estado de Envío" iconClass="fa-solid fa-envelope">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.875rem 0' }}>
                       <input
                         id="cotizacion-enviadoCorreo-checkbox"
                         type="checkbox"
-                        checked={cotizacionSeleccionada.enviadoCorreo || false}
-                        onChange={(e) => setCotizacionSeleccionada({
-                          ...cotizacionSeleccionada,
-                          enviadoCorreo: e.target.checked
-                        })}
+                        checked={!!cotizacionSeleccionada?.enviadoCorreo}
+                        readOnly
+                        aria-readonly="true"
+                        tabIndex={-1}
+                        onClick={(e) => e.preventDefault()}
+                        onKeyDown={(e) => e.preventDefault()}
+                        style={{ width: '18px', height: '18px', cursor: 'default' }}
                       />
-                      <span>Enviado por correo electrónico</span>
-                    </label>
+                      <span style={{ color: '#374151', fontSize: '0.95rem' }}>Enviado por correo electrónico</span>
+                    </div>
+                  </Field>
+                </div>
+
+                {/* Productos */}
+                <div style={{
+                  background: 'white',
+                  padding: '1.5rem',
+                  borderRadius: '12px',
+                  marginBottom: '1.5rem',
+                  border: '1px solid #e2e8f0',
+                  borderLeft: '4px solid #f59e0b'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+                    <h4 style={{ margin: 0, color: '#1e293b', fontSize: '1.05rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <i className="fa-solid fa-shopping-cart" style={{ color: '#f59e0b' }} aria-hidden="true"></i>
+                      <span>Productos</span>
+                      <span style={{
+                        background: '#f59e0b',
+                        color: 'white',
+                        padding: '0.25rem 0.75rem',
+                        borderRadius: '20px',
+                        fontSize: '0.8rem',
+                        fontWeight: 500,
+                        marginLeft: '0.5rem'
+                      }}>
+                        {cotizacionSeleccionada.productos?.length || 0} elemento{(cotizacionSeleccionada.productos?.length || 0) === 1 ? '' : 's'}
+                      </span>
+                    </h4>
+                    <button
+                      type="button"
+                      onClick={agregarProducto}
+                      style={{
+                        padding: '0.75rem 1.25rem',
+                        border: 'none',
+                        borderRadius: '10px',
+                        background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                        color: 'white',
+                        cursor: 'pointer',
+                        fontWeight: 600,
+                        fontSize: '0.9rem',
+                        transition: 'all 0.3s ease',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        boxShadow: '0 4px 6px -1px rgba(245, 158, 11, 0.3)'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.transform = 'translateY(-1px)';
+                        e.target.style.boxShadow = '0 6px 12px -1px rgba(245, 158, 11, 0.4)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.transform = 'translateY(0)';
+                        e.target.style.boxShadow = '0 4px 6px -1px rgba(245, 158, 11, 0.3)';
+                      }}
+                    >
+                      <i className="fa-solid fa-plus-circle" aria-hidden="true"></i>
+                      <span>Agregar Producto</span>
+                    </button>
+                  </div>
+
+                  {(!cotizacionSeleccionada.productos || cotizacionSeleccionada.productos?.length === 0) ? (
+                    <div style={{
+                      textAlign: 'center',
+                      padding: '3rem 2rem',
+                      color: '#6b7280',
+                      border: '2px dashed #e5e7eb',
+                      borderRadius: '12px',
+                      backgroundColor: '#f9fafb'
+                    }}>
+                      <i className="fa-solid fa-shopping-basket" style={{ fontSize: '3rem', marginBottom: '1rem', opacity: 0.5 }} aria-hidden="true"></i>
+                      <p style={{ margin: '0 0 0.5rem 0', fontSize: '1.1rem', fontWeight: 500 }}>No hay productos agregados</p>
+                      <p style={{ margin: 0, fontSize: '0.9rem', opacity: 0.7 }}>Comience agregando productos o servicios a esta cotización</p>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                      {cotizacionSeleccionada.productos?.map((producto, index) => (
+                        <div key={producto.producto?.id || producto._id || producto.codigo || index} style={{
+                          background: '#f8fafc',
+                          padding: '1.5rem',
+                          borderRadius: '12px',
+                          border: '1px solid #e2e8f0'
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                            <span style={{
+                              background: '#f59e0b',
+                              color: 'white',
+                              padding: '0.5rem 1rem',
+                              borderRadius: '8px',
+                              fontSize: '0.85rem',
+                              fontWeight: 600
+                            }}>
+                              Producto #{index + 1}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => eliminarProducto(index)}
+                              title="Eliminar producto"
+                              aria-label="Eliminar producto"
+                              style={{
+                                background: 'none',
+                                border: 'none',
+                                color: '#ef4444',
+                                cursor: 'pointer',
+                                padding: '0.5rem',
+                                borderRadius: '6px',
+                                transition: 'all 0.3s ease'
+                              }}
+                              onMouseEnter={(e) => {
+                                e.target.style.backgroundColor = '#fef2f2';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.target.style.backgroundColor = 'transparent';
+                              }}
+                            >
+                              <i className="fa-solid fa-trash" aria-hidden="true"></i>
+                            </button>
+                          </div>
+
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
+                            <Field id={`input-lista-cot-8-${index}`} label="Producto *" iconClass="fa-solid fa-box">
+                              <select
+                                id={`input-lista-cot-8-${index}`}
+                                value={getProductIdFromProductEntry(producto) || ''}
+                                onChange={(e) => {
+                                  const selectedProduct = productos.find(p => (p._id || p.id) === e.target.value);
+                                  const nuevosProductos = [...cotizacionSeleccionada.productos];
+                                  nuevosProductos[index] = {
+                                    ...nuevosProductos[index],
+                                    producto: {
+                                      id: e.target.value,
+                                      name: selectedProduct?.name || selectedProduct?.nombre || ''
+                                    },
+                                  };
+                                  setCotizacionSeleccionada({
+                                    ...cotizacionSeleccionada,
+                                    productos: nuevosProductos
+                                  });
+                                }}
+                                required
+                                style={styles.inputBase}
+                                onFocus={(e) => applyFocus(e, '#f59e0b', 'rgba(245, 158, 11, 0.1)')}
+                                onBlur={applyBlur}
+                              >
+                                <option value="">Seleccionar producto...</option>
+                                {productos.map(prod => (
+                                  <option key={prod._id} value={prod._id}>
+                                    {prod.name}
+                                  </option>
+                                ))}
+                              </select>
+                            </Field>
+
+                            <Field id={`input-lista-cot-9-${index}`} label="Cantidad *" iconClass="fa-solid fa-hashtag">
+                              <input
+                                id={`input-lista-cot-9-${index}`}
+                                type="number"
+                                min="1"
+                                step="1"
+                                placeholder="1"
+                                value={producto.cantidad || ''}
+                                onChange={(e) => {
+                                  const nuevosProductos = [...cotizacionSeleccionada.productos];
+                                  nuevosProductos[index] = {
+                                    ...nuevosProductos[index],
+                                    cantidad: e.target.value
+                                  };
+                                  setCotizacionSeleccionada({
+                                    ...cotizacionSeleccionada,
+                                    productos: nuevosProductos
+                                  });
+                                }}
+                                required
+                                style={styles.inputBase}
+                                onFocus={(e) => applyFocus(e, '#f59e0b', 'rgba(245, 158, 11, 0.1)')}
+                                onBlur={applyBlur}
+                              />
+                            </Field>
+
+                            <Field id={`input-lista-cot-10-${index}`} label="Precio Unitario *" iconClass="fa-solid fa-dollar-sign">
+                              <input
+                                id={`input-lista-cot-10-${index}`}
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                placeholder="0.00"
+                                value={producto.valorUnitario || ''}
+                                onChange={(e) => {
+                                  const nuevosProductos = [...cotizacionSeleccionada.productos];
+                                  nuevosProductos[index] = {
+                                    ...nuevosProductos[index],
+                                    valorUnitario: e.target.value
+                                  };
+                                  setCotizacionSeleccionada({
+                                    ...cotizacionSeleccionada,
+                                    productos: nuevosProductos
+                                  });
+                                }}
+                                required
+                                style={styles.inputBase}
+                                onFocus={(e) => applyFocus(e, '#f59e0b', 'rgba(245, 158, 11, 0.1)')}
+                                onBlur={applyBlur}
+                              />
+                            </Field>
+
+                            <Field id={`input-lista-cot-11-${index}`} label="Descuento (%)" iconClass="fa-solid fa-percent">
+                              <input
+                                id={`input-lista-cot-11-${index}`}
+                                type="number"
+                                min="0"
+                                max="100"
+                                step="0.1"
+                                placeholder="0"
+                                value={producto.descuento || ''}
+                                onChange={(e) => {
+                                  const nuevosProductos = [...cotizacionSeleccionada.productos];
+                                  nuevosProductos[index] = {
+                                    ...nuevosProductos[index],
+                                    descuento: e.target.value
+                                  };
+                                  setCotizacionSeleccionada({
+                                    ...cotizacionSeleccionada,
+                                    productos: nuevosProductos
+                                  });
+                                }}
+                                style={styles.inputBase}
+                                onFocus={(e) => applyFocus(e, '#f59e0b', 'rgba(245, 158, 11, 0.1)')}
+                                onBlur={applyBlur}
+                              />
+                            </Field>
+                          </div>
+
+                          <div style={{
+                            display: 'flex',
+                            justifyContent: 'flex-end',
+                            padding: '1rem',
+                            background: 'white',
+                            borderRadius: '8px',
+                            border: '1px solid #e5e7eb'
+                          }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                              <span style={{ color: '#374151', fontWeight: 500 }}>Subtotal:</span>
+                              <strong style={{ color: '#059669', fontSize: '1.1rem' }}>
+                                {formatCurrency(calcularSubtotalProducto(producto))}
+                              </strong>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Totales */}
+                  <div style={{
+                    marginTop: '2rem',
+                    padding: '1.5rem',
+                    background: 'linear-gradient(135deg, #1e293b, #374151)',
+                    borderRadius: '12px',
+                    color: 'white'
+                  }}>
+                    {(() => {
+                      const totales = calcularTotales(cotizacionSeleccionada.productos || []);
+                      return (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span>Subtotal:</span>
+                            <span>{formatCurrency(totales.subtotal)}</span>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#fca5a5' }}>
+                            <span>Descuentos aplicados:</span>
+                            <span>-{formatCurrency(totales.descuentos)}</span>
+                          </div>
+                          <div style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            paddingTop: '0.75rem',
+                            borderTop: '2px solid #475569',
+                            fontSize: '1.2rem',
+                            fontWeight: 600
+                          }}>
+                            <span>Total Final:</span>
+                            <strong style={{ color: '#34d399' }}>{formatCurrency(totales.total)}</strong>
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               </div>
-            </div>
 
-            <div className="form-section products-section">
-              <div className="section-header">
-                <div className="section-title">
-                  <i aria-hidden={true} className="fa-solid fa-shopping-cart"></i>
-                  <h4>Productos y Servicios</h4>
-                  <span className="productos-count">
-                    {cotizacionSeleccionada.productos?.length || 0} elemento{(cotizacionSeleccionada.productos?.length || 0) === 1 ? '' : 's'}
-                  </span>
+              {/* Footer */}
+              <div style={{
+                display: 'flex',
+                gap: '1rem',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '2rem',
+                borderTop: '2px solid #e5e7eb',
+                backgroundColor: 'white',
+                borderRadius: '0 0 20px 20px',
+                flexShrink: 0
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#6b7280', fontSize: '0.9rem' }}>
+                  <i className="fa-solid fa-info-circle" aria-hidden="true"></i>
+                  <span>Los campos marcados con * son obligatorios</span>
                 </div>
-                <button className="btn-add" onClick={agregarProducto}>
-                  <i aria-hidden={true} className="fa-solid fa-plus-circle"></i>
-                  <span>Agregar Producto</span>
-                </button>
-              </div>
 
-              {(!cotizacionSeleccionada.productos || cotizacionSeleccionada.productos?.length === 0) ? (
-                <div className="empty-products">
-                  <i aria-hidden={true} className="fa-solid fa-shopping-basket"></i>
-                  <p>No hay productos agregados</p>
-                  <p className="empty-subtitle">Comience agregando productos o servicios a esta cotización</p>
-                </div>
-              ) : (
-                <div className="productos-list">
-                  {cotizacionSeleccionada.productos?.map((producto, index) => (
-                    <div key={producto.producto?.id || producto._id || producto.codigo || index} className="producto-item">
-                      <div className="producto-header">
-                        <span className="producto-numero">#{index + 1}</span>
-                        <button
-                          className="btn-remove"
-                          onClick={() => eliminarProducto(index)}
-                          title="Eliminar producto"
-                          aria-label="Eliminar producto"
-                        >
-                          <i aria-hidden={true} className="fa-solid fa-trash"></i>
-                        </button>
-                      </div>
-                      <div className="producto-row">
-                        <div className="form-group producto-select">
-                          <label htmlFor="input-lista-cot-8"><i aria-hidden={true} className="fa-solid fa-box"></i> <span>Producto *</span></label>
-                          <select id="input-lista-cot-8"
-                            value={producto.producto?.id || ''}
-                            onChange={(e) => {
-                              const selectedProduct = productos.find(p => p._id === e.target.value);
-                              const nuevosProductos = [...cotizacionSeleccionada.productos];
-                              nuevosProductos[index] = {
-                                ...nuevosProductos[index],
-                                producto: {
-                                  id: e.target.value,
-                                  name: selectedProduct?.name || ''
-                                },
-                                valorUnitario: selectedProduct?.price || 0
-                              };
-                              setCotizacionSeleccionada({
-                                ...cotizacionSeleccionada,
-                                productos: nuevosProductos
-                              });
-                            }}
-                            required
-                          >
-                            <option value="">Seleccionar producto...</option>
-                            {productos.map(prod => (
-                              <option key={prod._id} value={prod._id}>
-                                {prod.name} - ${Number(prod.price).toLocaleString()}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className="form-group">
-                          <label htmlFor="input-lista-cot-9"><i aria-hidden={true} className="fa-solid fa-hashtag"></i> <span>Cantidad *</span></label>
-                          <input id="input-lista-cot-9"
-                            type="number"
-                            min="1"
-                            step="1"
-                            placeholder="1"
-                            value={producto.cantidad || ''}
-                            onChange={(e) => {
-                              const nuevosProductos = [...cotizacionSeleccionada.productos];
-                              nuevosProductos[index] = {
-                                ...nuevosProductos[index],
-                                cantidad: e.target.value
-                              };
-                              setCotizacionSeleccionada({
-                                ...cotizacionSeleccionada,
-                                productos: nuevosProductos
-                              });
-                            }}
-                            required
-                          />
-                        </div>
-                        <div className="form-group">
-                          <label htmlFor="input-lista-cot-10"><i aria-hidden={true} className="fa-solid fa-dollar-sign"></i> <span>Precio Unitario *</span></label>
-                          <input id="input-lista-cot-10"
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            placeholder="0.00"
-                            value={producto.valorUnitario || ''}
-                            onChange={(e) => {
-                              const nuevosProductos = [...cotizacionSeleccionada.productos];
-                              nuevosProductos[index] = {
-                                ...nuevosProductos[index],
-                                valorUnitario: e.target.value
-                              };
-                              setCotizacionSeleccionada({
-                                ...cotizacionSeleccionada,
-                                productos: nuevosProductos
-                              });
-                            }}
-                            required
-                          />
-                        </div>
-                        <div className="form-group">
-                          <label htmlFor="input-lista-cot-11"><i aria-hidden={true} className="fa-solid fa-percent"></i> <span>Descuento (%)</span></label>
-                          <input id="input-lista-cot-11"
-                            type="number"
-                            min="0"
-                            max="100"
-                            step="0.1"
-                            placeholder="0"
-                            value={producto.descuento || ''}
-                            onChange={(e) => {
-                              const nuevosProductos = [...cotizacionSeleccionada.productos];
-                              nuevosProductos[index] = {
-                                ...nuevosProductos[index],
-                                descuento: e.target.value
-                              };
-                              setCotizacionSeleccionada({
-                                ...cotizacionSeleccionada,
-                                productos: nuevosProductos
-                              });
-                            }}
-                          />
-                        </div>
-                      </div>
-                      <div className="producto-info">
-                        <div className="subtotal-producto">
-                          <span>Subtotal: </span>
-                          <strong>
-                            {formatCurrency(calcularSubtotalProducto(producto))}
-                          </strong>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      Swal.fire({
+                        title: '¿Descartar cambios?',
+                        text: 'Se perderán todos los cambios no guardados',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Sí, descartar',
+                        cancelButtonText: 'Continuar editando',
+                        confirmButtonColor: '#dc3545'
+                      }).then((result) => {
+                        if (result.isConfirmed) {
+                          setModoEdicion(false);
+                          setCotizacionSeleccionada(null);
+                        }
+                      });
+                    }}
+                    style={{
+                      padding: '0.875rem 1.5rem',
+                      border: '2px solid #e5e7eb',
+                      borderRadius: '10px',
+                      backgroundColor: 'white',
+                      color: '#374151',
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                      fontSize: '0.95rem',
+                      transition: 'all 0.3s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.backgroundColor = '#f3f4f6';
+                      e.target.style.borderColor = '#d1d5db';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.backgroundColor = 'white';
+                      e.target.style.borderColor = '#e5e7eb';
+                    }}
+                  >
+                    <i className="fa-solid fa-times" aria-hidden="true"></i>
+                    <span>Cancelar</span>
+                  </button>
 
-              <div className="total-section">
-                <div className="total-breakdown">
-                  {(() => {
-                    const totales = calcularTotales(cotizacionSeleccionada.productos || []);
-                    return (
-                      <>
-                        <div className="total-row">
-                          <span>Subtotal:</span>
-                          <span>{formatCurrency(totales.subtotal)}</span>
-                        </div>
-                        <div className="total-row descuentos">
-                          <span>Descuentos aplicados:</span>
-                          <span>{formatCurrency(totales.descuentos)}</span>
-                        </div>
-                        <div className="total-row total-final">
-                          <span>Total Final:</span>
-                          <strong>{formatCurrency(totales.total)}</strong>
-                        </div>
-                      </>
-                    );
-                  })()}
+
+
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      // Validación básica
+                      if (!cotizacionSeleccionada.cliente?.nombre || !cotizacionSeleccionada.cliente?.correo) {
+                        Swal.fire('Error', 'El nombre y correo del cliente son obligatorios', 'error');
+                        return;
+                      }
+
+                      if (!cotizacionSeleccionada.productos || cotizacionSeleccionada.productos.length === 0) {
+                        Swal.fire('Error', 'Debe agregar al menos un producto', 'error');
+                        return;
+                      }
+
+                      // Validar productos
+                      const productosInvalidos = cotizacionSeleccionada.productos.some(p =>
+                        !p.producto?.id || !p.cantidad || !p.valorUnitario || p.cantidad <= 0 || p.valorUnitario <= 0
+                      );
+
+                      if (productosInvalidos) {
+                        Swal.fire('Error', 'Todos los productos deben tener seleccionado un item, cantidad y precio válidos', 'error');
+                        return;
+                      }
+
+                      await guardarEdicion();
+                    }}
+                    style={{
+                      padding: '0.875rem 1.5rem',
+                      border: 'none',
+                      borderRadius: '10px',
+                      background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+                      color: 'white',
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                      fontSize: '0.95rem',
+                      transition: 'all 0.3s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      boxShadow: '0 4px 6px -1px rgba(59, 130, 246, 0.3)'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.transform = 'translateY(-1px)';
+                      e.target.style.boxShadow = '0 6px 12px -1px rgba(59, 130, 246, 0.4)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.transform = 'translateY(0)';
+                      e.target.style.boxShadow = '0 4px 6px -1px rgba(59, 130, 246, 0.3)';
+                    }}
+                  >
+                    <i className="fa-solid fa-save" aria-hidden="true"></i>
+                    <span>Guardar Cambios</span>
+                  </button>
                 </div>
               </div>
-            </div>
-          </div>
-
-          <div className="modal-footer">
-            <div className="footer-info">
-              <i aria-hidden={true} className="fa-solid fa-info-circle"></i>
-              <span>Los campos marcados con * son obligatorios</span>
-            </div>
-            <div className="footer-actions">
-              <button
-                className="btn-cancel"
-                onClick={() => {
-                  Swal.fire({
-                    title: '¿Descartar cambios?',
-                    text: 'Se perderán todos los cambios no guardados',
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonText: 'Sí, descartar',
-                    cancelButtonText: 'Continuar editando',
-                    confirmButtonColor: '#dc3545'
-                  }).then((result) => {
-                    if (result.isConfirmed) {
-                      setModoEdicion(false);
-                      setCotizacionSeleccionada(null);
-                    }
-                  });
-                }}
-              >
-                <i aria-hidden={true} className="fa-solid fa-times"></i>
-                <span>Cancelar</span>
-              </button>
-              <button
-                className="btn-preview"
-                onClick={() => {
-                  setModoEdicion(false);
-                  setMostrarPreview(true);
-                }}
-              >
-                <i aria-hidden={true} className="fa-solid fa-eye"></i>
-                <span>Vista Previa</span>
-              </button>
-              <button
-                className="btn-save"
-                onClick={async () => {
-                  // Validación básica
-                  if (!cotizacionSeleccionada.cliente?.nombre || !cotizacionSeleccionada.cliente?.correo) {
-                    Swal.fire('Error', 'El nombre y correo del cliente son obligatorios', 'error');
-                    return;
-                  }
-
-                  if (!cotizacionSeleccionada.productos || cotizacionSeleccionada.productos.length === 0) {
-                    Swal.fire('Error', 'Debe agregar al menos un producto', 'error');
-                    return;
-                  }
-
-                  // Validar productos
-                  const productosInvalidos = cotizacionSeleccionada.productos.some(p =>
-                    !p.producto?.id || !p.cantidad || !p.valorUnitario || p.cantidad <= 0 || p.valorUnitario <= 0
-                  );
-
-                  if (productosInvalidos) {
-                    Swal.fire('Error', 'Todos los productos deben tener seleccionado un item, cantidad y precio válidos', 'error');
-                    return;
-                  }
-
-                  await guardarEdicion();
-                }}
-              >
-                <i aria-hidden={true} className="fa-solid fa-save"></i>
-                <span>Guardar Cambios</span>
-              </button>
-            </div>
-          </div>
-        </Modal>
+            </form>
+          </dialog>
+        </div>
       )}
 
       <div className="custom-footer">
