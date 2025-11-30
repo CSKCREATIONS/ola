@@ -301,7 +301,7 @@ export default function AgregarUsuario() {
 
     setSubmitting(true);
     try {
-      const res = await api.post('/api/users', usuario);
+      await api.post('/api/users', usuario);
       // axios resolves only for 2xx; treat as success
       Swal.fire({
         title: 'Usuario creado correctamente',

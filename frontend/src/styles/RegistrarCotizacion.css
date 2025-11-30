@@ -1,13 +1,10 @@
 /* RegistrarCotizacion.css */
-.registrar-cotizacion-modulo {
-  padding: 1rem;
-}
 
-.registrar-cotizacion-modulo .encabezado-modulo {
+ .encabezado-modulo {
   margin-bottom: 1rem;
 }
 
-.registrar-cotizacion-modulo .titulo-profesional {
+.titulo-profesional {
   font-size: 1.5rem;
   font-weight: 700;
   color: #1e293b;
@@ -154,7 +151,7 @@
 
 .badge-prospecto-compacto {
   margin-left: 0.5rem;
-  background: #6366f1;
+  background: #4338ca;
   color: white;
   font-size: 0.7rem;
   padding: 0.125rem 0.5rem;
@@ -242,7 +239,7 @@
   text-align: center;
   min-width: 100px;
   font-weight: 600;
-  color: #059669;
+  color: #047857;
   background: #f0fdf4;
 }
 
@@ -280,7 +277,7 @@
 }
 
 .btn-agregar-compacto {
-  background: #10b981;
+  background: #047857;
   color: white;
 }
 
@@ -291,12 +288,12 @@
 
 .btn-limpiar-compacto {
   background: white;
-  color: #ef4444;
-  border: 1px solid #ef4444;
+  color: #b91c1c;
+  border: 1px solid #b91c1c;
 }
 
 .btn-limpiar-compacto:hover {
-  background: #ef4444;
+  background: #dc2626;
   color: white;
   transform: translateY(-1px);
 }
@@ -305,7 +302,7 @@
   padding: 0.375rem;
   border: none;
   border-radius: 4px;
-  background: #ef4444;
+  background: #dc2626;
   color: white;
   cursor: pointer;
   display: flex;
@@ -342,7 +339,7 @@
 }
 
 .btn-guardar-compacto {
-  background: #3b82f6;
+  background: #1d4ed8;
   color: white;
 }
 
@@ -352,7 +349,7 @@
 }
 
 .btn-enviar-compacto {
-  background: #10b981;
+  background: #047857;
   color: white;
 }
 

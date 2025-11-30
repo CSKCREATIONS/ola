@@ -3,7 +3,6 @@ import PropTypes from 'prop-types';
 import Swal from 'sweetalert2';
 import api from '../api/axiosConfig';
 import { makePedidoAgendadoTemplate } from '../utils/emailTemplates';
-import { formatDate } from '../utils/formatters';
 import { calcularTotales } from '../utils/calculations';
 import sanitizeHtml from '../utils/sanitizeHtml';
 
@@ -78,7 +77,7 @@ const trySetDocWithDOM = (doc, title, htmlContent, style) => {
     console.error('trySetDocWithDOM failed', err);
     return false;
   } finally {
-    try { doc.close(); } catch (e) { /* ignore */ }
+    try { doc.close(); } catch (e) { console.debug('doc.close failed (trySetDocWithDOM)', e); }
   }
 };
 
@@ -102,7 +101,7 @@ const trySetDocOuterHTML = (doc, title, htmlContent, style) => {
     console.error('trySetDocOuterHTML failed', err);
     return false;
   } finally {
-    try { doc.close(); } catch (e) { /* ignore */ }
+    try { doc.close(); } catch (e) { console.debug('doc.close failed (trySetDocOuterHTML)', e); }
   }
 };
 
@@ -267,7 +266,7 @@ const PedidoAgendadoPreview = ({ datos = {}, onClose = () => { }, onEmailSent, o
     const A4_HEIGHT_PX = 1122;
     const doPrintAndCleanup = () => {
       try {
-        window.print();
+        globalThis.print();
       } catch (e) {
         console.error('Error al imprimir', e);
         Swal.fire('Error', 'No se pudo iniciar la impresión', 'error');

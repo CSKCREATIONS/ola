@@ -357,7 +357,7 @@ const ListaDeCategorias = () => {
       const method = categoriaData.id ? 'PUT' : 'POST';
       const url = categoriaData.id ? `${API_URL}/${categoriaData.id}` : API_URL;
 
-      const res = await api({
+      await api({
         url,
         method,
         data: { name: categoriaData.name, description: categoriaData.description }
