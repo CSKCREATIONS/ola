@@ -771,11 +771,7 @@ export default function OrdenCompra() {
       // El backend no expone PATCH /:id, pero sí PUT /:id (editarOrden).
       // Usamos PUT para enviar el cambio parcial de `enviado`.
       const res = await api.put(`/api/ordenes-compra/${id}`, {
-<<<<<<< HEAD
         enviado: true
-=======
-        enviado: !estadoActual
->>>>>>> d4d68fdc4c4e800ff36185214ea5450f8c612798
       });
       const data = res.data || res;
       if (data.success) {
