@@ -40,14 +40,16 @@ export default function Login() {
       const serverMsg = resp?.data?.message;
       const status = resp?.status;
 
-      // Mapear distintos estados/mensajes del backend a mensajes amigables:
-      // - Si el rol está deshabilitado, mostrar exactamente ese mensaje.
-      // - Para 400/401/404 (credenciales/usuario inválido) mostrar
-      //   'Usuario o contraseña incorrectos' tal como pide el backend.
-      if (serverMsg === 'Rol deshabilitado' || serverMsg === 'Usuario deshabilitado') {
+      // Mapear distintos estados/mensajes del backend a mensajes específicos:
+      // - 404: Usuario no encontrado
+      // - 401: Credenciales inválidas (contraseña incorrecta)
+      // - 403: Rol deshabilitado o Usuario deshabilitado
+      if (status === 404 && serverMsg === 'Usuario no encontrado') {
+        setMensajeError('Usuario no encontrado');
+      } else if (status === 401 && serverMsg === 'Credenciales inválidas') {
+        setMensajeError('Credenciales inválidas');
+      } else if (serverMsg === 'Rol deshabilitado' || serverMsg === 'Usuario deshabilitado') {
         setMensajeError(serverMsg);
-      } else if (status === 400 || status === 401 || status === 404) {
-        setMensajeError('Usuario o contraseña incorrectos');
       } else if (serverMsg) {
         setMensajeError(serverMsg);
       } else {

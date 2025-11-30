@@ -30,7 +30,20 @@ export default function RecuperarContraseña() {
       }
     } catch (error) {
       console.error('Error:', error);
-      setMensajeError('Error en el servidor');
+      
+      // Extraer el mensaje del servidor si existe
+      const resp = error?.response;
+      const serverMsg = resp?.data?.message;
+      const status = resp?.status;
+
+      // Si el backend devuelve 404, significa que el correo no está registrado
+      if (status === 404 && serverMsg === 'Correo no registrado') {
+        setMensajeError('Correo no registrado');
+      } else if (serverMsg) {
+        setMensajeError(serverMsg);
+      } else {
+        setMensajeError('Error en el servidor');
+      }
     }
   };
 
