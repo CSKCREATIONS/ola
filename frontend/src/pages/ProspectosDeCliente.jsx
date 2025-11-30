@@ -236,6 +236,45 @@ export default function ProspectosDeCliente() {
     saveAs(data, 'ListaDeProspectos.xlsx');
   };
 
+  // Helper: Construir mapa de cotizaciones por email
+  const buildCotizacionesMap = async () => {
+    try {
+      const cotRes = await api.get(`/api/cotizaciones?t=${Date.now()}`);
+      const cotData = cotRes.data;
+      const cotList = Array.isArray(cotData) ? cotData : (cotData.data || []);
+      const map = {};
+      for (const cot of cotList) {
+        const email = (cot.cliente?.correo || '').toLowerCase();
+        if (!email) continue;
+        if (!map[email]) map[email] = [];
+        if (cot.codigo) map[email].push({ tipo: 'cotizacion', codigo: cot.codigo, id: cot._id });
+      }
+      setCotizacionesMap(map);
+    } catch (err) {
+      console.error('Error al cargar cotizaciones:', err);
+    }
+  };
+
+  // Helper: Construir mapa de pedidos agendados por email
+  const buildPedidosMap = async () => {
+    try {
+      const pedidosRes = await api.get('/api/pedidos?populate=true');
+      const pedidosData = pedidosRes.data || pedidosRes;
+      const pedidosList = Array.isArray(pedidosData) ? pedidosData : (pedidosData.data || []);
+      const pedidosMapLocal = {};
+      for (const p of pedidosList) {
+        if ((p.estado || '').toString().toLowerCase() !== 'agendado') continue;
+        const correo = (p.cliente?.correo || '').toLowerCase();
+        if (!correo) continue;
+        if (!pedidosMapLocal[correo]) pedidosMapLocal[correo] = [];
+        pedidosMapLocal[correo].push({ tipo: 'pedido', numeroPedido: p.numeroPedido || p._id, id: p._id });
+      }
+      setPedidosMap(pedidosMapLocal);
+    } catch (error_) {
+      console.error('Error al cargar pedidos agendados:', error_);
+    }
+  };
+
   const fetchProspectos = async () => {
     try {
       // Usa el nuevo endpoint de prospectos; agrega cache-buster para evitar 304
@@ -246,40 +285,8 @@ export default function ProspectosDeCliente() {
       const prospectosOrdenados = listaProspectos.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       setProspectos(prospectosOrdenados);
 
-      // Also fetch cotizaciones once and build a map by client email
-      try {
-        const cotRes = await api.get(`/api/cotizaciones?t=${Date.now()}`);
-        const cotData = cotRes.data;
-        const cotList = Array.isArray(cotData) ? cotData : (cotData.data || []);
-        const map = {};
-        for (const cot of cotList) {
-          const email = (cot.cliente?.correo || '').toLowerCase();
-          if (!email) continue;
-          if (!map[email]) map[email] = [];
-          if (cot.codigo) map[email].push({ tipo: 'cotizacion', codigo: cot.codigo, id: cot._id });
-        }
-        setCotizacionesMap(map);
-
-        // También cargar pedidos agendados y mapear por correo de cliente
-        try {
-          const pedidosRes = await api.get('/api/pedidos?populate=true');
-          const pedidosData = pedidosRes.data || pedidosRes;
-          const pedidosList = Array.isArray(pedidosData) ? pedidosData : (pedidosData.data || []);
-          const pedidosMapLocal = {};
-          for (const p of pedidosList) {
-            if ((p.estado || '').toString().toLowerCase() !== 'agendado') continue;
-            const correo = (p.cliente?.correo || '').toLowerCase();
-            if (!correo) continue;
-            if (!pedidosMapLocal[correo]) pedidosMapLocal[correo] = [];
-            pedidosMapLocal[correo].push({ tipo: 'pedido', numeroPedido: p.numeroPedido || p._id, id: p._id });
-          }
-          setPedidosMap(pedidosMapLocal);
-        } catch (errPedidos) {
-          console.error('Error al cargar pedidos agendados:', errPedidos);
-        }
-      } catch (err) {
-        console.error('Error al cargar cotizaciones:', err);
-      }
+      // Cargar cotizaciones y pedidos en paralelo
+      await Promise.all([buildCotizacionesMap(), buildPedidosMap()]);
     } catch (err) {
       console.error('Error al cargar prospectos', err);
       setProspectos([]);
@@ -713,7 +720,12 @@ export default function ProspectosDeCliente() {
                           <td style={{ padding: '16px 12px', width: 160 }}>
                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }} title={cliente.operacion || 'Sin operación'}>
                               <div style={{ width: 120, height: 10, background: '#e6e6e6', borderRadius: 999, overflow: 'hidden' }}>
-                                <div style={{ width: `${getProgressForCliente(cliente)}%`, height: '100%', borderRadius: 999, background: getProgressForCliente(cliente) >= 80 ? 'linear-gradient(90deg,#34d399,#10b981)' : getProgressForCliente(cliente) >= 10 ? 'linear-gradient(90deg,#f59e0b,#f97316)' : '#cbd5e1', transition: 'width 400ms ease' }} />
+                                <div style={{ width: `${getProgressForCliente(cliente)}%`, height: '100%', borderRadius: 999, background: (() => {
+                                  const progress = getProgressForCliente(cliente);
+                                  if (progress >= 80) return 'linear-gradient(90deg,#34d399,#10b981)';
+                                  if (progress >= 10) return 'linear-gradient(90deg,#f59e0b,#f97316)';
+                                  return '#cbd5e1';
+                                })(), transition: 'width 400ms ease' }} />
                               </div>
                               <div style={{ fontSize: '0.75rem', color: '#374151', fontWeight: 600 }}>{getProgressForCliente(cliente)}%</div>
                             </div>

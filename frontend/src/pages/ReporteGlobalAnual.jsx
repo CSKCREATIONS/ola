@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Row, Col, Table, Typography, Spin, Empty } from 'antd';
+import { Card, Table, Typography, Spin, Empty } from 'antd';
 import api from '../api/axiosConfig';
 import Fijo from '../components/Fijo';
 import NavCompras from '../components/NavCompras';
@@ -24,27 +24,27 @@ export default function ReporteGlobalAnual() {
 
         // Aggregate compras by year
         const comprasByYear = {};
-        (comprasPeriodo || []).forEach(item => {
+        for (const item of (comprasPeriodo || [])) {
           const id = item._id || {};
           const year = id.año || id.year || (new Date()).getFullYear();
           comprasByYear[year] = comprasByYear[year] || { comprasCount: 0, comprasTotal: 0 };
           comprasByYear[year].comprasCount += (item.totalCompras || 0);
           comprasByYear[year].comprasTotal += (item.totalGasto || item.totalIngresos || 0);
-        });
+        }
 
         // Aggregate orders by year
         const ordenesByYear = {};
-        (ordenesList || []).forEach(o => {
+        for (const o of (ordenesList || [])) {
           const d = o.fechaOrden ? new Date(o.fechaOrden) : new Date(o.createdAt || Date.now());
           const year = d.getFullYear();
           ordenesByYear[year] = ordenesByYear[year] || { ordenesCount: 0, ordenesTotal: 0 };
           ordenesByYear[year].ordenesCount += 1;
           ordenesByYear[year].ordenesTotal += (o.total || 0);
-        });
+        }
 
         // Merge years
         const years = Array.from(new Set([ ...Object.keys(comprasByYear), ...Object.keys(ordenesByYear) ]))
-          .map(y => Number(y))
+          .map(Number)
           .sort((a,b) => b - a);
 
         const merged = years.map(y => ({
@@ -83,15 +83,19 @@ export default function ReporteGlobalAnual() {
           <Title level={2}>Reporte Global Anual</Title>
           <p>Este reporte muestra agregados por año; los totales se "reinician" por año (cada año comienza un nuevo acumulado).</p>
 
-          {loading ? (
-            <div style={{ textAlign: 'center', padding: 40 }}><Spin size="large" /></div>
-          ) : yearsData && yearsData.length > 0 ? (
-            <Card bordered>
-              <Table dataSource={yearsData} columns={cols} rowKey={(r) => r.year} pagination={false} />
-            </Card>
-          ) : (
-            <Empty description="No hay datos anuales" />
-          )}
+          {(() => {
+            if (loading) {
+              return <div style={{ textAlign: 'center', padding: 40 }}><Spin size="large" /></div>;
+            }
+            if (yearsData && yearsData.length > 0) {
+              return (
+                <Card variant="bordered">
+                  <Table dataSource={yearsData} columns={cols} rowKey={(r) => r.year} pagination={false} />
+                </Card>
+              );
+            }
+            return <Empty description="No hay datos anuales" />;
+          })()}
         </div>
       </div>
     </div>

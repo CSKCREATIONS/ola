@@ -440,6 +440,26 @@ async function processProduct(p, useSession, session, Product, adjustments) {
   };
 }
 
+// Helper: Verificar si el error es por falta de soporte de transacciones
+function isTransactionNotSupportedError(error) {
+  const msg = String(error?.message || '');
+  return msg.includes('Transaction numbers are only allowed') || 
+         msg.includes('replica set') || 
+         msg.includes('Transaction') || 
+         error?.codeName === 'NoSuchTransaction';
+}
+
+// Helper: Compensar stock en caso de error
+async function compensateStockAdjustments(adjustments, Product) {
+  try {
+    for (const adj of adjustments) {
+      await Product.updateOne({ _id: adj._id }, { $inc: { stock: adj.qty } }).exec();
+    }
+  } catch (rollbackError_) {
+    console.warn('⚠️ Falló compensación de stock:', rollbackError_?.message || rollbackError_);
+  }
+}
+
 // Crear una nueva remisión (simplificada, segura y reutilizable)
 exports.createRemision = async (req, res) => {
   const mongoose = require('mongoose');
@@ -503,22 +523,15 @@ exports.createRemision = async (req, res) => {
     try {
       await session.withTransaction(async () => { await runCoreFlow(true); });
     } catch (txError) {
-      const msg = String(txError?.message || '');
-      const isNoTxnSupport = msg.includes('Transaction numbers are only allowed') || msg.includes('replica set') || msg.includes('Transaction') || txError?.codeName === 'NoSuchTransaction';
-      if (!isNoTxnSupport) throw txError;
+      if (!isTransactionNotSupportedError(txError)) throw txError;
+      
       // Fallback sin transacción: aplicar compensación si falla en medio
       let result;
       try {
         result = await runCoreFlow(false);
       } catch (error_) {
         // best-effort rollback
-        try {
-          for (const adj of (result?.adjustments || [])) {
-            await Product.updateOne({ _id: adj._id }, { $inc: { stock: adj.qty } }).exec();
-          }
-        } catch (rollbackError_) {
-          console.warn('⚠️ Falló compensación de stock:', rollbackError_?.message || rollbackError_);
-        }
+        await compensateStockAdjustments(result?.adjustments || [], Product);
         throw error_;
       }
     }

@@ -179,7 +179,12 @@ function parseFechaCotizacion(fecha) {
     // Normalize incoming value to string for simple checks
     const isString = typeof fecha === 'string';
     const isNullish = fecha == null;
-    const asStr = isString ? fecha : (isNullish ? '' : String(fecha));
+    let asStr = '';
+    if (isString) {
+      asStr = fecha;
+    } else if (!isNullish) {
+      asStr = String(fecha);
+    }
 
     // Exact match YYYY-MM-DD
     if (/^\d{4}-\d{2}-\d{2}$/.test(asStr)) {

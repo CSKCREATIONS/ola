@@ -592,7 +592,7 @@ JLA Global Company</textarea>
           const popup = Swal.getPopup();
           if (popup) popup.style.zIndex = '20001';
         } catch (e) {
-          // ignore
+          console.error('Error setting z-index:', e);
         }
       },
       preConfirm: async () => {
@@ -629,12 +629,12 @@ JLA Global Company</textarea>
           allowOutsideClick: false,
           didOpen: () => {
             try {
-              const container = Swal.getContainer && Swal.getContainer();
-              const popup = Swal.getPopup && Swal.getPopup();
+              const container = Swal.getContainer?.();
+              const popup = Swal.getPopup?.();
               if (container) container.style.zIndex = '21000';
               if (popup) popup.style.zIndex = '21001';
             } catch (e) {
-              // ignore
+              console.error('Error setting z-index:', e);
             }
             Swal.showLoading();
           }
@@ -653,12 +653,12 @@ JLA Global Company</textarea>
           confirmButtonColor: '#27ae60',
           didOpen: () => {
             try {
-              const container = Swal.getContainer && Swal.getContainer();
-              const popup = Swal.getPopup && Swal.getPopup();
+              const container = Swal.getContainer?.();
+              const popup = Swal.getPopup?.();
               if (container) container.style.zIndex = '22000';
               if (popup) popup.style.zIndex = '22001';
             } catch (e) {
-              // ignore
+              console.error('Error setting z-index:', e);
             }
           }
         });
@@ -671,12 +671,12 @@ JLA Global Company</textarea>
           confirmButtonColor: '#dc3545',
           didOpen: () => {
             try {
-              const container = Swal.getContainer && Swal.getContainer();
-              const popup = Swal.getPopup && Swal.getPopup();
+              const container = Swal.getContainer?.();
+              const popup = Swal.getPopup?.();
               if (container) container.style.zIndex = '22000';
               if (popup) popup.style.zIndex = '22001';
             } catch (e) {
-              // ignore
+              console.error('Error setting z-index:', e);
             }
           }
         });

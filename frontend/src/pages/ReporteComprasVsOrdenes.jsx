@@ -41,12 +41,6 @@ export default function ReporteComprasVsOrdenes() {
     fetch();
   }, []);
 
-  const monthlyColumns = [
-    { title: 'Periodo', dataIndex: 'period', key: 'period' },
-    { title: 'Total Compras', dataIndex: 'compras', key: 'compras', render: v => `$${Number(v||0).toLocaleString()}` },
-    { title: 'Total Órdenes', dataIndex: 'ordenes', key: 'ordenes', render: v => `$${Number(v||0).toLocaleString()}` },
-  ];
-
   const compraCols = [
     { title: 'N° Compra', dataIndex: 'numero', key: 'numero' },
     { title: 'Proveedor', dataIndex: 'proveedor', key: 'proveedor' },
@@ -75,7 +69,7 @@ export default function ReporteComprasVsOrdenes() {
             <>
               <Row gutter={[16,16]} style={{ marginBottom: 16 }}>
                 <Col xs={24} md={12}>
-                  <Card title="Resumen" bordered>
+                  <Card title="Resumen" variant="bordered">
                     {summary && summary.length > 0 ? (
                       <div style={{ display: 'flex', gap: 12, justifyContent: 'space-around' }}>
                         {summary.map((s, i) => (
@@ -93,7 +87,7 @@ export default function ReporteComprasVsOrdenes() {
                 </Col>
 
                 <Col xs={24} md={12}>
-                  <Card title="Distribución mensual (totales)" bordered>
+                  <Card title="Distribución mensual (totales)" variant="bordered">
                     {monthly && monthly.length > 0 ? (
                       <ResponsiveContainer width="100%" height={220}>
                         <BarChart data={monthly} margin={{ top: 10, right: 20, left: 0, bottom: 5 }}>
@@ -114,7 +108,7 @@ export default function ReporteComprasVsOrdenes() {
 
               <Row gutter={[16,16]}>
                 <Col xs={24} lg={12}>
-                  <Card title={<span><TableOutlined style={{ marginRight: 8 }} />Últimas Compras</span>} bordered>
+                  <Card title={<span><TableOutlined style={{ marginRight: 8 }} />Últimas Compras</span>} variant="bordered">
                     {recentCompras && recentCompras.length > 0 ? (
                       <Table dataSource={recentCompras} columns={compraCols} rowKey={(r) => r._id || r.numero} pagination={{ pageSize: 5 }} />
                     ) : (
@@ -124,7 +118,7 @@ export default function ReporteComprasVsOrdenes() {
                 </Col>
 
                 <Col xs={24} lg={12}>
-                  <Card title="Últimas Órdenes" bordered>
+                  <Card title="Últimas Órdenes" variant="bordered">
                     {recentOrdenes && recentOrdenes.length > 0 ? (
                       <Table dataSource={recentOrdenes} columns={ordenCols} rowKey={(r) => r._id || r.numeroOrden} pagination={{ pageSize: 5 }} />
                     ) : (

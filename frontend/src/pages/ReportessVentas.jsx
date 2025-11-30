@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import PropTypes from 'prop-types';
 import { 
     Card, 
     Col, 
@@ -68,17 +69,29 @@ const numberFormatter = (value) => Number(value || 0).toLocaleString();
 
 // Función Helper para el Tooltip del PieChart
 const CustomPieTooltip = ({ active, payload }) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload;
+    if (active && payload?.length) {
+      const data = payload[0]?.payload;
       return (
         <div style={{ backgroundColor: '#fff', padding: '10px', border: '1px solid #ccc', borderRadius: '4px' }}>
-          <p style={{ fontWeight: 'bold' }}>{data.name}</p>
-          <p style={{ color: COLORS.primary }}>{`Pedidos: ${data.value}`}</p>
+          <p style={{ fontWeight: 'bold' }}>{data?.name}</p>
+          <p style={{ color: COLORS.primary }}>{`Pedidos: ${data?.value}`}</p>
         </div>
       );
     }
     return null;
   };
+
+CustomPieTooltip.propTypes = {
+  active: PropTypes.bool,
+  payload: PropTypes.arrayOf(
+    PropTypes.shape({
+      payload: PropTypes.shape({
+        name: PropTypes.string,
+        value: PropTypes.number,
+      }),
+    })
+  ),
+};
 
 // Etiqueta personalizada para el PieChart (Donut)
 const CustomPieLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, value, name, percent }) => {
@@ -100,6 +113,17 @@ const CustomPieLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, value, nam
       </text>
     );
   };
+
+CustomPieLabel.propTypes = {
+  cx: PropTypes.number,
+  cy: PropTypes.number,
+  midAngle: PropTypes.number,
+  innerRadius: PropTypes.number,
+  outerRadius: PropTypes.number,
+  value: PropTypes.number,
+  name: PropTypes.string,
+  percent: PropTypes.number,
+};
 
 
 const ReportessVentas = () => {
@@ -145,7 +169,7 @@ const ReportessVentas = () => {
                     fetchEndpoint('estados', setEstadosChartData, 'estados de pedidos'),
                 ]);
             } catch (error) {
-                // El error ya fue reportado en fetchEndpoint
+                console.error('Error al cargar datos del reporte:', error);
             } finally {
                 setLoading(false);
             }
@@ -228,7 +252,7 @@ const ReportessVentas = () => {
                         {/* Sección de Estadísticas Clave */}
                         <Row gutter={[24, 24]} style={{ marginBottom: "40px" }}>
                             <Col xs={24} sm={12} md={12} lg={6}>
-                                <Card bordered={false} hoverable style={{ boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)', borderLeft: `5px solid ${COLORS.primary}` }}>
+                                <Card variant="borderless" hoverable style={{ boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)', borderLeft: `5px solid ${COLORS.primary}` }}>
                                     <Statistic
                                         title={<span style={{ color: COLORS.dark, fontWeight: '500' }}>Ventas Totales</span>}
                                         value={estadisticas.ventasTotales || 0}
@@ -239,7 +263,7 @@ const ReportessVentas = () => {
                                 </Card>
                             </Col>
                             <Col xs={24} sm={12} md={12} lg={6}>
-                                <Card bordered={false} hoverable style={{ boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)', borderLeft: `5px solid ${COLORS.info}` }}>
+                                <Card variant="borderless" hoverable style={{ boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)', borderLeft: `5px solid ${COLORS.info}` }}>
                                     <Statistic
                                         title={<span style={{ color: COLORS.dark, fontWeight: '500' }}>Total Pedidos</span>}
                                         value={estadisticas.totalPedidos || 0}
@@ -249,7 +273,7 @@ const ReportessVentas = () => {
                                 </Card>
                             </Col>
                             <Col xs={24} sm={12} md={12} lg={6}>
-                                <Card bordered={false} hoverable style={{ boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)', borderLeft: `5px solid ${COLORS.secondary}` }}>
+                                <Card variant="borderless" hoverable style={{ boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)', borderLeft: `5px solid ${COLORS.secondary}` }}>
                                     <Statistic
                                         title={<span style={{ color: COLORS.dark, fontWeight: '500' }}>Clientes Activos</span>}
                                         value={estadisticas.clientesActivos || 0}
@@ -259,7 +283,7 @@ const ReportessVentas = () => {
                                 </Card>
                             </Col>
                             <Col xs={24} sm={12} md={12} lg={6}>
-                                <Card bordered={false} hoverable style={{ boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)', borderLeft: `5px solid ${(estadisticas.crecimiento || 0) >= 0 ? COLORS.success : COLORS.danger}` }}>
+                                <Card variant="borderless" hoverable style={{ boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)', borderLeft: `5px solid ${(estadisticas.crecimiento || 0) >= 0 ? COLORS.success : COLORS.danger}` }}>
                                     <Statistic
                                         title={<span style={{ color: COLORS.dark, fontWeight: '500' }}>Crecimiento (%)</span>}
                                         value={estadisticas.crecimiento || 0}
@@ -286,8 +310,8 @@ const ReportessVentas = () => {
                         <Row gutter={[24, 24]} style={{ marginTop: "20px", marginBottom: "40px" }}>
                             <Col xs={24} sm={24} md={12} lg={12}>
                                 <Card 
-                                    title={<Title level={4} style={{ color: COLORS.dark }}>Top Clientes por Gasto</Title>} 
-                                    bordered
+                                    title={<Title level={4} style={{ color: COLORS.dark }}>Estado del Inventario</Title>} 
+                                    variant="bordered"
                                     style={{ boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)' }}
                                 >
                                     <Table
@@ -303,8 +327,8 @@ const ReportessVentas = () => {
                             </Col>
                             <Col xs={24} sm={24} md={12} lg={12}>
                                 <Card 
-                                    title={<Title level={4} style={{ color: COLORS.dark }}>Top Productos Vendidos</Title>} 
-                                    bordered
+                                    title={<Title level={4} style={{ color: COLORS.dark }}>Distribución de Estados</Title>} 
+                                    variant="bordered"
                                     style={{ boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)' }}
                                 >
                                     <Table
@@ -332,7 +356,7 @@ const ReportessVentas = () => {
                             <Col xs={24} sm={24} md={12} lg={12}>
                                 <Card 
                                     title={<Title level={4} style={{ color: COLORS.dark }}>pie-chart Distribución por Estado de Pedidos</Title>} 
-                                    bordered
+                                    variant="bordered"
                                     style={{ boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)' }}
                                 >
                                     <ResponsiveContainer width="100%" height={300}>
@@ -368,7 +392,7 @@ const ReportessVentas = () => {
                             <Col xs={24} sm={24} md={12} lg={12}>
                                 <Card 
                                     title={<Title level={4} style={{ color: COLORS.dark }}>bar-chart Ventas Mensuales (Ingresos y Cantidad)</Title>} 
-                                    bordered
+                                    variant="bordered"
                                     style={{ boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)' }}
                                 >
                                     <ResponsiveContainer width="100%" height={300}>

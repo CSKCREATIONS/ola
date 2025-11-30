@@ -164,7 +164,7 @@ const PrintButton = React.memo(function PrintButton({ numeroRemision, getPrintCo
 
     const A4_HEIGHT_PX = 1122;
     const doPrintAndCleanup = () => {
-      try { window.print(); } catch (e) { console.error('Error al imprimir', e); }
+      try { globalThis.print(); } catch (e) { console.error('Error al imprimir', e); }
       setTimeout(() => {
         try { printRoot.remove(); } catch (err) { console.warn('No se pudo remover printRoot:', err); }
         try { style.remove(); } catch (err) { console.warn('No se pudo remover style:', err); }
@@ -363,9 +363,6 @@ export default function RemisionPreview({ datos, onClose }) {
 
     setCorreo(datos?.cliente?.correo || datosConDefaults.cliente?.correo || '');
     setAsunto(`Remisión ${datos?.numeroRemision || datosConDefaults.numeroRemision || ''} - ${datos?.cliente?.nombre || datosConDefaults.cliente?.nombre || 'Cliente'} | ${COMPANY_NAME}`);
-    const obsText = (datos?.observaciones || datosConDefaults.observaciones)
-      ? '📝 OBSERVACIONES:\n' + (datos?.observaciones || datosConDefaults.observaciones) + '\n\n'
-      : '';
     setMensaje(
       `Estimado/a ${datos?.cliente?.nombre || datosConDefaults.cliente?.nombre || 'cliente'},\n\nEsperamos se encuentre muy bien. Adjunto encontrará el documento PDF de la remisión de entrega de su pedido con la siguiente información:\n\n• Número de remisión: ${datos?.numeroRemision || datosConDefaults.numeroRemision || 'N/A'}\n• Fecha de remisión: ${formatDateIso(datos?.fechaRemision || datosConDefaults.fechaRemision)}\n• Cliente: ${datos?.cliente?.nombre || datosConDefaults.cliente?.nombre || 'N/A'}\n• Correo: ${datos?.cliente?.correo || datosConDefaults.cliente?.correo || 'N/A'}\n• Ciudad: ${datos?.cliente?.ciudad || datosConDefaults.cliente?.ciudad || 'N/A'}\n• Total de productos entregados: ${datos?.productos?.length || datosConDefaults.productos?.length || 0} artículos\n• TOTAL GENERAL: S/. ${totalFinal.toLocaleString('es-ES')}\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` + `Si tiene alguna pregunta o comentario sobre la entrega, no dude en contactarnos.\n\nSaludos cordiales,\n${COMPANY_NAME}\n`
     );

@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
+import PropTypes from 'prop-types';
 import {
   Card,
   Col,
@@ -83,6 +84,41 @@ const CustomPieLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, value, nam
     );
   };
 
+CustomPieLabel.propTypes = {
+  cx: PropTypes.number,
+  cy: PropTypes.number,
+  midAngle: PropTypes.number,
+  innerRadius: PropTypes.number,
+  outerRadius: PropTypes.number,
+  value: PropTypes.number,
+  name: PropTypes.string,
+  percent: PropTypes.number,
+};
+
+// Componente de Tooltip personalizado para PieChart de países
+const CustomPaisTooltip = ({ payload }) => {
+  if (!payload || !payload.length) return null;
+  
+  const data = payload[0];
+  return (
+    <div style={{ backgroundColor: 'rgba(255, 255, 255, 0.9)', border: '1px solid #ccc', borderRadius: '4px', padding: '8px' }}>
+      <p style={{ margin: 0, fontWeight: 'bold' }}>{`${data.value} proveedores`}</p>
+      <p style={{ margin: 0, color: '#666' }}>{data.payload.pais}</p>
+    </div>
+  );
+};
+
+CustomPaisTooltip.propTypes = {
+  payload: PropTypes.arrayOf(
+    PropTypes.shape({
+      value: PropTypes.number,
+      payload: PropTypes.shape({
+        pais: PropTypes.string,
+      }),
+    })
+  ),
+};
+
 const ReportesProveedores = () => {
     const [estadisticas, setEstadisticas] = useState({});
     const [proveedoresPorPais, setProveedoresPorPais] = useState([]);
@@ -141,13 +177,13 @@ const ReportesProveedores = () => {
                 const ordenesList = ordenesRes.data?.data || ordenesRes.data || [];
                 
                 const comprasMonthlyMap = {};
-                (comprasPeriodo || []).forEach(item => {
+                for (const item of (comprasPeriodo || [])) {
                     const id = item._id || {};
                     const year = id.año || id.year || (new Date()).getFullYear();
                     const month = (id.mes || id.month || 1).toString().padStart(2, '0');
                     const period = `${year}-${month}`;
                     comprasMonthlyMap[period] = (comprasMonthlyMap[period] || 0) + (item.totalGasto || item.totalIngresos || 0);
-                });
+                }
 
                 const ordenesAll = (ordenesList || []);
                 const ordenesAprobadas = ordenesAll.filter(o => o.estado === 'Completada' || o.estado === 'Aprobada');
@@ -157,7 +193,7 @@ const ReportesProveedores = () => {
 
                 const ordenesMonthlyMapAll = {};
                 const ordenesMonthlyMapApproved = {};
-                ordenesAll.forEach(o => {
+                for (const o of ordenesAll) {
                     const d = o.fechaOrden ? new Date(o.fechaOrden) : new Date(o.createdAt || Date.now());
                     const period = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
                     ordenesMonthlyMapAll[period] = (ordenesMonthlyMapAll[period] || 0) + (o.total || 0);
@@ -165,16 +201,16 @@ const ReportesProveedores = () => {
                     if (o.estado === 'Completada' || o.estado === 'Aprobada') {
                         ordenesMonthlyMapApproved[period] = (ordenesMonthlyMapApproved[period] || 0) + (o.total || 0);
                     }
-                });
+                }
 
-                const periodsAll = Array.from(new Set([...Object.keys(comprasMonthlyMap), ...Object.keys(ordenesMonthlyMapAll)])).sort();
+                const periodsAll = Array.from(new Set([...Object.keys(comprasMonthlyMap), ...Object.keys(ordenesMonthlyMapAll)])).sort((a, b) => a.localeCompare(b));
                 const monthlyAll = periodsAll.map(p => ({ 
                     period: p, 
                     compras: comprasMonthlyMap[p] || 0, 
                     ordenes: ordenesMonthlyMapAll[p] || 0 
                 }));
 
-                const periodsApproved = Array.from(new Set([...Object.keys(ordenesMonthlyMapAll), ...Object.keys(ordenesMonthlyMapApproved)])).sort();
+                const periodsApproved = Array.from(new Set([...Object.keys(ordenesMonthlyMapAll), ...Object.keys(ordenesMonthlyMapApproved)])).sort((a, b) => a.localeCompare(b));
                 const monthlyApproved = periodsApproved.map(p => ({ 
                     period: p, 
                     ordenes: ordenesMonthlyMapAll[p] || 0, 
@@ -204,7 +240,7 @@ const ReportesProveedores = () => {
           title: "Proveedor",
           dataIndex: "nombre",
           key: "nombre",
-          render: (text) => <a style={{ fontWeight: '600', color: COLORS.primary }}>{text}</a>, 
+          render: (text) => <span style={{ fontWeight: '600', color: COLORS.primary }}>{text}</span>, 
         },
         {
           title: "Productos",
@@ -274,10 +310,10 @@ const ReportesProveedores = () => {
                                 { title: "Proveedores Activos", value: estadisticas.proveedoresActivos, icon: CheckCircleOutlined, color: COLORS.success },
                                 { title: "Proveedores Inactivos", value: estadisticas.proveedoresInactivos, icon: StopOutlined, color: COLORS.danger },
                                 { title: "Con Productos", value: estadisticas.conProductos, icon: ShoppingOutlined, color: COLORS.warning },
-                            ].map((stat, index) => (
-                                <Col xs={24} sm={12} md={12} lg={6} key={index}>
+                            ].map((stat) => (
+                                <Col xs={24} sm={12} md={12} lg={6} key={stat.title}>
                                     <Card
-                                        bordered={false}
+                                        variant="borderless"
                                         hoverable
                                         style={{
                                             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
@@ -308,7 +344,7 @@ const ReportesProveedores = () => {
                             <Col xs={24} md={12}>
                                 <Card 
                                     title={<Title level={4} style={{ margin: 0, color: COLORS.dark }}>Tendencia de Gasto (Compras vs Órdenes)</Title>} 
-                                    bordered
+                                    variant="bordered"
                                     style={{ boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)' }}
                                 >
                                     {comprasVsOrdenes ? (
@@ -360,7 +396,7 @@ const ReportesProveedores = () => {
                             <Col xs={24} md={12}>
                                 <Card 
                                     title={<Title level={4} style={{ margin: 0, color: COLORS.dark }}>Tasa de Aprobación de Órdenes</Title>} 
-                                    bordered
+                                    variant="bordered"
                                     style={{ boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)' }}
                                 >
                                     {ordenesAprobadasVsCompras ? (
@@ -440,7 +476,7 @@ const ReportesProveedores = () => {
                             <Col xs={24} sm={24} md={12} lg={12}>
                                 <Card 
                                     title={<Title level={4} style={{ color: COLORS.dark }}>Distribución Geográfica</Title>} 
-                                    bordered
+                                    variant="bordered"
                                     style={{ boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)' }}
                                 >
                                     <ResponsiveContainer width="100%" height={300}>
@@ -468,10 +504,7 @@ const ReportesProveedores = () => {
                                                     />
                                                 ))}
                                             </Pie>
-                                            <Tooltip 
-                                                contentStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.9)', border: '1px solid #ccc', borderRadius: '4px' }}
-                                                formatter={(value, name, props) => ([`${value} proveedores`, props.payload.pais])} 
-                                            />
+                                            <Tooltip content={<CustomPaisTooltip />} />
                                             <Legend 
                                                 layout="horizontal" 
                                                 verticalAlign="bottom" 
@@ -487,7 +520,7 @@ const ReportesProveedores = () => {
                             <Col xs={24} sm={24} md={12} lg={12}>
                                 <Card 
                                     title={<Title level={4} style={{ color: COLORS.dark }}>Estado de Cuentas</Title>} 
-                                    bordered
+                                    variant="bordered"
                                     style={{ boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)' }}
                                 >
                                     <ResponsiveContainer width="100%" height={300}>
@@ -501,8 +534,8 @@ const ReportesProveedores = () => {
                                                 name="Cantidad"
                                                 radius={[10, 10, 0, 0]}
                                             >
-                                                {proveedoresPorEstado.map((entry, index) => (
-                                                    <Cell key={`cell-${index}`} fill={getColorForEstado(entry.estado)} />
+                                                {proveedoresPorEstado.map((entry) => (
+                                                    <Cell key={`cell-${entry.estado}`} fill={getColorForEstado(entry.estado)} />
                                                 ))}
                                             </Bar>
                                         </BarChart>
@@ -525,7 +558,7 @@ const ReportesProveedores = () => {
                             <Col xs={24} sm={24} md={12} lg={12}>
                                 <Card 
                                     title={<Title level={4} style={{ color: COLORS.dark }}>Inventario por Proveedor</Title>} 
-                                    bordered
+                                    variant="bordered"
                                     style={{ boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)' }}
                                 >
                                     <Table
@@ -552,7 +585,7 @@ const ReportesProveedores = () => {
                             <Col xs={24} sm={24} md={12} lg={12}>
                                 <Card
                                     title={<Title level={4} style={{ color: COLORS.dark }}>Últimos Proveedores Agregados</Title>}
-                                    bordered
+                                    variant="bordered"
                                     style={{ boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)' }}
                                 >
                                     <Table
@@ -579,23 +612,31 @@ const ReportesProveedores = () => {
                             footer={null}
                             width={800}
                         >
-                            {loadingProducts ? (
-                                <div style={{ textAlign: 'center', padding: '50px' }}>
-                                    <Spin size="large" tip="Cargando productos..." />
-                                </div>
-                            ) : selectedProviderProducts.length > 0 ? (
-                                <Table
-                                    dataSource={selectedProviderProducts}
-                                    rowKey={(r) => r._id}
-                                    columns={selectedProviderProductsColumns}
-                                    pagination={{ pageSize: 5 }}
-                                    size="middle"
-                                />
-                            ) : (
-                                <p style={{ padding: '20px', textAlign: 'center', color: COLORS.danger }}>
-                                    El proveedor **{selectedProviderName}** no tiene productos registrados.
-                                </p>
-                            )}
+                            {(() => {
+                                if (loadingProducts) {
+                                    return (
+                                        <div style={{ textAlign: 'center', padding: '50px' }}>
+                                            <Spin size="large" tip="Cargando productos..." />
+                                        </div>
+                                    );
+                                }
+                                if (selectedProviderProducts.length > 0) {
+                                    return (
+                                        <Table
+                                            dataSource={selectedProviderProducts}
+                                            rowKey={(r) => r._id}
+                                            columns={selectedProviderProductsColumns}
+                                            pagination={{ pageSize: 5 }}
+                                            size="middle"
+                                        />
+                                    );
+                                }
+                                return (
+                                    <p style={{ padding: '20px', textAlign: 'center', color: COLORS.danger }}>
+                                        El proveedor **{selectedProviderName}** no tiene productos registrados.
+                                    </p>
+                                );
+                            })()}
                         </Modal>
 
                     </div>
