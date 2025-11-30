@@ -1,9 +1,8 @@
-import React, { useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { calcularSubtotalProducto } from '../utils/calculations';
 import { formatCurrency } from '../utils/formatters';
 import OrderDetailsHeader from './OrderDetailsHeader';
-import sanitizeHtml from '../utils/sanitizeHtml';
 
 function useDraggable(ref, enabled) {
   useEffect(() => {
@@ -64,72 +63,6 @@ export default function DetallesOrdenModal({ visible, orden = {}, onClose = () =
   }), []);
 
   const o = orden || {};
-
-  const handleOpenPrintWindow = useCallback((sourceSelector = '.pdf-orden-compra .header') => {
-    const printContent = document.querySelector(sourceSelector) || modalRef.current?.querySelector(sourceSelector);
-    if (!printContent) return;
-    const newWindow = window.open('', '_blank');
-    if (!newWindow) return;
-    const rawContent = printContent.innerHTML;
-    const safeContent = sanitizeHtml(rawContent);
-    const html = `
-      <html>
-        <head>
-          <title>Orden de Compra - ${orden?.numeroOrden || ''}</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
-            .header { text-align: center; margin-bottom: 30px; padding: 20px; background: linear-gradient(135deg, #6a1b9a, #9b59b6); color: white; border-radius: 10px; }
-            .info-section { margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; }
-            table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-            th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-            th { background: linear-gradient(135deg, #6a1b9a, #9b59b6); color: white; font-weight: bold; }
-            .total-row { background: #fef3c7; font-weight: bold; }
-            .status-badge { background: #6a1b9a; color: white; padding: 8px 16px; border-radius: 20px; display: inline-block; }
-          </style>
-        </head>
-        <body>
-          ${safeContent}
-        </body>
-      </html>
-    `;
-    const doc = newWindow.document;
-    try {
-      // Try to adopt the parsed documentElement into the new window's document
-      const parser = new DOMParser();
-      const newDoc = parser.parseFromString(html, 'text/html');
-      if (doc && doc.documentElement && newDoc && newDoc.documentElement) {
-        try {
-          doc.replaceChild(doc.adoptNode(newDoc.documentElement), doc.documentElement);
-        } catch (errReplace) {
-          // fallback to document.write if replaceChild/adoptNode fails
-          try {
-            doc.open();
-            doc.write(html);
-            doc.close();
-          } catch (errWrite) {
-            console.error('Both replaceChild and document.write failed for print:', errReplace, errWrite);
-          }
-        }
-      } else {
-        // Fallback: write HTML into document
-        doc.open();
-        doc.write(html);
-        doc.close();
-      }
-    } catch (err) {
-      console.error('Error preparing print document:', err);
-      try {
-        doc.open();
-        doc.write(html);
-        doc.close();
-      } catch (err2) {
-        console.error('Fallback document.write also failed:', err2);
-      }
-    }
-    newWindow.focus();
-    try { newWindow.print(); } catch (e) { console.debug('print() failed:', e); }
-    try { newWindow.close(); } catch (e) { /* ignore close errors */ }
-  }, [orden]);
 
   if (!visible) return null;
 
