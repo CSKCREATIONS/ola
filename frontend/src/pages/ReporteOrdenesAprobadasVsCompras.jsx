@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Card, Row, Col, Table, Typography, Spin, Empty, Statistic } from 'antd';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { LineChartOutlined, TableOutlined } from '@ant-design/icons';
 import api from '../api/axiosConfig';
 import Fijo from '../components/Fijo';
@@ -12,8 +12,8 @@ const COLORS = ['#2563eb', '#10b981', '#f59e0b', '#ef4444'];
 
 export default function ReporteOrdenesAprobadasVsCompras() {
   const [loading, setLoading] = useState(true);
-  const [summary, setSummary] = useState(null); // {totalCompras, totalOrdenesAprobadas, countCompras, countOrdenes}
-  const [monthly, setMonthly] = useState([]); // [{period, compras, ordenesAprobadas}]
+  const [summary, setSummary] = useState(null);
+  const [monthly, setMonthly] = useState([]);
   const [byProvider, setByProvider] = useState([]);
   const [recentCompras, setRecentCompras] = useState([]);
   const [recentOrdenes, setRecentOrdenes] = useState([]);
@@ -43,12 +43,6 @@ export default function ReporteOrdenesAprobadasVsCompras() {
     };
     fetch();
   }, []);
-
-  const monthlyCols = [
-    { title: 'Periodo', dataIndex: 'period', key: 'period' },
-    { title: 'Total Compras', dataIndex: 'compras', key: 'compras', render: v => `$${Number(v||0).toLocaleString()}` },
-    { title: 'Total Órdenes Aprobadas', dataIndex: 'ordenesAprobadas', key: 'ordenesAprobadas', render: v => `$${Number(v||0).toLocaleString()}` },
-  ];
 
   const providerCols = [
     { title: 'Proveedor', dataIndex: 'proveedor', key: 'proveedor' },
@@ -84,7 +78,7 @@ export default function ReporteOrdenesAprobadasVsCompras() {
             <>
               <Row gutter={[16,16]} style={{ marginBottom: 16 }}>
                 <Col xs={24} md={12}>
-                  <Card title="Resumen" bordered>
+                  <Card title="Resumen" variant="bordered">
                     {summary ? (
                       <Row gutter={16}>
                         <Col span={12}>
@@ -101,7 +95,7 @@ export default function ReporteOrdenesAprobadasVsCompras() {
                 </Col>
 
                 <Col xs={24} md={12}>
-                  <Card title="Distribución mensual" bordered>
+                  <Card title="Distribución mensual" variant="bordered">
                     {monthly && monthly.length > 0 ? (
                       <ResponsiveContainer width="100%" height={220}>
                         <BarChart data={monthly} margin={{ top: 10, right: 20, left: 0, bottom: 5 }}>
@@ -122,7 +116,7 @@ export default function ReporteOrdenesAprobadasVsCompras() {
 
               <Row gutter={[16,16]}>
                 <Col xs={24} lg={12}>
-                  <Card title={<span><TableOutlined style={{ marginRight: 8 }} />Por Proveedor</span>} bordered>
+                  <Card title={<span><TableOutlined style={{ marginRight: 8 }} />Por Proveedor</span>} variant="bordered">
                     {byProvider && byProvider.length > 0 ? (
                       <Table dataSource={byProvider} columns={providerCols} rowKey={(r) => r.proveedor || r._id} pagination={{ pageSize: 6 }} />
                     ) : (
@@ -132,7 +126,7 @@ export default function ReporteOrdenesAprobadasVsCompras() {
                 </Col>
 
                 <Col xs={24} lg={12}>
-                  <Card title="Últimas Compras vs Órdenes" bordered>
+                  <Card title="Últimas Compras vs Órdenes" variant="bordered">
                     <Row gutter={16}>
                       <Col span={12}>
                         {recentCompras && recentCompras.length > 0 ? (

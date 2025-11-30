@@ -486,52 +486,58 @@ export default function PedidosEntregados() {
     cargarRemisionesEntregadas();
   }, []);
 
+  // Helper para abrir remisión en preview
+  const openRemisionPreview = async (doc) => {
+    setPedidosEntregados(prev => {
+      const exists = prev.some(r => r._id === doc._id);
+      if (!exists) {
+        const merged = [doc, ...prev];
+        return merged.sort((a, b) => new Date(b.fechaRemision || b.updatedAt || b.createdAt || 0) - new Date(a.fechaRemision || a.updatedAt || a.createdAt || 0));
+      }
+      return prev;
+    });
+    setRemisionPreview(doc);
+    setPendingHighlightId(doc._id);
+  };
+
+  // Helper para hidratar remisión desde API
+  const hydrateRemisionFromApi = async (nueva) => {
+    try {
+      const fres = await api.get(`/api/remisiones/${nueva._id}`);
+      const fdata = fres.data || fres;
+      const fullDoc = fdata.remision || fdata || nueva;
+      await openRemisionPreview(fullDoc);
+    } catch (e) {
+      console.warn('No se pudo hidratar remisión navegada. Usando objeto recibido.', e);
+      await openRemisionPreview(nueva);
+    }
+  };
+
   // Efecto para procesar estado proveniente de navegación (CotizacionPreview/PedidosAgendados)
   useEffect(() => {
-    const openWith = async (doc) => {
-      setPedidosEntregados(prev => {
-        const exists = prev.some(r => r._id === doc._id);
-        if (!exists) {
-          const merged = [doc, ...prev];
-          return merged.sort((a, b) => new Date(b.fechaRemision || b.updatedAt || b.createdAt || 0) - new Date(a.fechaRemision || a.updatedAt || a.createdAt || 0));
-        }
-        return prev;
-      });
-      setRemisionPreview(doc);
-      setPendingHighlightId(doc._id);
-    };
-
-    const hydrateRemision = async (nueva) => {
+    const processNavigationState = async () => {
       try {
-        const fres = await api.get(`/api/remisiones/${nueva._id}`);
-        const fdata = fres.data || fres;
-        const fullDoc = fdata.remision || fdata || nueva;
-        await openWith(fullDoc);
+        const navState = location?.state;
+        if (navState?.autoPreviewRemision) {
+          const nueva = navState.autoPreviewRemision;
+
+          if (nueva?._id) {
+            await hydrateRemisionFromApi(nueva);
+          } else {
+            await openRemisionPreview(nueva);
+          }
+          if (navState.toast) {
+            Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: navState.toast, showConfirmButton: false, timer: 2000, timerProgressBar: true });
+          }
+          // Limpiar el estado de navegación para evitar reprocesos en refresh
+          navigate('/PedidosEntregados', { replace: true });
+        }
       } catch (e) {
-        console.warn('No se pudo hidratar remisión navegada. Usando objeto recibido.', e);
-        await openWith(nueva);
+        console.error('Error procesando estado de navegación remision:', e);
       }
     };
 
-    try {
-      const navState = location?.state;
-      if (navState?.autoPreviewRemision) {
-        const nueva = navState.autoPreviewRemision;
-
-        if (nueva?._id) {
-          hydrateRemision(nueva);
-        } else {
-          openWith(nueva);
-        }
-        if (navState.toast) {
-          Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: navState.toast, showConfirmButton: false, timer: 2000, timerProgressBar: true });
-        }
-        // Limpiar el estado de navegación para evitar reprocesos en refresh
-        navigate('/PedidosEntregados', { replace: true });
-      }
-    } catch (e) {
-      console.error('Error procesando estado de navegación remision:', e);
-    }
+    processNavigationState();
   }, [location?.state]);
 
   // Activar parpadeo cuando se cierra la vista previa

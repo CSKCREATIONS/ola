@@ -342,6 +342,64 @@ export default function ListaDeClientes() {
     cargarClientes();
   }, []);
 
+  // Helper: Extraer ID del cliente de diferentes formatos
+  const extractClientId = (cli) => {
+    if (!cli) return null;
+    
+    if (typeof cli === 'string') {
+      return cli;
+    }
+    
+    if (cli._id) {
+      try {
+        return typeof cli._id === 'string' ? cli._id : cli._id.toString();
+      } catch (e) {
+        console.error('Error converting cli._id to string:', e);
+        return String(cli._id);
+      }
+    }
+    
+    if (cli.id) {
+      try {
+        return typeof cli.id === 'string' ? cli.id : cli.id.toString();
+      } catch (e) {
+        console.error('Error converting cli.id to string:', e);
+        return String(cli.id);
+      }
+    }
+    
+    // último recurso: serializar el objeto cliente
+    try {
+      return String(cli);
+    } catch (e) {
+      console.error('Error serializing cliente object:', e);
+      return null;
+    }
+  };
+
+  // Helper: Agrupar remisiones por cliente
+  const groupRemisionesByCliente = (remisiones) => {
+    const grouped = {};
+    const remisionesArray = Array.isArray(remisiones) ? remisiones : [];
+    
+    for (const r of remisionesArray) {
+      const cli = r?.cliente;
+      const idStr = extractClientId(cli);
+      
+      if (!idStr) continue;
+      
+      if (!grouped[idStr]) grouped[idStr] = [];
+      grouped[idStr].push({ _id: r._id, numeroRemision: r.numeroRemision });
+    }
+    
+    // Ordenar remisiones por numeroRemision (desc) dentro de cada cliente
+    for (const k of Object.keys(grouped)) {
+      grouped[k].sort((a, b) => String(b.numeroRemision).localeCompare(String(a.numeroRemision)));
+    }
+    
+    return grouped;
+  };
+
   // Cargar remisiones y agruparlas por cliente
   useEffect(() => {
     const cargarRemisiones = async () => {
@@ -349,37 +407,13 @@ export default function ListaDeClientes() {
         const res = await api.get('/api/remisiones?limite=1000');
         const payload = res.data || res;
         // soportar varias formas de respuesta por si cambia el backend
-        const remisiones = payload.remisiones || (payload.data && payload.data.remisiones) || payload.data || [];
+        const remisiones = payload.remisiones || payload.data?.remisiones || payload.data || [];
         // pequeño log para depuración en el navegador
-        if (typeof window !== 'undefined' && window.console && window.console.debug) {
-          console.debug('[ListaDeClientes] remisiones fetched count=', Array.isArray(remisiones) ? remisiones.length : 0, remisiones && remisiones.slice ? remisiones.slice(0, 5) : remisiones);
+        if (globalThis.console?.debug) {
+          console.debug('[ListaDeClientes] remisiones fetched count=', Array.isArray(remisiones) ? remisiones.length : 0, remisiones?.slice?.(0, 5) ?? remisiones);
         }
 
-        const grouped = {};
-        for (const r of Array.isArray(remisiones) ? remisiones : []) {
-          const cli = r && r.cliente;
-          if (!cli) continue;
-          let idStr = null;
-          if (typeof cli === 'string') {
-            idStr = cli;
-          } else if (cli._id) {
-            try { idStr = typeof cli._id === 'string' ? cli._id : cli._id.toString(); } catch (e) { idStr = String(cli._id); }
-          } else if (cli.id) {
-            try { idStr = typeof cli.id === 'string' ? cli.id : cli.id.toString(); } catch (e) { idStr = String(cli.id); }
-          } else {
-            // último recurso: serializar el objeto cliente
-            try { idStr = String(cli); } catch (e) { continue; }
-          }
-
-          if (!idStr) continue;
-          if (!grouped[idStr]) grouped[idStr] = [];
-          grouped[idStr].push({ _id: r._id, numeroRemision: r.numeroRemision });
-        }
-
-        // Ordenar remisiones por numeroRemision (desc) dentro de cada cliente
-        for (const k of Object.keys(grouped)) {
-          grouped[k].sort((a, b) => String(b.numeroRemision).localeCompare(String(a.numeroRemision)));
-        }
+        const grouped = groupRemisionesByCliente(remisiones);
         setRemisionesMap(grouped);
       } catch (err) {
         console.error('Error al cargar remisiones:', err);
@@ -479,7 +513,7 @@ export default function ListaDeClientes() {
       const buttons = container.querySelectorAll('button[data-remision]');
       for (const btn of buttons) {
         btn.addEventListener('click', () => {
-          const id = btn.getAttribute('data-remision');
+          const id = btn.dataset.remision;
           abrirRemisionPreview(id);
           Swal.close();
         });

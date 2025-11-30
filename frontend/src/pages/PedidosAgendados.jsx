@@ -234,6 +234,75 @@ if (typeof document !== 'undefined') {
   }
 }
 
+// Componente helper para una fila de pedido (movido fuera para evitar redefiniciones)
+const PedidoRow = ({ pedido, index, indexOfFirstItem, blinkPedidoId, handleViewPedido, remisionarPedido, cancelarPedido }) => (
+  <tr key={pedido._id} className={pedido._id === blinkPedidoId ? 'blink-row-pedido' : ''}>
+    <td style={{ fontWeight: '600', color: '#6366f1' }}>{indexOfFirstItem + index + 1}</td>
+    <td>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div className="table-icon-small">
+          <i className="fa-solid fa-file-invoice" style={{ color: 'white', fontSize: '12px' }}></i>
+        </div>
+        {pedido.numeroPedido ? (
+          <button
+            type="button"
+            className="orden-numero-link"
+            onClick={() => handleViewPedido(pedido._id)}
+            title="Clic para ver información del pedido"
+          >
+            {pedido.numeroPedido}
+          </button>
+        ) : (
+          <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>---</span>
+        )}
+      </div>
+    </td>
+    <td style={{ color: '#6b7280' }}>{pedido.fechaAgendamiento}</td>
+    <td style={{ color: '#6b7280' }}>{pedido.fechaEntrega}</td>
+    <td style={{ fontWeight: '600', color: '#1f2937', fontSize: '14px' }}>{pedido.cliente?.nombre}</td>
+    <td style={{ color: '#6b7280' }}>{pedido.cliente?.ciudad}</td>
+    <td style={{ fontWeight: '600', color: '#059669', fontSize: '14px' }}>{(pedido.total || 0).toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+    <td className="no-export">
+      <div className="action-buttons">
+        <button
+          className="action-btn success"
+          onClick={() => remisionarPedido(pedido._id)}
+          title="Marcar como entregado"
+        >
+          <i className="fas fa-check"></i>
+        </button>
+        <button
+          className="action-btn danger"
+          onClick={() => cancelarPedido(pedido._id)}
+          title="Marcar como cancelado"
+        >
+          <i className="fas fa-times"></i>
+        </button>
+      </div>
+    </td>
+  </tr>
+);
+
+PedidoRow.propTypes = {
+  pedido: PropTypes.shape({
+    _id: PropTypes.string.isRequired,
+    numeroPedido: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    fechaAgendamiento: PropTypes.string,
+    fechaEntrega: PropTypes.string,
+    cliente: PropTypes.shape({
+      nombre: PropTypes.string,
+      ciudad: PropTypes.string,
+    }),
+    total: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  }).isRequired,
+  index: PropTypes.number.isRequired,
+  indexOfFirstItem: PropTypes.number.isRequired,
+  blinkPedidoId: PropTypes.string,
+  handleViewPedido: PropTypes.func.isRequired,
+  remisionarPedido: PropTypes.func.isRequired,
+  cancelarPedido: PropTypes.func.isRequired,
+};
+
 export default function PedidosAgendados() {
   const [pedidos, setPedidos] = useState([]);
   const [mostrarModalAgendar, setMostrarModalAgendar] = useState(false);
@@ -821,71 +890,6 @@ export default function PedidosAgendados() {
     }
   };
 
-  // Componente helper para una fila de pedido (reduce anidamiento en JSX principal)
-  const PedidoRow = ({ pedido, index, indexOfFirstItem }) => (
-    <tr key={pedido._id} className={pedido._id === blinkPedidoId ? 'blink-row-pedido' : ''}>
-      <td style={{ fontWeight: '600', color: '#6366f1' }}>{indexOfFirstItem + index + 1}</td>
-      <td>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div className="table-icon-small">
-            <i className="fa-solid fa-file-invoice" style={{ color: 'white', fontSize: '12px' }}></i>
-          </div>
-          {pedido.numeroPedido ? (
-            <button
-              type="button"
-              className="orden-numero-link"
-              onClick={() => handleViewPedido(pedido._id)}
-              title="Clic para ver información del pedido"
-            >
-              {pedido.numeroPedido}
-            </button>
-          ) : (
-            <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>---</span>
-          )}
-        </div>
-      </td>
-      <td style={{ color: '#6b7280' }}>{pedido.fechaAgendamiento}</td>
-      <td style={{ color: '#6b7280' }}>{pedido.fechaEntrega}</td>
-      <td style={{ fontWeight: '600', color: '#1f2937', fontSize: '14px' }}>{pedido.cliente?.nombre}</td>
-      <td style={{ color: '#6b7280' }}>{pedido.cliente?.ciudad}</td>
-      <td style={{ fontWeight: '600', color: '#059669', fontSize: '14px' }}>{(pedido.total || 0).toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-      <td className="no-export">
-        <div className="action-buttons">
-          <button
-            className="action-btn success"
-            onClick={() => remisionarPedido(pedido._id)}
-            title="Marcar como entregado"
-          >
-            <i className="fas fa-check"></i>
-          </button>
-          <button
-            className="action-btn danger"
-            onClick={() => cancelarPedido(pedido._id)}
-            title="Marcar como cancelado"
-          >
-            <i className="fas fa-times"></i>
-          </button>
-        </div>
-      </td>
-    </tr>
-  );
-
-  PedidoRow.propTypes = {
-    pedido: PropTypes.shape({
-      _id: PropTypes.string.isRequired,
-      numeroPedido: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-      fechaAgendamiento: PropTypes.string,
-      fechaEntrega: PropTypes.string,
-      cliente: PropTypes.shape({
-        nombre: PropTypes.string,
-        ciudad: PropTypes.string,
-      }),
-      total: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-    }).isRequired,
-    index: PropTypes.number.isRequired,
-    indexOfFirstItem: PropTypes.number.isRequired,
-  };
-
   return (
     <div>
       <Fijo />
@@ -999,6 +1003,10 @@ export default function PedidosAgendados() {
                         pedido={pedido}
                         index={index}
                         indexOfFirstItem={indexOfFirstItem}
+                        blinkPedidoId={blinkPedidoId}
+                        handleViewPedido={handleViewPedido}
+                        remisionarPedido={remisionarPedido}
+                        cancelarPedido={cancelarPedido}
                       />
                     ))}
                     {pedidos.length === 0 && (

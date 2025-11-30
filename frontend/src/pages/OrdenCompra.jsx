@@ -299,7 +299,7 @@ const prepareHtmlOrden = (o, rows, totals) => `
 
 const writeDocPrimaryOrden = (win, html) => {
   try {
-    if (!win || !win.document) return false;
+    if (!win?.document) return false;
     const parser = new DOMParser();
     const parsed = parser.parseFromString(html, 'text/html');
     // create doctype and import the parsed <html> element
@@ -312,15 +312,15 @@ const writeDocPrimaryOrden = (win, html) => {
       win.document.appendChild(imported);
       win.document.close();
       return true;
-    } catch (innerErr) {
-      console.debug('importNode approach failed, falling back to document.write:', innerErr);
+    } catch (error_) {
+      console.debug('importNode approach failed, falling back to document.write:', error_);
       try {
         win.document.open();
         win.document.write(html);
         win.document.close();
         return true;
-      } catch (writeErr) {
-        console.debug('document.write fallback failed:', writeErr);
+      } catch (error_) {
+        console.debug('document.write fallback failed:', error_);
         return false;
       }
     }
@@ -422,7 +422,7 @@ async function enviarOrdenPorCorreoHelper(orden) {
         if (container) container.style.zIndex = '30000';
         const popup = Swal.getPopup();
         if (popup) popup.style.zIndex = '30001';
-      } catch (e) { /* ignore */ }
+      } catch (e) { console.error('Error setting z-index:', e); }
     },
     preConfirm: async () => {
       const email = document.getElementById('emailDestino').value;
@@ -448,7 +448,7 @@ async function enviarOrdenPorCorreoHelper(orden) {
             if (container) container.style.zIndex = '30020';
             const popup = Swal.getPopup();
             if (popup) popup.style.zIndex = '30021';
-          } catch (e) { /* ignore */ }
+          } catch (e) { console.error('Error setting z-index:', e); }
           Swal.showLoading();
         }
       });
@@ -458,8 +458,8 @@ async function enviarOrdenPorCorreoHelper(orden) {
       // Intentar persistir la marca de 'enviado' en el backend (PUT /:id)
       try {
         await api.put(`/api/ordenes-compra/${orden._id}`, { enviado: true });
-      } catch (persistErr) {
-        console.warn('No se pudo persistir "enviado" en backend:', persistErr);
+      } catch (error_) {
+        console.warn('No se pudo persistir "enviado" en backend:', error_);
       }
 
       // Success modal - ensure it overlays
@@ -474,7 +474,7 @@ async function enviarOrdenPorCorreoHelper(orden) {
             if (container) container.style.zIndex = '30030';
             const popup = Swal.getPopup();
             if (popup) popup.style.zIndex = '30031';
-          } catch (e) { /* ignore */ }
+          } catch (e) { console.error('Error setting z-index:', e); }
         }
       });
 
@@ -491,7 +491,7 @@ async function enviarOrdenPorCorreoHelper(orden) {
             if (container) container.style.zIndex = '30040';
             const popup = Swal.getPopup();
             if (popup) popup.style.zIndex = '30041';
-          } catch (e) { /* ignore */ }
+          } catch (e) { console.error('Error setting z-index:', e); }
         }
       });
     }
@@ -578,7 +578,7 @@ export default function OrdenCompra() {
     const res = await fetchProductosPorProveedorHelper(proveedorId, setProductosProveedor, setCargandoProductos);
     if (proveedorId) {
       // If filtered exists and is empty, mark provider as having no associated products
-      const filtered = res && res.filtered ? res.filtered : [];
+      const filtered = res?.filtered ?? [];
       setProveedorSinProductos(Array.isArray(filtered) && filtered.length === 0);
     } else {
       setProveedorSinProductos(false);
@@ -755,34 +755,6 @@ export default function OrdenCompra() {
       }
     } catch (error) {
       console.error('Error eliminarOrden:', error);
-      Swal.fire('Error', 'No se pudo conectar con el servidor', 'error');
-    }
-  };
-
-  // Función para marcar/desmarcar orden como enviada
-  const toggleEnviado = async (id, estadoActual) => {
-    // No permitimos revertir una orden ya enviada desde el toggle.
-    if (estadoActual) {
-      Swal.fire('Info', 'La orden ya fue enviada y no puede volver a marcarse como NO.', 'info');
-      return;
-    }
-
-    try {
-      // El backend no expone PATCH /:id, pero sí PUT /:id (editarOrden).
-      // Usamos PUT para enviar el cambio parcial de `enviado`.
-      const res = await api.put(`/api/ordenes-compra/${id}`, {
-        enviado: true
-      });
-      const data = res.data || res;
-      if (data.success) {
-        Swal.fire({ icon: 'success', title: 'Orden marcada como enviada', showConfirmButton: false, timer: 1500 });
-        // Actualizamos localmente para reflejar inmediatamente el cambio
-        setOrdenes(prev => prev.map(o => o._id === id ? { ...o, enviado: true } : o));
-      } else {
-        Swal.fire('Error', data.message || 'No se pudo actualizar', 'error');
-      }
-    } catch (error) {
-      console.error('Error toggleEnviado:', error);
       Swal.fire('Error', 'No se pudo conectar con el servidor', 'error');
     }
   };
