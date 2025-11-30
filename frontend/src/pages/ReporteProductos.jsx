@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import PropTypes from 'prop-types';
 import { 
     Card, 
     Col, 
@@ -14,7 +15,6 @@ import {
     WarningOutlined,
     CheckCircleOutlined,
     StopOutlined,
-    TableOutlined,
     LineChartOutlined,
     BarChartOutlined, // Aseguramos que este icono esté importado
 } from "@ant-design/icons";
@@ -53,13 +53,13 @@ const PIE_COLORS = [COLORS.success, COLORS.danger, COLORS.warning, COLORS.info, 
 // 1. Función Helper para el Tooltip (CORREGIDA PARA ACCEDER A LA DATA CORRECTA)
 const CustomTooltip = ({ active, payload }) => {
     // Verificamos que payload exista y tenga datos
-    if (active && payload && payload.length) {
+    if (active && payload?.length) {
       // El payload[0].payload contiene el objeto de datos original: { categoria, cantidad }
-      const data = payload[0].payload; 
+      const data = payload[0]?.payload; 
       
       // La cantidad viene directamente del payload[0].value
-      const cantidad = payload[0].value;
-      const categoria = data.categoria;
+      const cantidad = payload[0]?.value;
+      const categoria = data?.categoria;
 
       return (
         <div style={{ backgroundColor: '#fff', padding: '10px', border: '1px solid #ccc', borderRadius: '4px' }}>
@@ -70,6 +70,18 @@ const CustomTooltip = ({ active, payload }) => {
     }
     return null;
   };
+
+CustomTooltip.propTypes = {
+  active: PropTypes.bool,
+  payload: PropTypes.arrayOf(
+    PropTypes.shape({
+      value: PropTypes.number,
+      payload: PropTypes.shape({
+        categoria: PropTypes.string,
+      }),
+    })
+  ),
+};
 
 // 2. Función Helper para asignar colores a las barras
 const getColorForCategoria = (index) => {
@@ -96,6 +108,17 @@ const CustomPieLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, value, nam
       </text>
     );
   };
+
+CustomPieLabel.propTypes = {
+  cx: PropTypes.number,
+  cy: PropTypes.number,
+  midAngle: PropTypes.number,
+  innerRadius: PropTypes.number,
+  outerRadius: PropTypes.number,
+  value: PropTypes.number,
+  name: PropTypes.string,
+  percent: PropTypes.number,
+};
 
 
 const Reportes = () => {
@@ -125,7 +148,7 @@ const Reportes = () => {
             title: "Categoría", 
             dataIndex: "categoria", 
             key: "categoria",
-            render: (text) => <a style={{ fontWeight: '600', color: COLORS.primary }}>{text}</a>, 
+            render: (text) => <span style={{ fontWeight: '600', color: COLORS.primary }}>{text}</span>, 
         },
         { 
             title: "Cantidad", 
@@ -156,8 +179,8 @@ const Reportes = () => {
                                 { title: "Productos Activos", value: estadisticas.productosActivos, icon: CheckCircleOutlined, color: COLORS.success },
                                 { title: "Productos Inactivos", value: estadisticas.productosInactivos, icon: StopOutlined, color: COLORS.danger },
                                 { title: "Stock Bajo", value: estadisticas.stockBajo, icon: WarningOutlined, color: COLORS.warning },
-                            ].map((stat, index) => (
-                                <Col xs={24} sm={12} md={12} lg={6} key={index}>
+                            ].map((stat) => (
+                                <Col xs={24} sm={12} md={12} lg={6} key={stat.title}>
                                     <Card 
                                         bordered={false} 
                                         hoverable 

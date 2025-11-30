@@ -207,9 +207,9 @@ exports.enviarRemisionPorCorreo = async (req, res) => {
     // Enviar primero sin bloquear por PDF (si pdfAttachment llegó antes se adjunta)
     try {
       await enviarCorreoConAttachment(destinatario, asuntoFinal, htmlContent, pdfAttachment);
-    } catch (sendErr) {
-      console.error('❌ Error enviando correo de remisión:', sendErr.message);
-      return res.status(500).json({ message: 'Error al enviar remisión por correo', error: sendErr.message });
+    } catch (error_) {
+      console.error('❌ Error enviando correo de remisión:', error_.message);
+      return res.status(500).json({ message: 'Error al enviar remisión por correo', error: error_.message });
     }
 
     return res.json({ message: 'Remisión enviada por correo exitosamente', modo, numeroRemision, adjuntoPDF: !!pdfAttachment });
@@ -343,6 +343,103 @@ exports.getByCotizacionReferencia = async (req, res) => {
   }
 };
 
+// Helper: Buscar o crear cliente
+async function findOrCreateCliente(clienteBody, useSession, session, ClienteModel) {
+  const correo = (clienteBody.correo || '').toLowerCase().trim();
+  let clienteDoc = null;
+  if (correo) {
+    clienteDoc = useSession
+      ? await ClienteModel.findOne({ correo }).session(session).exec()
+      : await ClienteModel.findOne({ correo }).exec();
+  }
+
+  if (!clienteDoc) {
+    const nuevo = new ClienteModel({
+      nombre: clienteBody.nombre || 'Cliente sin nombre',
+      ciudad: clienteBody.ciudad || '',
+      direccion: clienteBody.direccion || '',
+      telefono: clienteBody.telefono || '',
+      correo: correo || '',
+      esCliente: true,
+      operacion: 'compra'
+    });
+    clienteDoc = useSession ? await nuevo.save({ session }) : await nuevo.save();
+  }
+  return clienteDoc;
+}
+
+// Helper: Generar número de remisión
+async function generateNumeroRemision(useSession, session, CounterModel) {
+  const counter = await CounterModel.findByIdAndUpdate(
+    { _id: 'remision' },
+    { $inc: { seq: 1 } },
+    useSession ? { new: true, upsert: true, session } : { new: true, upsert: true }
+  ).exec();
+  const seq = counter ? counter.seq : Date.now();
+  return `REM-${String(seq).padStart(6, '0')}`;
+}
+
+// Helper: Procesar un producto individual
+async function processProduct(p, useSession, session, Product, adjustments) {
+  const cantidad = Number.parseFloat(p.cantidad || 0) || 0;
+  const precioUnitario = Number.parseFloat(p.valorUnitario || p.precioUnitario || 0) || 0;
+  const total = Number.parseFloat((cantidad * precioUnitario).toFixed(2)) || 0;
+  const prodId = sanitizarId(p.producto || p.productId || p.id);
+
+  if (prodId) {
+    const prodDoc = useSession
+      ? await Product.findById(prodId).session(session).exec()
+      : await Product.findById(prodId).exec();
+    
+    if (!prodDoc) {
+      const err = new Error('Producto no encontrado');
+      err.code = 'PRODUCT_NOT_FOUND';
+      throw err;
+    }
+    
+    if (typeof prodDoc.stock !== 'number' || prodDoc.stock < cantidad) {
+      const err = new Error(`Stock insuficiente para ${prodDoc.name}. Disponible: ${prodDoc.stock}, solicitado: ${cantidad}`);
+      err.code = 'STOCK_INSUFICIENTE';
+      throw err;
+    }
+    
+    // Descontar stock de forma atómica
+    const updateOpts = useSession ? { session, new: true } : { new: true };
+    const updated = await Product.findOneAndUpdate(
+      { _id: prodId, stock: { $gte: cantidad } },
+      { $inc: { stock: -cantidad } },
+      updateOpts
+    ).exec();
+    
+    if (!updated) {
+      const err = new Error(`Stock insuficiente para ${prodDoc.name}. Disponible: ${prodDoc.stock}, solicitado: ${cantidad}`);
+      err.code = 'STOCK_INSUFICIENTE';
+      throw err;
+    }
+    
+    if (!useSession) adjustments.push({ _id: prodId, qty: cantidad });
+
+    return {
+      nombre: p.nombre || prodDoc.name || p.productoNombre || p.descripcion || 'Producto',
+      cantidad,
+      precioUnitario,
+      total,
+      descripcion: p.descripcion || prodDoc.description || '',
+      codigo: p.codigo || ''
+    };
+  }
+  
+  // Producto sin ID (manual), no gestiona stock
+  return {
+    nombre: p.nombre || p.productoNombre || p.descripcion || 'Producto',
+    cantidad,
+    precioUnitario,
+    total,
+    descripcion: p.descripcion || '',
+    codigo: p.codigo || ''
+  };
+}
+
 // Crear una nueva remisión (simplificada, segura y reutilizable)
 exports.createRemision = async (req, res) => {
   const mongoose = require('mongoose');
@@ -354,7 +451,7 @@ exports.createRemision = async (req, res) => {
   try {
     const { cliente: clienteBody, productos = [], fechaEntrega, descripcion = '', condicionesPago = '' } = req.body;
 
-    if (!clienteBody || !clienteBody.correo || !clienteBody.nombre) {
+    if (!clienteBody?.correo || !clienteBody?.nombre) {
       return res.status(400).json({ message: 'Datos de cliente incompletos' });
     }
 
@@ -365,92 +462,18 @@ exports.createRemision = async (req, res) => {
     let savedRemision;
     const runCoreFlow = async (useSession) => {
       // Buscar/crear cliente por correo
-      const correo = (clienteBody.correo || '').toLowerCase().trim();
-      let clienteDoc = null;
-      if (correo) {
-        clienteDoc = useSession
-          ? await ClienteModel.findOne({ correo }).session(session).exec()
-          : await ClienteModel.findOne({ correo }).exec();
-      }
+      const clienteDoc = await findOrCreateCliente(clienteBody, useSession, session, ClienteModel);
 
-      if (!clienteDoc) {
-        const nuevo = new ClienteModel({
-          nombre: clienteBody.nombre || 'Cliente sin nombre',
-          ciudad: clienteBody.ciudad || '',
-          direccion: clienteBody.direccion || '',
-          telefono: clienteBody.telefono || '',
-          correo: correo || '',
-          esCliente: true,
-          operacion: 'compra'
-        });
-        clienteDoc = useSession ? await nuevo.save({ session }) : await nuevo.save();
-      }
-
-      // Generar número de remisión con contador atómico en la misma transacción
-      const counter = await CounterModel.findByIdAndUpdate(
-        { _id: 'remision' },
-        { $inc: { seq: 1 } },
-        useSession ? { new: true, upsert: true, session } : { new: true, upsert: true }
-      ).exec();
-      const seq = counter ? counter.seq : Date.now();
-      const numeroRemision = `REM-${String(seq).padStart(6, '0')}`;
+      // Generar número de remisión con contador atómico
+      const numeroRemision = await generateNumeroRemision(useSession, session, CounterModel);
 
       // Validar y descontar stock por cada producto con ID
       const productosNormalized = [];
       const adjustments = []; // para compensación en fallback sin transacción
+      
       for (const p of productos) {
-        const cantidad = Number.parseFloat(p.cantidad || 0) || 0;
-        const precioUnitario = Number.parseFloat(p.valorUnitario || p.precioUnitario || 0) || 0;
-        const total = Number.parseFloat((cantidad * precioUnitario).toFixed(2)) || 0;
-        const prodId = sanitizarId(p.producto || p.productId || p.id);
-
-        if (prodId) {
-          const prodDoc = useSession
-            ? await Product.findById(prodId).session(session).exec()
-            : await Product.findById(prodId).exec();
-          if (!prodDoc) {
-            const err = new Error('Producto no encontrado');
-            err.code = 'PRODUCT_NOT_FOUND';
-            throw err;
-          }
-          if (typeof prodDoc.stock !== 'number' || prodDoc.stock < cantidad) {
-            const err = new Error(`Stock insuficiente para ${prodDoc.name}. Disponible: ${prodDoc.stock}, solicitado: ${cantidad}`);
-            err.code = 'STOCK_INSUFICIENTE';
-            throw err;
-          }
-          // Descontar stock de forma atómica
-          const updateOpts = useSession ? { session, new: true } : { new: true };
-          const updated = await Product.findOneAndUpdate(
-            { _id: prodId, stock: { $gte: cantidad } },
-            { $inc: { stock: -cantidad } },
-            updateOpts
-          ).exec();
-          if (!updated) {
-            const err = new Error(`Stock insuficiente para ${prodDoc.name}. Disponible: ${prodDoc.stock}, solicitado: ${cantidad}`);
-            err.code = 'STOCK_INSUFICIENTE';
-            throw err;
-          }
-          if (!useSession) adjustments.push({ _id: prodId, qty: cantidad });
-
-          productosNormalized.push({
-            nombre: p.nombre || prodDoc.name || p.productoNombre || p.descripcion || 'Producto',
-            cantidad,
-            precioUnitario,
-            total,
-            descripcion: p.descripcion || prodDoc.description || '',
-            codigo: p.codigo || ''
-          });
-        } else {
-          // Producto sin ID (manual), no gestiona stock
-          productosNormalized.push({
-            nombre: p.nombre || p.productoNombre || p.descripcion || 'Producto',
-            cantidad,
-            precioUnitario,
-            total,
-            descripcion: p.descripcion || '',
-            codigo: p.codigo || ''
-          });
-        }
+        const normalizedProduct = await processProduct(p, useSession, session, Product, adjustments);
+        productosNormalized.push(normalizedProduct);
       }
 
       const subtotal = productosNormalized.reduce((acc, x) => acc + (x.total || 0), 0);
@@ -487,16 +510,16 @@ exports.createRemision = async (req, res) => {
       let result;
       try {
         result = await runCoreFlow(false);
-      } catch (fallbackErr) {
+      } catch (error_) {
         // best-effort rollback
         try {
           for (const adj of (result?.adjustments || [])) {
             await Product.updateOne({ _id: adj._id }, { $inc: { stock: adj.qty } }).exec();
           }
-        } catch (rollbackErr) {
-          console.warn('⚠️ Falló compensación de stock:', rollbackErr?.message || rollbackErr);
+        } catch (rollbackError_) {
+          console.warn('⚠️ Falló compensación de stock:', rollbackError_?.message || rollbackError_);
         }
-        throw fallbackErr;
+        throw error_;
       }
     }
 
