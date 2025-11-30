@@ -218,6 +218,52 @@ const actualizarCompra = async (req, res) => {
   }
 };
 
+// Helper: Validar resultado del envío de correo
+function validateMailResult(mailResult) {
+  if (!mailResult || typeof mailResult !== 'object') {
+    return { isValid: true };
+  }
+
+  const rejectedArray = Array.isArray(mailResult.rejected) ? mailResult.rejected : [];
+  const rejectedRecipients = Array.isArray(mailResult.rejectedRecipients) ? mailResult.rejectedRecipients : [];
+  const rejected = rejectedArray.length > 0 ? rejectedArray : rejectedRecipients;
+  
+  const acceptedArray = Array.isArray(mailResult.accepted) ? mailResult.accepted : [];
+  const acceptedRecipients = Array.isArray(mailResult.acceptedRecipients) ? mailResult.acceptedRecipients : [];
+  const accepted = acceptedArray.length > 0 ? acceptedArray : acceptedRecipients;
+  
+  const infoFlag = String(mailResult.info || mailResult.messageId || mailResult.response || '').toLowerCase();
+
+  // If there is an explicit info flag indicating no transporter, or no accepted recipients, treat as failure
+  const hasNoTransporter = infoFlag.includes('no-transporter');
+  const hasOnlyRejections = Array.isArray(accepted) && accepted.length === 0 && Array.isArray(rejected) && rejected.length > 0;
+  
+  if (hasNoTransporter || hasOnlyRejections) {
+    return {
+      isValid: false,
+      info: mailResult.info,
+      accepted,
+      rejected
+    };
+  }
+
+  return { isValid: true };
+}
+
+// Helper: Preparar compra para envío
+async function prepareCompraForEmail(compraId) {
+  let compra = await Compra.findById(compraId);
+  if (!compra) {
+    return null;
+  }
+
+  // Asegurar que cada producto y proveedor tengan datos (best-effort)
+  compra = await populateProductosIfNeeded(compra);
+  compra = await populateProveedorIfNeeded(compra);
+  
+  return compra;
+}
+
 // Enviar compra por correo electrónico
 const enviarCompraPorCorreo = async (req, res) => {
   try {
@@ -232,13 +278,8 @@ const enviarCompraPorCorreo = async (req, res) => {
 
     if (!destinatario) return res.status(400).json({ success: false, message: 'Destinatario es requerido' });
 
-    // populate full proveedor so we can access nested contact info reliably
-    let compra = await Compra.findById(compraId);
+    const compra = await prepareCompraForEmail(compraId);
     if (!compra) return res.status(404).json({ success: false, message: 'Compra no encontrada' });
-
-    // Asegurar que cada producto y proveedor tengan datos (best-effort)
-    compra = await populateProductosIfNeeded(compra);
-    compra = await populateProveedorIfNeeded(compra);
 
     const compraHTML = generarHTMLCompra(compra, mensaje);
     const pdfAttachment = await generatePdfAttachmentSafe(compra);
@@ -248,19 +289,11 @@ const enviarCompraPorCorreo = async (req, res) => {
 
     try {
       const mailResult = await sendMail(destinatario, asuntoFinal, compraHTML, attachments);
+      const validation = validateMailResult(mailResult);
 
-      // Some sendMail implementations return an object with accepted/rejected arrays (nodemailer),
-      // or an object with info when no transporter is configured. Detect common failure shapes.
-      if (mailResult && typeof mailResult === 'object') {
-        const rejected = Array.isArray(mailResult.rejected) ? mailResult.rejected : (Array.isArray(mailResult.rejectedRecipients) ? mailResult.rejectedRecipients : []);
-        const accepted = Array.isArray(mailResult.accepted) ? mailResult.accepted : (Array.isArray(mailResult.acceptedRecipients) ? mailResult.acceptedRecipients : []);
-        const infoFlag = String(mailResult.info || mailResult.messageId || mailResult.response || '').toLowerCase();
-
-        // If there is an explicit info flag indicating no transporter, or no accepted recipients, treat as failure
-        if (infoFlag.includes('no-transporter') || (Array.isArray(accepted) && accepted.length === 0 && Array.isArray(rejected) && rejected.length > 0)) {
-          console.warn('⚠️ sendMail reported no transporter or rejected recipients:', { info: mailResult.info, accepted, rejected });
-          return res.status(500).json({ success: false, message: 'No hay transporter de correo configurado o el destinatario fue rechazado', details: { info: mailResult } });
-        }
+      if (!validation.isValid) {
+        console.warn('⚠️ sendMail reported no transporter or rejected recipients:', { info: validation.info, accepted: validation.accepted, rejected: validation.rejected });
+        return res.status(500).json({ success: false, message: 'No hay transporter de correo configurado o el destinatario fue rechazado', details: { info: validation } });
       }
 
       console.log('✅ Correo enviado exitosamente' + (pdfAttachment ? ' con PDF adjunto' : ''));
