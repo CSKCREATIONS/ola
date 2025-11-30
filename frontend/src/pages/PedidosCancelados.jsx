@@ -159,6 +159,7 @@ export default function PedidosCancelados() {
       const perms = payload.permissions || payload.permisos || [];
       return Array.isArray(perms) && perms.includes(perm);
     } catch (e) {
+      console.error('Error leyendo permisos del token:', e);
       return false;
     }
   };
@@ -297,9 +298,14 @@ export default function PedidosCancelados() {
                         </td>
                         <td style={{ color: '#374151', fontWeight: 600 }}>
                           {pedido.responsableCancelacion ? (
-                            (pedido.responsableCancelacion.firstName || pedido.responsableCancelacion.username)
-                              ? `${pedido.responsableCancelacion.firstName || ''} ${pedido.responsableCancelacion.surname || ''}`.trim()
-                              : (pedido.responsableCancelacion.username || String(pedido.responsableCancelacion))
+                            (() => {
+                              const rc = pedido.responsableCancelacion;
+                              const hasName = rc.firstName || rc.username;
+                              if (hasName) {
+                                return `${rc.firstName || ''} ${rc.surname || ''}`.trim();
+                              }
+                              return rc.username || String(rc);
+                            })()
                           ) : (
                             <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>Sistema</span>
                           )}

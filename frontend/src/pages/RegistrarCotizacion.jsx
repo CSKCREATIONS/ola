@@ -288,10 +288,54 @@ export default function RegistrarCotizacion() {
 
 
   // Helpers to reduce cognitive complexity of guardar flow
-  const validarClienteYProductos = () => {
-    const newErrors = {};
-    const newProductErrors = productosSeleccionados.map(() => ({}));
+  const validarCamposCliente = (nombre, ciudad, direccion, telefono, correo, fecha) => {
+    const errors = {};
+    if (!nombre) errors.cliente = 'El nombre o razón social es requerido.';
+    if (!ciudad) errors.ciudad = 'La ciudad es requerida.';
+    if (!direccion) errors.direccion = 'La dirección es requerida.';
+    if (!telefono) errors.telefono = 'El teléfono es requerido.';
+    if (!correo) errors.correo = 'El correo es requerido.';
+    if (!fecha) errors.fecha = 'La fecha es requerida.';
+    if (correo && !isValidEmail(correo)) errors.correo = 'El correo tiene un formato inválido.';
+    return errors;
+  };
 
+  const validarFecha = (fecha) => {
+    try {
+      const hoy = new Date();
+      const hoyStr = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
+      if (fecha && fecha < hoyStr) return 'La fecha no puede ser anterior a la fecha actual.';
+    } catch (err) {
+      console.warn('Error validando fecha localmente:', err);
+    }
+    return null;
+  };
+
+  const validarProductosSeleccionados = () => {
+    const productErrors = productosSeleccionados.map(() => ({}));
+    let idx = 0;
+    for (const p of productosSeleccionados) {
+      if (!p.producto) productErrors[idx].producto = 'Seleccione un producto.';
+      if (!p.cantidad || Number.parseFloat(p.cantidad) <= 0) productErrors[idx].cantidad = 'Ingrese una cantidad válida.';
+      if (!p.valorUnitario || Number.parseFloat(p.valorUnitario) <= 0) productErrors[idx].valorUnitario = 'Valor unitario inválido.';
+      if (p.stock !== undefined && p.cantidad && Number(p.cantidad) > Number(p.stock)) productErrors[idx].cantidad = 'Cantidad no disponible en stock.';
+      idx++;
+    }
+    return productErrors;
+  };
+
+  const construirResumenErrores = (newErrors, newProductErrors) => {
+    const resumen = [];
+    for (const k of Object.keys(newErrors)) resumen.push(newErrors[k]);
+    newProductErrors.forEach((pe, i) => {
+      if (pe && Object.keys(pe).length > 0) {
+        for (const kk of Object.keys(pe)) resumen.push(`Producto ${i + 1}: ${pe[kk]}`);
+      }
+    });
+    return resumen;
+  };
+
+  const validarClienteYProductos = () => {
     const nombre = clienteNombre?.trim();
     const ciudad = clienteCiudad?.trim();
     const direccion = clienteDireccion?.trim();
@@ -300,57 +344,27 @@ export default function RegistrarCotizacion() {
     const fechaEl = document.getElementById('fecha');
     const fecha = fechaEl ? fechaEl.value : '';
 
-    if (!nombre) newErrors.cliente = 'El nombre o razón social es requerido.';
-    if (!ciudad) newErrors.ciudad = 'La ciudad es requerida.';
-    if (!direccion) newErrors.direccion = 'La dirección es requerida.';
-    if (!telefono) newErrors.telefono = 'El teléfono es requerido.';
-    if (!correo) newErrors.correo = 'El correo es requerido.';
-    if (!fecha) newErrors.fecha = 'La fecha es requerida.';
-
-    if (correo && !isValidEmail(correo)) newErrors.correo = 'El correo tiene un formato inválido.';
+    const newErrors = validarCamposCliente(nombre, ciudad, direccion, telefono, correo, fecha);
+    
+    const errorFecha = validarFecha(fecha);
+    if (errorFecha) newErrors.fecha = errorFecha;
 
     if (productosSeleccionados.length === 0) newErrors.productos = 'Debes agregar al menos un producto a la cotización.';
 
-    // fecha no puede ser anterior a hoy
-    try {
-      const hoy = new Date();
-      const hoyStr = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
-      if (fecha && fecha < hoyStr) newErrors.fecha = 'La fecha no puede ser anterior a la fecha actual.';
-    } catch (err) {
-      console.warn('Error validando fecha localmente:', err);
-    }
-
-    // productos: validar por fila (usar for...of en lugar de .forEach)
-    let idx = 0;
-    for (const p of productosSeleccionados) {
-      if (!p.producto) newProductErrors[idx].producto = 'Seleccione un producto.';
-      if (!p.cantidad || Number.parseFloat(p.cantidad) <= 0) newProductErrors[idx].cantidad = 'Ingrese una cantidad válida.';
-      if (!p.valorUnitario || Number.parseFloat(p.valorUnitario) <= 0) newProductErrors[idx].valorUnitario = 'Valor unitario inválido.';
-      if (p.stock !== undefined && p.cantidad && Number(p.cantidad) > Number(p.stock)) newProductErrors[idx].cantidad = 'Cantidad no disponible en stock.';
-      idx++;
-    }
-
+    const newProductErrors = validarProductosSeleccionados();
     const hasProductRowErrors = newProductErrors.some(obj => Object.keys(obj).length > 0);
 
     if (Object.keys(newErrors).length > 0 || hasProductRowErrors) {
       setErrors(newErrors);
       setProductErrors(newProductErrors);
-      // Mostrar resumen de errores para retroalimentación inmediata
       try {
-        const resumen = [];
-        for (const k of Object.keys(newErrors)) resumen.push(newErrors[k]);
-        newProductErrors.forEach((pe, i) => {
-          if (pe && Object.keys(pe).length > 0) {
-            for (const kk of Object.keys(pe)) resumen.push(`Producto ${i + 1}: ${pe[kk]}`);
-          }
-        });
+        const resumen = construirResumenErrores(newErrors, newProductErrors);
         if (resumen.length > 0) {
           Swal.fire({ icon: 'warning', title: 'Errores en el formulario', html: resumen.map(r => `<div style="text-align:left;margin:4px 0">• ${r}</div>`).join(''), confirmButtonText: 'Corregir' });
         }
-      } catch (swErr) {
-        console.warn('No se pudo mostrar resumen de errores:', swErr);
+      } catch (error_) {
+        console.warn('No se pudo mostrar resumen de errores:', error_);
       }
-
       return null;
     }
 
@@ -471,16 +485,17 @@ export default function RegistrarCotizacion() {
       <Fijo />
       <div className="content">
         <NavVentas />
-        <div className="contenido-modulo registrar-cotizacion-modulo">
-          <div className="max-width">
+        <div className="max-width">
+          <div className="contenido-modulo">
+
             <div className='encabezado-modulo'>
               <h3 className='titulo-profesional'>Registrar cotizacion</h3>
             </div>
-            
+
             {/* Sección Información del Cliente */}
             <div className="seccion-compacta">
               <div className="seccion-header-compacto">
-                <div className="seccion-icono-compacto" style={{background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)'}}>
+                <div className="seccion-icono-compacto" style={{ background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)' }}>
                   <i className="fa-solid fa-user"></i>
                 </div>
                 <h4 className="seccion-titulo-compacto">Información del Cliente</h4>
@@ -504,7 +519,7 @@ export default function RegistrarCotizacion() {
                       onChange={(e) => {
                         const q = e.target.value;
                         setClienteNombre(q);
-                        setErrors(prev => { const copy = { ...(prev || {}) }; delete copy.cliente; return copy; });
+                        setErrors(prev => { const copy = { ...prev }; delete copy.cliente; return copy; });
                         if (q && q.trim().length >= 1) {
                           const ql = q.trim().toLowerCase();
                           const matches = clientes
@@ -588,11 +603,11 @@ export default function RegistrarCotizacion() {
                     className="cuadroTexto input-compacto"
                     placeholder="Ciudad de residencia"
                     value={clienteCiudad}
-                      onChange={(e) => { setClienteCiudad(e.target.value); setErrors(prev => { const copy = { ...(prev || {}) }; delete copy.ciudad; return copy; }); }}
+                    onChange={(e) => { setClienteCiudad(e.target.value); setErrors(prev => { const copy = { ...prev }; delete copy.ciudad; return copy; }); }}
                   />
-                    {errors.ciudad && (
-                      <div style={{ color: '#ef4444', marginTop: '0.25rem', fontSize: '0.9rem' }}>{errors.ciudad}</div>
-                    )}
+                  {errors.ciudad && (
+                    <div style={{ color: '#ef4444', marginTop: '0.25rem', fontSize: '0.9rem' }}>{errors.ciudad}</div>
+                  )}
                 </div>
 
                 {/* Campo Dirección */}
@@ -607,11 +622,11 @@ export default function RegistrarCotizacion() {
                     className="cuadroTexto input-compacto"
                     placeholder="Dirección completa"
                     value={clienteDireccion}
-                      onChange={(e) => { setClienteDireccion(e.target.value); setErrors(prev => { const copy = { ...(prev || {}) }; delete copy.direccion; return copy; }); }}
+                    onChange={(e) => { setClienteDireccion(e.target.value); setErrors(prev => { const copy = { ...prev }; delete copy.direccion; return copy; }); }}
                   />
-                    {errors.direccion && (
-                      <div style={{ color: '#ef4444', marginTop: '0.25rem', fontSize: '0.9rem' }}>{errors.direccion}</div>
-                    )}
+                  {errors.direccion && (
+                    <div style={{ color: '#ef4444', marginTop: '0.25rem', fontSize: '0.9rem' }}>{errors.direccion}</div>
+                  )}
                 </div>
 
                 {/* Campo Teléfono */}
@@ -632,14 +647,14 @@ export default function RegistrarCotizacion() {
                       const valor = e.target.value;
                       const valorFiltrado = valor.replaceAll(/[^0-9+\-() ]/g, '');
                       setClienteTelefono(valorFiltrado);
-                      setErrors(prev => { const copy = { ...(prev || {}) }; delete copy.telefono; return copy; });
+                      setErrors(prev => { const copy = { ...prev }; delete copy.telefono; return copy; });
                     }}
                     onKeyDown={(e) => {
                       // Prevenir entrada de letras en tiempo real usando onKeyDown (reemplazo de onKeyPress deprecado)
                       const char = e.key;
                       // Permitir teclas de control como Backspace, Delete, Tab, Escape, Enter, flechas
                       if (
-                        char.length === 1 && 
+                        char.length === 1 &&
                         !/[0-9+\-() ]/.test(char) &&
                         !['Backspace', 'Delete', 'Tab', 'Escape', 'Enter', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(char)
                       ) {
@@ -665,11 +680,11 @@ export default function RegistrarCotizacion() {
                     className="cuadroTexto input-compacto"
                     placeholder="cliente@ejemplo.com"
                     value={clienteCorreo}
-                      onChange={(e) => { setClienteCorreo(e.target.value); setErrors(prev => { const copy = { ...(prev || {}) }; delete copy.correo; return copy; }); }}
+                    onChange={(e) => { setClienteCorreo(e.target.value); setErrors(prev => { const copy = { ...prev }; delete copy.correo; return copy; }); }}
                   />
-                    {errors.correo && (
-                      <div style={{ color: '#ef4444', marginTop: '0.25rem', fontSize: '0.9rem' }}>{errors.correo}</div>
-                    )}
+                  {errors.correo && (
+                    <div style={{ color: '#ef4444', marginTop: '0.25rem', fontSize: '0.9rem' }}>{errors.correo}</div>
+                  )}
                 </div>
 
                 {/* Campo Responsable */}
@@ -702,7 +717,7 @@ export default function RegistrarCotizacion() {
                     id='fecha'
                     type="date"
                     className="cuadroTexto input-compacto"
-                    onChange={() => setErrors(prev => { const copy = { ...(prev || {}) }; delete copy.fecha; return copy; })}
+                    onChange={() => setErrors(prev => { const copy = { ...prev }; delete copy.fecha; return copy; })}
                   />
                   {errors.fecha && (
                     <div style={{ color: '#ef4444', marginTop: '0.25rem', fontSize: '0.9rem' }}>{errors.fecha}</div>
@@ -742,13 +757,13 @@ export default function RegistrarCotizacion() {
             {/* Sección Descripción */}
             <div className="seccion-compacta">
               <div className="seccion-header-compacto">
-                <div className="seccion-icono-compacto" style={{background: 'linear-gradient(135deg, #10b981, #059669)'}}>
+                <div className="seccion-icono-compacto" style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}>
                   <i className="fa-solid fa-edit"></i>
                 </div>
                 <h4 className="seccion-titulo-compacto">Descripción de la Cotización</h4>
               </div>
               <div className="contenedor-editor-compacto">
-                <Editor 
+                <Editor
                   id='descripcion-cotizacion'
                   onInit={(evt, editor) => (descripcionRef.current = editor)}
                   apiKey="bjhw7gemroy70lt4bgmfvl29zid7pmrwyrtx944dmm4jq39w"
@@ -761,7 +776,7 @@ export default function RegistrarCotizacion() {
             {/* Sección Productos */}
             <div className="seccion-compacta">
               <div className="seccion-header-compacto">
-                <div className="seccion-icono-compacto" style={{background: 'linear-gradient(135deg, #f59e0b, #d97706)'}}>
+                <div className="seccion-icono-compacto" style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}>
                   <i className="fa-solid fa-box"></i>
                 </div>
                 <h4 className="seccion-titulo-compacto">Productos a Cotizar</h4>
@@ -772,7 +787,7 @@ export default function RegistrarCotizacion() {
                   <i className="fa-solid fa-plus"></i>
                   <span>Agregar Producto</span>
                 </button>
-                
+
                 {productosSeleccionados.length > 0 && (
                   <button onClick={eliminarTodosLosProductos} className="btn-limpiar-compacto">
                     <i className="fa-solid fa-trash-can"></i>
@@ -808,7 +823,7 @@ export default function RegistrarCotizacion() {
                               className="cuadroTexto"
                               value={prod.producto}
                               onChange={(e) => handleProductoChange(index, e.target.value)}
-                              style={{ borderColor: (productErrors[index] && productErrors[index].producto) ? '#ef4444' : undefined }}
+                              style={{ borderColor: productErrors[index]?.producto ? '#ef4444' : undefined }}
                             >
                               <option value="">Seleccione un producto</option>
                               {productos.filter(p => p.activo !== false && p.activo !== 'false').map(p => (
@@ -817,64 +832,64 @@ export default function RegistrarCotizacion() {
                                 </option>
                               ))}
                             </select>
-                            {productErrors[index] && productErrors[index].producto && (
+                            {productErrors[index]?.producto && (
                               <div style={{ color: '#ef4444', marginTop: '0.25rem', fontSize: '0.85rem' }}>{productErrors[index].producto}</div>
                             )}
                           </td>
                           <td>
-                            <input 
-                              type="text" 
-                              name="descripcion" 
-                              className='cuadroTexto' 
-                              value={prod.descripcion} 
+                            <input
+                              type="text"
+                              name="descripcion"
+                              className='cuadroTexto'
+                              value={prod.descripcion}
                               onChange={(e) => handleChange(index, e)}
                             />
                           </td>
                           <td>
-                            <input 
-                              type="number" 
-                              name="cantidad" 
-                              className='cuadroTexto input-cantidad-compacto' 
-                              value={prod.cantidad} 
+                            <input
+                              type="number"
+                              name="cantidad"
+                              className='cuadroTexto input-cantidad-compacto'
+                              value={prod.cantidad}
                               onChange={(e) => handleChange(index, e)}
-                              style={{ borderColor: (productErrors[index] && productErrors[index].cantidad) ? '#ef4444' : undefined }}
+                              style={{ borderColor: productErrors[index]?.cantidad ? '#ef4444' : undefined }}
                             />
                             {prod.cantidad && prod.stock !== undefined && Number(prod.cantidad) > Number(prod.stock) && (
                               <span className="alerta-stock-compacto">cantidad no disponible</span>
                             )}
-                            {productErrors[index] && productErrors[index].cantidad && (
+                            {productErrors[index]?.cantidad && (
                               <div style={{ color: '#ef4444', marginTop: '0.25rem', fontSize: '0.85rem' }}>{productErrors[index].cantidad}</div>
                             )}
                           </td>
                           <td>
-                            <input 
-                              type="number" 
-                              name="valorUnitario" 
-                              className='cuadroTexto input-precio-compacto' 
-                              value={prod.valorUnitario} 
-                              onChange={(e) => handleChange(index, e)} 
+                            <input
+                              type="number"
+                              name="valorUnitario"
+                              className='cuadroTexto input-precio-compacto'
+                              value={prod.valorUnitario}
+                              onChange={(e) => handleChange(index, e)}
                               readOnly
-                              style={{ borderColor: (productErrors[index] && productErrors[index].valorUnitario) ? '#ef4444' : undefined }}
+                              style={{ borderColor: productErrors[index]?.valorUnitario ? '#ef4444' : undefined }}
                             />
-                            {productErrors[index] && productErrors[index].valorUnitario && (
+                            {productErrors[index]?.valorUnitario && (
                               <div style={{ color: '#ef4444', marginTop: '0.25rem', fontSize: '0.85rem' }}>{productErrors[index].valorUnitario}</div>
                             )}
                           </td>
                           <td>
-                            <input 
-                              type="number" 
-                              name="descuento" 
-                              className='cuadroTexto input-descuento-compacto' 
-                              value={prod.descuento} 
+                            <input
+                              type="number"
+                              name="descuento"
+                              className='cuadroTexto input-descuento-compacto'
+                              value={prod.descuento}
                               onChange={(e) => handleChange(index, e)}
                             />
                           </td>
                           <td>
-                            <input 
-                              type="number" 
-                              name="subtotal" 
-                              className='cuadroTexto input-subtotal-compacto' 
-                              value={prod.subtotal} 
+                            <input
+                              type="number"
+                              name="subtotal"
+                              className='cuadroTexto input-subtotal-compacto'
+                              value={prod.subtotal}
                               readOnly
                             />
                           </td>
@@ -885,7 +900,7 @@ export default function RegistrarCotizacion() {
                           </td>
                         </tr>
                       ))}
-                      
+
                       {productosSeleccionados.length === 0 && (
                         <tr>
                           <td colSpan={8} className="estado-vacio-compacto">
@@ -894,10 +909,10 @@ export default function RegistrarCotizacion() {
                           </td>
                         </tr>
                       )}
-                      
+
                       {productosSeleccionados.length > 0 && (
                         <tr className="fila-total-compacta">
-                          <td colSpan={6} style={{textAlign: 'right', fontWeight: '700'}}>
+                          <td colSpan={6} style={{ textAlign: 'right', fontWeight: '700' }}>
                             Total General:
                           </td>
                           <td className="valor-total-compacto">
@@ -973,18 +988,18 @@ export default function RegistrarCotizacion() {
             {/* Sección Condiciones de Pago */}
             <div className="seccion-compacta">
               <div className="seccion-header-compacto">
-                <div className="seccion-icono-compacto" style={{background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)'}}>
+                <div className="seccion-icono-compacto" style={{ background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)' }}>
                   <i className="fa-solid fa-credit-card"></i>
                 </div>
                 <div>
                   <h4 className="seccion-titulo-compacto">Condiciones de Pago</h4>
-                  <p style={{margin: '0.25rem 0 0 0', color: '#64748b', fontSize: '0.8rem'}}>
+                  <p style={{ margin: '0.25rem 0 0 0', color: '#64748b', fontSize: '0.8rem' }}>
                     Especifique las condiciones comerciales y términos de pago
                   </p>
                 </div>
               </div>
               <div className="contenedor-editor-compacto">
-                <Editor 
+                <Editor
                   id='condiciones-pago'
                   onInit={(evt, editor) => (condicionesPagoRef.current = editor)}
                   apiKey="bjhw7gemroy70lt4bgmfvl29zid7pmrwyrtx944dmm4jq39w"
@@ -1001,18 +1016,19 @@ export default function RegistrarCotizacion() {
                   <i className="fa-solid fa-times"></i>
                   <span>Cancelar</span>
                 </button>
-                
+
                 <button type="button" onClick={() => handleGuardarCotizacion(false, true)} className="btn-guardar-compacto">
                   <i className="fa-solid fa-save"></i>
                   <span>Guardar</span>
                 </button>
-                
+
                 <button type="button" onClick={() => handleGuardarCotizacion(true, true)} className="btn-enviar-compacto">
                   <i className="fa-solid fa-paper-plane"></i>
                   <span>Guardar y Enviar</span>
                 </button>
               </div>
             </div>
+
           </div>
         </div>
         <div className="custom-footer">
