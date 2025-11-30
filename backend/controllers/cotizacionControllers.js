@@ -634,7 +634,7 @@ async function markCotizacionAsSent(id) {
 
 // Gmail sending uses the centralized enviarConGmail helper in ../utils/gmailSender
 
-async function trySendWithSendGrid(destinatario, asuntoFinal, mensajeFinal, htmlCompleto, pdfAttachment) {
+async function trySendWithSendGrid(destinatario, asuntoFinal, mensajeFinal, htmlParaEnviar, pdfAttachment) {
   if (!process.env.SENDGRID_API_KEY?.startsWith('SG.')) return { ok: false };
   try {
     const msg = {
@@ -642,7 +642,7 @@ async function trySendWithSendGrid(destinatario, asuntoFinal, mensajeFinal, html
       from: { email: process.env.SENDGRID_FROM_EMAIL, name: process.env.SENDGRID_FROM_NAME },
       subject: asuntoFinal,
       text: mensajeFinal,
-      html: htmlCompleto,
+      html: htmlParaEnviar,
       attachments: pdfAttachment ? [{ content: pdfAttachment.content.toString('base64'), filename: pdfAttachment.filename, type: pdfAttachment.contentType, disposition: 'attachment' }] : []
     };
     await sgMail.send(msg);
@@ -667,27 +667,24 @@ exports.enviarCotizacionPorCorreo = async (req, res) => {
 
     const destinatario = correoDestino || cotizacion.cliente.correo;
     const asuntoFinal = asunto || `Cotización ${cotizacion.codigo} - JLA Global Company`;
-    const mensajeFinal = mensaje || `Nos complace enviarle la cotización ${cotizacion.codigo}. Esperamos que sea de su interés y quedamos atentos a sus comentarios.`;
-    const htmlCompleto = generarHTMLCotizacion(cotizacion);
+    const mensajeFinal = mensaje || `Adjunto encontrará la cotización ${cotizacion.codigo}.\n\nGracias por su preferencia.`;
+
+    // Generar HTML simple con el mensaje del usuario en <pre> tag
+    const htmlParaEnviar = `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Cotización ${cotizacion.codigo}</title>
+</head>
+<body style="font-family:Arial,sans-serif;line-height:1.6;padding:20px;">
+  <pre style="white-space:pre-wrap;font-family:monospace;font-size:1rem;">${mensajeFinal}</pre>
+</body>
+</html>`;
 
     const pdfAttachment = await generatePdfAttachmentSafe(cotizacion);
 
-    // Try to inline CSS for email clients using `juice` if available
-    let htmlParaEnviar = htmlCompleto;
-    let juice;
-    try { juice = require('juice'); } catch (error_) { juice = null; }
-    if (juice) {
-      try {
-        htmlParaEnviar = juice(htmlCompleto);
-        console.log('✅ CSS inlined usando juice para el cuerpo del correo');
-      } catch (error_) {
-        console.warn('⚠️ No se pudo inlinear HTML con juice, se enviará HTML original:', error_?.message || error_);
-        htmlParaEnviar = htmlCompleto;
-      }
-    }
-
     // Show debug info
-    console.log('📊 Datos de cotización para HTML:', { total: cotizacion.total, productos: cotizacion.productos?.length || 0 });
+    console.log('📊 Enviando cotización con mensaje personalizado:', { destinatario, asunto: asuntoFinal });
 
     const useGmail = process.env.USE_GMAIL === 'true';
 

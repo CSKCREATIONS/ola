@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import PropTypes from 'prop-types';
 import Fijo from '../components/Fijo';
 import NavVentas from '../components/NavVentas';
 import exportElementToPdf from '../utils/exportToPdf';
@@ -14,6 +15,34 @@ import CotizacionPreview from '../components/CotizacionPreview';
 import { calcularSubtotalProducto, calcularTotales } from '../utils/calculations';
 import { formatCurrency, formatDate } from '../utils/formatters';
 import DeleteButton from '../components/DeleteButton';
+
+// Componente Field para formularios (reutilizable)
+function Field({ id, label, iconClass, children }) {
+  return (
+    <div>
+      <label htmlFor={id} style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        marginBottom: '0.5rem',
+        fontWeight: '600',
+        color: '#374151',
+        fontSize: '0.95rem'
+      }}>
+        <i className={iconClass} style={{ color: '#3b82f6', fontSize: '0.875rem' }} aria-hidden="true"></i>
+        <span>{label}</span>
+      </label>
+      {children}
+    </div>
+  );
+}
+
+Field.propTypes = {
+  id: PropTypes.string.isRequired,
+  label: PropTypes.string.isRequired,
+  iconClass: PropTypes.string.isRequired,
+  children: PropTypes.node.isRequired,
+};
 
 export default function ListaDeCotizaciones() {
   const [cotizaciones, setCotizaciones] = useState([]);
@@ -39,15 +68,6 @@ export default function ListaDeCotizaciones() {
       backgroundColor: '#ffffff',
       fontFamily: 'inherit',
       boxSizing: 'border-box'
-    },
-    label: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '0.5rem',
-      marginBottom: '0.5rem',
-      fontWeight: '600',
-      color: '#374151',
-      fontSize: '0.95rem'
     }
   };
 
@@ -71,25 +91,10 @@ export default function ListaDeCotizaciones() {
       return tmp.textContent || tmp.innerText || '';
     } catch (e) {
       // Fallback simple: eliminar tags con regex (no decodifica entidades)
-      return String(html).replace(/<[^>]*>/g, '');
+      console.warn('stripHtml DOM parsing failed, using regex fallback:', e);
+      return String(html).replaceAll(/<[^>]*>/g, '');
     }
   };
-
-  // Componente Field (igual al del segundo modal)
-  function Field({ id, label, iconClass, children }) {
-    return (
-      <div>
-        <label htmlFor={id} style={styles.label}>
-          <i className={iconClass} style={{ color: '#3b82f6', fontSize: '0.875rem' }} aria-hidden="true"></i>
-          <span>{label}</span>
-        </label>
-        {children}
-      </div>
-    );
-  }
-
-
-
 
   const exportToExcel = (listaCotizaciones) => {
     if (!listaCotizaciones || listaCotizaciones.length === 0) {
@@ -333,18 +338,18 @@ export default function ListaDeCotizaciones() {
   // Helper: compute min/default dates for Swal
   const computeMinAndDefaultDate = (cotizacion) => {
     let baseRaw;
-    if (cotizacion && cotizacion.createdAt) baseRaw = cotizacion.createdAt;
-    else if (cotizacion && cotizacion.fechaString) baseRaw = cotizacion.fechaString;
-    else if (cotizacion && cotizacion.fecha) baseRaw = cotizacion.fecha;
+    if (cotizacion?.createdAt) baseRaw = cotizacion.createdAt;
+    else if (cotizacion?.fechaString) baseRaw = cotizacion.fechaString;
+    else if (cotizacion?.fecha) baseRaw = cotizacion.fecha;
     else baseRaw = new Date();
 
     const baseDate = parseApiDate(baseRaw) || new Date(baseRaw);
     const minDateStr = baseDate.toISOString().slice(0, 10);
 
     let defaultDate;
-    if (cotizacion && cotizacion.fechaString) {
+    if (cotizacion?.fechaString) {
       defaultDate = cotizacion.fechaString;
-    } else if (cotizacion && cotizacion.fecha) {
+    } else if (cotizacion?.fecha) {
       const parsed = parseApiDate(cotizacion.fecha);
       defaultDate = parsed ? parsed.toISOString().slice(0, 10) : minDateStr;
     } else {
@@ -480,6 +485,7 @@ export default function ListaDeCotizaciones() {
             return false;
           }
         } catch (err) {
+          console.warn('Error validating date in preConfirm:', err);
           Swal.showValidationMessage('Fecha inválida');
           return false;
         }
@@ -625,12 +631,11 @@ export default function ListaDeCotizaciones() {
 
   const cotizacionesFiltradas = cotizaciones.filter(cot => {
     let fechaCompare = null;
-    if (cot?.fechaString) fechaCompare = cot.fechaString;
-    else if (cot?.fecha) {
+    if (cot?.fechaString) {
+      fechaCompare = cot.fechaString;
+    } else if (cot?.fecha) {
       const parsed = parseApiDate(cot.fecha);
       fechaCompare = parsed ? parsed.toISOString().slice(0, 10) : null;
-    } else {
-      fechaCompare = null;
     }
     const coincideFecha = !filtroFecha || fechaCompare === filtroFecha;
     const coincideCliente = !filtroCliente || cot.cliente?.nombre?.toLowerCase().includes(filtroCliente.toLowerCase());

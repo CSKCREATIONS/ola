@@ -323,12 +323,7 @@ export default function RemisionPreview({ datos, onClose }) {
 
   const [correo, setCorreo] = useState(datosConDefaults.cliente?.correo || '');
   const [asunto, setAsunto] = useState(`Remisión ${datosConDefaults.numeroRemision || ''} - ${datosConDefaults.cliente?.nombre || 'Cliente'}`);
-  const [mensaje, setMensaje] = useState(() => {
-    const uName = `${usuario.firstName} ${usuario.surname}`;
-    const uEmail = usuario.email ? `\n${usuario.email}` : '';
-    const uTel = usuario.telefono ? `\nTel: ${usuario.telefono}` : '';
-    return `Estimado/a ${datosConDefaults.cliente?.nombre || 'cliente'},\n\nEsperamos se encuentre bien. Adjunto encontrará la remisión con número ${datosConDefaults.numeroRemision || ''}.\n\nDetalles de la remisión:\n- Fecha: ${new Date(datosConDefaults.fechaRemision).toLocaleDateString('es-ES')}\n- Total: S/. ${datosConDefaults.total?.toLocaleString('es-ES') || '0'}\n- Productos: ${datosConDefaults.productos?.length || 0} artículos\n\nEsta remisión confirma la entrega de los productos solicitados.\n\nSaludos cordiales,\n${uName}${uEmail}${uTel}`;
-  });
+  const [mensaje, setMensaje] = useState('');
 
   const numeroRemision = useMemo(() => datosConDefaults.numeroRemision || `REM-${randomString(6)}`, [datosConDefaults]);
 
@@ -361,10 +356,9 @@ export default function RemisionPreview({ datos, onClose }) {
     return () => { mounted = false; };
   }, [datos]);
 
+
+  //
   const abrirModalEnvio = useCallback(() => {
-    const remitenteLinea = `${usuario?.firstName || 'Equipo'} ${usuario?.surname || ''}`;
-    const remitenteEmailLinea = usuario?.email ? `\n📧 Correo: ${usuario.email}` : '';
-    const remitenteTelefonoLinea = usuario?.telefono ? `\n📞 Teléfono: ${usuario.telefono}` : '';
     const totalFinal = datos?.total ?? calcularTotales(datos?.productos || []).total ?? 0;
 
     setCorreo(datos?.cliente?.correo || datosConDefaults.cliente?.correo || '');
@@ -373,7 +367,7 @@ export default function RemisionPreview({ datos, onClose }) {
       ? '📝 OBSERVACIONES:\n' + (datos?.observaciones || datosConDefaults.observaciones) + '\n\n'
       : '';
     setMensaje(
-      `Estimado/a ${datos?.cliente?.nombre || datosConDefaults.cliente?.nombre || 'cliente'},\n\nEsperamos se encuentre muy bien. Adjunto encontrará el documento PDF de la la remisión de entrega de su pedido con la siguiente información:\n\n📦 DETALLES DE LA REMISIÓN:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Número de remisión: ${datos?.numeroRemision || datosConDefaults.numeroRemision || 'N/A'}\n• Fecha de remisión: ${formatDateIso(datos?.fechaRemision || datosConDefaults.fechaRemision)}\n• Fecha de entrega: ${formatDateIso(datos?.fechaEntrega || datosConDefaults.fechaEntrega)}\n• Cliente: ${datos?.cliente?.nombre || datosConDefaults.cliente?.nombre || 'N/A'}\n• Correo: ${datos?.cliente?.correo || datosConDefaults.cliente?.correo || 'N/A'}\n• Teléfono: ${datos?.cliente?.telefono || datosConDefaults.cliente?.telefono || 'N/A'}\n• Ciudad: ${datos?.cliente?.ciudad || datosConDefaults.cliente?.ciudad || 'N/A'}\n• Estado: ${datos?.estado || datosConDefaults.estado || 'Entregado'} ✅\n• Total de productos entregados: ${datos?.productos?.length || datosConDefaults.productos?.length || 0} artículos\n• TOTAL GENERAL: S/. ${totalFinal.toLocaleString('es-ES')}\n• Ref. Pedido: ${datos?.codigoPedido || datosConDefaults.codigoPedido || 'N/A'}\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` + obsText + `¡Gracias por confiar en nosotros y esperamos que los productos entregados cumplan con sus expectativas!\n\nSi tiene alguna pregunta o comentario sobre la entrega, no dude en contactarnos.\n\nSaludos cordiales,\n\n${remitenteLinea}${remitenteEmailLinea}${remitenteTelefonoLinea}\n\n${COMPANY_NAME}\n🌐 Productos de calidad`
+      `Estimado/a ${datos?.cliente?.nombre || datosConDefaults.cliente?.nombre || 'cliente'},\n\nEsperamos se encuentre muy bien. Adjunto encontrará el documento PDF de la remisión de entrega de su pedido con la siguiente información:\n\n• Número de remisión: ${datos?.numeroRemision || datosConDefaults.numeroRemision || 'N/A'}\n• Fecha de remisión: ${formatDateIso(datos?.fechaRemision || datosConDefaults.fechaRemision)}\n• Cliente: ${datos?.cliente?.nombre || datosConDefaults.cliente?.nombre || 'N/A'}\n• Correo: ${datos?.cliente?.correo || datosConDefaults.cliente?.correo || 'N/A'}\n• Ciudad: ${datos?.cliente?.ciudad || datosConDefaults.cliente?.ciudad || 'N/A'}\n• Total de productos entregados: ${datos?.productos?.length || datosConDefaults.productos?.length || 0} artículos\n• TOTAL GENERAL: S/. ${totalFinal.toLocaleString('es-ES')}\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` + `Si tiene alguna pregunta o comentario sobre la entrega, no dude en contactarnos.\n\nSaludos cordiales,\n${COMPANY_NAME}\n`
     );
     setShowEnviarModal(true);
   }, [usuario, datos, datosConDefaults, COMPANY_NAME]);

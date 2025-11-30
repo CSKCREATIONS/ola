@@ -39,16 +39,6 @@ async function fetchRemisionOrThrow(id) {
   return remision;
 }
 
-async function generatePdfAttachmentSafe(remision) {
-  try {
-    const pdfService = new PDFService();
-    const pdfData = await pdfService.generarPDFRemision(remision);
-    return pdfData ? { filename: pdfData.filename, content: pdfData.buffer, contentType: pdfData.contentType } : null;
-  } catch (e) {
-    console.error('⚠️ Error generando PDF (no crítico):', e.message);
-    return null;
-  }
-}
 
 function configureSendGridIfAvailable() {
   const sgKey = process.env.SENDGRID_API_KEY;
@@ -158,57 +148,12 @@ exports.enviarRemisionPorCorreo = async (req, res) => {
       // Generar número dinámico para esta remisión derivada del pedido
       numeroRemision = `REM-${pedido.numeroPedido}-${Date.now().toString().slice(-6)}`;
       asuntoFinal = asunto || `Remisión - Pedido ${pedido.numeroPedido} - ${process.env.COMPANY_NAME || 'JLA Global Company'}`;
-      // Use PDFService to produce consistent HTML (same design as PDFs)
-      try {
-        const pdfService = new PDFService();
-        const remisionData = {
-          numeroRemision,
-          pedidoReferencia: pedido._id,
-          codigoPedido: pedido.numeroPedido,
-          cliente: {
-            nombre: pedido.cliente.nombre,
-            correo: pedido.cliente.correo,
-            telefono: pedido.cliente.telefono,
-            ciudad: pedido.cliente.ciudad
-          },
-          productos: pedido.productos.map(p => ({
-            nombre: p.product?.name || 'Producto',
-            cantidad: p.cantidad,
-            precioUnitario: p.product?.price || 0,
-            total: (p.cantidad || 0) * (p.product?.price || 0),
-            codigo: p.product?.codigo || 'N/A'
-          })),
-          fechaRemision: new Date(),
-          responsable: null,
-          estado: 'activa',
-          total: pedido.productos.reduce((total, p) => total + ((p.cantidad || 0) * (p.product?.price || 0)), 0)
-        };
-
-        // Generate HTML and PDF (PDF generation already attempted below; reuse html here)
-        htmlContent = pdfService.generarHTMLRemision(remisionData);
-
-        // Try to inline CSS for better email rendering
-        try {
-          const juice = require('juice');
-          htmlContent = juice(htmlContent);
-        } catch (error_) {
-          // juice not available or failed - continue with non-inlined HTML
-          console.warn('⚠️ Juice inlining skipped (pedido remisión):', error_?.message || error_);
-        }
-      } catch (e) {
-        console.warn('⚠️ Fallback: no se pudo generar HTML profesional para remisión (pedido):', e.message);
-        // Fallback to simple HTML
-        htmlContent = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8" /><title>Remisión ${numeroRemision}</title></head><body style="font-family:Arial,sans-serif;line-height:1.5;">
-        <h2 style="margin:0 0 12px;">Remisión ${numeroRemision}</h2>
-        <p><strong>Pedido origen:</strong> ${pedido.numeroPedido}</p>
-        <p><strong>Cliente:</strong> ${pedido.cliente?.nombre || 'N/A'} | <strong>Correo:</strong> ${pedido.cliente?.correo || 'N/A'}</p>
-        <p><strong>Productos:</strong> ${(pedido.productos||[]).length} items</p>
-        ${mensaje ? `<div style='margin-top:10px;padding:10px;border:1px solid #ddd;border-radius:6px;background:#f9f9f9;'>${mensaje}</div>` : ''}
-        <p style="margin-top:20px;font-size:12px;color:#666;">Documento generado automáticamente - ${new Date().toLocaleString('es-ES')}</p>
+      // Usar mensaje personalizado del usuario en lugar de HTML generado
+      htmlContent = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8" /><title>Remisión ${numeroRemision}</title></head><body style="font-family:Arial,sans-serif;line-height:1.6;padding:20px;">
+        <pre style="white-space:pre-wrap;font-family:monospace;font-size:1rem;">${mensaje || 'Adjunto encontrará la remisión solicitada.'}</pre>
       </body></html>`;
-      }
       try {
-        console.log('📄 Generando PDF (derivado de pedido)...');
+        console.log('Generando PDF (derivado de pedido)...');
         const pdfService = new PDFService();
         const remisionData = {
           numeroRemision,
@@ -243,38 +188,10 @@ exports.enviarRemisionPorCorreo = async (req, res) => {
       numeroRemision = remisionDoc.numeroRemision;
       destinatario = correoDestino || remisionDoc.cliente?.correo;
       asuntoFinal = asunto || `Remisión ${numeroRemision} - ${process.env.COMPANY_NAME || 'JLA Global Company'}`;
-      // Use PDFService to build consistent HTML for existing remisión
-      try {
-        const pdfService = new PDFService();
-        const remObj = remisionDoc.toObject ? remisionDoc.toObject() : remisionDoc;
-        htmlContent = pdfService.generarHTMLRemision(remObj);
-
-        try {
-          const juice = require('juice');
-          htmlContent = juice(htmlContent);
-        } catch (error_) {
-          console.warn('⚠️ Juice inlining skipped (remisión existente):', error_?.message || error_);
-        }
-      } catch (e) {
-        console.warn('⚠️ Fallback: no se pudo generar HTML profesional para remisión existente:', e.message);
-        htmlContent = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8" /><title>Remisión ${numeroRemision}</title></head><body style="font-family:Arial,sans-serif;line-height:1.5;">
-        <h2 style="margin:0 0 12px;">Remisión ${numeroRemision}</h2>
-        <p><strong>Cliente:</strong> ${remisionDoc.cliente?.nombre || 'N/A'} | <strong>Correo:</strong> ${remisionDoc.cliente?.correo || 'N/A'}</p>
-        <p><strong>Productos:</strong> ${(remisionDoc.productos||[]).length} items</p>
-        ${mensaje ? `<div style='margin-top:10px;padding:10px;border:1px solid #ddd;border-radius:6px;background:#f9f9f9;'>${mensaje}</div>` : ''}
-        <p style="margin-top:20px;font-size:12px;color:#666;">Documento generado automáticamente - ${new Date().toLocaleString('es-ES')}</p>
+      // Usar mensaje personalizado del usuario en lugar de HTML generado
+      htmlContent = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8" /><title>Remisión ${numeroRemision}</title></head><body style="font-family:Arial,sans-serif;line-height:1.6;padding:20px;">
+        <pre style="white-space:pre-wrap;font-family:monospace;font-size:1rem;">${mensaje || 'Adjunto encontrará la remisión solicitada.'}</pre>
       </body></html>`;
-      }
-      const pedidoLike = {
-        numeroPedido: remisionDoc.codigoPedido || remisionDoc.numeroRemision,
-        cliente: remisionDoc.cliente,
-        estado: remisionDoc.estado,
-        observaciones: remisionDoc.observaciones,
-        productos: (remisionDoc.productos || []).map(p => ({
-          product: { name: p.nombre, price: p.precioUnitario, codigo: p.codigo },
-          cantidad: p.cantidad
-        }))
-      };
 
       try {
         console.log('📄 Generando PDF (remisión existente)...');

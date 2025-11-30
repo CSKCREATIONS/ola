@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import PropTypes from 'prop-types';
 import Fijo from '../components/Fijo';
 import NavVentas from '../components/NavVentas';
 import Swal from 'sweetalert2';
@@ -314,8 +315,8 @@ export default function PedidosAgendados() {
       // limpiar errores del campo cambiado
       setProductErrors(prevErrors => {
         const ne = [...(prevErrors || [])];
-        ne[index] = { ...(ne[index] || {}) };
-        if (ne[index] && ne[index][name]) delete ne[index][name];
+        ne[index] = ne[index] || {};
+        if (ne[index]?.[name]) delete ne[index][name];
         return ne;
       });
       return next;
@@ -475,16 +476,14 @@ export default function PedidosAgendados() {
       const newErrors = {};
       const newProductErrors = [];
 
-      if (!agendarCliente || !agendarCliente.trim()) newErrors.cliente = 'Nombre o razón social es obligatorio.';
-      if (!agendarTelefono || !agendarTelefono.trim()) newErrors.telefono = 'Teléfono es obligatorio.';
-      if (!agendarCorreo || !agendarCorreo.trim()) newErrors.correo = 'Correo es obligatorio.';
+      if (!agendarCliente?.trim()) newErrors.cliente = 'Nombre o razón social es obligatorio.';
+      if (!agendarTelefono?.trim()) newErrors.telefono = 'Teléfono es obligatorio.';
+      if (!agendarCorreo?.trim()) newErrors.correo = 'Correo es obligatorio.';
       else if (!isValidEmail(agendarCorreo)) newErrors.correo = 'Formato de correo inválido.';
       if (!agendarFechaAg) newErrors.fechaAg = 'Fecha de agendamiento es obligatoria.';
       if (!agendarFechaEnt) newErrors.fechaEnt = 'Fecha de entrega es obligatoria.';
 
-      if (!agendarProductos || agendarProductos.length === 0) {
-        newErrors.productos = 'Agrega al menos un producto al pedido.';
-      } else {
+      if (agendarProductos?.length) {
         agendarProductos.forEach((p, i) => {
           const pe = {};
           if (!p.producto) pe.producto = 'Seleccione un producto.';
@@ -492,6 +491,8 @@ export default function PedidosAgendados() {
           if (!p.valorUnitario || Number.parseFloat(p.valorUnitario) <= 0) pe.valorUnitario = 'Valor unitario inválido.';
           newProductErrors[i] = pe;
         });
+      } else {
+        newErrors.productos = 'Agrega al menos un producto al pedido.';
       }
 
       // Si hay errores, setearlos y no enviar
@@ -868,6 +869,22 @@ export default function PedidosAgendados() {
       </td>
     </tr>
   );
+
+  PedidoRow.propTypes = {
+    pedido: PropTypes.shape({
+      _id: PropTypes.string.isRequired,
+      numeroPedido: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+      fechaAgendamiento: PropTypes.string,
+      fechaEntrega: PropTypes.string,
+      cliente: PropTypes.shape({
+        nombre: PropTypes.string,
+        ciudad: PropTypes.string,
+      }),
+      total: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    }).isRequired,
+    index: PropTypes.number.isRequired,
+    indexOfFirstItem: PropTypes.number.isRequired,
+  };
 
   return (
     <div>
@@ -1363,14 +1380,14 @@ export default function PedidosAgendados() {
                                       name="producto"
                                       value={prod.producto || ''}
                                       onChange={(e) => handleProductoSelectAgendar(index, e.target.value)}
-                                      style={{ border: productErrors[index] && productErrors[index].producto ? '2px solid #ef4444' : '2px solid #e5e7eb', borderRadius: 6, padding: '8px' }}
+                                      style={{ border: productErrors[index]?.producto ? '2px solid #ef4444' : '2px solid #e5e7eb', borderRadius: 6, padding: '8px' }}
                                     >
                                       <option value="">Seleccione un producto</option>
                                       {productosDisponibles.filter(p => p.activo !== false && p.activo !== 'false').map(p => (
                                         <option key={p._id} value={p._id}>{p.name}</option>
                                       ))}
                                     </select>
-                                    {productErrors[index] && productErrors[index].producto && (
+                                    {productErrors[index]?.producto && (
                                       <div style={{ color: '#ef4444', marginTop: 6, fontSize: '0.85rem' }}>{productErrors[index].producto}</div>
                                     )}
                                   </td>
@@ -1391,9 +1408,9 @@ export default function PedidosAgendados() {
                                       className="cuadroTexto"
                                       value={prod.cantidad}
                                       onChange={(e) => handleProductoAgendarChange(index, e)}
-                                      style={{ border: productErrors[index] && productErrors[index].cantidad ? '2px solid #ef4444' : '2px solid #e5e7eb', borderRadius: 6, textAlign: 'center' }}
+                                      style={{ border: productErrors[index]?.cantidad ? '2px solid #ef4444' : '2px solid #e5e7eb', borderRadius: 6, textAlign: 'center' }}
                                     />
-                                    {productErrors[index] && productErrors[index].cantidad && (
+                                    {productErrors[index]?.cantidad && (
                                       <div style={{ color: '#ef4444', marginTop: 6, fontSize: '0.85rem' }}>{productErrors[index].cantidad}</div>
                                     )}
                                   </td>
@@ -1405,9 +1422,9 @@ export default function PedidosAgendados() {
                                       value={prod.valorUnitario}
                                       onChange={(e) => handleProductoAgendarChange(index, e)}
                                       readOnly
-                                      style={{ border: productErrors[index] && productErrors[index].valorUnitario ? '2px solid #ef4444' : '2px solid #e5e7eb', borderRadius: 6, textAlign: 'center' }}
+                                      style={{ border: productErrors[index]?.valorUnitario ? '2px solid #ef4444' : '2px solid #e5e7eb', borderRadius: 6, textAlign: 'center' }}
                                     />
-                                    {productErrors[index] && productErrors[index].valorUnitario && (
+                                    {productErrors[index]?.valorUnitario && (
                                       <div style={{ color: '#ef4444', marginTop: 6, fontSize: '0.85rem' }}>{productErrors[index].valorUnitario}</div>
                                     )}
                                   </td>
