@@ -6,16 +6,6 @@ const { verifyToken } = require('../middlewares/authJwt');
 const pedidoController = require('../controllers/pedidoControllers');
 const { checkPermission } = require('../middlewares/role');
 
-// Función para generar número de pedido usando Counter
-async function generarNumeroPedido() {
-  const Counter = require('../models/Counter');
-  const counter = await Counter.findByIdAndUpdate(
-    'pedido',
-    { $inc: { seq: 1 } },
-    { new: true, upsert: true }
-  );
-  return `PED-${String(counter.seq).padStart(5, '0')}`;
-}
 
 //
 // === RUTAS ===
@@ -50,9 +40,9 @@ router.get('/',
 router.patch('/:id/cancelar', verifyToken, async (req, res) => {
   try {
     // Intentar parsear fecha enviada; si no viene o es inválida, usar ahora
-    const fechaRaw = req.body && req.body.fechaCancelacion ? req.body.fechaCancelacion : null;
+    const fechaRaw = req.body?.fechaCancelacion ?? null;
     let fechaCancelacion = fechaRaw ? new Date(fechaRaw) : new Date();
-    if (!(fechaCancelacion instanceof Date) || isNaN(fechaCancelacion)) {
+    if (!(fechaCancelacion instanceof Date) || Number.isNaN(fechaCancelacion.getTime())) {
       fechaCancelacion = new Date();
     }
 

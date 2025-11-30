@@ -633,7 +633,7 @@ exports.reporteCategorias = async (req, res) => {
 
               const merged = resultado.map(r => {
                 const key = r.pais || 'Sin País';
-                return Object.assign({}, r, comprasMap[key] || { totalGasto: 0, comprasCount: 0 });
+                return { ...r, ...(comprasMap[key] || { totalGasto: 0, comprasCount: 0 }) };
               });
 
               res.json({ success: true, data: merged });
@@ -1120,7 +1120,7 @@ exports.reporteCategorias = async (req, res) => {
               const gastoAgg = await Compra.aggregate([
                 { $group: { _id: null, totalGasto: { $sum: { $ifNull: ['$total', 0] } } } }
               ]);
-              const totalGasto = (gastoAgg && gastoAgg[0] && gastoAgg[0].totalGasto) ? gastoAgg[0].totalGasto : 0;
+              const totalGasto = gastoAgg?.[0]?.totalGasto ?? 0;
 
               res.json({
                 success: true,

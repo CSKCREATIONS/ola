@@ -142,11 +142,11 @@ async function applyPostPedidoClienteRules(clienteId, cotizacionReferenciada, cl
       if (!clienteDoc) return;
 
       const esClienteFlag = clienteDoc.esCliente === true || String(clienteDoc.esCliente).toLowerCase() === 'true';
-      if (!esClienteFlag) {
+      if (esClienteFlag) {
+        console.log(`Cliente ${clienteId} ya es cliente (esCliente:true): no se modificó nada`);
+      } else {
         await Cliente.findByIdAndUpdate(clienteId, { operacion: 'agenda' }, { new: true }).exec();
         console.log(`Cliente ${clienteId} es prospecto: establecido operacion='agenda' (no se cambia esCliente)`);
-      } else {
-        console.log(`Cliente ${clienteId} ya es cliente (esCliente:true): no se modificó nada`);
       }
     } catch (err) {
       console.warn('⚠️ No se pudo actualizar operacion del cliente tras agendar desde cotización:', err?.message || err);
@@ -156,10 +156,10 @@ async function applyPostPedidoClienteRules(clienteId, cotizacionReferenciada, cl
 
   // Comportamiento legacy: si el payload no indica operacion='agenda', marcar como cliente activo
   try {
-    if (!(clientePayload && typeof clientePayload === 'object' && clientePayload.operacion === 'agenda')) {
-      await safeSetClienteEsCliente(clienteId);
-    } else {
+    if (clientePayload && typeof clientePayload === 'object' && clientePayload.operacion === 'agenda') {
       console.log('Cliente creado desde agenda: se omite marcar esCliente:true');
+    } else {
+      await safeSetClienteEsCliente(clienteId);
     }
   } catch (err) {
     console.warn('⚠️ Error aplicando reglas legacy de cliente post-pedido:', err?.message || err);
@@ -246,6 +246,48 @@ async function updateStockIfEntregado(pedido) {
   return { ok: true };
 }
 
+// Helper: parsear fecha de entrega de forma segura
+function parseFechaEntregaSafe(fechaEntrega) {
+  if (!fechaEntrega) return null;
+  const tmp = new Date(fechaEntrega);
+  if (tmp instanceof Date && !Number.isNaN(tmp.getTime())) {
+    return tmp;
+  }
+  return null;
+}
+
+// Helper: actualizar fecha de entrega en el pedido
+async function updatePedidoFechaEntrega(pedido, fechaEntregaParsed) {
+  try {
+    if (fechaEntregaParsed) {
+      pedido.fechaEntrega = fechaEntregaParsed;
+    } else if (!pedido.fechaEntrega) {
+      pedido.fechaEntrega = new Date();
+    }
+  } catch (error_) {
+    console.warn('⚠️ No se pudo asignar fechaEntrega al pedido (no crítico):', error_?.message || error_);
+  }
+}
+
+// Helper: promover prospecto a cliente tras remisionar
+async function promoteClienteIfProspecto(clienteRef) {
+  try {
+    if (!clienteRef) return;
+    const clienteDoc = await Cliente.findById(clienteRef).exec();
+    if (!clienteDoc) return;
+    
+    const esClienteFlag = clienteDoc.esCliente === true || String(clienteDoc.esCliente).toLowerCase() === 'true';
+    if (esClienteFlag) {
+      console.log(`Cliente ${clienteRef} ya es cliente activo (esCliente:true) - no se realizaron cambios`);
+    } else {
+      await Cliente.findByIdAndUpdate(clienteRef, { esCliente: true, operacion: 'compra' }, { new: true }).exec();
+      console.log(`Cliente ${clienteRef} actualizado: esCliente=true, operacion='compra'`);
+    }
+  } catch (error_) {
+    console.warn('⚠️ No se pudo actualizar el cliente tras remisionar (no bloqueante):', error_?.message || error_);
+  }
+}
+
 // Configurar SendGrid de forma segura para no bloquear el arranque
 try {
   const apiKey = process.env.SENDGRID_API_KEY;
@@ -330,7 +372,7 @@ exports.createPedido = async (req, res) => {
     const parseSafeDate = (value) => {
       if (!value) return new Date();
       const d = new Date(value);
-      return (d instanceof Date && !isNaN(d)) ? d : new Date();
+      return (d instanceof Date && !Number.isNaN(d.getTime())) ? d : new Date();
     };
     const fechaAgSegura = parseSafeDate(fechaAgendamiento);
     const fechaEntSegura = parseSafeDate(fechaEntrega);
@@ -357,8 +399,8 @@ exports.createPedido = async (req, res) => {
     // Delegar reglas de actualización de cliente a helper para reducir complejidad
     try {
       await applyPostPedidoClienteRules(clienteId, cotizacionReferenciada, clientePayload);
-    } catch (errSet) {
-      console.warn('⚠️ Error aplicando reglas de cliente post-pedido (no bloqueante):', errSet?.message || errSet);
+    } catch (error_) {
+      console.warn('⚠️ Error aplicando reglas de cliente post-pedido (no bloqueante):', error_?.message || error_);
     }
 
     // Recuperar el pedido guardado con relaciones pobladas para enviar al frontend
@@ -369,8 +411,8 @@ exports.createPedido = async (req, res) => {
         .populate('cotizacionReferenciada', 'codigo')
         .exec();
       return res.status(201).json(pedidoPopulado || pedidoGuardado);
-    } catch (popErr) {
-      console.warn('⚠️ No se pudo popular el pedido antes de responder, devolviendo el documento guardado:', popErr?.message || popErr);
+    } catch (error_) {
+      console.warn('⚠️ No se pudo popular el pedido antes de responder, devolviendo el documento guardado:', error_?.message || error_);
       return res.status(201).json(pedidoGuardado);
     }
   } catch (err) {
@@ -426,15 +468,7 @@ exports.remisionarPedido = async (req, res) => {
     const { fechaEntrega, observaciones } = req.body || {};
 
     // Parsear fechaEntrega enviada por el cliente (si existe) de forma segura
-    let fechaEntregaParsed = null;
-    if (fechaEntrega) {
-      const tmp = new Date(fechaEntrega);
-      if (tmp instanceof Date && !isNaN(tmp)) {
-        fechaEntregaParsed = tmp;
-      } else {
-        fechaEntregaParsed = null;
-      }
-    }
+    const fechaEntregaParsed = parseFechaEntregaSafe(fechaEntrega);
 
     if (!pedidoId) return res.status(400).json({ message: 'ID de pedido inválido' });
 
@@ -447,20 +481,20 @@ exports.remisionarPedido = async (req, res) => {
 
     // Registrar contexto para diagnóstico
     console.log(`🧪 Intentando remisionar pedido ${pedido.numeroPedido} (${pedido._id}) estado=${pedido.estado}`);
-    pedido.productos.forEach(p => {
+    for (const p of pedido.productos) {
       const prodDoc = p.product || {};
       console.log(`🧪 Producto en pedido -> id=${prodDoc._id || p.product} nombre=${prodDoc.name || prodDoc.nombre || 'N/A'} stock=${prodDoc.stock} cantidadSolicitada=${p.cantidad}`);
-    });
+    }
 
     // Verificar/descontar stock solo si el pedido aún no estaba marcado como entregado
-    if (!(pedido.estado && String(pedido.estado).toLowerCase() === 'entregado')) {
+    if (pedido.estado && String(pedido.estado).toLowerCase() === 'entregado') {
+      console.log('🔁 Pedido ya entregado previamente, saltando verificación de stock para evitar doble descuento.');
+    } else {
       const stockResult = await updateStockIfEntregado(pedido);
       if (!stockResult.ok) {
         console.warn(`🛑 Remisionar abortado por stock insuficiente: ${stockResult.message}`);
         return res.status(stockResult.status || 400).json({ message: stockResult.message || 'Stock insuficiente', codigo: 'STOCK_INSUFICIENTE' });
       }
-    } else {
-      console.log('🔁 Pedido ya entregado previamente, saltando verificación de stock para evitar doble descuento.');
     }
 
     // Generar número de remisión secuencial
@@ -514,15 +548,7 @@ exports.remisionarPedido = async (req, res) => {
     await nuevaRemision.save();
 
     // Si el cliente proporcionó una fecha de entrega, actualizar el pedido para reflejarla
-    try {
-      if (fechaEntregaParsed) {
-        pedido.fechaEntrega = fechaEntregaParsed;
-      } else if (!pedido.fechaEntrega) {
-        pedido.fechaEntrega = new Date();
-      }
-    } catch (errAssign) {
-      console.warn('⚠️ No se pudo asignar fechaEntrega al pedido (no crítico):', errAssign?.message || errAssign);
-    }
+    await updatePedidoFechaEntrega(pedido, fechaEntregaParsed);
 
     // Actualizar pedido con referencia a remisión (no bloqueante)
     safeUpdatePedidoWithRemision(pedido, nuevaRemision._id, numeroRemision);
@@ -535,23 +561,8 @@ exports.remisionarPedido = async (req, res) => {
     safeMarkCotizacionRemisionada(pedido.cotizacionReferenciada?._id || pedido.cotizacionReferenciada);
 
     // Actualizar cliente: si es prospecto (esCliente === false) -> promover a cliente y marcar operacion='compra'
-    try {
-      const clienteRef = pedido.cliente?._id || pedido.cliente;
-      if (clienteRef) {
-        const clienteDoc = await Cliente.findById(clienteRef).exec();
-        if (clienteDoc) {
-          const esClienteFlag = clienteDoc.esCliente === true || String(clienteDoc.esCliente).toLowerCase() === 'true';
-          if (!esClienteFlag) {
-            await Cliente.findByIdAndUpdate(clienteRef, { esCliente: true, operacion: 'compra' }, { new: true }).exec();
-            console.log(`Cliente ${clienteRef} actualizado: esCliente=true, operacion='compra'`);
-          } else {
-            console.log(`Cliente ${clienteRef} ya es cliente activo (esCliente:true) - no se realizaron cambios`);
-          }
-        }
-      }
-    } catch (errClientePromo) {
-      console.warn('⚠️ No se pudo actualizar el cliente tras remisionar (no bloqueante):', errClientePromo?.message || errClientePromo);
-    }
+    const clienteRef = pedido.cliente?._id || pedido.cliente;
+    await promoteClienteIfProspecto(clienteRef);
 
     return res.status(201).json({ message: 'Remisión creada exitosamente', remision: remisionCompleta, numeroRemision });
   } catch (error) {

@@ -6,7 +6,6 @@ import { getStoredUser } from '../utils/emailHelpers';
 import { makePedidoCanceladoTemplate } from '../utils/emailTemplates';
 import { formatDate } from '../utils/formatters';
 import { calcularTotales } from '../utils/calculations';
-import sanitizeHtml from '../utils/sanitizeHtml';
 
 const STYLES = {
   overlay: {
@@ -244,7 +243,7 @@ export default function PedidoCanceladoPreview({ datos = {}, onClose = () => {},
     const A4_HEIGHT_PX = 1122;
     const doPrintAndCleanup = () => {
       try {
-        window.print();
+        globalThis.print();
       } catch (e) {
         console.error('Error al imprimir', e);
         Swal.fire('Error', 'No se pudo iniciar la impresión', 'error');
