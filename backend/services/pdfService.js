@@ -290,6 +290,7 @@ class PDFService {
     }, 0) : 0);
 
     const companyName = escapeHtml(process.env.COMPANY_NAME || 'JLA Global Company');
+    const companyPhone = escapeHtml(process.env.COMPANY_PHONE || '(555) 123-4567');
 
     // Green palette for remisiones
     const palette = {
@@ -325,57 +326,89 @@ class PDFService {
     <body>
       <div class="container">
         <div class="banner">
-          <div>
-            <div class="icon">📄</div>
-            <div class="title-main">REMISIÓN</div>
-            <div class="sub">N° ${escapeHtml(remision.numeroRemision || String(remision._id || ''))}</div>
+          <div style="display: flex; align-items: center; justify-content: center; gap: 1rem;">
+            <div class="icon" style="font-size: 2rem;">🚚</div>
+            <div>
+              <div class="title-main">REMISIÓN</div>
+              <div class="sub">N° ${escapeHtml(remision.numeroRemision || String(remision._id || ''))}</div>
+            </div>
           </div>
         </div>
 
         <div class="card">
           <div class="info-grid">
             <div>
-              <h4 style="color:var(--primary)">Entregar a:</h4>
-              <div class="info-field"><strong>Nombre:</strong> ${escapeHtml(remision.cliente?.nombre || remision.nombreCliente || '')}</div>
-              <div class="info-field"><strong>Dirección:</strong> ${escapeHtml(remision.cliente?.direccion || '')}</div>
-              <div class="info-field"><strong>Ciudad:</strong> ${escapeHtml(remision.cliente?.ciudad || '')}</div>
-              <div class="info-field"><strong>Teléfono:</strong> ${escapeHtml(remision.cliente?.telefono || '')}</div>
+              <h4 style="color:var(--primary); border-bottom: 3px solid var(--primary); padding-bottom: 0.5rem; font-size: 1.2rem; font-weight: bold; margin-bottom: 1rem;">Entregar a:</h4>
+              <div style="line-height: 1.8;">
+                <p style="margin: 0.25rem 0;"><strong>Cliente:</strong> ${escapeHtml(remision.cliente?.nombre || remision.nombreCliente || 'Cliente no especificado')}</p>
+                <p style="margin: 0.25rem 0;"><strong>Dirección:</strong> ${escapeHtml(remision.cliente?.direccion || '')} ${escapeHtml(remision.cliente?.ciudad || 'Ciudad no especificada')}</p>
+                <p style="margin: 0.25rem 0;"><strong>Email:</strong> ${escapeHtml(remision.cliente?.correo || 'No especificado')}</p>
+                <p style="margin: 0.25rem 0;"><strong>Teléfono:</strong> ${escapeHtml(remision.cliente?.telefono || 'No especificado')}</p>
+              </div>
             </div>
             <div>
-              <h4 style="color:var(--primary)">Remite:</h4>
-              <div class="info-field"><strong>Fecha de remisión:</strong> ${fechaRemision}</div>
-              <div class="info-field"><strong>F. Entrega:</strong> ${fechaEntrega}</div>
-              <div class="info-field"><strong>Responsable:</strong> ${escapeHtml(remision.responsable?.firstName || '')}</div>
+              <h4 style="color:var(--primary); border-bottom: 3px solid var(--primary); padding-bottom: 0.5rem; font-size: 1.2rem; font-weight: bold; margin-bottom: 1rem;">Remite:</h4>
+              <div style="line-height: 1.8;">
+                <p style="margin: 0.25rem 0;"><strong>Fecha de entrega:</strong> ${fechaEntrega}</p>
+                <p style="margin: 0.25rem 0;"><strong>Empresa:</strong> ${companyName}</p>
+                <p style="margin: 0.25rem 0;"><strong>Dirección:</strong> ${escapeHtml(remision.empresa?.direccion || 'Cl. 21 # 5 - 52 C19, Chía, Cundinamarca')}</p>
+                <p style="margin: 0.25rem 0;"><strong>Teléfono:</strong> ${companyPhone}</p>
+              </div>
             </div>
           </div>
 
           ${remision.descripcion ? `<div style="margin-top:12px;"><h4 style="margin:0 0 8px 0; color:var(--primary);">Descripción</h4><div class="descripcion">${escapeHtml(remision.descripcion)}</div></div>` : ''}
-          <table class="productos">
+          <table class="productos" style="width: 100%; border-collapse: collapse; margin-top: 1rem; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
             <thead>
-              <tr>
-                <th style=>Producto</th>
-                <th style="width:80px; text-align:center;">Cantidad</th>
-                <th style="width:140px; text-align:right;">Precio Unit.</th>
-                <th style="width:140px; text-align:right;">Subtotal</th>
+              <tr style="background: linear-gradient(135deg, #059669, #065f46); color: white;">
+                <th style="padding: 1rem; text-align: center; font-weight: bold;">Cant.</th>
+                <th style="padding: 1rem; text-align: left; font-weight: bold;">Producto</th>
+                <th style="padding: 1rem; text-align: left; font-weight: bold;">Descripción</th>
+                <th style="padding: 1rem; text-align: right; font-weight: bold;">Valor Unit.</th>
+                <th style="padding: 1rem; text-align: right; font-weight: bold;">Total</th>
               </tr>
             </thead>
             <tbody>
               ${productosRows}
-              </tbody>
-              <tfoot>
-                <tr>
-                  <td colspan="3" style="padding:12px; text-align:right; font-weight:700; font-size:1.1rem; color:var(--primary);">TOTAL:</td>
-                  <td style="padding:12px; text-align:right; font-weight:800; font-size:1.3rem; color:var(--primary);">S/. ${Number(total || 0).toFixed(2)}</td>
-                </tr>
-              </tfoot>
-            </table>
+            </tbody>
+            <tfoot>
+              <tr style="background: linear-gradient(135deg, #ecfdf5, #d1fae5); border-top: 2px solid #059669;">
+                <td colspan="4" style="padding: 1rem; text-align: right; font-weight: bold; font-size: 1.1rem; color: #059669;">TOTAL A ENTREGAR:</td>
+                <td style="padding: 1rem; text-align: right; font-weight: bold; font-size: 1.3rem; color: #059669;">S/. ${Number(total || 0).toLocaleString('es-ES')}</td>
+              </tr>
+            </tfoot>
+          </table>
 
-            
+          ${remision.condicionesPago ? `<div style="margin: 2rem 0;"><h3 style="border-bottom: 3px solid #10b981; padding-bottom: 0.5rem; color: #10b981; font-size: 1.2rem; font-weight: bold; margin-bottom: 1rem;">Condiciones de Pago</h3><div style="background: #eff6ff; padding: 1rem; border-radius: 8px; border-left: 4px solid #10b981; line-height: 1.6;">${escapeHtml(remision.condicionesPago)}</div></div>` : ''}
 
-            <div class="footer-blue">
-              <div style="font-weight:700; color:var(--primary);">${companyName}</div>
-              <div style="font-size:12px; color:#6b7280; margin-top:6px;">Remisión generada automáticamente</div>
+          ${remision.observaciones ? `<div style="line-height: 1.6; margin-top: 1.5rem;"><div style="margin-top: 0.5rem; padding: 1rem; background: white; border-radius: 6px; border: 1px solid #d1d5db; white-space: pre-wrap;">${escapeHtml(remision.observaciones)}</div></div>` : ''}
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; margin-top: 3rem; padding-top: 2rem; border-top: 1px solid #e5e7eb;">
+            <div style="text-align: center;">
+              <div style="border-top: 2px solid #374151; margin-top: 3rem; padding-top: 0.5rem;">
+                <p style="font-size: 0.9rem; color: #6b7280; margin: 0; font-weight: bold;">ENTREGADO POR:</p>
+              </div>
             </div>
+            <div style="text-align: center;">
+              <div style="border-top: 2px solid #374151; margin-top: 3rem; padding-top: 0.5rem;">
+                <p style="font-size: 0.9rem; color: #6b7280; margin: 0; font-weight: bold;">RECIBIDO POR:</p>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top: 2rem; padding: 1.5rem; background: linear-gradient(135deg, #f8f9fa, #e9ecef); border-radius: 8px; border-top: 3px solid #059669;">
+            <h5 style="font-size: 1rem; color: #059669; margin-bottom: 0.8rem; font-weight: bold;">TÉRMINOS Y CONDICIONES:</h5>
+            <ul style="font-size: 0.9rem; color: #6b7280; margin: 0; padding-left: 1.5rem; line-height: 1.5;">
+              <li>El cliente debe verificar la mercancía al momento de la entrega</li>
+              <li>Los reclamos por daños o faltantes deben realizarse en el momento de la entrega</li>
+              <li>Una vez firmada la remisión, se da por aceptada la mercancía en perfectas condiciones</li>
+            </ul>
+          </div>
+
+          <div style="margin-top: 3rem; padding: 1.5rem; background: linear-gradient(135deg, #f8f9fa, #e9ecef); border-radius: 8px; text-align: center; border-top: 3px solid #059669;">
+            <div style="font-size: 1.1rem; font-weight: bold; color: #059669; margin-bottom: 0.5rem;">JLA GLOBAL COMPANY</div>
+            <div style="font-size: 0.9rem; color: #666;">Gracias por su preferencia • Remisión de entrega</div>
+          </div>
         </div>
       </div>
     </body>

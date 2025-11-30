@@ -209,9 +209,9 @@ export default function PedidosEntregados() {
 
     const validateRemisionInputs = () => {
       const newErrors = {};
-      if (!remisionarCliente || !remisionarCliente.trim()) newErrors.cliente = 'Nombre o razón social es obligatorio.';
-      if (!remisionarTelefono || !remisionarTelefono.trim()) newErrors.telefono = 'Teléfono es obligatorio.';
-      if (!remisionarCorreo || !remisionarCorreo.trim()) newErrors.correo = 'Correo es obligatorio.';
+      if (!remisionarCliente?.trim()) newErrors.cliente = 'Nombre o razón social es obligatorio.';
+      if (!remisionarTelefono?.trim()) newErrors.telefono = 'Teléfono es obligatorio.';
+      if (!remisionarCorreo?.trim()) newErrors.correo = 'Correo es obligatorio.';
       else if (!isValidEmail(remisionarCorreo)) newErrors.correo = 'Formato de correo inválido.';
       if (!remisionarFechaRem) newErrors.fechaRem = 'Fecha de entrega es obligatoria.';
       if (!remisionarProductos || remisionarProductos.length === 0) newErrors.productos = 'Agrega al menos un producto a la remisión.';
@@ -268,7 +268,7 @@ export default function PedidosEntregados() {
         if (res && res.status >= 200 && res.status < 300) {
           const raw = res?.data || res;
           let nuevaRemision = raw?.remision || raw?.data || raw;
-          if (nuevaRemision && nuevaRemision.remision) nuevaRemision = nuevaRemision.remision;
+          if (nuevaRemision?.remision) nuevaRemision = nuevaRemision.remision;
 
           Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Remisión creada', showConfirmButton: false, timer: 1800, timerProgressBar: true });
 
@@ -280,7 +280,7 @@ export default function PedidosEntregados() {
           condicionesRef.current?.setContent('');
 
           // Agregar al listado local si no existe y abrir vista previa (con datos completos)
-          if (nuevaRemision && nuevaRemision._id) {
+          if (nuevaRemision?._id) {
             let fullRemision = nuevaRemision;
             try {
               const fres = await api.get(`/api/remisiones/${nuevaRemision._id}`);
@@ -301,7 +301,7 @@ export default function PedidosEntregados() {
           }
 
           // Refrescar del servidor en segundo plano (mejora consistencia)
-          try { cargarRemisionesEntregadas(); } catch (e) { /* non-blocking */ }
+          cargarRemisionesEntregadas().catch(() => { /* non-blocking refresh */ });
         } else {
           Swal.fire('Error', res.data?.message || 'No se pudo crear la remisión', 'error');
         }
@@ -361,8 +361,8 @@ export default function PedidosEntregados() {
       // limpiar errores del campo cambiado
       setProductErrors(prevErrors => {
         const ne = [...(prevErrors || [])];
-        ne[index] = { ...(ne[index] || {}) };
-        if (ne[index] && ne[index][name]) delete ne[index][name];
+        ne[index] = { ...ne[index] };
+        if (ne[index]?.[name]) delete ne[index][name];
         return ne;
       });
       return next;
@@ -429,6 +429,8 @@ export default function PedidosEntregados() {
       return Array.from(dedupMap.values()).sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
     };
 
+    const normalizar = (arr, esClienteFlag) => (Array.isArray(arr) ? arr.map(c => ({ ...c, esCliente: !!esClienteFlag })) : []);
+
     const cargarClientesYProspectos = async () => {
       try {
         const [clientesRes, prospectosRes] = await Promise.all([
@@ -439,7 +441,6 @@ export default function PedidosEntregados() {
         const listaClientes = clientesRes.data?.data || clientesRes.data || [];
         const listaProspectos = prospectosRes.data?.data || prospectosRes.data || [];
 
-        const normalizar = (arr, esClienteFlag) => (Array.isArray(arr) ? arr.map(c => ({ ...c, esCliente: !!esClienteFlag })) : []);
         const todos = [...normalizar(listaClientes, true), ...normalizar(listaProspectos, false)];
 
         const resultado = deduplicateClientes(todos);
@@ -487,38 +488,39 @@ export default function PedidosEntregados() {
 
   // Efecto para procesar estado proveniente de navegación (CotizacionPreview/PedidosAgendados)
   useEffect(() => {
+    const openWith = async (doc) => {
+      setPedidosEntregados(prev => {
+        const exists = prev.some(r => r._id === doc._id);
+        if (!exists) {
+          const merged = [doc, ...prev];
+          return merged.sort((a, b) => new Date(b.fechaRemision || b.updatedAt || b.createdAt || 0) - new Date(a.fechaRemision || a.updatedAt || a.createdAt || 0));
+        }
+        return prev;
+      });
+      setRemisionPreview(doc);
+      setPendingHighlightId(doc._id);
+    };
+
+    const hydrateRemision = async (nueva) => {
+      try {
+        const fres = await api.get(`/api/remisiones/${nueva._id}`);
+        const fdata = fres.data || fres;
+        const fullDoc = fdata.remision || fdata || nueva;
+        await openWith(fullDoc);
+      } catch (e) {
+        console.warn('No se pudo hidratar remisión navegada. Usando objeto recibido.', e);
+        await openWith(nueva);
+      }
+    };
+
     try {
       const navState = location?.state;
       if (navState?.autoPreviewRemision) {
         const nueva = navState.autoPreviewRemision;
-        const openWith = async (doc) => {
-          setPedidosEntregados(prev => {
-            const exists = prev.some(r => r._id === doc._id);
-            if (!exists) {
-              const merged = [doc, ...prev];
-              return merged.sort((a, b) => new Date(b.fechaRemision || b.updatedAt || b.createdAt || 0) - new Date(a.fechaRemision || a.updatedAt || a.createdAt || 0));
-            }
-            return prev;
-          });
-          setRemisionPreview(doc);
-          setPendingHighlightId(doc._id);
-        };
 
         if (nueva?._id) {
-          // Intentar hidratar la remisión navegada
-          (async () => {
-            try {
-              const fres = await api.get(`/api/remisiones/${nueva._id}`);
-              const fdata = fres.data || fres;
-              const fullDoc = fdata.remision || fdata || nueva;
-              await openWith(fullDoc);
-            } catch (e) {
-              console.warn('No se pudo hidratar remisión navegada. Usando objeto recibido.', e);
-              await openWith(nueva);
-            }
-          })();
+          hydrateRemision(nueva);
         } else {
-          // Sin _id; usar lo que llegó
           openWith(nueva);
         }
         if (navState.toast) {
@@ -847,13 +849,16 @@ export default function PedidosEntregados() {
                           </div>
                         </td>
                         <td style={{ color: '#374151', fontWeight: 600 }}>
-                          {remision.responsable ? (
-                            (remision.responsable.firstName || remision.responsable.username)
-                              ? `${remision.responsable.firstName || ''} ${remision.responsable.surname || ''}`.trim()
-                              : (remision.responsable.username || String(remision.responsable))
-                          ) : (
-                            <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>Sistema</span>
-                          )}
+                          {(() => {
+                            if (!remision.responsable) {
+                              return <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>Sistema</span>;
+                            }
+                            const hasName = remision.responsable.firstName || remision.responsable.username;
+                            if (hasName) {
+                              return `${remision.responsable.firstName || ''} ${remision.responsable.surname || ''}`.trim();
+                            }
+                            return remision.responsable.username || String(remision.responsable);
+                          })()}
                         </td>
 
                         <td style={{ fontWeight: '600', color: '#1f2937', fontSize: '14px' }}>
@@ -1243,14 +1248,14 @@ export default function PedidosEntregados() {
                                       name="producto"
                                       value={prod.producto || ''}
                                       onChange={(e) => handleProductoSelectRemisionar(index, e.target.value)}
-                                      style={{ border: productErrors[index] && productErrors[index].producto ? '2px solid #ef4444' : '2px solid #e5e7eb', borderRadius: 6, padding: '8px' }}
+                                      style={{ border: productErrors[index]?.producto ? '2px solid #ef4444' : '2px solid #e5e7eb', borderRadius: 6, padding: '8px' }}
                                     >
                                       <option value="">Seleccione un producto</option>
                                       {productosDisponibles.filter(p => p.activo !== false && p.activo !== 'false').map(p => (
                                         <option key={p._id} value={p._id}>{p.name}</option>
                                       ))}
                                     </select>
-                                    {productErrors[index] && productErrors[index].producto && (
+                                    {productErrors[index]?.producto && (
                                       <div style={{ color: '#ef4444', marginTop: 6, fontSize: '0.85rem' }}>{productErrors[index].producto}</div>
                                     )}
                                   </td>
@@ -1271,9 +1276,9 @@ export default function PedidosEntregados() {
                                       className="cuadroTexto"
                                       value={prod.cantidad}
                                       onChange={(e) => handleProductoRemisionarChange(index, e)}
-                                      style={{ border: productErrors[index] && productErrors[index].cantidad ? '2px solid #ef4444' : '2px solid #e5e7eb', borderRadius: 6, textAlign: 'center' }}
+                                      style={{ border: productErrors[index]?.cantidad ? '2px solid #ef4444' : '2px solid #e5e7eb', borderRadius: 6, textAlign: 'center' }}
                                     />
-                                    {productErrors[index] && productErrors[index].cantidad && (
+                                    {productErrors[index]?.cantidad && (
                                       <div style={{ color: '#ef4444', marginTop: 6, fontSize: '0.85rem' }}>{productErrors[index].cantidad}</div>
                                     )}
                                   </td>
@@ -1285,9 +1290,9 @@ export default function PedidosEntregados() {
                                       value={prod.valorUnitario}
                                       onChange={(e) => handleProductoRemisionarChange(index, e)}
                                       readOnly
-                                      style={{ border: productErrors[index] && productErrors[index].valorUnitario ? '2px solid #ef4444' : '2px solid #e5e7eb', borderRadius: 6, textAlign: 'center' }}
+                                      style={{ border: productErrors[index]?.valorUnitario ? '2px solid #ef4444' : '2px solid #e5e7eb', borderRadius: 6, textAlign: 'center' }}
                                     />
-                                    {productErrors[index] && productErrors[index].valorUnitario && (
+                                    {productErrors[index]?.valorUnitario && (
                                       <div style={{ color: '#ef4444', marginTop: 6, fontSize: '0.85rem' }}>{productErrors[index].valorUnitario}</div>
                                     )}
                                   </td>
