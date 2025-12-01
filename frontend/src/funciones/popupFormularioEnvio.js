@@ -35,7 +35,7 @@ export function mostrarFormularioEnvio() {
         const c = document.querySelector('.swal2-container');
         if (c) c.style.zIndex = '20000';
       } catch (e) {
-        // ignore
+        console.warn('Error al ajustar z-index del modal:', e);
       }
     },
     preConfirm: () => {

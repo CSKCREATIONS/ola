@@ -43,7 +43,7 @@ exports.getUserById = async (req, res) => {
       });
     }
 
-    if (req.userRole === 'coordinador' && user.role && user.role.name === 'admin') {
+    if (req.userRole === 'coordinador' && user.role?.name === 'admin') {
       return res.status(403).json({
         success: false,
         message: 'NO puedes ver usuarios admin'
