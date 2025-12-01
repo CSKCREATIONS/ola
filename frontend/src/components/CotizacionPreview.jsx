@@ -468,7 +468,15 @@ export default function CotizacionPreview({ datos, onClose, onEmailSent, onRemis
             {datos?.condicionesPago && (
               <div style={{ marginBottom: '2rem' }}>
                 <h3 style={{ borderBottom: '3px solid #2563eb', paddingBottom: '0.5rem', color: '#2563eb', fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '1rem' }}>Condiciones de Pago</h3>
-                <div style={{ background: '#eff6ff', padding: '1rem', borderRadius: '8px', borderLeft: '4px solid #2563eb', lineHeight: '1.6' }}>{datos.condicionesPago}</div>
+                <div style={{ background: '#eff6ff', padding: '1rem', borderRadius: '8px', borderLeft: '4px solid #2563eb', lineHeight: '1.6' }}>{(() => {
+                    const desc = datos.condicionesPago;
+                    const looksLikeHtml = typeof desc === 'string' && /<[^>]+>/.test(desc);
+                    if (looksLikeHtml) {
+                      const safeHtml = sanitizeHtml(desc);
+                      return <div dangerouslySetInnerHTML={{ __html: safeHtml }} />;
+                    }
+                    return <div style={{ whiteSpace: 'pre-wrap' }}>{desc}</div>;
+                  })()}</div>
               </div>
             )}
 

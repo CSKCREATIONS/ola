@@ -436,21 +436,24 @@ export default function PedidosAgendados() {
   const [filteredClientesAgendar, setFilteredClientesAgendar] = useState([]);
   const [showDropdownAgendar, setShowDropdownAgendar] = useState(false);
 
-  useEffect(() => {
-    const deduplicateClientes = (todos) => {
-      const dedupMap = new Map();
-      for (const c of todos) {
-        const key = ((c.correo || '').toLowerCase().trim()) || c._id;
-        if (dedupMap.has(key)) {
-          const existente = dedupMap.get(key);
-          if (existente.esCliente === false && c.esCliente) dedupMap.set(key, c);
-        } else {
-          dedupMap.set(key, c);
-        }
+  // Extraer helpers fuera del useEffect para evitar anidamiento profundo
+  const deduplicateClientes = (todos) => {
+    const dedupMap = new Map();
+    for (const c of todos) {
+      const key = ((c.correo || '').toLowerCase().trim()) || c._id;
+      if (dedupMap.has(key)) {
+        const existente = dedupMap.get(key);
+        if (existente.esCliente === false && c.esCliente) dedupMap.set(key, c);
+      } else {
+        dedupMap.set(key, c);
       }
-      return Array.from(dedupMap.values()).sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
-    };
+    }
+    return Array.from(dedupMap.values()).sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
+  };
 
+  const normalizar = (arr, esClienteFlag) => (Array.isArray(arr) ? arr.map(c => ({ ...c, esCliente: !!esClienteFlag })) : []);
+
+  useEffect(() => {
     const cargarClientesYProspectos = async () => {
       try {
         const [clientesRes, prospectosRes] = await Promise.all([
@@ -461,7 +464,6 @@ export default function PedidosAgendados() {
         const listaClientes = clientesRes.data?.data || clientesRes.data || [];
         const listaProspectos = prospectosRes.data?.data || prospectosRes.data || [];
 
-        const normalizar = (arr, esClienteFlag) => (Array.isArray(arr) ? arr.map(c => ({ ...c, esCliente: !!esClienteFlag })) : []);
         const todos = [...normalizar(listaClientes, true), ...normalizar(listaProspectos, false)];
 
         const resultado = deduplicateClientes(todos);

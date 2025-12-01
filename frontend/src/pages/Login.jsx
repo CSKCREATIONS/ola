@@ -48,7 +48,7 @@ export default function Login() {
         setMensajeError('Usuario no encontrado');
       } else if (status === 401 && serverMsg === 'Credenciales inválidas') {
         setMensajeError('Credenciales inválidas');
-      } else if (serverMsg === 'Rol deshabilitado' || serverMsg === 'Usuario deshabilitado') {
+      } else if (serverMsg === 'Acceso denegado' || serverMsg === ' Acceso denegado.') {
         setMensajeError(serverMsg);
       } else if (serverMsg) {
         setMensajeError(serverMsg);

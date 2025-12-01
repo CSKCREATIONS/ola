@@ -389,7 +389,7 @@ const PedidoAgendadoPreview = ({ datos = {}, onClose = () => { }, onEmailSent, o
               <div>
                 <h3 style={{ borderBottom: '3px solid #fd7e14', paddingBottom: '0.5rem', color: '#fd7e14', fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '1rem' }}>Detalles del Pedido</h3>
                 <div style={{ lineHeight: '1.8' }}>
-                  <p><strong>Fecha de agendamiento:</strong> {datos.fechaAgendamiento }</p>
+                  <p><strong>Fecha de agendamiento:</strong> {datos.fechaAgendamiento}</p>
                   <p><strong>Fecha de Entrega:</strong> {datos.fechaEntrega}</p>
                 </div>
               </div>
@@ -430,7 +430,15 @@ const PedidoAgendadoPreview = ({ datos = {}, onClose = () => { }, onEmailSent, o
             {datos?.condicionesPago && (
               <div style={{ marginBottom: '2rem' }}>
                 <h3 style={{ borderBottom: '3px solid #fd7e14', paddingBottom: '0.5rem', color: '#fd7e14', fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '1rem' }}>Condiciones de Pago</h3>
-                <div style={{ background: '#eff6ff', padding: '1rem', borderRadius: '8px', borderLeft: '4px solid #fd7e14', lineHeight: '1.6' }}>{datos.condicionesPago}</div>
+                <div style={{ background: '#eff6ff', padding: '1rem', borderRadius: '8px', borderLeft: '4px solid #fd7e14', lineHeight: '1.6' }}>{(() => {
+                  const desc = datos.condicionesPago;
+                  const looksLikeHtml = typeof desc === 'string' && /<[^>]+>/.test(desc);
+                  if (looksLikeHtml) {
+                    const safeHtml = sanitizeHtml(desc);
+                    return <div dangerouslySetInnerHTML={{ __html: safeHtml }} />;
+                  }
+                  return <div style={{ whiteSpace: 'pre-wrap' }}>{desc}</div>;
+                })()}</div>
               </div>
             )}
 

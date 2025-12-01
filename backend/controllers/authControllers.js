@@ -85,7 +85,7 @@ exports.signin = async (req, res) => {
       console.log('[AuthController] Usuario deshabilitado');
       return res.status(403).json({
         success: false,
-        message: "Usuario deshabilitado"
+        message: "Acceso denegado"
       });
     }
 
@@ -94,7 +94,7 @@ exports.signin = async (req, res) => {
       console.log('[AuthController] Rol deshabilitado');
       return res.status(403).json({
         success: false,
-        message: "Rol deshabilitado"
+        message: "Acceso denegado"
       });
     }
 

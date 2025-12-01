@@ -97,7 +97,7 @@ CustomPieLabel.propTypes = {
 
 // Componente de Tooltip personalizado para PieChart de países
 const CustomPaisTooltip = ({ payload }) => {
-  if (!payload || !payload.length) return null;
+  if (!payload?.length) return null;
   
   const data = payload[0];
   return (
