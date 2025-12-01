@@ -44,7 +44,6 @@ import {
 } from "recharts";
 import Fijo from '../components/Fijo';
 import NavVentas from '../components/NavVentas';
-import dayjs from 'dayjs';
 
 const { Title } = Typography;
 const { RangePicker } = DatePicker;
@@ -149,6 +148,18 @@ const ReportessVentas = () => {
     // Estados para filtros de fecha
     const [dateRange, setDateRange] = useState(null);
 
+    // Función helper para procesar respuestas de la API
+    const procesarRespuesta = (response, setter, esArray = false) => {
+        if (response.data?.success) {
+            const data = response.data.data;
+            if (esArray) {
+                setter(Array.isArray(data) ? data : []);
+            } else {
+                setter(data || {});
+            }
+        }
+    };
+
     // Función para cargar todos los datos
     const fetchAllData = async (desde = null, hasta = null) => {
         setLoading(true);
@@ -186,30 +197,14 @@ const ReportessVentas = () => {
             ]);
 
             // Procesar respuestas
-            if (estadisticasRes.data?.success) {
-                setEstadisticas(estadisticasRes.data.data || {});
-            }
-            if (topClientesRes.data?.success) {
-                setTopClientes(Array.isArray(topClientesRes.data.data) ? topClientesRes.data.data : []);
-            }
-            if (topProductosRes.data?.success) {
-                setTopProductos(Array.isArray(topProductosRes.data.data) ? topProductosRes.data.data : []);
-            }
-            if (estadosRes.data?.success) {
-                setEstadosChartData(Array.isArray(estadosRes.data.data) ? estadosRes.data.data : []);
-            }
-            if (cotizacionesRes.data?.success) {
-                setCotizaciones(cotizacionesRes.data.data || {});
-            }
-            if (pedidosRes.data?.success) {
-                setPedidosEstados(pedidosRes.data.data || {});
-            }
-            if (prospectosRes.data?.success) {
-                setProspectos(prospectosRes.data.data || {});
-            }
-            if (remisionesRes.data?.success) {
-                setRemisiones(remisionesRes.data.data || {});
-            }
+            procesarRespuesta(estadisticasRes, setEstadisticas);
+            procesarRespuesta(topClientesRes, setTopClientes, true);
+            procesarRespuesta(topProductosRes, setTopProductos, true);
+            procesarRespuesta(estadosRes, setEstadosChartData, true);
+            procesarRespuesta(cotizacionesRes, setCotizaciones);
+            procesarRespuesta(pedidosRes, setPedidosEstados);
+            procesarRespuesta(prospectosRes, setProspectos);
+            procesarRespuesta(remisionesRes, setRemisiones);
 
         } catch (err) {
             console.error('Error al cargar datos del reporte:', err);
@@ -226,7 +221,7 @@ const ReportessVentas = () => {
     // Manejar cambio de rango de fechas
     const handleDateRangeChange = (dates) => {
         setDateRange(dates);
-        if (dates && dates[0] && dates[1]) {
+        if (dates?.[0] && dates?.[1]) {
             const desde = dates[0].format('YYYY-MM-DD');
             const hasta = dates[1].format('YYYY-MM-DD');
             fetchAllData(desde, hasta);

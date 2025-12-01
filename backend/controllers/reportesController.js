@@ -1074,7 +1074,8 @@ exports.reporteCategorias = async (req, res) => {
               const proveedoresActivos = await Proveedor.countDocuments({ activo: true });
               const proveedoresInactivos = await Proveedor.countDocuments({ activo: false });
     
-              const conProductos = await Product.distinct('proveedor').then(ids => ids.length);
+              const proveedorIds = await Product.distinct('proveedor');
+              const conProductos = proveedorIds.length;
 
               // Agregar estadísticas de compras relacionadas con proveedores
               const totalCompras = await Compra.countDocuments();
@@ -1791,15 +1792,29 @@ exports.estados = async (req, res) => {
       {
         $project: {
           name: {
-            $switch: {
-              branches: [
-                { case: { $eq: ['$_id', 'agendado'] }, then: 'Agendado' },
-                { case: { $eq: ['$_id', 'entregado'] }, then: 'Entregado' },
-                { case: { $eq: ['$_id', 'cancelado'] }, then: 'Cancelado' },
-                { case: { $eq: ['$_id', 'pendiente'] }, then: 'Pendiente' }
-              ],
-              default: 'Otro'
-            }
+            $cond: [
+              { $eq: ['$_id', 'agendado'] },
+              'Agendado',
+              {
+                $cond: [
+                  { $eq: ['$_id', 'entregado'] },
+                  'Entregado',
+                  {
+                    $cond: [
+                      { $eq: ['$_id', 'cancelado'] },
+                      'Cancelado',
+                      {
+                        $cond: [
+                          { $eq: ['$_id', 'pendiente'] },
+                          'Pendiente',
+                          'Otro'
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
           },
           value: 1,
           _id: 0
