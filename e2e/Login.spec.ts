@@ -83,4 +83,3 @@ test('recuperar-contraseña-correo-invalido', async ({ page }) => {
   await page.getByRole('button', { name: 'Recuperar contraseña' }).click();
   await expect(page.getByText('Correo no registrado')).toBeVisible();
 });
-

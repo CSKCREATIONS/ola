@@ -75,4 +75,3 @@ test('eliminar-usuario', async ({ page }) => {
   await page.getByRole('button', { name: 'Sí, eliminar' }).click();
   await expect(page.getByText('Usuario eliminado')).toBeVisible();
 })
-
