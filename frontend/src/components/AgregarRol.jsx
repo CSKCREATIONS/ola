@@ -200,7 +200,11 @@ export default function AgregarRol() {
          }
       } catch (error) {
          console.error('[AgregarRol]', error);
-         Swal.fire('Error', 'Error del servidor al crear el rol', 'error');
+         const errorMessage = error?.response?.data?.message || error?.message || 'Error del servidor al crear el rol';
+         const displayMessage = errorMessage.toLowerCase().includes('exist') || errorMessage.toLowerCase().includes('duplicado') 
+            ? 'El rol ya existe' 
+            : errorMessage;
+         Swal.fire('Error', displayMessage, 'error');
       }
    };
 

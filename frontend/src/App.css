@@ -751,8 +751,8 @@ h3 {
 
 /* Botones de acción específicos para pedidos */
 .action-btn.success {
-  background: linear-gradient(135deg, #10b981, #059669);
-  color: white;
+  background: linear-gradient(135deg, #059669, #047857);
+  color: #ffffff;
   box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
 }
 
