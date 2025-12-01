@@ -327,11 +327,12 @@ export default function RegistrarCotizacion() {
   const construirResumenErrores = (newErrors, newProductErrors) => {
     const resumen = [];
     for (const k of Object.keys(newErrors)) resumen.push(newErrors[k]);
-    newProductErrors.forEach((pe, i) => {
+    for (let i = 0; i < newProductErrors.length; i++) {
+      const pe = newProductErrors[i];
       if (pe && Object.keys(pe).length > 0) {
         for (const kk of Object.keys(pe)) resumen.push(`Producto ${i + 1}: ${pe[kk]}`);
       }
-    });
+    }
     return resumen;
   };
 

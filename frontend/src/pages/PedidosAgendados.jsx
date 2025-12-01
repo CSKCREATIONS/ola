@@ -555,13 +555,14 @@ export default function PedidosAgendados() {
       if (!agendarFechaEnt) newErrors.fechaEnt = 'Fecha de entrega es obligatoria.';
 
       if (agendarProductos?.length) {
-        agendarProductos.forEach((p, i) => {
+        for (let i = 0; i < agendarProductos.length; i++) {
+          const p = agendarProductos[i];
           const pe = {};
           if (!p.producto) pe.producto = 'Seleccione un producto.';
           if (!p.cantidad || Number.parseFloat(p.cantidad) <= 0) pe.cantidad = 'Cantidad debe ser mayor a 0.';
           if (!p.valorUnitario || Number.parseFloat(p.valorUnitario) <= 0) pe.valorUnitario = 'Valor unitario inválido.';
           newProductErrors[i] = pe;
-        });
+        }
       } else {
         newErrors.productos = 'Agrega al menos un producto al pedido.';
       }
