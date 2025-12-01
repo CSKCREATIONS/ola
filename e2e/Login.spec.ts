@@ -9,29 +9,41 @@ test('login-exitoso', async ({ page }) => {
   await page.getByRole('textbox', { name: 'Usuario' }).press('Tab');
   await page.getByRole('textbox', { name: 'Contraseña' }).fill('admin123');
   await page.getByRole('button', { name: 'Iniciar sesión' }).click();
+   await expect(page.getByText('Bienvenid@ al sistema. Estos son sus módulos disponibles.')).toBeVisible();;
 });
 
-// intento de login con credenciales invalidas
-test('login-mal', async ({ page }) => {
+// intento de login con usuario inexistente
+test('login-usuario-inexistente', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('textbox', { name: 'Usuario' }).click();
   await page.getByRole('textbox', { name: 'Usuario' }).fill('jla317');
   await page.getByRole('textbox', { name: 'Contraseña' }).click();
   await page.getByRole('textbox', { name: 'Contraseña' }).fill('jla317');
   await page.getByRole('button', { name: 'Iniciar sesión' }).click();
-  await expect(page.getByText('Usuario o contraseña')).toBeVisible();
-  await expect(page.locator('form')).toContainText('Usuario o contraseña incorrectos');
+  await expect(page.getByText('Usuario no encontrado')).toBeVisible();
 });
 
-// login para usuario deshabilitado 'jla242' 
+// intento de login con usuario existente pero contraseña incorrecta
+test('login-contraseña-incorrecta', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('textbox', { name: 'Usuario' }).click();
+  await page.getByRole('textbox', { name: 'Usuario' }).fill('admin');
+  await page.getByRole('textbox', { name: 'Contraseña' }).click();
+  await page.getByRole('textbox', { name: 'Contraseña' }).fill('adminjla');
+  await page.getByRole('button', { name: 'Iniciar sesión' }).click();
+  await expect(page.getByText('Credenciales inválidas')).toBeVisible();
+});
+
+
+// login para usuario deshabilitado 'jla153' 
 test('login-usuario-deshabilitado', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('textbox', { name: 'Usuario' }).click();
-  await page.getByRole('textbox', { name: 'Usuario' }).fill('jla242');
+  await page.getByRole('textbox', { name: 'Usuario' }).fill('jla153');
   await page.getByRole('textbox', { name: 'Contraseña' }).click();
-  await page.getByRole('textbox', { name: 'Contraseña' }).fill('jla242');
+  await page.getByRole('textbox', { name: 'Contraseña' }).fill('jla153');
   await page.getByRole('button', { name: 'Iniciar sesión' }).click();
-  await expect(page.getByText('Usuario deshabilitado')).toBeVisible();
+  await expect(page.getByText('Acceso denegado')).toBeVisible();
 });
 
 //test de redireccion a /RecuperarContraseña cuando es la primera vez iniciando sesion en el sistema
@@ -62,5 +74,13 @@ test('recuperar-contraseña', async ({ page }) => {
 //correo no almacenado en la base de datos
 test('recuperar-contraseña-correo-invalido', async ({ page }) => {
   await page.goto('/');
- 
+  await page.getByRole('link', { name: 'Recupérala aquí' }).click();
+  await page.getByRole('textbox', { name: 'Correo electrónico' }).click();
+  await page.getByRole('textbox', { name: 'Correo electrónico' }).fill('pangea');
+  await page.getByRole('textbox', { name: 'Correo electrónico' }).press('Alt+6');
+  await page.getByRole('textbox', { name: 'Correo electrónico' }).press('Alt+4');
+  await page.getByRole('textbox', { name: 'Correo electrónico' }).fill('pangea@gmail.com');
+  await page.getByRole('button', { name: 'Recuperar contraseña' }).click();
+  await expect(page.getByText('Correo no registrado')).toBeVisible();
 });
+

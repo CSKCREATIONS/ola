@@ -11,12 +11,14 @@ test('editar-perfil', async ({ page }) => {
   await page.getByRole('button', { name: 'Iniciar sesión' }).click();
   await page.getByRole('link', { name: 'Avatar usuario', exact: true }).click();
   await page.getByRole('button', { name: 'Editar Perfil' }).click();
-  await page.getByLabel('Segundo apellido').click();
-  await page.getByLabel('Segundo apellido').fill('Garcia');
+  await page.getByLabel('Primer nombre').click();
+  await page.getByLabel('Primer nombre').fill('Top');
+  await page.getByLabel('Primer apellido').click();
+  await page.getByLabel('Primer apellido').fill('User');
   await page.getByLabel('Segundo nombre').click();
   await page.getByLabel('Segundo nombre').fill('');
   await page.locator('button').filter({ hasText: 'Guardar Cambios' }).click();
-  await expect(page.getByText('Perfil actualizado')).toBeVisible();
+  await expect(page.getByText('Perfil actualizado correctamente')).toBeVisible();
 })
 
 // cambiar contraseña propia como user 'admin'
@@ -36,6 +38,8 @@ test('cambiar-contraseña', async ({ page }) => {
   await page.getByPlaceholder('Repite la contraseña').fill('admin123');
   await page.locator('button').filter({ hasText: 'Guardar Cambios' }).click();
   await expect(page.getByText('Tu sesión expirará. Debes')).toBeVisible();
+  await page.getByRole('button', { name: 'OK' }).click();
+  await expect(page.getByRole('heading', { name: 'Portal JLA Global Company' })).toBeVisible();
 })
 
 
