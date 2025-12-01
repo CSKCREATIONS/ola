@@ -52,7 +52,7 @@ export default function RolesYPermisos() {
       Swal.fire({
         icon: 'success',
         title: 'Estado actualizado',
-        text: `El rol "${roleName || ''}" ha sido ${nuevoEstado ? 'habilitado' : 'deshabilitado'} correctamente.`,
+        text: nuevoEstado ? 'Rol habilitado' : 'Rol deshabilitado',
         timer: 2000,
         showConfirmButton: false
       });
