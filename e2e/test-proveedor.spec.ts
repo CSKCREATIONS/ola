@@ -1,5 +1,65 @@
 import { test, expect } from '@playwright/test';
 
+
+//Revision de los productos de un proveedor
+test('productosProveedor', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('textbox', { name: 'Usuario' }).click();
+  await page.getByRole('textbox', { name: 'Usuario' }).fill('admin');
+  await page.getByRole('textbox', { name: 'Contraseña' }).click();
+  await page.getByRole('textbox', { name: 'Contraseña' }).fill('admin123');
+  await page.getByRole('button', { name: 'Iniciar sesión' }).click();
+  await page.getByRole('link', { name: '🧑 Proveedores' }).click();
+  await page.getByRole('button', { name: /Ver \(\d+\)/ }).first().click();
+  await page.getByRole('button', { name: 'Cerrar', exact: true }).click();
+}); 
+
+
+//Inhabilitar un proveedor ya creado
+test('inhabilitarProveedor', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('textbox', { name: 'Usuario' }).click();
+  await page.getByRole('textbox', { name: 'Usuario' }).fill('admin');
+  await page.getByRole('textbox', { name: 'Contraseña' }).click();
+  await page.getByRole('textbox', { name: 'Contraseña' }).fill('admin123');
+  await page.getByRole('button', { name: 'Iniciar sesión' }).click();
+  await page.getByRole('link', { name: '🧑 Proveedores' }).click();
+  await page.locator('tr:nth-child(3) > td:nth-child(6) > .switch > .slider').click();
+  await page.getByRole('button', { name: 'Sí, desactivar' }).click();
+  await page.getByRole('button', { name: 'OK' }).click();
+});
+
+//Habilitar un proveedor que ha sido inhabilitado
+test('habilitarProveedor', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('textbox', { name: 'Usuario' }).click();
+  await page.getByRole('textbox', { name: 'Usuario' }).fill('admin');
+  await page.getByRole('textbox', { name: 'Contraseña' }).click();
+  await page.getByRole('textbox', { name: 'Contraseña' }).fill('admin123');
+  await page.getByRole('button', { name: 'Iniciar sesión' }).click();
+  await page.getByRole('link', { name: '🧑 Proveedores' }).click();
+  await page.locator('tr:nth-child(2) > td:nth-child(6) > .switch > .slider').click();
+  await page.getByRole('button', { name: 'Sí, activar' }).click();
+  await page.getByRole('button', { name: 'OK' }).click();
+});
+
+
+//Revision cuando un proveedor no tiene productos asociados
+test('noproductosProveedor', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('textbox', { name: 'Usuario' }).click();
+  await page.getByRole('textbox', { name: 'Usuario' }).fill('admin');
+  await page.getByRole('textbox', { name: 'Contraseña' }).click();
+  await page.getByRole('textbox', { name: 'Contraseña' }).fill('admin123');
+  await page.getByRole('button', { name: 'Iniciar sesión' }).click();
+  await page.getByRole('link', { name: '🧑 Proveedores' }).click();
+  await expect(page.getByRole('button', { name: 'Ver (0)' }).nth(2)).toBeVisible();
+  await page.getByRole('button', { name: 'Ver (0)' }).nth(2).click();
+  await expect(page.locator('#root')).toContainText('Este proveedor no tiene productos asociados.');
+  await page.getByRole('button', { name: 'Cerrar', exact: true }).click();
+});
+
+
 //Creacion de un nuevo proveedor
 test('nuevoProveedor', async ({ page }) => {
   await page.goto('/');
@@ -28,7 +88,8 @@ test('nuevoProveedor', async ({ page }) => {
   await page.getByRole('button', { name: 'Guardar' }).click();
   await expect(page.getByText('Proveedor guardado')).toBeVisible();
   await page.getByRole('button', { name: 'OK' }).click();
-});
+}); 
+
 
 //Editar un proveedor ya creado
 test('editarProveedor', async ({ page }) => {
@@ -44,60 +105,4 @@ test('editarProveedor', async ({ page }) => {
   await page.getByRole('textbox', { name: 'Nombre del Proveedor *' }).fill('mariaa');
   await page.getByRole('button', { name: 'Guardar' }).click();
   await page.getByRole('button', { name: 'OK' }).click();
-});
-
-//Inhabilitar un proveedor ya creado
-test('inhabilitarProveedor', async ({ page }) => {
-  await page.goto('/');
-  await page.getByRole('textbox', { name: 'Usuario' }).click();
-  await page.getByRole('textbox', { name: 'Usuario' }).fill('admin');
-  await page.getByRole('textbox', { name: 'Contraseña' }).click();
-  await page.getByRole('textbox', { name: 'Contraseña' }).fill('admin123');
-  await page.getByRole('button', { name: 'Iniciar sesión' }).click();
-  await page.getByRole('link', { name: '🧑 Proveedores' }).click();
-  await page.locator('tr:nth-child(3) > td:nth-child(6) > .switch > .slider').click();
-  await page.getByRole('button', { name: 'Sí, desactivar' }).click();
-  await page.getByRole('button', { name: 'OK' }).click();
-});
-
-//Habilitar un proveedor que ha sido inhabilitado
-test('habilitarProveedor', async ({ page }) => {
-  await page.goto('/');
-  await page.getByRole('textbox', { name: 'Usuario' }).click();
-  await page.getByRole('textbox', { name: 'Usuario' }).fill('admin');
-  await page.getByRole('textbox', { name: 'Contraseña' }).click();
-  await page.getByRole('textbox', { name: 'Contraseña' }).fill('admin123');
-  await page.getByRole('button', { name: 'Iniciar sesión' }).click();
-  await page.getByRole('link', { name: '🧑 Proveedores' }).click();
-  await page.locator('tr:nth-child(4) > td:nth-child(6) > .switch > .slider').click();
-  await page.getByRole('button', { name: 'Sí, activar' }).click();
-  await page.getByRole('button', { name: 'OK' }).click();
-});
-
-//Revision de los productos de un proveedor
-test('productosProveedor', async ({ page }) => {
-  await page.goto('/');
-  await page.getByRole('textbox', { name: 'Usuario' }).click();
-  await page.getByRole('textbox', { name: 'Usuario' }).fill('admin');
-  await page.getByRole('textbox', { name: 'Contraseña' }).click();
-  await page.getByRole('textbox', { name: 'Contraseña' }).fill('admin123');
-  await page.getByRole('button', { name: 'Iniciar sesión' }).click();
-  await page.getByRole('link', { name: '🧑 Proveedores' }).click();
-  await page.getByRole('button', { name: 'Ver (4)' }).click();
-  await page.getByRole('button', { name: 'Cerrar', exact: true }).click();
-});
-
-//Revision cuando un proveedor no tiene productos asociados
-test('noproductosProveedor', async ({ page }) => {
-  await page.goto('/');
-  await page.getByRole('textbox', { name: 'Usuario' }).click();
-  await page.getByRole('textbox', { name: 'Usuario' }).fill('admin');
-  await page.getByRole('textbox', { name: 'Contraseña' }).click();
-  await page.getByRole('textbox', { name: 'Contraseña' }).fill('admin123');
-  await page.getByRole('button', { name: 'Iniciar sesión' }).click();
-  await page.getByRole('link', { name: '🧑 Proveedores' }).click();
-  await expect(page.getByRole('button', { name: 'Ver (0)' }).nth(2)).toBeVisible();
-  await page.getByRole('button', { name: 'Ver (0)' }).nth(2).click();
-  await expect(page.locator('#root')).toContainText('Este proveedor no tiene productos asociados.');
-  await page.getByRole('button', { name: 'Cerrar', exact: true }).click();
 });

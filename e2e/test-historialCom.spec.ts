@@ -165,7 +165,6 @@ test('imprimirOr', async ({ page }) => {
   await page.getByRole('textbox', { name: 'Contraseña' }).fill('admin123');
   await page.getByRole('button', { name: 'Iniciar sesión' }).click();
   await page.getByRole('link', { name: '📚 Historial de compras' }).click();
-  await page.getByRole('button', { name: '2', exact: true }).click();
   await page.getByRole('button', { name: 'OC-1764099977014-qpHZXUU0X' }).click();
   const page1Promise = page.waitForEvent('popup');
   await page.getByRole('button', { name: 'Imprimir PDF' }).click();

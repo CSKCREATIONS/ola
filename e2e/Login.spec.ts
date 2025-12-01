@@ -35,7 +35,7 @@ test('login-contraseña-incorrecta', async ({ page }) => {
 });
 
 
-// login para usuario deshabilitado 'jla153' 
+// login para usuario deshabilitado 
 test('login-usuario-deshabilitado', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('textbox', { name: 'Usuario' }).click();

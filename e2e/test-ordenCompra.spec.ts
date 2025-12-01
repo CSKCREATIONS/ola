@@ -108,15 +108,31 @@ test('editarOrden', async ({ page }) => {
   await page.getByRole('textbox', { name: 'Contraseña' }).click();
   await page.getByRole('textbox', { name: 'Contraseña' }).fill('admin123');
   await page.getByRole('button', { name: 'Iniciar sesión' }).click();
-  await page.getByRole('button', { name: 'Iniciar sesión' }).click();
   await page.getByRole('link', { name: '🧾 Orden de compra' }).click();
+  await page.getByRole('button', { name: 'OC-1764550903222-FWOeVf4YR' }).click();
+  await page.getByText('Cerrar', { exact: true }).click();
   await page.getByRole('button', { name: 'Editar orden' }).nth(2).click();
   await page.locator('.btn-profesional').first().click();
-  await page.getByRole('spinbutton', { name: 'Cantidad' }).click();
-  await page.getByRole('spinbutton', { name: 'Cantidad' }).click();
-  await page.getByRole('spinbutton', { name: 'Cantidad' }).fill('03');
+  await page.getByLabel('Producto').selectOption('6928afe3426018ed8a2c029b');
   await page.getByRole('button', { name: 'Guardar' }).click();
-  await page.getByRole('button', { name: '×' }).click();
+})
+
+
+//Marcar aprobada una orden de compra
+test('enviarOrden', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('textbox', { name: 'Usuario' }).click();
+  await page.getByRole('textbox', { name: 'Usuario' }).fill('admin');
+  await page.getByRole('textbox', { name: 'Contraseña' }).click();
+  await page.getByRole('textbox', { name: 'Contraseña' }).fill('admin123');
+  await page.getByRole('button', { name: 'Iniciar sesión' }).click();
+  await page.getByRole('link', { name: '🧾 Orden de compra' }).click();
+  await page.getByRole('button', { name: 'OC-1764550903222-FWOeVf4YR' }).click();
+  await page.getByRole('button', { name: 'Enviar correo', exact: true }).click();
+  await page.getByRole('textbox', { name: 'ejemplo@correo.com' }).fill('fsharyk@gmail.com');
+  await page.getByRole('button', { name: '📧 Enviar Orden' }).click();
+  await expect(page.getByText('La orden de compra ha sido')).toBeVisible();
+  await page.getByRole('button', { name: 'OK' }).click();
 })
 
 //Marcar aprobada una orden de compra
@@ -129,24 +145,7 @@ test('aprobarOrden', async ({ page }) => {
   await page.getByRole('textbox', { name: 'Contraseña' }).press('Enter');
   await page.getByRole('button', { name: 'Iniciar sesión' }).click();
   await page.getByRole('link', { name: '🧾 Orden de compra' }).click();
-  await page.getByRole('button', { name: 'Pendiente' }).nth(5).click();
+  await page.getByRole('button', { name: 'Pendiente' }).nth(4).click();
   await page.getByRole('button', { name: 'Marcar como Completada' }).click();
-  await page.getByRole('button', { name: 'OK' }).click();
-})
-
-//Marcar aprobada una orden de compra
-test('enviarOrden', async ({ page }) => {
-  await page.goto('/');
-  await page.getByRole('textbox', { name: 'Usuario' }).click();
-  await page.getByRole('textbox', { name: 'Usuario' }).fill('admin');
-  await page.getByRole('textbox', { name: 'Contraseña' }).click();
-  await page.getByRole('textbox', { name: 'Contraseña' }).fill('admin123');
-  await page.getByRole('button', { name: 'Iniciar sesión' }).click();
-  await page.getByRole('link', { name: '🧾 Orden de compra' }).click();
-  await page.getByRole('button', { name: 'OC-1764551073215-9D0PrySQy' }).click();
-  await page.getByRole('button', { name: 'Enviar correo', exact: true }).click();
-  await page.getByRole('textbox', { name: 'ejemplo@correo.com' }).fill('fsharyk@gmail.com');
-  await page.getByRole('button', { name: '📧 Enviar Orden' }).click();
-  await expect(page.getByText('La orden de compra ha sido')).toBeVisible();
   await page.getByRole('button', { name: 'OK' }).click();
 })

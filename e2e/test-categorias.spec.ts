@@ -49,7 +49,7 @@ test('desactivarCategoria', async ({ page }) => {
   await page.getByRole('textbox', { name: 'Contraseña' }).fill('admin123');
   await page.getByRole('button', { name: 'Iniciar sesión' }).click();
   await page.getByRole('link', { name: '🗂️ Categorías' }).click();
-  await page.locator('tr:nth-child(5) > td:nth-child(4) > .switch > .slider').click();
+  await page.locator('tr:nth-child(2) > td:nth-child(4) > .switch > .slider').click();
   await page.getByRole('button', { name: 'Sí, desactivar' }).click();
   await page.getByRole('button', { name: 'OK' }).click();
 });
