@@ -7,11 +7,6 @@ const { verifyToken } = require('../middlewares/authJwt');
 // ========== RUTAS SIN AUTENTICACIÓN PARA REPORTES BÁSICOS ==========
 // Estas rutas deben ir ANTES que las rutas con autenticación
 
-// Estadísticas básicas de ventas
-router.get('/estados', reportesController.estadosPedidos);
-router.get('/clientes', reportesController.clientes);
-router.get('/productos', reportesController.productos);
-
 // Estadísticas básicas de productos
 router.get('/estadisticas-productos', reportesController.estadisticasProductos);
 router.get('/productos-por-categoria', reportesController.productosPorCategoria);
@@ -35,11 +30,6 @@ router.get(
     reportesController.reporteCategorias
 );
 
-router.get('/subcategorias',
-    verifyToken,
-    checkPermission('reportesProductos.ver'),
-    reportesController.reporteSubcategorias
-);
 
 router.get('/productos',
     verifyToken,
@@ -52,42 +42,7 @@ router.get('/consolidado',
     reportesController.reporteConsolidado
 );
 
-// Reportes de ventas
-router.get('/ventas/por-periodo',
-    verifyToken,
-    checkPermission('reportesVentas.ver'),
-    reportesController.reporteVentasPorPeriodo
-);
-router.get('/ventas/consolidado',
-    verifyToken,
-    checkPermission('reportesVentas.ver'),
-    reportesController.reporteVentasConsolidado
-);
-router.get('/ventas/por-estado',
-    verifyToken,
-    checkPermission('reportesVentas.ver'),
-    reportesController.reportePedidosPorEstado
-);
-router.get('/ventas/cotizaciones',
-    verifyToken,
-    checkPermission('reportesVentas.ver'),
-    reportesController.reporteCotizaciones
-);
 
-// 🆕 Reporte de clientes
-router.get('/clientes',
-    verifyToken,
-    checkPermission('reportesVentas.ver'),
-    reportesController.reporteClientes);
-
-// Nuevas rutas para reportes simplificados (SIN AUTENTICACIÓN PARA TESTING)
-router.get('/estadisticas',
-    reportesController.estadisticasVentas
-);
-
-router.get('/estados',
-    reportesController.estadosPedidos
-);
 
 router.get('/estadisticas-productos',
     reportesController.estadisticasProductos
@@ -126,14 +81,34 @@ router.get('/productos-de-proveedor/:id',
     reportesController.productosDeProveedor
 );
 
-router.get('/clientes',
-    reportesController.clientes
-);
-
 router.get('/productos',
     reportesController.productos
 );
 
+// ========== NUEVAS RUTAS PARA REPORTES DE VENTAS ==========
+// Top clientes con más compras
+router.get('/top-clientes-compras', reportesController.topClientesCompras);
+
+// Top productos más vendidos (con filtro de tiempo)
+router.get('/top-productos-vendidos', reportesController.topProductosVendidos);
+
+// Cotizaciones registradas (con filtro de tiempo)
+router.get('/cotizaciones-registradas', reportesController.reporteCotizacionesRegistradas);
+
+// Pedidos agendados y cancelados (con filtro de tiempo)
+router.get('/pedidos-estados', reportesController.reportePedidosEstados);
+
+// Prospectos convertidos en clientes (con filtro de tiempo)
+router.get('/prospectos-convertidos', reportesController.reporteProspectosConvertidos);
+
+// Remisiones generadas (con filtro de tiempo)
+router.get('/remisiones-generadas', reportesController.reporteRemisionesGeneradas);
+
+// Estadísticas generales para dashboard
+router.get('/estadisticas', reportesController.estadisticas);
+
+// Estados de pedidos para gráfico
+router.get('/estados', reportesController.estados);
 
 // Reportes de proveedores
 router.get('/por-pais',

@@ -1,48 +1,15 @@
 /* global globalThis */
 import { useState, useEffect, useCallback } from "react";
 import PropTypes from "prop-types";
-import { toggleSubMenu } from "../funciones/animaciones";
 import { registerModalRol } from "../funciones/modalController";
 import Swal from "sweetalert2";
 import api from '../api/axiosConfig';
-
-/* ---------- Styles (aligned with EditarRol.jsx) ---------- */
-const overlayStyle = {
-   position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-   backgroundColor: 'rgba(0, 0, 0, 0.6)', display: 'flex',
-   alignItems: 'center', justifyContent: 'center', zIndex: 1000,
-   backdropFilter: 'blur(4px)', padding: '1rem'
-};
-
-const formStyle = {
-   backgroundColor: 'white', borderRadius: '20px', maxWidth: '1200px',
-   width: 'min(1200px, calc(100% - 2rem))', maxHeight: '95vh', height: '95vh',
-   overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-   display: 'flex', flexDirection: 'column', margin: 0, padding: 0, border: 'none'
-};
-
-const headerStyle = {
-   background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)', color: 'white',
-   padding: '2rem', borderRadius: '20px 20px 0 0'
-};
-
-const scrollContentStyle = {
-   flex: 1, minHeight: 0, overflowY: 'auto', padding: '2rem', backgroundColor: '#f8fafc'
-};
 
 const cardStyleBase = {
    padding: '1.25rem', borderRadius: '12px', transition: 'all 0.3s ease'
 };
 
-/* checkbox / radio shared styles used in EditarRol.jsx */
-const checkboxLabelStyle = {
-   display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem',
-   cursor: 'pointer', borderRadius: '6px', transition: 'background 0.2s ease'
-};
 
-const checkboxStyle = {
-   width: '18px', height: '18px', cursor: 'pointer', accentColor: '#8b5cf6'
-};
 /* ---------- Small components ---------- */
 const IconBox = ({ children }) => (
    <div style={{
