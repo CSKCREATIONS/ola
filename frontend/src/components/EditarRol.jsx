@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { closeModal } from "../funciones/animaciones";
-
+import Swal from 'sweetalert2';
+import api from '../api/axiosConfig';
 import PropTypes from 'prop-types';
 
 /* --------------------- Permisos por módulo --------------------- */
@@ -246,11 +247,44 @@ export default function EditarRol({ rol }) {
       });
    };
 
-      /* Submit handler (minimal stub to avoid missing identifier errors) */
-      const handleSubmit = (e) => {
+      /* Submit handler */
+      const handleSubmit = async (e) => {
          e.preventDefault();
-         // Minimal behavior: close modal. Detailed save logic can be added later.
-         closeModal('edit-role-modal');
+         
+         // Validaciones
+         if (!nombreRol.trim()) {
+            return Swal.fire('Error', 'El nombre del rol es obligatorio', 'error');
+         }
+         if (permisos.length === 0) {
+            return Swal.fire('Error', 'Selecciona al menos un permiso', 'error');
+         }
+         if (!rol?._id) {
+            return Swal.fire('Error', 'No se pudo identificar el rol a actualizar', 'error');
+         }
+
+         try {
+            const res = await api.patch(`/api/roles/${rol._id}`, {
+               name: nombreRol,
+               permissions: permisos
+            });
+
+            const data = res.data || res;
+            if (res.status >= 200 && res.status < 300 && data.success) {
+               await Swal.fire('Éxito', 'Rol actualizado', 'success');
+               closeModal('edit-role-modal');
+               // Recargar la página para reflejar los cambios
+               window.location.reload();
+            } else {
+               Swal.fire('Error', data.message || 'No se pudo actualizar el rol', 'error');
+            }
+         } catch (error) {
+            console.error('[EditarRol]', error);
+            const errorMessage = error?.response?.data?.message || error?.message || 'Error del servidor al actualizar el rol';
+            const displayMessage = errorMessage.toLowerCase().includes('exist') || errorMessage.toLowerCase().includes('duplicado')
+               ? 'El rol ya existe'
+               : errorMessage;
+            Swal.fire('Error', displayMessage, 'error');
+         }
       };
 
    /* GroupRadio component is declared at top-level (reuse) */

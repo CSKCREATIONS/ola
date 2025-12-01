@@ -26,7 +26,7 @@ router.patch('/:id/toggle-enabled',
 );
 
 
-// PATCH api/roles/:d  - editar rol
+// PATCH api/roles/:id  - editar rol
 router.patch('/:id',
   verifyToken,
   checkPermission('roles.editar'),
