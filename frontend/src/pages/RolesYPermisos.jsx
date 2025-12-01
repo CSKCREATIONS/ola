@@ -33,7 +33,7 @@ export default function RolesYPermisos() {
   const toggleEstadoRol = async (id, nuevoEstado, roleName) => {
     const confirmResult = await Swal.fire({
       title: nuevoEstado ? `¿Habilitar rol "${roleName || ''}"?` : `¿Deshabilitar rol "${roleName || ''}?`,
-      text: "Esta accion le impedirá el ingreso al sistema a los usuarios con este rol.",
+      text: nuevoEstado ? `Esta accion le permitirá el ingreso al sistema a los usuarios con este rol.` : "Esta accion le impedirá el ingreso al sistema a los usuarios con este rol.",
       icon: 'warning',
       showCancelButton: true,
       confirmButtonText: 'Sí, confirmar',

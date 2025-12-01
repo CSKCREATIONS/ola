@@ -24,12 +24,13 @@ class PDFService {
 
   // Centralized base styles generator. Accepts a palette object { primary, gradient, lightGradient, muted }
   getBaseStyles(palette = {}) {
-    const pal = Object.assign({
+    const pal = {
       primary: '#2563eb',
       gradient: 'linear-gradient(135deg,#2563eb,#1d4ed8)',
       lightGradient: 'linear-gradient(135deg,#eff6ff,#dbeafe)',
-      muted: '#6b7280'
-    }, palette || {});
+      muted: '#6b7280',
+      ...palette
+    };
 
     // Return a <style> block to be inlined in each template
     return `
@@ -174,7 +175,7 @@ class PDFService {
       const nombre = p.producto?.name || p.producto?.nombre || p.nombre || 'Producto sin nombre';
       const cantidad = p.cantidad || 0;
       const valorUnitario = Number.parseFloat(p.valorUnitario || p.precioUnitario || 0).toFixed(2);
-      const subtotal = Number.parseFloat(p.subtotal != null ? p.subtotal : (cantidad * (p.valorUnitario || p.precioUnitario || 0))).toFixed(2);
+      const subtotal = Number.parseFloat(p.subtotal !== null && p.subtotal !== undefined ? p.subtotal : (cantidad * (p.valorUnitario || p.precioUnitario || 0))).toFixed(2);
       return `
         <tr class="producto-row ${idx % 2 === 0 ? 'even' : 'odd'}">
           <td class="producto-nombre">${escapeHtml(String(nombre))}</td>
@@ -188,7 +189,6 @@ class PDFService {
     const descripcionHtml = cotizacion.descripcion ? `<div class="descripcion">${escapeHtml(cotizacion.descripcion)}</div>` : '';
     const condicionesHtml = cotizacion.condicionesPago ? `<div class="condiciones">${escapeHtml(cotizacion.condicionesPago)}</div>` : '';
 
-    const logoUrl = process.env.COMPANY_LOGO_URL || '';
     const companyName = escapeHtml(process.env.COMPANY_NAME || 'JLA Global Company');
     const companyPhone = escapeHtml(process.env.COMPANY_PHONE || '(000) 000-0000');
 
@@ -276,11 +276,6 @@ class PDFService {
       if (typeof str !== 'string') return '';
       return str.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
     };
-
-    const formatDate = (d) => (d ? new Date(d).toLocaleDateString('es-ES') : 'N/A');
-
-    const fechaRemision = formatDate(remision.fechaRemision || remision.fecha);
-    const fechaEntrega = formatDate(remision.fechaEntrega);
 
     const total = remision.total || (Array.isArray(remision.productos) ? remision.productos.reduce((s, p) => {
       const cantidad = Number.parseFloat(p.cantidad) || 0;
@@ -425,7 +420,6 @@ class PDFService {
 
     const formatDate = (d) => (d ? new Date(d).toLocaleDateString('es-ES') : 'N/A');
     const fechaPedido = formatDate(pedido.fecha || pedido.createdAt);
-    const fechaEntrega = formatDate(pedido.fechaEntrega);
 
     const parseNumber = (v) => Number.parseFloat(v) || 0;
     const calcTotal = () => {

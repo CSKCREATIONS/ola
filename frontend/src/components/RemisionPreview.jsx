@@ -463,7 +463,15 @@ export default function RemisionPreview({ datos, onClose }) {
               <div style={{ marginBottom: '2rem' }}>
                 <h3 style={{ borderBottom: '3px solid #10b981', paddingBottom: '0.5rem', color: '#10b981', fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '1rem' }}>Descripción</h3>
                 <div style={{ background: '#eff6ff', padding: '1rem', borderRadius: '8px', borderLeft: '4px solid #10b981', lineHeight: '1.6' }}>
-                  {datosConDefaults.descripcion}
+                  {(() => {
+                    const desc = datosConDefaults.descripcion;
+                    const looksLikeHtml = typeof desc === 'string' && /<[^>]+>/.test(desc);
+                    if (looksLikeHtml) {
+                      const safeHtml = sanitizeHtml(desc);
+                      return <div dangerouslySetInnerHTML={{ __html: safeHtml }} />;
+                    }
+                    return <div style={{ whiteSpace: 'pre-wrap' }}>{desc}</div>;
+                  })()}
                 </div>
               </div>
             )}
@@ -477,7 +485,15 @@ export default function RemisionPreview({ datos, onClose }) {
               <div style={{ marginBottom: '2rem' }}>
               <h3 style={{ borderBottom: '3px solid #10b981', paddingBottom: '0.5rem', color: '#10b981', fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '1rem' }}>Condiciones de Pago</h3>
               <div style={{ background: '#eff6ff', padding: '1rem', borderRadius: '8px', borderLeft: '4px solid #10b981', lineHeight: '1.6' }}>
-                {datosConDefaults.condicionesPago}
+                {(() => {
+                    const desc = datosConDefaults.condicionesPago;
+                    const looksLikeHtml = typeof desc === 'string' && /<[^>]+>/.test(desc);
+                    if (looksLikeHtml) {
+                      const safeHtml = sanitizeHtml(desc);
+                      return <div dangerouslySetInnerHTML={{ __html: safeHtml }} />;
+                    }
+                    return <div style={{ whiteSpace: 'pre-wrap' }}>{desc}</div>;
+                  })()}
               </div>
             </div>
             )}

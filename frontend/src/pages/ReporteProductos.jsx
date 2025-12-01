@@ -182,7 +182,7 @@ const Reportes = () => {
                             ].map((stat) => (
                                 <Col xs={24} sm={12} md={12} lg={6} key={stat.title}>
                                     <Card 
-                                        bordered={false} 
+                                        variant="borderless" 
                                         hoverable 
                                         style={{ 
                                             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)', 
@@ -213,7 +213,7 @@ const Reportes = () => {
                             <Col xs={24} sm={24} md={12} lg={12}>
                                 <Card 
                                     title={<Title level={4} style={{ color: COLORS.dark }}>Productos por Categoría</Title>} 
-                                    bordered
+                                    variant="bordered"
                                     style={{ boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)' }}
                                 >
                                     <Table
@@ -231,7 +231,7 @@ const Reportes = () => {
                             <Col xs={24} sm={24} md={12} lg={12}>
                                 <Card 
                                     title={<Title level={4} style={{ color: COLORS.dark }}>Estado de Inventario</Title>} 
-                                    bordered
+                                    variant="bordered"
                                     style={{ boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)' }}
                                 >
                                     <ResponsiveContainer width="100%" height={300}>
@@ -249,12 +249,19 @@ const Reportes = () => {
                                                 labelLine={false}
                                                 label={CustomPieLabel} // Usamos la etiqueta personalizada para el Donut
                                             >
-                                                {productosPorEstado.map((entry, index) => (
-                                                    <Cell 
-                                                        key={`cell-${entry.name}-${index}`} 
-                                                        fill={entry.name === 'Activo' ? COLORS.success : entry.name === 'Inactivo' ? COLORS.danger : COLORS.warning} 
-                                                    />
-                                                ))}
+                                                {productosPorEstado.map((entry, index) => {
+                                                    const getCellColor = () => {
+                                                        if (entry.name === 'Activo') return COLORS.success;
+                                                        if (entry.name === 'Inactivo') return COLORS.danger;
+                                                        return COLORS.warning;
+                                                    };
+                                                    return (
+                                                        <Cell 
+                                                            key={`cell-${entry.name}-${index}`} 
+                                                            fill={getCellColor()} 
+                                                        />
+                                                    );
+                                                })}
                                             </Pie>
                                             <Tooltip content={<CustomTooltip />} />
                                             <Legend layout="horizontal" verticalAlign="bottom" align="center" iconType="circle" />
@@ -276,7 +283,7 @@ const Reportes = () => {
                             <Col span={24}>
                                 <Card 
                                     title={<Title level={4} style={{ color: COLORS.dark }}>Distribución Detallada por Categoría</Title>} 
-                                    bordered
+                                    variant="bordered"
                                     style={{ boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)', marginTop: '20px' }}
                                 >
                                     <ResponsiveContainer width="100%" height={300}>
@@ -290,7 +297,7 @@ const Reportes = () => {
                                             {/* Aseguramos que dataKey apunte al campo correcto: 'cantidad' */}
                                             <Bar dataKey="cantidad" name="Cantidad de Productos" radius={[5, 5, 0, 0]} >
                                                 {productosPorCategoria.map((entry, index) => (
-                                                    <Cell key={`cell-${index}`} fill={getColorForCategoria(index)} />
+                                                    <Cell key={`cell-${entry.categoria || entry._id || index}`} fill={getColorForCategoria(index)} />
                                                 ))}
                                             </Bar>
                                         </BarChart>
