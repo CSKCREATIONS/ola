@@ -1317,7 +1317,7 @@ export default function PedidosAgendados() {
                         <TinyMCE.Editor
                           id="agendar-descripcion"
                           onInit={(evt, editor) => (descripcionRef.current = editor)}
-                          apiKey="otu4s642tv612posr0ne65wrxy2i5kmop915g2gu2zbv5mho"
+                          apiKey="2o32797pg92f9dkmfu7lag00dumqni4pik6xv30ds3v5nq9o"
                           textareaName="Descripcion"
                           init={{ height: 220, menubar: false }}
                         />
@@ -1532,7 +1532,7 @@ export default function PedidosAgendados() {
                         <TinyMCE.Editor
                           id="agendar-condiciones"
                           onInit={(evt, editor) => (condicionesRef.current = editor)}
-                          apiKey="otu4s642tv612posr0ne65wrxy2i5kmop915g2gu2zbv5mho"
+                          apiKey="2o32797pg92f9dkmfu7lag00dumqni4pik6xv30ds3v5nq9o"
                           textareaName="Condiciones"
                           init={{ height: 260, menubar: false }}
                         />

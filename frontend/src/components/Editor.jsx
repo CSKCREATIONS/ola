@@ -23,7 +23,7 @@ export default function FormularioConEditor() {
         <label htmlFor="contenido">Contenido</label>
         <Editor
           id="contenido"
-          apiKey="otu4s642tv612posr0ne65wrxy2i5kmop915g2gu2zbv5mho"  // Opcional, usa la versión gratuita
+          apiKey="2o32797pg92f9dkmfu7lag00dumqni4pik6xv30ds3v5nq9o"  // Opcional, usa la versión gratuita
           initialValue="<p>Escribe aquí...</p>"
           init={{
             height: 1000,
