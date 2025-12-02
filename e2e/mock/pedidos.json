@@ -1,0 +1,22 @@
+[
+  {
+    "_id": "673d9a1e2f8b3c001a4e5f02",
+    "numeroPedido": "PED-123",
+    "cliente": {
+      "_id": "673d9a1e2f8b3c001a4e5e01",
+      "nombre": "Cliente Test"
+    },
+    "nombreCliente": "Cliente Test",
+    "fechaAgendada": "2024-11-25",
+    "total": 1500,
+    "estado": "agendado",
+    "productos": [
+      {
+        "_id": "prod2",
+        "nombre": "Producto Pedido",
+        "cantidad": 3,
+        "precioUnitario": 500
+      }
+    ]
+  }
+]

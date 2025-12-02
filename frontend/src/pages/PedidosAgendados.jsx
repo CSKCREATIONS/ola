@@ -816,15 +816,33 @@ export default function PedidosAgendados() {
   const remisionarPedido = async (id) => {
     // Mostrar modal para seleccionar fecha de entrega y luego llamar al endpoint de remisión
     try {
+      const hoy = new Date().toISOString().split('T')[0];
       const defaultDate = pedidoDefaultDateForSwal(id);
+      const fechaInicial = (defaultDate && defaultDate >= hoy) ? defaultDate : hoy;
+      
       const { value: fechaSeleccionada } = await Swal.fire({
         title: 'Seleccione la fecha de entrega',
         input: 'date',
         inputLabel: 'Fecha de entrega',
-        inputValue: defaultDate,
+        inputValue: fechaInicial,
+        inputAttributes: {
+          min: hoy,
+          max: '2099-12-31'
+        },
         showCancelButton: true,
         confirmButtonText: 'Confirmar',
-        cancelButtonText: 'Cancelar'
+        cancelButtonText: 'Cancelar',
+        preConfirm: (fecha) => {
+          if (!fecha) {
+            Swal.showValidationMessage('Debe seleccionar una fecha');
+            return false;
+          }
+          if (fecha < hoy) {
+            Swal.showValidationMessage('No puede seleccionar una fecha pasada');
+            return false;
+          }
+          return fecha;
+        }
       });
 
       if (!fechaSeleccionada) return; // usuario canceló o no escogió
@@ -1299,7 +1317,7 @@ export default function PedidosAgendados() {
                         <TinyMCE.Editor
                           id="agendar-descripcion"
                           onInit={(evt, editor) => (descripcionRef.current = editor)}
-                          apiKey="bjhw7gemroy70lt4bgmfvl29zid7pmrwyrtx944dmm4jq39w"
+                          apiKey="otu4s642tv612posr0ne65wrxy2i5kmop915g2gu2zbv5mho"
                           textareaName="Descripcion"
                           init={{ height: 220, menubar: false }}
                         />
@@ -1514,7 +1532,7 @@ export default function PedidosAgendados() {
                         <TinyMCE.Editor
                           id="agendar-condiciones"
                           onInit={(evt, editor) => (condicionesRef.current = editor)}
-                          apiKey="bjhw7gemroy70lt4bgmfvl29zid7pmrwyrtx944dmm4jq39w"
+                          apiKey="otu4s642tv612posr0ne65wrxy2i5kmop915g2gu2zbv5mho"
                           textareaName="Condiciones"
                           init={{ height: 260, menubar: false }}
                         />

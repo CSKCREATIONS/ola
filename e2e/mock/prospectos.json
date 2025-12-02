@@ -1,0 +1,13 @@
+[
+  {
+    "_id": "673d9a1e2f8b3c001a4e5e01",
+    "nombre": "Cliente Test",
+    "email": "test@example.com",
+    "telefono": "123456789",
+    "ciudad": "Ciudad Test",
+    "soporte": "Soporte Test",
+    "probabilidad": 90,
+    "cotizaciones": ["673d9a1e2f8b3c001a4e5f01"],
+    "pedidos": ["673d9a1e2f8b3c001a4e5f02"]
+  }
+]

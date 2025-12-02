@@ -767,7 +767,7 @@ export default function RegistrarCotizacion() {
                 <Editor
                   id='descripcion-cotizacion'
                   onInit={(evt, editor) => (descripcionRef.current = editor)}
-                  apiKey="bjhw7gemroy70lt4bgmfvl29zid7pmrwyrtx944dmm4jq39w"
+                  apiKey="otu4s642tv612posr0ne65wrxy2i5kmop915g2gu2zbv5mho"
                   textareaName="Descripcion"
                   init={{ height: 200, menubar: false }}
                 />
@@ -1003,7 +1003,7 @@ export default function RegistrarCotizacion() {
                 <Editor
                   id='condiciones-pago'
                   onInit={(evt, editor) => (condicionesPagoRef.current = editor)}
-                  apiKey="bjhw7gemroy70lt4bgmfvl29zid7pmrwyrtx944dmm4jq39w"
+                  apiKey="otu4s642tv612posr0ne65wrxy2i5kmop915g2gu2zbv5mho"
                   textareaName="Condiciones"
                   init={{ height: 200, menubar: false }}
                 />

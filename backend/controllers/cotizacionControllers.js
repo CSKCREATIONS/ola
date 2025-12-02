@@ -1289,7 +1289,14 @@ async function postCrearRemisionUpdates(clienteId, nuevaRemision, cotizacionId, 
 // Convertir cotización a remisión — crea solo un documento en la colección 'remisions'
 exports.remisionarCotizacion = async (req, res) => {
   try {
-    const { cotizacionId, fechaEntrega, observaciones } = req.body;
+    // Get cotizacionId from URL params (POST /api/cotizaciones/:id/remisionar)
+    const cotizacionId = req.params.id || req.body.cotizacionId;
+    const { fechaEntrega, observaciones } = req.body;
+    
+    if (!cotizacionId) {
+      return res.status(400).json({ message: 'ID de cotización no proporcionado' });
+    }
+    
     const cotizacion = await Cotizacion.findById(cotizacionId).populate('cliente.referencia');
     if (!cotizacion) {
       return res.status(404).json({ message: 'Cotización no encontrada' });

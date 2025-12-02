@@ -1162,7 +1162,7 @@ export default function PedidosEntregados() {
                         <TinyMCE.Editor
                           id="remisionar-descripcion"
                           onInit={(evt, editor) => (descripcionRef.current = editor)}
-                          apiKey="bjhw7gemroy70lt4bgmfvl29zid7pmrwyrtx944dmm4jq39w"
+                          apiKey="otu4s642tv612posr0ne65wrxy2i5kmop915g2gu2zbv5mho"
                           textareaName="Descripcion"
                           init={{ height: 220, menubar: false }}
                         />
@@ -1377,7 +1377,7 @@ export default function PedidosEntregados() {
                         <TinyMCE.Editor
                           id="remisionar-condiciones"
                           onInit={(evt, editor) => (condicionesRef.current = editor)}
-                          apiKey="bjhw7gemroy70lt4bgmfvl29zid7pmrwyrtx944dmm4jq39w"
+                          apiKey="otu4s642tv612posr0ne65wrxy2i5kmop915g2gu2zbv5mho"
                           textareaName="Condiciones"
                           init={{ height: 260, menubar: false }}
                         />

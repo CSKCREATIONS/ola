@@ -306,6 +306,51 @@ export default function ProspectosDeCliente() {
     }
   };
 
+  // Remisionar pedido desde prospectos
+  const remisionarPedido = async (id) => {
+    try {
+      const hoy = new Date().toISOString().split('T')[0];
+      const { value: fechaSeleccionada } = await Swal.fire({
+        title: 'Seleccione la fecha de entrega',
+        input: 'date',
+        inputLabel: 'Fecha de entrega',
+        inputValue: hoy,
+        inputAttributes: {
+          min: hoy,
+          max: '2099-12-31'
+        },
+        showCancelButton: true,
+        confirmButtonText: 'Confirmar',
+        cancelButtonText: 'Cancelar',
+        preConfirm: (fecha) => {
+          if (!fecha) {
+            Swal.showValidationMessage('Debe seleccionar una fecha');
+            return false;
+          }
+          if (fecha < hoy) {
+            Swal.showValidationMessage('No puede seleccionar una fecha pasada');
+            return false;
+          }
+          return fecha;
+        }
+      });
+
+      if (!fechaSeleccionada) return;
+
+      const res = await api.post(`/api/pedidos/${id}/remisionar`, { fechaEntrega: fechaSeleccionada });
+      if (res.status >= 200 && res.status < 300) {
+        setMostrarPedidoPreview(false);
+        setPedidoSeleccionado(null);
+        await fetchProspectos(); // Recargar para actualizar listas
+        Swal.fire('Éxito', 'Pedido remisionado correctamente', 'success');
+      }
+    } catch (error) {
+      console.error('Error al remisionar pedido:', error);
+      const responseData = error?.response?.data;
+      Swal.fire('Error', responseData?.message || error.message || 'No se pudo remisionar el pedido', 'error');
+    }
+  };
+
   const toggleExpandEmails = (emailKey) => {
     setExpandedEmails(prev => ({ ...prev, [emailKey]: !prev[emailKey] }));
   };
@@ -787,7 +832,11 @@ export default function ProspectosDeCliente() {
             }
             {
               mostrarPedidoPreview && pedidoSeleccionado && (
-                <PedidoAgendadoPreview datos={pedidoSeleccionado} onClose={() => { setMostrarPedidoPreview(false); setPedidoSeleccionado(null); }} />
+                <PedidoAgendadoPreview 
+                  datos={pedidoSeleccionado} 
+                  onClose={() => { setMostrarPedidoPreview(false); setPedidoSeleccionado(null); }} 
+                  onRemisionar={() => remisionarPedido(pedidoSeleccionado._id)}
+                />
               )
             }
             <div className="custom-footer">

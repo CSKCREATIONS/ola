@@ -1,0 +1,22 @@
+[
+  {
+    "_id": "673d9a1e2f8b3c001a4e5f01",
+    "codigo": "COT-TEST1",
+    "cliente": {
+      "_id": "673d9a1e2f8b3c001a4e5e01",
+      "nombre": "Cliente Test"
+    },
+    "nombreCliente": "Cliente Test",
+    "fecha": "2024-11-20",
+    "total": 1000,
+    "estado": "pendiente",
+    "productos": [
+      {
+        "_id": "prod1",
+        "nombre": "Producto Test",
+        "cantidad": 2,
+        "precioUnitario": 500
+      }
+    ]
+  }
+]
