@@ -8,6 +8,7 @@ import api from '../api/axiosConfig';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 import EditarPedido from '../components/EditarPedido';
 import PedidoAgendadoPreview from '../components/PedidoAgendadoPreview';
 import RemisionPreview from '../components/RemisionPreview';
@@ -80,8 +81,6 @@ const pedidosAgendadosStyles = `
       align-items: center;
       justify-content: center;
     }
-
-    
 
     .pedidos-action-btn {
       background: linear-gradient(135deg, #f59e0b, #ea580c);
@@ -168,59 +167,58 @@ const pedidosAgendadosStyles = `
       align-items: center;
       gap: 5px;
     }
-      /* Modal adjustments: keep modal centered, limit size and enable scrolling */
-      .modal-overlay {
-        position: fixed;
-        inset: 0;
-        background: rgba(0,0,0,0.6);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 10000;
-        padding: 1.25rem;
-        overflow: auto;
-        -webkit-overflow-scrolling: touch;
-      }
 
-      .modal-lg {
-        background: white;
-        border-radius: 12px;
-        width: min(1100px, 100%);
-        max-width: 1100px;
-        max-height: calc(100vh - 80px);
-        box-shadow: 0 20px 60px rgba(0,0,0,0.25);
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-      }
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      padding: 1.25rem;
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+    }
 
-      .modal-header {
-        padding: 1rem 1.25rem;
-        border-bottom: 1px solid #e5e7eb;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 1rem;
-      }
+    .modal-lg {
+      background: white;
+      border-radius: 12px;
+      width: min(1100px, 100%);
+      max-width: 1100px;
+      max-height: calc(100vh - 80px);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
 
-      .modal-body {
-        padding: 1rem 1.25rem;
-        overflow: auto;
-        max-height: calc(100vh - 240px);
-      }
+    .modal-header {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
 
-      .modal-close {
-        background: none;
-        border: none;
-        font-size: 1.4rem;
-        line-height: 1;
-        cursor: pointer;
-        color: #374151;
-      }
+    .modal-body {
+      padding: 1rem 1.25rem;
+      overflow: auto;
+      max-height: calc(100vh - 240px);
+    }
 
-      /* Make large tables inside modals scroll horizontally instead of expanding the modal */
-      .modal-body table { width: 100%; border-collapse: collapse; }
-      .modal-body .overflow-auto { overflow: auto; }
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.4rem;
+      line-height: 1;
+      cursor: pointer;
+      color: #374151;
+    }
+
+    .modal-body table { width: 100%; border-collapse: collapse; }
+    .modal-body .overflow-auto { overflow: auto; }
   </style>
 `;
 
@@ -234,8 +232,194 @@ if (typeof document !== 'undefined') {
   }
 }
 
-// Componente helper para una fila de pedido (movido fuera para evitar redefiniciones)
-const PedidoRow = ({ pedido, index, indexOfFirstItem, blinkPedidoId, handleViewPedido, remisionarPedido, cancelarPedido }) => (
+// ==================== CONSTANTES Y HELPERS ====================
+
+// Estilos reutilizables
+const MODAL_STYLES = {
+  section: {
+    background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+    borderRadius: '14px',
+    padding: '1.25rem',
+    border: '1px solid #e2e8f0',
+    marginBottom: '1rem'
+  },
+  sectionHeader: {
+    borderBottom: '2px solid #e2e8f0',
+    paddingBottom: '.75rem',
+    marginBottom: '1rem',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '.75rem'
+  },
+  sectionTitle: {
+    margin: 0,
+    fontWeight: 600,
+    color: '#1e293b'
+  },
+  inputContainer: {
+    background: '#fff',
+    borderRadius: 10,
+    padding: '0.75rem',
+    border: '2px solid #e5e7eb'
+  }
+};
+
+const BUTTON_STYLES = {
+  cancel: {
+    padding: '0.7rem 1.25rem',
+    border: '2px solid #e5e7eb',
+    borderRadius: '10px',
+    background: '#fff',
+    color: '#374151',
+    fontWeight: 600,
+    cursor: 'pointer'
+  },
+  primary: {
+    padding: '0.7rem 1.4rem',
+    borderRadius: '10px',
+    border: 'none',
+    background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+    color: '#fff',
+    fontWeight: 600,
+    cursor: 'pointer'
+  },
+  success: {
+    padding: '0.7rem 1.4rem',
+    borderRadius: '10px',
+    border: 'none',
+    background: 'linear-gradient(135deg, #10b981, #059669)',
+    color: '#fff',
+    fontWeight: 600,
+    cursor: 'pointer'
+  }
+};
+
+// Helper: Normalizar respuestas de API
+const normalizeApiResponse = (response) => {
+  const data = response.data || response;
+  return data.data || data;
+};
+
+// Helper: Validar email
+const isValidEmail = (email) => {
+  if (typeof email !== 'string') return false;
+  const trimmed = email.trim();
+  if (trimmed.length === 0 || trimmed.length > 254) return false;
+  const at = trimmed.indexOf('@');
+  if (at <= 0 || trimmed.includes('@', at + 1)) return false;
+  const local = trimmed.slice(0, at);
+  const domain = trimmed.slice(at + 1);
+  if (!local || !domain || local.length > 64 || domain.length > 253) return false;
+  if (local.startsWith('.') || local.endsWith('.') || local.includes('..')) return false;
+  if (domain.includes('..')) return false;
+  const labels = domain.split('.');
+  if (labels.length < 2) return false;
+  const labelAllowed = /^[A-Za-z0-9-]+$/;
+  return labels.every(lab => lab && lab.length <= 63 && !lab.startsWith('-') && !lab.endsWith('-') && labelAllowed.test(lab));
+};
+
+// Helper: Limpiar campo de error
+const clearFieldError = (setErrors, fieldName) => {
+  setErrors(prev => {
+    const next = { ...prev };
+    delete next[fieldName];
+    return next;
+  });
+};
+
+// Helper: Toast de éxito
+const showSuccessToast = (title) => {
+  Swal.fire({
+    toast: true,
+    position: 'top-end',
+    icon: 'success',
+    title,
+    showConfirmButton: false,
+    timer: 2000,
+    timerProgressBar: true,
+    didOpen: (toast) => {
+      toast.addEventListener('mouseenter', Swal.stopTimer);
+      toast.addEventListener('mouseleave', Swal.resumeTimer);
+    }
+  });
+};
+
+// Helper: Deduplicar clientes
+const deduplicateClientes = (todos) => {
+  const dedupMap = new Map();
+  for (const c of todos) {
+    const key = ((c.correo || '').toLowerCase().trim()) || c._id;
+    if (dedupMap.has(key)) {
+      const existente = dedupMap.get(key);
+      if (existente.esCliente === false && c.esCliente) dedupMap.set(key, c);
+    } else {
+      dedupMap.set(key, c);
+    }
+  }
+  return Array.from(dedupMap.values()).sort((a, b) => 
+    (a.nombre || '').localeCompare(b.nombre || '')
+  );
+};
+
+// Helper: Normalizar array de clientes
+const normalizeClientes = (arr, esClienteFlag) => 
+  (Array.isArray(arr) ? arr.map(c => ({ ...c, esCliente: !!esClienteFlag })) : []);
+
+// Helper: Sanitizar teléfono
+const sanitizePhone = (value) => {
+  let sanitized = value.replace(/[^\d+ ]/g, '');
+  sanitized = sanitized.replace(/(?!^)\+/g, '');
+  if (/\+/.test(sanitized) && sanitized[0] !== '+') {
+    sanitized = '+' + sanitized.replace(/\+/g, '');
+  }
+  return sanitized;
+};
+
+// ==================== COMPONENTES ====================
+
+// Componente: Icono de sección de modal
+const ModalSectionIcon = ({ icon, gradient }) => (
+  <div style={{
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    background: gradient,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: '#fff'
+  }}>
+    <i className={icon}></i>
+  </div>
+);
+
+ModalSectionIcon.propTypes = {
+  icon: PropTypes.string.isRequired,
+  gradient: PropTypes.string.isRequired
+};
+
+// Componente: Error de campo
+const FieldError = ({ error }) => 
+  error ? (
+    <div style={{ color: '#ef4444', marginTop: 6, fontSize: '0.9rem' }}>
+      {error}
+    </div>
+  ) : null;
+
+FieldError.propTypes = {
+  error: PropTypes.string
+};
+
+// Componente: Fila de pedido
+const PedidoRow = ({ 
+  pedido, 
+  index, 
+  indexOfFirstItem, 
+  blinkPedidoId, 
+  handleViewPedido, 
+  remisionarPedido, 
+  cancelarPedido 
+}) => (
   <tr key={pedido._id} className={pedido._id === blinkPedidoId ? 'blink-row-pedido' : ''}>
     <td style={{ fontWeight: '600', color: '#6366f1' }}>{indexOfFirstItem + index + 1}</td>
     <td>
@@ -259,9 +443,16 @@ const PedidoRow = ({ pedido, index, indexOfFirstItem, blinkPedidoId, handleViewP
     </td>
     <td style={{ color: '#6b7280' }}>{pedido.fechaAgendamiento}</td>
     <td style={{ color: '#6b7280' }}>{pedido.fechaEntrega}</td>
-    <td style={{ fontWeight: '600', color: '#1f2937', fontSize: '14px' }}>{pedido.cliente?.nombre}</td>
+    <td style={{ fontWeight: '600', color: '#1f2937', fontSize: '14px' }}>
+      {pedido.cliente?.nombre}
+    </td>
     <td style={{ color: '#6b7280' }}>{pedido.cliente?.ciudad}</td>
-    <td style={{ fontWeight: '600', color: '#059669', fontSize: '14px' }}>{(pedido.total || 0).toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+    <td style={{ fontWeight: '600', color: '#059669', fontSize: '14px' }}>
+      {(pedido.total || 0).toLocaleString('es-CO', { 
+        minimumFractionDigits: 2, 
+        maximumFractionDigits: 2 
+      })}
+    </td>
     <td className="no-export">
       <div className="action-buttons">
         <button
@@ -303,6 +494,8 @@ PedidoRow.propTypes = {
   cancelarPedido: PropTypes.func.isRequired,
 };
 
+// ==================== COMPONENTE PRINCIPAL ====================
+
 function PedidosAgendados() {
   const [pedidos, setPedidos] = useState([]);
   const [mostrarModalAgendar, setMostrarModalAgendar] = useState(false);
@@ -315,17 +508,9 @@ function PedidosAgendados() {
   const navigate = useNavigate();
   const [pendingHighlightId, setPendingHighlightId] = useState(null);
   const [blinkPedidoId, setBlinkPedidoId] = useState(null);
-
-  // Usuario autenticado (para mostrar en Responsable)
   const [user, setUser] = useState(null);
-  useEffect(() => {
-    try {
-      const storedUser = localStorage.getItem('user');
-      if (storedUser) setUser(JSON.parse(storedUser));
-    } catch (err) { console.error('Error reading stored user from localStorage:', err); }
-  }, []);
 
-  // Estado del formulario de agendamiento (sólo UI)
+  // Estado del formulario
   const [agendarCliente, setAgendarCliente] = useState('');
   const [agendarCiudad, setAgendarCiudad] = useState('');
   const [agendarDireccion, setAgendarDireccion] = useState('');
@@ -333,12 +518,29 @@ function PedidosAgendados() {
   const [agendarCorreo, setAgendarCorreo] = useState('');
   const [agendarFechaAg, setAgendarFechaAg] = useState('');
   const [agendarFechaEnt, setAgendarFechaEnt] = useState('');
-  // Errores de validación inline
   const [errors, setErrors] = useState({});
-  // Errores por producto (array paralelo a `agendarProductos`)
   const [productErrors, setProductErrors] = useState([]);
 
-  // Limpiar errores al abrir/cerrar el modal para evitar mensajes residuales
+  const descripcionRef = useRef(null);
+  const condicionesRef = useRef(null);
+
+  const [agendarProductos, setAgendarProductos] = useState([]);
+  const [productosDisponibles, setProductosDisponibles] = useState([]);
+  const [clientesAgendar, setClientesAgendar] = useState([]);
+  const [filteredClientesAgendar, setFilteredClientesAgendar] = useState([]);
+  const [showDropdownAgendar, setShowDropdownAgendar] = useState(false);
+
+  // Cargar usuario
+  useEffect(() => {
+    try {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) setUser(JSON.parse(storedUser));
+    } catch (err) {
+      console.error('Error reading stored user:', err);
+    }
+  }, []);
+
+  // Limpiar errores al abrir modal
   useEffect(() => {
     if (mostrarModalAgendar) {
       setErrors({});
@@ -346,31 +548,132 @@ function PedidosAgendados() {
     }
   }, [mostrarModalAgendar]);
 
-  // Editors (UI only)
-  const descripcionRef = useRef(null);
-  const condicionesRef = useRef(null);
+  // Cargar productos
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        const res = await api.get('/api/products');
+        const lista = normalizeApiResponse(res);
+        setProductosDisponibles(Array.isArray(lista) ? lista : []);
+      } catch (err) {
+        console.error('Error al cargar productos:', err);
+      }
+    };
+    loadProducts();
+  }, []);
 
-  // Productos (UI only dentro del modal)
-  const [agendarProductos, setAgendarProductos] = useState([]);
-  const [productosDisponibles, setProductosDisponibles] = useState([]);
+  // Cargar clientes y prospectos
+  useEffect(() => {
+    const cargarClientesYProspectos = async () => {
+      try {
+        const [clientesRes, prospectosRes] = await Promise.all([
+          api.get('/api/clientes'),
+          api.get('/api/clientes/prospectos')
+        ]);
+
+        const listaClientes = normalizeApiResponse(clientesRes);
+        const listaProspectos = normalizeApiResponse(prospectosRes);
+
+        const todos = [
+          ...normalizeClientes(listaClientes, true),
+          ...normalizeClientes(listaProspectos, false)
+        ];
+
+        setClientesAgendar(deduplicateClientes(todos));
+      } catch (err) {
+        console.error('Error al cargar clientes/prospectos:', err);
+      }
+    };
+    cargarClientesYProspectos();
+  }, []);
+
+  // Cargar pedidos agendados
+  const fetchPedidosAgendados = async () => {
+    try {
+      const pedidosRes = await api.get('/api/pedidos?populate=true');
+      const pedidosData = normalizeApiResponse(pedidosRes);
+      const agendados = (Array.isArray(pedidosData) ? pedidosData : [])
+        .filter(p => p.estado === 'agendado')
+        .sort((a, b) => new Date(b.createdAt || b.fechaCreacion) - 
+                       new Date(a.createdAt || a.fechaCreacion));
+      setPedidos(agendados);
+    } catch (error) {
+      console.error('Error al cargar pedidos agendados:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchPedidosAgendados();
+  }, []);
+
+  // Procesar navegación con auto-preview
+  useEffect(() => {
+    try {
+      const navState = location?.state;
+      if (navState?.autoPreviewPedido) {
+        const nuevo = navState.autoPreviewPedido;
+        setPedidos(prev => {
+          const exists = prev.some(p => p._id === nuevo._id);
+          if (!exists) {
+            const merged = [nuevo, ...prev];
+            return merged.sort((a, b) => 
+              new Date(b.createdAt || b.fechaCreacion || 0) - 
+              new Date(a.createdAt || a.fechaCreacion || 0)
+            );
+          }
+          return prev;
+        });
+        setCotizacionPreview(nuevo);
+        setPendingHighlightId(nuevo._id);
+        if (navState.toast) showSuccessToast(navState.toast);
+        navigate('/PedidosAgendados', { replace: true });
+      }
+    } catch (e) {
+      console.error('Error procesando navegación:', e);
+    }
+  }, [location?.state, navigate]);
+
+  // Animación de parpadeo
+  useEffect(() => {
+    if (blinkPedidoId) {
+      if (!document.getElementById('blink-style-pedidos')) {
+        const styleEl = document.createElement('style');
+        styleEl.id = 'blink-style-pedidos';
+        styleEl.textContent = '@keyframes rowBlinkPedido {0%{background-color:#ffffff;}50%{background-color:#fef9c3;}100%{background-color:#ffffff;}} .blink-row-pedido{animation:rowBlinkPedido 1.2s ease-in-out 6;}';
+        document.head.appendChild(styleEl);
+      }
+      const timeout = setTimeout(() => setBlinkPedidoId(null), 7500);
+      return () => clearTimeout(timeout);
+    }
+  }, [blinkPedidoId]);
+
+  // Handlers de productos
   const agregarProductoAgendar = () => {
     const uid = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`;
-    setAgendarProductos(prev => ([...prev, {
+    setAgendarProductos(prev => [...prev, {
       uid,
       producto: '',
-      nombre: '', descripcion: '', cantidad: '', valorUnitario: '', descuento: '', subtotal: ''
-    }]));
-    setProductErrors(prev => ([...prev, {}]));
+      nombre: '',
+      descripcion: '',
+      cantidad: '',
+      valorUnitario: '',
+      descuento: '',
+      subtotal: ''
+    }]);
+    setProductErrors(prev => [...prev, {}]);
   };
+
   const eliminarProductoAgendar = (index) => {
     setAgendarProductos(prev => prev.filter((_, i) => i !== index));
     setProductErrors(prev => prev.filter((_, i) => i !== index));
   };
+
   const limpiarProductosAgendados = () => {
     if (agendarProductos.length === 0) return;
     setAgendarProductos([]);
     setProductErrors([]);
   };
+
   const handleProductoAgendarChange = (index, e) => {
     const { name, value } = e.target;
     setAgendarProductos(prev => {
@@ -381,30 +684,17 @@ function PedidosAgendados() {
       const descNum = Number.parseFloat(next[index].descuento) || 0;
       const subtotal = cantidadNum * valorNum * (1 - descNum / 100);
       next[index].subtotal = subtotal ? subtotal.toFixed(2) : '';
-      // limpiar errores del campo cambiado
+      
       setProductErrors(prevErrors => {
         const ne = [...(prevErrors || [])];
         ne[index] = ne[index] || {};
         if (ne[index]?.[name]) delete ne[index][name];
         return ne;
       });
+      
       return next;
     });
   };
-
-  // Cargar productos activos para el select (igual que RegistrarCotizacion)
-  useEffect(() => {
-    const loadProducts = async () => {
-      try {
-        const res = await api.get('/api/products');
-        const lista = res.data?.data || res.data || [];
-        setProductosDisponibles(Array.isArray(lista) ? lista : []);
-      } catch (err) {
-        console.error('Error al cargar productos disponibles (agendar):', err);
-      }
-    };
-    loadProducts();
-  }, []);
 
   const handleProductoSelectAgendar = (index, productId) => {
     const producto = productosDisponibles.find(p => (p._id || p.id) === productId);
@@ -423,7 +713,6 @@ function PedidosAgendados() {
       };
       return next;
     });
-    // limpiar errores para ese producto
     setProductErrors(prev => {
       const next = [...(prev || [])];
       next[index] = {};
@@ -431,63 +720,7 @@ function PedidosAgendados() {
     });
   };
 
-  // Autocompletado de cliente (igual a RegistrarCotizacion)
-  const [clientesAgendar, setClientesAgendar] = useState([]);
-  const [filteredClientesAgendar, setFilteredClientesAgendar] = useState([]);
-  const [showDropdownAgendar, setShowDropdownAgendar] = useState(false);
-
-  // Extraer helpers fuera del useEffect para evitar anidamiento profundo
-  const deduplicateClientes = (todos) => {
-    const dedupMap = new Map();
-    for (const c of todos) {
-      const key = ((c.correo || '').toLowerCase().trim()) || c._id;
-      if (dedupMap.has(key)) {
-        const existente = dedupMap.get(key);
-        if (existente.esCliente === false && c.esCliente) dedupMap.set(key, c);
-      } else {
-        dedupMap.set(key, c);
-      }
-    }
-    return Array.from(dedupMap.values()).sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
-  };
-
-  const normalizar = (arr, esClienteFlag) => (Array.isArray(arr) ? arr.map(c => ({ ...c, esCliente: !!esClienteFlag })) : []);
-
-  useEffect(() => {
-    const cargarClientesYProspectos = async () => {
-      try {
-        const [clientesRes, prospectosRes] = await Promise.all([
-          api.get('/api/clientes'),
-          api.get('/api/clientes/prospectos')
-        ]);
-
-        const listaClientes = clientesRes.data?.data || clientesRes.data || [];
-        const listaProspectos = prospectosRes.data?.data || prospectosRes.data || [];
-
-        const todos = [...normalizar(listaClientes, true), ...normalizar(listaProspectos, false)];
-
-        const resultado = deduplicateClientes(todos);
-        setClientesAgendar(resultado);
-      } catch (err) {
-        console.error('Error al cargar clientes/prospectos (agendar):', err);
-      }
-    };
-    cargarClientesYProspectos();
-  }, []);
-
-  // Handlers extraídos para reducir anidamiento y mejorar legibilidad
-  const handleViewPedido = async (pedidoId) => {
-    try {
-      const res = await api.get(`/api/pedidos/${pedidoId}?populate=true`);
-      const data = res.data || res;
-      const pedidoCompleto = data.data || data;
-      setCotizacionPreview(pedidoCompleto);
-    } catch (error) {
-      console.error('Error loading pedido:', error);
-      Swal.fire('Error', 'No se pudo cargar la información del pedido.', 'error');
-    }
-  };
-
+  // Handlers de cliente
   const handleDropdownSelectCliente = (c) => {
     setAgendarCliente(c.nombre || '');
     setAgendarCiudad(c.ciudad || '');
@@ -500,7 +733,8 @@ function PedidosAgendados() {
   const handleAgendarClienteChange = (e) => {
     const q = e.target.value;
     setAgendarCliente(q);
-    if (errors.cliente) setErrors(prev => ({ ...prev, cliente: undefined }));
+    clearFieldError(setErrors, 'cliente');
+    
     if (q && q.trim().length >= 1) {
       const ql = q.trim().toLowerCase();
       const matches = clientesAgendar
@@ -514,36 +748,25 @@ function PedidosAgendados() {
     }
   };
 
-  // Función para manejar cuando se envía un email
+  const handleViewPedido = async (pedidoId) => {
+    try {
+      const res = await api.get(`/api/pedidos/${pedidoId}?populate=true`);
+      const pedidoCompleto = normalizeApiResponse(res);
+      setCotizacionPreview(pedidoCompleto);
+    } catch (error) {
+      console.error('Error loading pedido:', error);
+      Swal.fire('Error', 'No se pudo cargar la información del pedido.', 'error');
+    }
+  };
+
   const handleEmailSent = (pedidoId) => {
-    // Actualizar el estado local si es necesario
     setPedidos(prev => prev.map(p =>
       p._id === pedidoId ? { ...p, enviadoCorreo: true } : p
     ));
   };
 
-  // Simple, deterministic email validator (copied pattern from RegistrarCotizacion)
-  const isValidEmail = (email) => {
-    if (typeof email !== 'string') return false;
-    const trimmed = email.trim();
-    if (trimmed.length === 0 || trimmed.length > 254) return false;
-    const at = trimmed.indexOf('@');
-    if (at <= 0 || trimmed.includes('@', at + 1)) return false;
-    const local = trimmed.slice(0, at);
-    const domain = trimmed.slice(at + 1);
-    if (!local || !domain) return false;
-    if (local.length > 64 || domain.length > 253) return false;
-    if (local.startsWith('.') || local.endsWith('.') || local.includes('..')) return false;
-    if (domain.includes('..')) return false;
-    const labels = domain.split('.');
-    if (labels.length < 2) return false;
-    const labelAllowed = /^[A-Za-z0-9-]+$/;
-    return labels.every(lab => lab && lab.length <= 63 && !lab.startsWith('-') && !lab.endsWith('-') && labelAllowed.test(lab));
-  };
-
   const handleGuardarAgendar = async () => {
     try {
-      // Validaciones inline: construir objetos de error
       const newErrors = {};
       const newProductErrors = [];
 
@@ -559,45 +782,43 @@ function PedidosAgendados() {
           const p = agendarProductos[i];
           const pe = {};
           if (!p.producto) pe.producto = 'Seleccione un producto.';
-          if (!p.cantidad || Number.parseFloat(p.cantidad) <= 0) pe.cantidad = 'Cantidad debe ser mayor a 0.';
-          if (!p.valorUnitario || Number.parseFloat(p.valorUnitario) <= 0) pe.valorUnitario = 'Valor unitario inválido.';
+          if (!p.cantidad || Number.parseFloat(p.cantidad) <= 0) 
+            pe.cantidad = 'Cantidad debe ser mayor a 0.';
+          if (!p.valorUnitario || Number.parseFloat(p.valorUnitario) <= 0) 
+            pe.valorUnitario = 'Valor unitario inválido.';
           newProductErrors[i] = pe;
         }
       } else {
         newErrors.productos = 'Agrega al menos un producto al pedido.';
       }
 
-      // Si hay errores, setearlos y no enviar
-      const hasFieldErrors = Object.keys(newErrors).length > 0 || newProductErrors.some(pe => pe && Object.keys(pe).length > 0);
+      const hasFieldErrors = Object.keys(newErrors).length > 0 || 
+        newProductErrors.some(pe => pe && Object.keys(pe).length > 0);
+      
       if (hasFieldErrors) {
         setErrors(newErrors);
         setProductErrors(newProductErrors);
-        // intentar enfocar el primer campo con error
         return;
       }
 
-      const clientePayload = {
-        nombre: agendarCliente,
-        ciudad: agendarCiudad || '',
-        direccion: agendarDireccion || '',
-        telefono: agendarTelefono,
-        correo: agendarCorreo,
-        esCliente: false,
-        operacion: 'agenda'
-      };
-
-      const productosPayload = agendarProductos.map(p => ({
-        producto: p.producto || null,
-        descripcion: p.descripcion || '',
-        cantidad: Number.parseFloat(p.cantidad) || 0,
-        valorUnitario: Number.parseFloat(p.valorUnitario) || 0,
-        descuento: Number.parseFloat(p.descuento) || 0,
-        subtotal: Number.parseFloat(p.subtotal) || 0
-      }));
-
       const body = {
-        cliente: clientePayload,
-        productos: productosPayload,
+        cliente: {
+          nombre: agendarCliente,
+          ciudad: agendarCiudad || '',
+          direccion: agendarDireccion || '',
+          telefono: agendarTelefono,
+          correo: agendarCorreo,
+          esCliente: false,
+          operacion: 'agenda'
+        },
+        productos: agendarProductos.map(p => ({
+          producto: p.producto || null,
+          descripcion: p.descripcion || '',
+          cantidad: Number.parseFloat(p.cantidad) || 0,
+          valorUnitario: Number.parseFloat(p.valorUnitario) || 0,
+          descuento: Number.parseFloat(p.descuento) || 0,
+          subtotal: Number.parseFloat(p.subtotal) || 0
+        })),
         fechaAgendamiento: agendarFechaAg || new Date().toISOString(),
         fechaEntrega: agendarFechaEnt || new Date().toISOString(),
         descripcion: descripcionRef.current?.getContent({ format: 'html' }) || '',
@@ -608,9 +829,7 @@ function PedidosAgendados() {
 
       const res = await api.post('/api/pedidos', body);
       if (res.status >= 200 && res.status < 300) {
-        // Normalizar forma de respuesta
-        const data = res.data || res;
-        const nuevoPedido = data.data || data;
+        const nuevoPedido = normalizeApiResponse(res);
         await handlePostCreate(nuevoPedido);
       } else {
         Swal.fire('Error', res.data?.message || 'No se pudo crear el pedido.', 'error');
@@ -621,11 +840,19 @@ function PedidosAgendados() {
     }
   };
 
-  // Helper: handle UI updates after creating a pedido
   const handlePostCreate = async (nuevoPedido) => {
     setMostrarModalAgendar(false);
-    setAgendarCliente(''); setAgendarCiudad(''); setAgendarDireccion(''); setAgendarTelefono(''); setAgendarCorreo(''); setAgendarFechaAg(''); setAgendarFechaEnt(''); setAgendarProductos([]);
-    setErrors({}); setProductErrors([]);
+    setAgendarCliente('');
+    setAgendarCiudad('');
+    setAgendarDireccion('');
+    setAgendarTelefono('');
+    setAgendarCorreo('');
+    setAgendarFechaAg('');
+    setAgendarFechaEnt('');
+    setAgendarProductos([]);
+    setErrors({});
+    setProductErrors([]);
+    
     if (descripcionRef.current) descripcionRef.current.setContent('');
     if (condicionesRef.current) condicionesRef.current.setContent('');
 
@@ -634,153 +861,71 @@ function PedidosAgendados() {
     showSuccessToast('Pedido agendado');
   };
 
-  const showSuccessToast = (title) => {
-    Swal.fire({
-      toast: true,
-      position: 'top-end',
-      icon: 'success',
-      title,
-      showConfirmButton: false,
-      timer: 2000,
-      timerProgressBar: true,
-      didOpen: (toast) => { toast.addEventListener('mouseenter', Swal.stopTimer); toast.addEventListener('mouseleave', Swal.resumeTimer); }
-    });
-  };
-
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = pedidos.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(pedidos.length / itemsPerPage);
-
-  // Cargar pedidos (reutilizable)
-  const fetchPedidosAgendados = async () => {
-    try {
-      const pedidosRes = await api.get('/api/pedidos?populate=true');
-      const pedidosData = pedidosRes.data || pedidosRes;
-      const agendados = (Array.isArray(pedidosData) ? pedidosData : pedidosData.data || []).filter(p => p.estado === 'agendado');
-      const agendadosOrdenados = agendados.sort((a, b) => new Date(b.createdAt || b.fechaCreacion) - new Date(a.createdAt || a.fechaCreacion));
-      setPedidos(agendadosOrdenados);
-    } catch (error_) {
-      console.error('❌ Error al cargar pedidos agendados:', error_);
-    }
-  };
-
-  useEffect(() => { fetchPedidosAgendados(); }, []);
-
-  // Procesar navegación desde ListaDeCotizaciones: auto preview + toast + preparar parpadeo
-  useEffect(() => {
-    try {
-      const navState = location?.state;
-      if (navState?.autoPreviewPedido) {
-        const nuevo = navState.autoPreviewPedido;
-        // Insertar el pedido si no existe aún
-        setPedidos(prev => {
-          const exists = prev.some(p => p._id === nuevo._id);
-            if (!exists) {
-              const merged = [nuevo, ...prev];
-              return merged.sort((a, b) => new Date(b.createdAt || b.fechaCreacion || 0) - new Date(a.createdAt || a.fechaCreacion || 0));
-            }
-            return prev;
-        });
-        setCotizacionPreview(nuevo);
-        setPendingHighlightId(nuevo._id);
-        if (navState.toast) {
-          Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: navState.toast, showConfirmButton: false, timer: 2000, timerProgressBar: true });
-        }
-        // Limpiar estado de navegación para evitar reprocesos
-        navigate('/PedidosAgendados', { replace: true });
-      }
-    } catch (e) {
-      console.error('Error procesando estado de navegación pedido agendado:', e);
-    }
-  }, [location?.state]);
-
-  // Handler para cierre del preview que activa parpadeo de fila
   const handleClosePedidoPreview = () => {
     setCotizacionPreview(null);
     if (pendingHighlightId) setBlinkPedidoId(pendingHighlightId);
   };
 
-  // Inyectar estilos de animación para parpadeo
-  useEffect(() => {
-    if (blinkPedidoId) {
-      if (!document.getElementById('blink-style-pedidos')) {
-        const styleEl = document.createElement('style');
-        styleEl.id = 'blink-style-pedidos';
-        styleEl.textContent = '@keyframes rowBlinkPedido {0%{background-color:#ffffff;}50%{background-color:#fef9c3;}100%{background-color:#ffffff;}} .blink-row-pedido{animation:rowBlinkPedido 1.2s ease-in-out 6;}';
-        document.head.appendChild(styleEl);
-      }
-      const timeout = setTimeout(() => setBlinkPedidoId(null), 7500);
-      return () => clearTimeout(timeout);
-    }
-  }, [blinkPedidoId]);
-
   const exportarPDF = () => {
     const elementosNoExport = document.querySelectorAll('.no-export');
-    for (const el of elementosNoExport) {
-      el.style.display = 'none';
-    }
+    elementosNoExport.forEach(el => el.style.display = 'none');
 
     const input = document.getElementById('tabla_despachos');
     if (!input) {
-      for (const el of elementosNoExport) {
-        el.style.display = '';
-      }
+      elementosNoExport.forEach(el => el.style.display = '');
       return;
     }
 
-    const generatePdfFromCanvas = (canvas) => {
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const imgWidth = 190;
-      const pageHeight = 295;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight;
-      let position = 10;
+    const restoreElements = () => {
+      elementosNoExport.forEach(el => el.style.display = '');
+    };
 
-      pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
+    html2canvas(input)
+      .then(canvas => {
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const imgWidth = 190;
+        const pageHeight = 295;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        let heightLeft = imgHeight;
+        let position = 10;
 
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
         pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
         heightLeft -= pageHeight;
-      }
 
-      pdf.save('pedidos_agendados.pdf');
-      for (const el of elementosNoExport) {
-        el.style.display = '';
-      }
-    };
+        while (heightLeft >= 0) {
+          position = heightLeft - imgHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+          heightLeft -= pageHeight;
+        }
 
-    const handleExportError = (err) => {
-      console.error('Error exporting PDF:', err);
-      for (const el of elementosNoExport) {
-        el.style.display = '';
-      }
-    };
-
-    html2canvas(input).then(generatePdfFromCanvas).catch(handleExportError);
+        pdf.save('pedidos_agendados.pdf');
+        restoreElements();
+      })
+      .catch(err => {
+        console.error('Error exporting PDF:', err);
+        restoreElements();
+      });
   };
 
-  const exportToExcel = (pedidosAgendados) => {
-    if (!pedidosAgendados || pedidosAgendados.length === 0) {
+  const exportToExcel = () => {
+    if (!pedidos || pedidos.length === 0) {
       Swal.fire("Error", "No hay datos para exportar", "warning");
       return;
     }
 
-    const dataFormateada = pedidosAgendados.map(pedido => ({
+    const dataFormateada = pedidos.map(pedido => ({
       'Nombre': pedido.cliente?.nombre || pedido.nombre || pedido.clienteInfo?.nombre || '',
       'Numero de Pedido': pedido.numeroPedido || '',
       'Ciudad': pedido.cliente?.ciudad || pedido.ciudad || pedido.clienteInfo?.ciudad || '',
       'Teléfono': pedido.cliente?.telefono || pedido.telefono || pedido.clienteInfo?.telefono || '',
       'Correo': pedido.cliente?.correo || pedido.correo || pedido.clienteInfo?.correo || '',
     }));
+    
     const worksheet = XLSX.utils.json_to_sheet(dataFormateada);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Clientes');
-
     const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
     const data = new Blob([excelBuffer], { type: 'application/octet-stream' });
     saveAs(data, 'ListaPedidosAgendados.xlsx');
@@ -799,13 +944,15 @@ function PedidosAgendados() {
     if (!confirm.isConfirmed) return;
 
     try {
-      const res = await api.patch(`/api/pedidos/${id}/cancelar`, { fechaCancelacion: new Date().toISOString() });
-      const result = res.data || res;
+      const res = await api.patch(`/api/pedidos/${id}/cancelar`, { 
+        fechaCancelacion: new Date().toISOString() 
+      });
+      
       if (res.status >= 200 && res.status < 300) {
         Swal.fire('Cancelado', 'El pedido ha sido cancelado', 'success');
         setPedidos(prev => prev.filter(p => p._id !== id));
       } else {
-        throw new Error(result.message || 'No se pudo cancelar');
+        throw new Error(res.data?.message || 'No se pudo cancelar');
       }
     } catch (error) {
       console.error('Error al cancelar pedido:', error);
@@ -814,11 +961,23 @@ function PedidosAgendados() {
   };
 
   const remisionarPedido = async (id) => {
-    // Mostrar modal para seleccionar fecha de entrega y luego llamar al endpoint de remisión
     try {
       const hoy = new Date().toISOString().split('T')[0];
-      const defaultDate = pedidoDefaultDateForSwal(id);
-      const fechaInicial = (defaultDate && defaultDate >= hoy) ? defaultDate : hoy;
+      const pedido = pedidos.find(p => p._id === id);
+      let fechaInicial = hoy;
+      
+      if (pedido?.fechaEntrega) {
+        try {
+          const d = new Date(pedido.fechaEntrega);
+          const yyyy = d.getFullYear();
+          const mm = String(d.getMonth() + 1).padStart(2, '0');
+          const dd = String(d.getDate()).padStart(2, '0');
+          const fechaDefault = `${yyyy}-${mm}-${dd}`;
+          if (fechaDefault >= hoy) fechaInicial = fechaDefault;
+        } catch (e) {
+          console.error('Error procesando fecha:', e);
+        }
+      }
       
       const { value: fechaSeleccionada } = await Swal.fire({
         title: 'Seleccione la fecha de entrega',
@@ -845,21 +1004,27 @@ function PedidosAgendados() {
         }
       });
 
-      if (!fechaSeleccionada) return; // usuario canceló o no escogió
+      if (!fechaSeleccionada) return;
 
-      // Llamar al backend para crear la remisión desde el pedido
-      const res = await api.post(`/api/pedidos/${id}/remisionar`, { fechaEntrega: fechaSeleccionada });
-      const data = res.data || res;
+      const res = await api.post(`/api/pedidos/${id}/remisionar`, { 
+        fechaEntrega: fechaSeleccionada 
+      });
+      
       if (res.status >= 200 && res.status < 300) {
-        // Remover el pedido de la lista local (ya remisionado / entregado)
         setPedidos(prev => prev.filter(p => p._id !== id));
-        // Cerrar vista previa del pedido agendado si estaba abierta
         setCotizacionPreview(null);
-        // Obtener objeto remisión desde la respuesta
+        
         const remision = res?.data?.remision || res?.data?.data?.remision || null;
-        // Navegar a PedidosEntregados para renderizar allí la RemisionPreview y parpadeo
+        
         if (remision) {
-          Swal.fire({ title: 'Remisionando pedido',allowOutsideClick: false, allowEscapeKey: false, showConfirmButton: false, didOpen: () => Swal.showLoading() });
+          Swal.fire({ 
+            title: 'Remisionando pedido',
+            allowOutsideClick: false, 
+            allowEscapeKey: false, 
+            showConfirmButton: false, 
+            didOpen: () => Swal.showLoading() 
+          });
+          
           navigate('/PedidosEntregados', {
             state: {
               autoPreviewRemision: remision,
@@ -868,18 +1033,17 @@ function PedidosAgendados() {
             }
           });
         } else {
-          // Si no llegó el objeto completo, al menos mostrar toast en destino
           navigate('/PedidosEntregados', {
             state: { toast: 'pedido remisionado' }
           });
         }
       } else {
-        throw new Error(data.message || 'No se pudo crear la remisión');
+        throw new Error(res.data?.message || 'No se pudo crear la remisión');
       }
     } catch (error) {
       console.error('Error al remisionar pedido:', error);
       const responseData = error?.response?.data;
-      // Manejo específico para stock insuficiente
+      
       if (responseData?.codigo === 'STOCK_INSUFICIENTE') {
         Swal.fire({
           icon: 'error',
@@ -888,28 +1052,16 @@ function PedidosAgendados() {
         });
         return;
       }
-      // Otros errores genéricos
+      
       Swal.fire('Error', responseData?.message || error.message || 'No se pudo remisionar el pedido', 'error');
     }
   };
 
-  // Helper: compute YYYY-MM-DD default date for Swal input from pedido fechaEntrega if available
-  const pedidoDefaultDateForSwal = (pedidoId) => {
-    try {
-      const p = pedidos.find(x => x._id === pedidoId) || {};
-      if (!p?.fechaEntrega) {
-        return '';
-      }
-      const d = new Date(p.fechaEntrega);
-      const yyyy = d.getFullYear();
-      const mm = String(d.getMonth() + 1).padStart(2, '0');
-      const dd = String(d.getDate()).padStart(2, '0');
-      return `${yyyy}-${mm}-${dd}`;
-    } catch (error_) {
-      console.error('Error computing default date for pedido:', error_);
-      return '';
-    }
-  };
+  // Cálculos de paginación
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = pedidos.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(pedidos.length / itemsPerPage);
 
   return (
     <div>
@@ -918,36 +1070,30 @@ function PedidosAgendados() {
         <NavVentas />
         <div className="max-width">
           <div className="contenido-modulo">
-            {/* Encabezado profesional */}
             <SharedListHeaderCard
               title="Pedidos Agendados"
               subtitle="Control y gestión de pedidos programados para entrega"
               iconClass="fa-solid fa-calendar-check"
             >
               <div className="export-buttons">
-                <button
-                  onClick={exportToExcel.bind(this, pedidos)}
-                  className="export-btn excel"
-                >
-                  <i className="fa-solid fa-file-excel"></i>{' '}<span>Exportar Excel</span>
+                <button onClick={exportToExcel} className="export-btn excel">
+                  <i className="fa-solid fa-file-excel"></i>{' '}
+                  <span>Exportar Excel</span>
                 </button>
-                <button
-                  onClick={exportarPDF}
-                  className="export-btn pdf"
-                >
-                  <i className="fa-solid fa-file-pdf"></i>{' '}<span>Exportar PDF</span>
+                <button onClick={exportarPDF} className="export-btn pdf">
+                  <i className="fa-solid fa-file-pdf"></i>{' '}
+                  <span>Exportar PDF</span>
                 </button>
-                <button
-                  onClick={() => setMostrarModalAgendar(true)}
+                <button 
+                  onClick={() => setMostrarModalAgendar(true)} 
                   className="export-btn create"
                 >
-                  <i className="fa-solid fa-plus"></i>{' '}<span>Agendar Pedido</span>
+                  <i className="fa-solid fa-plus"></i>{' '}
+                  <span>Agendar Pedido</span>
                 </button>
-                
               </div>
             </SharedListHeaderCard>
 
-            {/* Estadísticas avanzadas */}
             <AdvancedStats cards={[
               {
                 iconClass: 'fa-solid fa-calendar-check',
@@ -964,12 +1110,13 @@ function PedidosAgendados() {
               {
                 iconClass: 'fa-solid fa-clock',
                 gradient: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                value: pedidos.filter(p => new Date(p.fechaEntrega) <= new Date(Date.now() + 24 * 60 * 60 * 1000)).length,
+                value: pedidos.filter(p => 
+                  new Date(p.fechaEntrega) <= new Date(Date.now() + 24 * 60 * 60 * 1000)
+                ).length,
                 label: 'Entregas Próximas'
               }
             ]} />
 
-            {/* Tabla principal con diseño moderno */}
             <div className="table-container">
               <div className="table-header">
                 <div className="table-header-content">
@@ -977,9 +1124,7 @@ function PedidosAgendados() {
                     <i className="fa-solid fa-table" style={{ color: 'white', fontSize: '16px' }}></i>
                   </div>
                   <div>
-                    <h4 className="table-title">
-                      Pedidos pendientes
-                    </h4>
+                    <h4 className="table-title">Pedidos pendientes</h4>
                     <p className="table-subtitle">
                       Mostrando {currentItems.length} de {pedidos.length} pedidos
                     </p>
@@ -992,28 +1137,35 @@ function PedidosAgendados() {
                   <thead>
                     <tr>
                       <th>
-                        <i className="fa-solid fa-hashtag icon-gap" style={{ color: '#6366f1' }}></i>{' '}
+                        <i className="fa-solid fa-hashtag icon-gap" style={{ color: '#6366f1' }}></i>
                       </th>
                       <th>
-                        <i className="fa-solid fa-file-invoice icon-gap" style={{ color: '#6366f1' }}></i>{' '}<span>No. PEDIDO</span>
+                        <i className="fa-solid fa-file-invoice icon-gap" style={{ color: '#6366f1' }}></i>
+                        <span>NO. PEDIDO</span>
                       </th>
                       <th>
-                        <i className="fa-solid fa-calendar-plus icon-gap" style={{ color: '#6366f1' }}></i>{' '}<span>F. AGENDAMIENTO</span>
+                        <i className="fa-solid fa-calendar-plus icon-gap" style={{ color: '#6366f1' }}></i>
+                        <span>F. AGENDAMIENTO</span>
                       </th>
                       <th>
-                        <i className="fa-solid fa-truck icon-gap" style={{ color: '#6366f1' }}></i>{' '}<span>F. ENTREGA</span>
+                        <i className="fa-solid fa-truck icon-gap" style={{ color: '#6366f1' }}></i>
+                        <span>F. ENTREGA</span>
                       </th>
                       <th>
-                        <i className="fa-solid fa-user icon-gap" style={{ color: '#6366f1' }}></i>{' '}<span>CLIENTE</span>
+                        <i className="fa-solid fa-user icon-gap" style={{ color: '#6366f1' }}></i>
+                        <span>CLIENTE</span>
                       </th>
                       <th>
-                        <i className="fa-solid fa-location-dot icon-gap" style={{ color: '#6366f1' }}></i>{' '}<span>CIUDAD</span>
+                        <i className="fa-solid fa-location-dot icon-gap" style={{ color: '#6366f1' }}></i>
+                        <span>CIUDAD</span>
                       </th>
                       <th>
-                        <i className="fa-solid fa-dollar-sign icon-gap" style={{ color: '#6366f1' }}></i>{' '}<span>TOTAL</span>
+                        <i className="fa-solid fa-dollar-sign icon-gap" style={{ color: '#6366f1' }}></i>
+                        <span>TOTAL</span>
                       </th>
                       <th style={{ textAlign: 'center' }}>
-                        <i className="fa-solid fa-cogs icon-gap" style={{ color: '#6366f1' }}></i>{' '}<span>ACCIONES</span>
+                        <i className="fa-solid fa-cogs icon-gap" style={{ color: '#6366f1' }}></i>
+                        <span>ACCIONES</span>
                       </th>
                     </tr>
                   </thead>
@@ -1035,7 +1187,9 @@ function PedidosAgendados() {
                         <td colSpan="8">
                           <div className="table-empty-state">
                             <div className="table-empty-icon">
-                              <i className="fa-solid fa-calendar-check" style={{ fontSize: '3.5rem', color: '#9ca3af' }}></i>
+                              <i className="fa-solid fa-calendar-check" 
+                                style={{ fontSize: '3.5rem', color: '#9ca3af' }}>
+                              </i>
                             </div>
                             <div>
                               <h5 className="table-empty-title">
@@ -1053,7 +1207,6 @@ function PedidosAgendados() {
                 </table>
               </div>
 
-              {/* Paginación */}
               {totalPages > 1 && (
                 <div className="table-pagination">
                   {Array.from({ length: totalPages }, (_, i) => (
@@ -1069,7 +1222,6 @@ function PedidosAgendados() {
               )}
             </div>
 
-            {/* Modal de vista previa de pedido agendado */}
             {cotizacionPreview && (
               <PedidoAgendadoPreview
                 datos={cotizacionPreview}
@@ -1082,13 +1234,15 @@ function PedidosAgendados() {
             {showRemisionPreview && remisionPreviewData && (
               <RemisionPreview
                 datos={remisionPreviewData}
-                onClose={() => { setShowRemisionPreview(false); setRemisionPreviewData(null); }}
+                onClose={() => {
+                  setShowRemisionPreview(false);
+                  setRemisionPreviewData(null);
+                }}
               />
             )}
 
             <EditarPedido />
 
-            {/** Modal: Agendar Pedido **/}
             {mostrarModalAgendar && (
               <div className="modal-overlay">
                 <div className="modal-lg">
@@ -1102,19 +1256,20 @@ function PedidosAgendados() {
                     </button>
                   </div>
                   <div className="modal-body">
-                    {/* Sección: Información del Cliente */}
-                    <div className="modal-section">
-                      <div className="modal-section-header">
-                        <div className="modal-section-icon blue">
-                          <i className="fa-solid fa-user"></i>
-                        </div>
-                        <h4 className="modal-section-title">Información del Cliente</h4>
+                    {/* Información del Cliente */}
+                    <div style={MODAL_STYLES.section}>
+                      <div style={MODAL_STYLES.sectionHeader}>
+                        <ModalSectionIcon 
+                          icon="fa-solid fa-user" 
+                          gradient="linear-gradient(135deg, #3b82f6, #1d4ed8)" 
+                        />
+                        <h4 style={MODAL_STYLES.sectionTitle}>Información del Cliente</h4>
                       </div>
 
                       <div className="modal-grid">
                         <div className="modal-grid-item">
                           <label htmlFor="agendar-cliente" className="modal-label">
-                            Nombre o Razón Social 
+                            Nombre o Razón Social
                           </label>
                           <div style={{ position: 'relative' }}>
                             <input
@@ -1125,22 +1280,21 @@ function PedidosAgendados() {
                               placeholder="Nombre o razón social"
                               value={agendarCliente}
                               onChange={handleAgendarClienteChange}
-                              onFocus={(e) => {
-                                if (filteredClientesAgendar.length > 0) setShowDropdownAgendar(true);
+                              onFocus={() => {
+                                if (filteredClientesAgendar.length > 0) 
+                                  setShowDropdownAgendar(true);
                               }}
                               onBlur={() => setTimeout(() => setShowDropdownAgendar(false), 150)}
                               required
                             />
-                            {errors.cliente && (
-                              <div style={{ color: '#ef4444', marginTop: 6, fontSize: '0.9rem' }}>{errors.cliente}</div>
-                            )}
+                            <FieldError error={errors.cliente} />
                             {showDropdownAgendar && filteredClientesAgendar.length > 0 && (
                               <div className="modal-dropdown">
                                 {filteredClientesAgendar.map((c) => (
                                   <button
                                     type="button"
                                     key={c._id}
-                                    onMouseDown={(ev) => { ev.preventDefault(); }}
+                                    onMouseDown={(ev) => ev.preventDefault()}
                                     onClick={() => handleDropdownSelectCliente(c)}
                                     className="modal-dropdown-item"
                                   >
@@ -1169,7 +1323,6 @@ function PedidosAgendados() {
                             placeholder="Ciudad de residencia"
                             value={agendarCiudad}
                             onChange={(e) => setAgendarCiudad(e.target.value)}
-                            required
                           />
                         </div>
 
@@ -1182,138 +1335,121 @@ function PedidosAgendados() {
                             placeholder="Dirección completa"
                             value={agendarDireccion}
                             onChange={(e) => setAgendarDireccion(e.target.value)}
-                            required
                           />
                         </div>
 
                         <div className="modal-grid-item">
-                          <label htmlFor="agendar-telefono" className="modal-label">
-                            Teléfono 
-                          </label>
+                          <label htmlFor="agendar-telefono" className="modal-label">Teléfono</label>
                           <input
                             id="agendar-telefono"
                             type="tel"
                             className="modal-input"
+                            style={{ border: errors.telefono ? '2px solid #ef4444' : undefined }}
                             placeholder="+57 000 000 0000"
                             value={agendarTelefono}
                             inputMode="tel"
                             autoComplete="tel"
                             pattern="^[+]?\d[\d ]{3,}$"
                             onKeyDown={(e) => {
-                              // Bloquear letras directamente al tipear
-                              if (/^[a-zA-Z]$/.test(e.key)) {
-                                e.preventDefault();
-                              }
+                              if (/^[a-zA-Z]$/.test(e.key)) e.preventDefault();
                             }}
                             onPaste={(e) => {
-                              // Sanitizar contenido pegado eliminando letras y símbolos no permitidos
-                              const pasted = (e.clipboardData.getData('text') || '').replaceAll(/[^\d+ ]/g, '');
+                              const pasted = (e.clipboardData.getData('text') || '')
+                                .replace(/[^\d+ ]/g, '');
                               e.preventDefault();
-                              setAgendarTelefono(prev => (prev + pasted)
-                                .replaceAll(/(?!^)[+]/g, '')
-                                .replaceAll(/[^\d+ ]/g, ''));
+                              setAgendarTelefono(prev => 
+                                sanitizePhone(prev + pasted)
+                              );
                             }}
                             onChange={(e) => {
-                              const raw = e.target.value;
-                              // Permitir sólo dígitos, espacios y un '+' inicial opcional
-                              let sanitized = raw.replaceAll(/[^\d+ ]/g, '');
-                              // Si hay más de un '+', conservar sólo el primero al inicio
-                              sanitized = sanitized.replaceAll(/(?!^)\+/g, '');
-                              // Si '+' aparece y no está al inicio, moverlo al inicio
-                              if (/\+/.test(sanitized) && sanitized[0] !== '+') {
-                                sanitized = '+' + sanitized.replaceAll('+', '');
-                              }
-                              setAgendarTelefono(sanitized);
-                                if (errors.telefono) setErrors(prev => ({ ...prev, telefono: undefined }));
+                              setAgendarTelefono(sanitizePhone(e.target.value));
+                              clearFieldError(setErrors, 'telefono');
                             }}
                             required
                           />
-                            {errors.telefono && (
-                              <div style={{ color: '#ef4444', marginTop: 6, fontSize: '0.9rem' }}>{errors.telefono}</div>
-                            )}
+                          <FieldError error={errors.telefono} />
                         </div>
 
                         <div className="modal-grid-item">
                           <label htmlFor="agendar-correo" className="modal-label">
-                            Correo Electrónico 
+                            Correo Electrónico
                           </label>
                           <input
                             id="agendar-correo"
                             type="email"
-                              className="modal-input"
-                              style={{ border: errors.correo ? '2px solid #ef4444' : undefined }}
+                            className="modal-input"
+                            style={{ border: errors.correo ? '2px solid #ef4444' : undefined }}
                             placeholder="cliente@ejemplo.com"
-                              value={agendarCorreo}
-                              onChange={(e) => { setAgendarCorreo(e.target.value); if (errors.correo) setErrors(prev => ({ ...prev, correo: undefined })); }}
+                            value={agendarCorreo}
+                            onChange={(e) => {
+                              setAgendarCorreo(e.target.value);
+                              clearFieldError(setErrors, 'correo');
+                            }}
                             required
                           />
-                            {errors.correo && (
-                              <div style={{ color: '#ef4444', marginTop: 6, fontSize: '0.9rem' }}>{errors.correo}</div>
-                            )}
+                          <FieldError error={errors.correo} />
                         </div>
 
                         <div className="modal-grid-item">
                           <div className="modal-label">Responsable</div>
                           <div className="modal-readonly">
                             <i className="fa-solid fa-user-tie"></i>
-                            <span>{user ? `${user.firstName || ''} ${user.surname || ''}` : ''}</span>
+                            <span>
+                              {user ? `${user.firstName || ''} ${user.surname || ''}` : ''}
+                            </span>
                           </div>
                         </div>
 
                         <div className="modal-grid-item">
-                          <label htmlFor="fecha-agendamiento" className="modal-label">Fecha de agendamiento</label>
+                          <label htmlFor="fecha-agendamiento" className="modal-label">
+                            Fecha de agendamiento
+                          </label>
                           <input
                             id="fecha-agendamiento"
                             type="date"
                             className="modal-input"
                             style={{ border: errors.fechaAg ? '2px solid #ef4444' : undefined }}
                             value={agendarFechaAg}
-                            onChange={(e) => { setAgendarFechaAg(e.target.value); if (errors.fechaAg) setErrors(prev => ({ ...prev, fechaAg: undefined })); }}
+                            onChange={(e) => {
+                              setAgendarFechaAg(e.target.value);
+                              clearFieldError(setErrors, 'fechaAg');
+                            }}
                             required
                           />
-                          {errors.fechaAg && (
-                            <div style={{ color: '#ef4444', marginTop: 6, fontSize: '0.9rem' }}>{errors.fechaAg}</div>
-                          )}
+                          <FieldError error={errors.fechaAg} />
                         </div>
 
                         <div className="modal-grid-item">
-                          <label htmlFor="fecha-entrega" className="modal-label">Fecha de entrega</label>
+                          <label htmlFor="fecha-entrega" className="modal-label">
+                            Fecha de entrega
+                          </label>
                           <input
                             id="fecha-entrega"
                             type="date"
                             className="modal-input"
                             style={{ border: errors.fechaEnt ? '2px solid #ef4444' : undefined }}
                             value={agendarFechaEnt}
-                            onChange={(e) => { setAgendarFechaEnt(e.target.value); if (errors.fechaEnt) setErrors(prev => ({ ...prev, fechaEnt: undefined })); }}
+                            onChange={(e) => {
+                              setAgendarFechaEnt(e.target.value);
+                              clearFieldError(setErrors, 'fechaEnt');
+                            }}
                             required
                           />
-                          {errors.fechaEnt && (
-                            <div style={{ color: '#ef4444', marginTop: 6, fontSize: '0.9rem' }}>{errors.fechaEnt}</div>
-                          )}
+                          <FieldError error={errors.fechaEnt} />
                         </div>
                       </div>
                     </div>
 
-                    {/* Sección: Descripción */}
-                    <div style={{
-                      background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
-                      borderRadius: '14px',
-                      padding: '1.25rem',
-                      border: '1px solid #e2e8f0',
-                      marginBottom: '1rem'
-                    }}>
-                      <div style={{
-                        borderBottom: '2px solid #e2e8f0',
-                        paddingBottom: '.75rem',
-                        marginBottom: '1rem',
-                        display: 'flex', alignItems: 'center', gap: '.75rem'
-                      }}>
-                        <div style={{ width: 36, height: 36, borderRadius: 10, background: 'linear-gradient(135deg, #10b981, #059669)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
-                          <i className="fa-solid fa-edit"></i>
-                        </div>
-                        <h4 style={{ margin: 0, fontWeight: 600, color: '#1e293b' }}>Descripción del Pedido</h4>
+                    {/* Descripción */}
+                    <div style={MODAL_STYLES.section}>
+                      <div style={MODAL_STYLES.sectionHeader}>
+                        <ModalSectionIcon 
+                          icon="fa-solid fa-edit" 
+                          gradient="linear-gradient(135deg, #10b981, #059669)" 
+                        />
+                        <h4 style={MODAL_STYLES.sectionTitle}>Descripción del Pedido</h4>
                       </div>
-                      <div style={{ background: '#fff', borderRadius: 10, padding: '0.75rem', border: '2px solid #e5e7eb' }}>
+                      <div style={MODAL_STYLES.inputContainer}>
                         <TinyMCE.Editor
                           id="agendar-descripcion"
                           onInit={(evt, editor) => (descripcionRef.current = editor)}
@@ -1324,291 +1460,254 @@ function PedidosAgendados() {
                       </div>
                     </div>
 
-                    {/* Sección de productos (UI) */}
-                    <div style={{
-                      background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
-                      borderRadius: '14px',
-                      padding: '1.25rem',
-                      border: '1px solid #e2e8f0',
-                      marginTop: '1rem',
-                      marginBottom: '1rem'
-                    }}>
+                    {/* Productos */}
+                    <div style={MODAL_STYLES.section}>
                       <div style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        borderBottom: '2px solid #e2e8f0',
-                        paddingBottom: '.75rem',
-                        marginBottom: '1rem'
+                        ...MODAL_STYLES.sectionHeader,
+                        justifyContent: 'space-between'
                       }}>
-                        <h4 style={{ margin: 0, fontWeight: 600, color: '#1e293b', display: 'flex', alignItems: 'center', gap: '.75rem' }}>
-                          <div style={{ width: 36, height: 36, borderRadius: 10, background: 'linear-gradient(135deg, #f59e0b, #d97706)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
-                            <i className="fa-solid fa-box"></i>
-                          </div>
-                          Productos a agendar
-                        </h4>
-                        <div style={{ display: 'flex', gap: '.5rem' }}>
-                          <button
-                            type="button"
-                            onClick={agregarProductoAgendar}
-                            style={{
-                              padding: '.6rem 1rem',
-                              border: 'none',
-                              borderRadius: '10px',
-                              background: 'linear-gradient(135deg, #10b981, #059669)',
-                              color: '#fff', fontWeight: 600, cursor: 'pointer'
-                            }}
-                          >
-                            <i className="fa-solid fa-plus" style={{ marginRight: 8 }}></i>{' '}
-                            Agregar Producto
-                          </button>
-                          {agendarProductos.length > 0 && (
-                            <button
-                              type="button"
-                              onClick={limpiarProductosAgendados}
-                              style={{
-                                padding: '.6rem 1rem',
-                                borderRadius: '10px',
-                                border: '2px solid #ef4444',
-                                background: '#fff', color: '#ef4444', fontWeight: 600, cursor: 'pointer'
-                              }}
-                            >
-                              <i className="fa-solid fa-trash" style={{ marginRight: 8 }}></i>{' '}
-                              Limpiar Todo
-                            </button>
-                          )}
-                        </div>
-                      </div>
-
-                      {errors.productos && (
-                        <div style={{ color: '#ef4444', margin: '0.5rem 0 1rem 0', fontSize: '0.95rem' }}>{errors.productos}</div>
-                      )}
-
-                      <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', overflow: 'hidden' }}>
-                        <div style={{ overflowX: 'auto', maxHeight: 360 }}>
-                          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                            <thead>
-                              <tr style={{ background: 'linear-gradient(135deg, #f8fafc, #e2e8f0)' }}>
-                                <th style={{ padding: '0.9rem 0.75rem', textAlign: 'left', fontWeight: 600, color: '#374151', fontSize: '.9rem', borderBottom: '2px solid #e2e8f0' }}>#</th>
-                                <th style={{ padding: '0.9rem 0.75rem', textAlign: 'left', fontWeight: 600, color: '#374151', fontSize: '.9rem', borderBottom: '2px solid #e2e8f0', minWidth: 160 }}>Producto</th>
-                                <th style={{ padding: '0.9rem 0.75rem', textAlign: 'left', fontWeight: 600, color: '#374151', fontSize: '.9rem', borderBottom: '2px solid #e2e8f0', minWidth: 150 }}>Descripción</th>
-                                <th style={{ padding: '0.9rem 0.75rem', textAlign: 'center', fontWeight: 600, color: '#374151', fontSize: '.9rem', borderBottom: '2px solid #e2e8f0' }}>Cantidad</th>
-                                <th style={{ padding: '0.9rem 0.75rem', textAlign: 'center', fontWeight: 600, color: '#374151', fontSize: '.9rem', borderBottom: '2px solid #e2e8f0' }}>Valor Unit.</th>
-                                <th style={{ padding: '0.9rem 0.75rem', textAlign: 'center', fontWeight: 600, color: '#374151', fontSize: '.9rem', borderBottom: '2px solid #e2e8f0' }}>% Desc.</th>
-                                <th style={{ padding: '0.9rem 0.75rem', textAlign: 'center', fontWeight: 600, color: '#374151', fontSize: '.9rem', borderBottom: '2px solid #e2e8f0' }}>Subtotal</th>
-                                <th style={{ padding: '0.9rem 0.75rem', textAlign: 'center', fontWeight: 600, color: '#374151', fontSize: '.9rem', borderBottom: '2px solid #e2e8f0' }}>Acciones</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {agendarProductos.map((prod, index) => (
-                                <tr key={prod.uid || index} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                                  <td style={{ padding: '.8rem .75rem', color: '#64748b', fontWeight: 500 }}>{index + 1}</td>
-                                  <td style={{ padding: '.5rem .75rem' }}>
-                                    <select
-                                      className="cuadroTexto"
-                                      name="producto"
-                                      value={prod.producto || ''}
-                                      onChange={(e) => handleProductoSelectAgendar(index, e.target.value)}
-                                      style={{ border: productErrors[index]?.producto ? '2px solid #ef4444' : '2px solid #e5e7eb', borderRadius: 6, padding: '8px' }}
-                                    >
-                                      <option value="">Seleccione un producto</option>
-                                      {productosDisponibles.filter(p => p.activo !== false && p.activo !== 'false').map(p => (
-                                        <option key={p._id} value={p._id}>{p.name}</option>
-                                      ))}
-                                    </select>
-                                    {productErrors[index]?.producto && (
-                                      <div style={{ color: '#ef4444', marginTop: 6, fontSize: '0.85rem' }}>{productErrors[index].producto}</div>
-                                    )}
-                                  </td>
-                                  <td style={{ padding: '.5rem .75rem' }}>
-                                    <input
-                                      type="text"
-                                      name="descripcion"
-                                      className="cuadroTexto"
-                                      value={prod.descripcion}
-                                      onChange={(e) => handleProductoAgendarChange(index, e)}
-                                      style={{ border: '2px solid #e5e7eb', borderRadius: 6 }}
-                                    />
-                                  </td>
-                                  <td style={{ padding: '.5rem .75rem' }}>
-                                    <input
-                                      type="number"
-                                      name="cantidad"
-                                      className="cuadroTexto"
-                                      value={prod.cantidad}
-                                      onChange={(e) => handleProductoAgendarChange(index, e)}
-                                      style={{ border: productErrors[index]?.cantidad ? '2px solid #ef4444' : '2px solid #e5e7eb', borderRadius: 6, textAlign: 'center' }}
-                                    />
-                                    {productErrors[index]?.cantidad && (
-                                      <div style={{ color: '#ef4444', marginTop: 6, fontSize: '0.85rem' }}>{productErrors[index].cantidad}</div>
-                                    )}
-                                  </td>
-                                  <td style={{ padding: '.5rem .75rem' }}>
-                                    <input
-                                      type="number"
-                                      name="valorUnitario"
-                                      className="cuadroTexto"
-                                      value={prod.valorUnitario}
-                                      onChange={(e) => handleProductoAgendarChange(index, e)}
-                                      readOnly
-                                      style={{ border: productErrors[index]?.valorUnitario ? '2px solid #ef4444' : '2px solid #e5e7eb', borderRadius: 6, textAlign: 'center' }}
-                                    />
-                                    {productErrors[index]?.valorUnitario && (
-                                      <div style={{ color: '#ef4444', marginTop: 6, fontSize: '0.85rem' }}>{productErrors[index].valorUnitario}</div>
-                                    )}
-                                  </td>
-                                  <td style={{ padding: '.5rem .75rem' }}>
-                                    <input
-                                      type="number"
-                                      name="descuento"
-                                      className="cuadroTexto"
-                                      value={prod.descuento}
-                                      onChange={(e) => handleProductoAgendarChange(index, e)}
-                                      style={{ border: '2px solid #e5e7eb', borderRadius: 6, textAlign: 'center' }}
-                                    />
-                                  </td>
-                                  <td style={{ padding: '.5rem .75rem' }}>
-                                    <input
-                                      type="number"
-                                      name="subtotal"
-                                      className="cuadroTexto"
-                                      value={prod.subtotal}
-                                      readOnly
-                                      style={{ border: '2px solid #e5e7eb', borderRadius: 6, textAlign: 'center', backgroundColor: '#f8fafc', fontWeight: 600, color: '#059669' }}
-                                    />
-                                  </td>
-                                  <td style={{ padding: '.5rem .75rem', textAlign: 'center' }}>
-                                    <button
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '.75rem'
+                        }}>
+                                      <ModalSectionIcon 
+                                      icon="fa-solid fa-boxes" 
+                                      gradient="linear-gradient(135deg, #f59e0b, #ea580c)" 
+                                      />
+                                      <h4 style={MODAL_STYLES.sectionTitle}>Productos del Pedido</h4>
+                                    </div>
+                                    <div style={{ display: 'flex', gap: '8px' }}>
+                                      <button
                                       type="button"
-                                      onClick={() => eliminarProductoAgendar(index)}
                                       style={{
-                                        padding: '.5rem', border: 'none', borderRadius: 6, background: '#ef4444', color: '#fff', cursor: 'pointer', width: '2rem', height: '2rem'
+                                        ...BUTTON_STYLES.success,
+                                        padding: '0.5rem 1rem',
+                                        fontSize: '0.9rem'
                                       }}
+                                      onClick={agregarProductoAgendar}
+                                      >
+                                      <i className="fa-solid fa-plus" style={{ marginRight: '6px' }}></i>
+                                      Agregar
+                                      </button>
+                                      {agendarProductos.length > 0 && (
+                                      <button
+                                        type="button"
+                                        style={{
+                                        ...BUTTON_STYLES.cancel,
+                                        padding: '0.5rem 1rem',
+                                        fontSize: '0.9rem'
+                                        }}
+                                        onClick={limpiarProductosAgendados}
+                                      >
+                                        <i className="fa-solid fa-trash" style={{ marginRight: '6px' }}></i>
+                                        Limpiar
+                                      </button>
+                                      )}
+                                    </div>
+                                    </div>
+                                    
+                                    {errors.productos && (
+                                    <div style={{ color: '#ef4444', marginBottom: '1rem', fontSize: '0.9rem' }}>
+                                      {errors.productos}
+                                    </div>
+                                    )}
+
+                                    {agendarProductos.length > 0 && (
+                                    <div style={{ overflow: 'auto' }}>
+                                      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                      <thead>
+                                        <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
+                                        <th style={{ padding: '0.75rem', textAlign: 'left', fontSize: '0.85rem' }}>
+                                          Producto
+                                        </th>
+                                        <th style={{ padding: '0.75rem', textAlign: 'left', fontSize: '0.85rem' }}>
+                                          Descripción
+                                        </th>
+                                        <th style={{ padding: '0.75rem', textAlign: 'center', fontSize: '0.85rem' }}>
+                                          Cantidad
+                                        </th>
+                                        <th style={{ padding: '0.75rem', textAlign: 'right', fontSize: '0.85rem' }}>
+                                          Valor Unit.
+                                        </th>
+                                        <th style={{ padding: '0.75rem', textAlign: 'center', fontSize: '0.85rem' }}>
+                                          Desc. %
+                                        </th>
+                                        <th style={{ padding: '0.75rem', textAlign: 'right', fontSize: '0.85rem' }}>
+                                          Subtotal
+                                        </th>
+                                        <th style={{ padding: '0.75rem', textAlign: 'center', fontSize: '0.85rem' }}>
+                                          Acción
+                                        </th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {agendarProductos.map((prod, idx) => (
+                                        <tr key={prod.uid} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                                          <td style={{ padding: '0.75rem' }}>
+                                          <select
+                                            className="modal-input"
+                                            style={{ 
+                                            border: productErrors[idx]?.producto ? '2px solid #ef4444' : undefined,
+                                            minWidth: '150px'
+                                            }}
+                                            value={prod.producto}
+                                            onChange={(e) => handleProductoSelectAgendar(idx, e.target.value)}
+                                          >
+                                            <option value="">Seleccionar...</option>
+                                            {productosDisponibles.map((p) => (
+                                            <option key={p._id || p.id} value={p._id || p.id}>
+                                              {p.name}
+                                            </option>
+                                            ))}
+                                          </select>
+                                          <FieldError error={productErrors[idx]?.producto} />
+                                          </td>
+                                          <td style={{ padding: '0.75rem' }}>
+                                          <input
+                                            type="text"
+                                            className="modal-input"
+                                            placeholder="Descripción"
+                                            name="descripcion"
+                                            value={prod.descripcion}
+                                            onChange={(e) => handleProductoAgendarChange(idx, e)}
+                                            style={{ minWidth: '150px' }}
+                                          />
+                                          </td>
+                                          <td style={{ padding: '0.75rem' }}>
+                                          <input
+                                            type="number"
+                                            className="modal-input"
+                                            style={{ 
+                                            border: productErrors[idx]?.cantidad ? '2px solid #ef4444' : undefined,
+                                            textAlign: 'center',
+                                            width: '80px'
+                                            }}
+                                            placeholder="0"
+                                            name="cantidad"
+                                            value={prod.cantidad}
+                                            onChange={(e) => handleProductoAgendarChange(idx, e)}
+                                            min="0"
+                                            step="1"
+                                          />
+                                          <FieldError error={productErrors[idx]?.cantidad} />
+                                          </td>
+                                          <td style={{ padding: '0.75rem' }}>
+                                          <input
+                                            type="number"
+                                            className="modal-input"
+                                            style={{ 
+                                            border: productErrors[idx]?.valorUnitario ? '2px solid #ef4444' : undefined,
+                                            textAlign: 'right',
+                                            width: '100px'
+                                            }}
+                                            placeholder="0.00"
+                                            name="valorUnitario"
+                                            value={prod.valorUnitario}
+                                            onChange={(e) => handleProductoAgendarChange(idx, e)}
+                                            min="0"
+                                            step="0.01"
+                                          />
+                                          <FieldError error={productErrors[idx]?.valorUnitario} />
+                                          </td>
+                                          <td style={{ padding: '0.75rem' }}>
+                                          <input
+                                            type="number"
+                                            className="modal-input"
+                                            style={{ textAlign: 'center', width: '70px' }}
+                                            placeholder="0"
+                                            name="descuento"
+                                            value={prod.descuento}
+                                            onChange={(e) => handleProductoAgendarChange(idx, e)}
+                                            min="0"
+                                            max="100"
+                                            step="0.01"
+                                          />
+                                          </td>
+                                          <td style={{ padding: '0.75rem', textAlign: 'right', fontWeight: '600' }}>
+                                          {prod.subtotal ? 
+                                            Number.parseFloat(prod.subtotal).toLocaleString('es-CO', {
+                                            minimumFractionDigits: 2,
+                                            maximumFractionDigits: 2
+                                            }) : '0.00'}
+                                          </td>
+                                          <td style={{ padding: '0.75rem', textAlign: 'center' }}>
+                                          <button
+                                            type="button"
+                                            onClick={() => eliminarProductoAgendar(idx)}
+                                            style={{
+                                            background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+                                            color: '#fff',
+                                            border: 'none',
+                                            borderRadius: '6px',
+                                            padding: '0.4rem 0.6rem',
+                                            cursor: 'pointer',
+                                            fontSize: '0.85rem'
+                                            }}
+                                          >
+                                            <i className="fa-solid fa-trash"></i>
+                                          </button>
+                                          </td>
+                                        </tr>
+                                        ))}
+                                      </tbody>
+                                      </table>
+                                    </div>
+                                    )}
+                                  </div>
+
+                                  {/* Condiciones de Pago */}
+                                  <div style={MODAL_STYLES.section}>
+                                    <div style={MODAL_STYLES.sectionHeader}>
+                                    <ModalSectionIcon 
+                                      icon="fa-solid fa-file-contract" 
+                                      gradient="linear-gradient(135deg, #8b5cf6, #6366f1)" 
+                                    />
+                                    <h4 style={MODAL_STYLES.sectionTitle}>Condiciones de Pago</h4>
+                                    </div>
+                                    <div style={MODAL_STYLES.inputContainer}>
+                                    <TinyMCE.Editor
+                                      id="agendar-condiciones"
+                                      onInit={(evt, editor) => (condicionesRef.current = editor)}
+                                      apiKey="2o32797pg92f9dkmfu7lag00dumqni4pik6xv30ds3v5nq9o"
+                                      textareaName="Condiciones"
+                                      init={{ height: 200, menubar: false }}
+                                    />
+                                    </div>
+                                  </div>
+
+                                  {/* Footer con botones */}
+                                  <div style={{ 
+                                    display: 'flex', 
+                                    justifyContent: 'flex-end', 
+                                    gap: '12px',
+                                    marginTop: '1.5rem',
+                                    paddingTop: '1rem',
+                                    borderTop: '2px solid #e5e7eb'
+                                  }}>
+                                    <button
+                                    type="button"
+                                    style={BUTTON_STYLES.cancel}
+                                    onClick={() => setMostrarModalAgendar(false)}
                                     >
-                                      <i className="fa-solid fa-trash"></i>
+                                    <i className="fa-solid fa-times" style={{ marginRight: '6px' }}></i>
+                                    Cancelar
                                     </button>
-                                  </td>
-                                </tr>
-                              ))}
-
-                              {agendarProductos.length === 0 && (
-                                <tr>
-                                  <td colSpan={8} style={{ padding: '1.25rem', textAlign: 'center', color: '#64748b', fontStyle: 'italic' }}>
-                                    No hay productos agregados. Haga clic en "Agregar Producto" para comenzar.
-                                  </td>
-                                </tr>
+                                    <button
+                                    type="button"
+                                    style={BUTTON_STYLES.success}
+                                    onClick={handleGuardarAgendar}
+                                    >
+                                    <i className="fa-solid fa-save" style={{ marginRight: '6px' }}></i>
+                                    Guardar Pedido
+                                    </button>
+                                  </div>
+                                  </div>
+                                </div>
+                                </div>
                               )}
+                              </div>
+                            </div>
+                            </div>
+                          </div>
+                          );
+                        }
 
-                              {agendarProductos.length > 0 && (
-                                <tr style={{ background: 'linear-gradient(135deg, #f8fafc, #e2e8f0)' }}>
-                                  <td colSpan={6} style={{ padding: '0.9rem .75rem', fontWeight: 700, textAlign: 'right', color: '#1e293b' }}>Total General:</td>
-                                  <td style={{ padding: '0.9rem .75rem', fontWeight: 700, textAlign: 'center', color: '#059669' }}>
-                                    {agendarProductos.reduce((acc, p) => acc + (Number.parseFloat(p.subtotal) || 0), 0).toLocaleString('es-CO', { minimumFractionDigits: 2 })}
-                                  </td>
-                                  <td></td>
-                                </tr>
-                              )}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Sección: Condiciones/Observaciones */}
-                    <div style={{
-                      background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
-                      borderRadius: '14px',
-                      padding: '1.25rem',
-                      border: '1px solid #e2e8f0',
-                      marginBottom: '1rem'
-                    }}>
-                      <div style={{ borderBottom: '2px solid #e2e8f0', paddingBottom: '.75rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '.75rem' }}>
-                        <div style={{ width: 36, height: 36, borderRadius: 10, background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
-                          <i className="fa-solid fa-clipboard-list"></i>
-                        </div>
-                        <h4 style={{ margin: 0, fontWeight: 600, color: '#1e293b' }}>Condiciones de pago</h4>
-                      </div>
-                      <div style={{ background: '#fff', borderRadius: 10, padding: '0.75rem', border: '2px solid #e5e7eb' }}>
-                        <TinyMCE.Editor
-                          id="agendar-condiciones"
-                          onInit={(evt, editor) => (condicionesRef.current = editor)}
-                          apiKey="2o32797pg92f9dkmfu7lag00dumqni4pik6xv30ds3v5nq9o"
-                          textareaName="Condiciones"
-                          init={{ height: 260, menubar: false }}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Botones de acción (sin lógica) */}
-                    <div style={{
-                      background: '#fff',
-                      borderRadius: '12px',
-                      padding: '1rem',
-                      border: '1px solid #e2e8f0',
-                      display: 'flex',
-                      justifyContent: 'flex-end',
-                      gap: '.75rem'
-                    }}>
-                      <button
-                        type="button"
-                        onClick={() => setMostrarModalAgendar(false)}
-                        style={{
-                          padding: '0.7rem 1.25rem',
-                          border: '2px solid #e5e7eb',
-                          borderRadius: '10px',
-                          background: '#fff',
-                          color: '#374151',
-                          fontWeight: 600,
-                          cursor: 'pointer'
-                        }}
-                      >
-                        Cancelar
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={handleGuardarAgendar}
-                        style={{
-                          padding: '0.7rem 1.4rem',
-                          borderRadius: '10px',
-                          border: 'none',
-                          background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-                          color: '#fff',
-                          fontWeight: 600,
-                          cursor: 'pointer'
-                        }}
-                      >
-                        Agendar
-                      </button>
-
-                      <button
-                        type="button"
-                        style={{
-                          padding: '0.7rem 1.4rem',
-                          borderRadius: '10px',
-                          border: 'none',
-                          background: 'linear-gradient(135deg, #10b981, #059669)',
-                          color: '#fff',
-                          fontWeight: 600,
-                          cursor: 'pointer'
-                        }}
-                      >
-                        Agendar y Enviar
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-      <div className="custom-footer">
-        <p className="custom-footer-text">
-          © 2025 <span className="custom-highlight">PANGEA</span>. Todos los derechos reservados.
-        </p>
-      </div>
-    </div>
-  );
-}
-export default PedidosAgendados;
+                        export default PedidosAgendados;
