@@ -43,20 +43,17 @@ Para cada atributo se definen objetivos, métricas (SLI), metas (SLO) y métodos
 
 ### 2.3. Seguridad
 - Objetivo: proteger confidencialidad, integridad y disponibilidad.
-- Controles clave:
-  - Autenticación: JWT (expiración ≤ 24h), rotación/invalidación en logout.
-  - Autorización: verificación de permisos por ruta (`roles.*`, `usuarios.*`, etc.) con middleware consistente.
-  - Transporte: HTTPS obligatorio en prod, CORS restringido por origen.
-  - Almacenamiento de secretos: variables de entorno, nunca en el repo.
-  - Validación de entradas: validación de esquema a nivel API (celebrate/Joi o zod) y sanitización contra XSS/NoSQL injection.
-  - Cabeceras de seguridad: Helmet.
-  - Rate limiting: por IP y por token en endpoints sensibles.
-  - Hash de contraseñas: bcrypt con salt robusto.
-  - Auditoría: registro de acciones privilegiadas (creación/edición de roles, usuarios, remisiones, etc.).
-- SLI/SLO:
-  - Incidentes de severidad alta sin parche > 48h: 0.
-  - Vulnerabilidades críticas abiertas (npm audit/Snyk): 0.
-- Verificación: escaneo de dependencias (SCA), pruebas de seguridad (OWASP), revisión de permisos.
+- Controles implementados:
+  - **Autenticación JWT**: bcryptjs para hash de contraseñas con salt factor 10
+  - **Autorización basada en roles**: Middleware `authJwt.js` y `role.js` verifican permisos por ruta
+  - **Transporte seguro**: CORS configurado con orígenes permitidos (localhost y pangea.casacam.net); HTTPS en producción
+  - **Gestión de secretos**: Variables de entorno con dotenv (MongoDB URI, JWT secret, API keys)
+  - **Validación de entradas**: express-validator + express-mongo-sanitize contra NoSQL injection
+  - **Cabeceras de seguridad**: Helmet configurado en `server.js`
+  - **Rate limiting**: express-rate-limit con trust proxy para IPs reales
+  - **Sanitización HTML**: sanitize-html para prevenir XSS en contenido rico
+  - **Validación de email**: Regex robusto contra catastrophic backtracking en modelo Cliente
+- Verificación: npm audit disponible para escaneo de dependencias vulnerables
 
 ### 2.4. Mantenibilidad
 - Objetivo: facilitar cambios seguros y rápidos.
@@ -76,28 +73,43 @@ Para cada atributo se definen objetivos, métricas (SLI), metas (SLO) y métodos
 
 ### 2.6. Compatibilidad y portabilidad
 - Objetivo: facilidad para desplegar y operar en entornos equivalentes.
-- Metas:
-  - 12-Factor: configuración por variables de entorno.
-  - Paridad de entornos: staging ≈ prod (versión de Node, Mongo, flags de compilación).
-- Verificación: scripts de arranque estandarizados; `.env.example` actualizado.
+- Implementación:
+  - **12-Factor App**: Configuración completa por variables de entorno (dotenv)
+    - Backend: MONGODB_URI, JWT_SECRET, PORT, NODE_ENV, CORS origins, SendGrid API key
+    - Frontend: REACT_APP_API_URL (proxy), NODE_ENV
+  - **Paridad de entornos**: Docker Compose garantiza mismas versiones
+    - MongoDB: 7.0
+    - Node: LTS (especificado en Dockerfile)
+    - Dependencias: package-lock.json versionado
+  - **Containerización**: Dockerfiles optimizados para backend y frontend
+  - **Scripts estandarizados**: `npm run dev`, `npm run backend`, `npm run frontend`
 
 
 ## 3. Requisitos no funcionales por capa
 
 ### 3.1. Backend (Express + MongoDB)
-- Tiempo de respuesta objetivo (p95):
-  - CRUD típicos: ≤ 400 ms.
-  - Endpoints pesados (PDF/email/reportes): ≤ 1200 ms.
-- Concurrencia: soportar ≥ 50 req/s sostenidas en hardware estándar (tunning de pool Mongo, keep-alive, compresión).
-- Resiliencia:
-  - Timeouts para llamadas externas (p. ej., correo, PDF) ≤ 10 s; reintentos con backoff exponencial (3 intentos).
-  - Apagado elegante con cierre de conexiones Mongo.
-- Datos:
-  - Índices en campos de búsqueda/relación (ej.: `Pedido.numero`, `Cliente.nit`, `Products.codigo`).
-  - Validación con Mongoose; migraciones versionadas para cambios de esquema.
-- Seguridad:
-  - Middlewares: `helmet`, `cors` restringido, `rate-limit` y `express-mongo-sanitize`.
-  - Verificación consistente de permisos por endpoint.
+
+**Rendimiento:**
+- Mediciones de carga disponibles con wrk en `/wrk/resultados_wrk_*`
+- Pruebas de concurrencia realizadas sobre endpoints principales
+
+**Resiliencia:**
+- Apagado elegante con cierre de conexiones Mongo en señales SIGTERM/SIGINT
+- Healthchecks configurados en Docker Compose
+
+**Gestión de datos:**
+- **Índices en campos clave**:
+  - User: username, email (unique)
+  - Category: name (unique con gestión de índices problemáticos)
+  - Product: name (unique), category, proveedor (refs)
+  - Pedido: numeroPedido (unique)
+  - Remision: numeroRemision (unique), estado, fechaRemision, cliente.nombre
+  - Cliente: correo (unique con validación regex robusta)
+- **Validación Mongoose**: Esquemas completos con validadores, tipos y mensajes de error
+
+**Seguridad:**
+- Middlewares: `helmet`, `cors` restringido, `express-rate-limit`, `express-mongo-sanitize`
+- Verificación de permisos: Middleware `authJwt` y `role` en rutas protegidas
 
 ### 3.2. Frontend (React)
 - Cliente HTTP único (`src/api/axiosConfig.js`) con:
@@ -124,31 +136,33 @@ Para cada atributo se definen objetivos, métricas (SLI), metas (SLO) y métodos
 
 ## 5. Estrategia de pruebas (Test Pyramid)
 
-- Unitarias (rápidas):
-  - Backend: Jest + ts-jest (si se migra a TS) o Jest puro; mocks de Mongoose.
-  - Frontend: Jest + React Testing Library.
-  - Meta: cobertura global ≥ 70%.
-- Integración:
-  - Backend: Supertest sobre Express; Mongo en memoria (mongodb-memory-server) o contenedor.
-  - Casos: auth, permisos, flujos de ventas/pedidos/remisiones.
-- End-to-End:
-  - Playwright o Cypress: flujos críticos (login, CRUD productos, creación de pedido, remisionar).
-  - Meta: suites críticas ejecutan en CI nocturna y antes de releases.
-- No funcionales:
-  - Carga: k6/JMeter sobre endpoints más usados; metas de p95 definidas.
-  - Seguridad: ZAP baseline; `npm audit`/Snyk; secret scanning.
+### End-to-End (Playwright)
+- **16 suites de pruebas E2E** cubriendo flujos críticos:
+  - Login, usuarios, roles y permisos
+  - Clientes (lista y prospectos)
+  - Cotizaciones (registro y listado)
+  - Pedidos (agendados, entregados, cancelados)
+  - Productos, categorías, proveedores
+  - Órdenes de compra e historial de compras
+- Configuración en `playwright.config.ts` con reporters y retries
+- Scripts disponibles: `npm run test:e2e`, `npm run test:e2e:ui`, `npm run test:verify`
+- Verificación previa de servicios con `verificar-servicios.ps1`
+- Documentación completa en `TESTS_README.md` y `EJECUTAR_TESTS.md`
+
+### Pruebas de rendimiento
+- Herramienta `wrk` configurada en `/wrk` con scripts de pruebas de carga
+- Resultados almacenados en `/wrk/resultados_wrk_*`
 
 
 ## 6. Observabilidad y operatividad
 
-- Logging estructurado (pino/winston): nivel, timestamp, traceId, userId, permiso invocado.
-- Correlación:
-  - Inyectar `X-Request-Id` en API; middleware para propagar `req.id` y loggear por petición.
-- Métricas (Prometheus):
-  - Latencia y tasa por ruta, errores por código HTTP, uso de heap/CPU, conexiones Mongo.
-- Salud:
-  - `/health` (rápido) y `/ready` (dependencias: Mongo conectada).
-- Trazas (opcional): OpenTelemetry para endpoints críticos.
+### Logging
+- Morgan implementado para logging HTTP básico de todas las peticiones
+- Logs de nivel aplicación con console en desarrollo
+
+### Endpoints de salud
+- `GET /health`: retorna `{status: 'ok', time: <timestamp>}` (respuesta rápida para healthchecks)
+- `GET /ready`: verifica estado de conexión Mongoose, retorna 200 si conectado o 503 si no disponible
 
 
 ## 7. Seguridad y cumplimiento (OWASP/ASVS)
@@ -167,17 +181,25 @@ Para cada atributo se definen objetivos, métricas (SLI), metas (SLO) y métodos
 
 ## 8. Gestión de configuración y despliegue (CI/CD)
 
-- CI (GitHub Actions/GitLab CI sugerido):
-  1) Instalar dependencias (Node LTS, cache).
-  2) Lint + formateo (ESLint/Prettier).
-  3) Pruebas unitarias + cobertura.
-  4) Pruebas de integración backend con Mongo en memoria.
-  5) Build frontend.
-  6) Security scan (npm audit/Snyk) y CodeQL opcional.
-- CD:
-  - Despliegues automatizados por tag `v*` a staging; despliegue a prod con aprobación manual.
-  - Variables por entorno (DB URI, JWT secret, CORS origins, API URL).
-- Feature flags (opcional) para cambios de alto riesgo.
+### Integración Continua (GitHub Actions)
+- Pipeline en `.github/workflows/playwright.yml`:
+  - Instalación de dependencias con Node LTS y npm ci
+  - Instalación de navegadores Playwright
+  - Ejecución de tests E2E completos
+  - Publicación de reportes como artefactos (30 días retención)
+  - Triggers: push y PR a main/master
+
+### Despliegue Continuo (Docker)
+- **Arquitectura de contenedores**:
+  - MongoDB 7.0 con healthcheck configurado
+  - Backend: Node/Express (imagen `cskcreations/pangea-backend:latest`)
+  - Frontend: React + Nginx (imagen `cskcreations/pangea-frontend:latest`)
+- **Configuración**:
+  - Proxy inverso Nginx para rutas `/api/*` → backend:5000
+  - Variables de entorno vía docker-compose.yml
+  - Networking interno entre servicios
+- **Producción**: http://pangea.casacam.net (VM Ubuntu)
+- **Documentación**: `DEPLOYMENT.md` con pasos completos de despliegue
 
 
 ## 9. Gestión de versiones y ramas
@@ -191,21 +213,37 @@ Para cada atributo se definen objetivos, métricas (SLI), metas (SLO) y métodos
 
 ## 10. Estándares de código y documentación
 
-- Estilo: ESLint + Prettier en todo el monorepo (backend y frontend).
-- Formato: pre-commit hooks (Husky) ejecutan lint y pruebas rápidas.
-- Documentación:
-  - `README.md` actualizado (arranque, variables, scripts).
-  - `QUALITY_MODEL.md` (este documento) y `CONTRIBUTING.md`.
-  - API: OpenAPI con ejemplos.
+### Estilo de código
+- ESLint configurado en frontend (`eslintConfig` en package.json)
+- Configuración para React app con globals definidos
+
+### Documentación del proyecto
+- **Documentos principales**:
+  - `README.md`: Documentación principal del proyecto
+  - `QUALITY_MODEL.md`: Este documento de modelo de calidad
+  - `TESTS_README.md`: Guía completa de ejecución de tests E2E
+  - `EJECUTAR_TESTS.md`: Instrucciones detalladas de testing
+  - `DEPLOYMENT.md`: Guía de despliegue con Docker y pasos para VM
+  - `PERMISOS_SISTEMA.md`: Documentación del sistema de permisos
+  - `backend/README.md`: Documentación específica del backend
+- **Scripts de verificación**: `verificar-servicios.ps1` para validar que servicios estén listos
 
 
 ## 11. Gestión de datos y backups
 
-- MongoDB:
-  - Índices en campos de búsqueda; revisión trimestral de performance.
-  - Backups diarios (full) y horarios (incrementales) en producción.
-  - RPO ≤ 24h; RTO ≤ 4h.
-  - Entornos no productivos con datos anonimizados.
+### MongoDB
+- **Índices definidos en modelos**:
+  - User: username, email (unique)
+  - Category: name (unique con gestión de índices problemáticos)
+  - Product: name (unique), category, proveedor (referencias)
+  - Pedido: numeroPedido (unique)
+  - Remision: numeroRemision (unique), estado, fechaRemision, cliente.nombre
+  - Cliente: correo (unique con validación)
+
+### Sistema de backups
+- Scripts en `/backup-pangea`: `backup.bat` y `restore.bat` para Windows
+- Respaldos almacenados en `/backend/backups/` con timestamps
+- Documentación en `backup-pangea/backup.md`
 
 
 ## 12. Presupuestos y fórmulas de calidad
@@ -227,28 +265,57 @@ Para cada atributo se definen objetivos, métricas (SLI), metas (SLO) y métodos
 - Fugas de token en localStorage: rotación, expiraciones cortas, revisión de XSS.
 
 
-## 14. Roadmap de mejora (priorizado)
+## 14. Pilares de calidad implementados
 
-1) Corto plazo (1-2 sprints):
-   - Añadir Helmet, rate-limiter y validación de esquemas.
-   - Establecer CI con lint, tests y `npm audit` obligatorio.
-   - Endpoint `/health` y `/ready` + logs estructurados.
-   - Coverage mínimo del 60-70% en módulos críticos.
-2) Medio plazo (3-5 sprints):
-   - OpenAPI + portal de documentación.
-   - Pruebas E2E (Cypress/Playwright) de flujos críticos.
-   - Índices y perfilado de queries en Mongo.
-   - Caching de listas y catálogos.
-3) Largo plazo:
-   - Observabilidad completa (métricas y trazas), colas para trabajos pesados, hardening de seguridad (SAST/DAST), accesibilidad AA en todas las vistas.
+### Testing automatizado
+- 16 suites E2E con Playwright cubriendo flujos críticos de negocio
+- CI/CD con GitHub Actions ejecutando tests en cada push/PR
+- Scripts de verificación de servicios antes de ejecución
+- Herramientas de pruebas de carga (wrk) con resultados documentados
+
+### Seguridad en profundidad
+- Autenticación JWT con bcrypt para contraseñas
+- Autorización granular basada en roles y permisos
+- Múltiples capas de protección: Helmet, CORS, rate-limiting, sanitización
+- Validación robusta de entradas (express-validator, Mongoose schemas)
+- Gestión segura de secretos vía variables de entorno
+
+### Observabilidad
+- Endpoints de salud para healthchecks y readiness
+- Logging HTTP con Morgan
+- Healthchecks de MongoDB en Docker Compose
+
+### Infraestructura como código
+- Dockerfiles optimizados para backend y frontend
+- Docker Compose con networking y healthchecks
+- Configuración 12-Factor con variables de entorno
+- Imágenes versionadas en Docker Hub
+
+### Gestión de datos
+- Índices estratégicos en colecciones MongoDB
+- Validaciones a nivel de esquema con Mongoose
+- Sistema de backups con scripts documentados
+
+### Documentación
+- 7 documentos técnicos cubriendo testing, despliegue y permisos
+- Scripts de automatización documentados
+- READMEs específicos por componente
 
 
 ## 15. Puertas de calidad (Quality Gates)
 
-- Build: debe compilar backend y frontend sin errores. Estado: pendiente de CI.
-- Lint/Typecheck: ESLint sin errores; si se migra a TS, `tsc --noEmit` debe pasar.
-- Tests: unitarios e integración con cobertura mínima. Fallo de cualquiera bloquea merge.
-- Seguridad: `npm audit` sin críticas; dependencias vulnerables bloquean merge.
+### Tests E2E
+- 16 suites Playwright ejecutándose automáticamente en CI (GitHub Actions)
+- Triggers en push y pull requests a main/master
+- Reportes publicados como artefactos con retención de 30 días
+- Fallo de tests bloquea el merge
+
+### Build
+- Backend: Node/Express arranca sin errores
+- Frontend: React build funciona (react-scripts build)
+
+### Lint
+- ESLint configurado en frontend con reglas react-app
 
 
 ## 16. Checklist de PR
