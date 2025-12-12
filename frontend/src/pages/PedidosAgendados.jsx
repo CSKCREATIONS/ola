@@ -303,7 +303,7 @@ PedidoRow.propTypes = {
   cancelarPedido: PropTypes.func.isRequired,
 };
 
-export default function PedidosAgendados() {
+function PedidosAgendados() {
   const [pedidos, setPedidos] = useState([]);
   const [mostrarModalAgendar, setMostrarModalAgendar] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -1611,3 +1611,4 @@ export default function PedidosAgendados() {
     </div>
   );
 }
+export default PedidosAgendados;

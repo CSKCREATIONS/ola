@@ -6,7 +6,7 @@ const { validateObjectIdParam } = require('../utils/objectIdValidator');
 const { normalizeCotizacionProductos } = require('../utils/normalize');
 const cotizacionController = require('../controllers/cotizacionControllers');
 const Cotizacion = require('../models/cotizaciones');
-const Product = require('../models/Product');
+const Product = require('../models/Products');
 
 // ========================================
 // HELPERS
