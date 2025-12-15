@@ -10,7 +10,7 @@ test('crear-rol', async ({ page, browserName }) => {
   await page.getByRole('button', { name: 'Iniciar sesión' }).click();
   await page.getByRole('link', { name: '🛡️ Roles y permisos' }).click();
 
-  const roleName = `Supervisor ${browserName}`;
+  const roleName = `Supervisori ${browserName}`;
   await page.getByRole('button', { name: 'Crear Rol' }).click();
   await page.getByPlaceholder('Ej: Administrador, Vendedor,').click();
   await page.getByPlaceholder('Ej: Administrador, Vendedor,').fill(roleName);

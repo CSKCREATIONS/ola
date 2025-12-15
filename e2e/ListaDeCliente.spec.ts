@@ -21,7 +21,7 @@ test.afterEach(async ({ page }, testInfo) => {
 
 // Helper para login UI
 async function loginAndNavigate(page: Page) {
-  await page.goto('http://localhost:3000/');
+  await page.goto('/');
   await page.getByRole('textbox', { name: 'Usuario' }).fill('admin');
   await page.getByRole('textbox', { name: 'Contraseña' }).fill('admin123');
   await page.getByRole('button', { name: 'Iniciar sesión' }).click();
@@ -143,7 +143,7 @@ test.describe('Lista de Clientes - Tests básicos', () => {
     const page2Btn = page.getByRole('button', { name: '2', exact: true });
     if (await page2Btn.count() > 0) {
       await page2Btn.click();
-      await expect(page.getByRole('button', { name: '2' })).toBeVisible();
+      await expect(page.getByRole('button', { name: '2', exact: true })).toBeVisible();
     }
   });
 });

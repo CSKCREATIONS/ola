@@ -5,7 +5,7 @@ test.setTimeout(60000);
 
 // Helper para login reutilizable
 async function loginAndNavigate(page: Page) {
-  await page.goto('http://localhost:3000/');
+  await page.goto('/');
   await page.getByRole('textbox', { name: 'Usuario' }).fill('admin');
   await page.getByRole('textbox', { name: 'Contraseña' }).fill('admin123');
   await page.getByRole('button', { name: 'Iniciar sesión' }).click();

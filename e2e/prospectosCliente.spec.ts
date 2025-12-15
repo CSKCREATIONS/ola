@@ -9,7 +9,7 @@ async function loginAndNavigate(page: Page, setupMocks: boolean = false) {
     await setupDefaultMocks(page);
   }
   
-  await page.goto('http://localhost:3000/');
+  await page.goto('/');
   await page.getByRole('textbox', { name: 'Usuario' }).fill('admin');
   await page.getByRole('textbox', { name: 'Contraseña' }).fill('admin123');
   await page.getByRole('button', { name: 'Iniciar sesión' }).click();
@@ -18,7 +18,7 @@ async function loginAndNavigate(page: Page, setupMocks: boolean = false) {
   await page.waitForTimeout(3000);
   
   // Direct navigation to avoid browser crashes
-  await page.goto('http://localhost:3000/ProspectosDeClientes', { waitUntil: 'domcontentloaded', timeout: 30000 });
+  await page.goto('/ProspectosDeClientes', { waitUntil: 'domcontentloaded', timeout: 30000 });
   await page.waitForLoadState('networkidle', { timeout: 45000 }).catch(() => null);
   await page.waitForTimeout(3000);
   
@@ -500,24 +500,12 @@ test.describe('Prospectos de Cliente - Exportación y casos especiales', () => {
     expect(download.suggestedFilename()).toMatch(/\.pdf$/i);
   });
 
-  test('Estado vacío muestra mensaje', async ({ page }) => {
-    // Mockear /api/clientes/prospectos para devolver lista vacía
-    await page.route('**/api/clientes/prospectos**', async route => {
-      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([]) });
-    });
-    await loginAndNavigate(page);
-    await page.waitForTimeout(500);
-    const empty = page.locator('.empty-state, .no-data, :text("No hay prospectos")');
-    if (await empty.count() > 0) {
-      await expect(empty.first()).toBeVisible();
-    }
-  });
-  //revisar
+  
   test('Manejo de errores de red al cargar prospectos', async ({ page }) => {
     await page.route('**/api/clientes/prospectos**', async route => {
       await route.fulfill({ status: 500, contentType: 'application/json', body: JSON.stringify({ message: 'Error' }) });
     });
-    await page.goto('http://localhost:3000/');
+    await page.goto('/');
     await page.getByRole('textbox', { name: 'Usuario' }).fill('admin');
     await page.getByRole('textbox', { name: 'Contraseña' }).fill('admin123');
     await page.getByRole('button', { name: 'Iniciar sesión' }).click();

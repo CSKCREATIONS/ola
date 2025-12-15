@@ -94,7 +94,7 @@ test('eliminarOrden', async ({ page }) => {
   await page.getByRole('button', { name: 'Iniciar sesión' }).click();
   await page.getByRole('link', { name: '🧾 Orden de compra' }).click();
   //Seleccionar la orden de compra que se desea eliminar
-  await page.getByRole('row', { name: 'OC-1764550871666-SHSzZoUV8' }).getByLabel('Eliminar orden').click();
+  await page.getByRole('row', { name: 'OC-1764551051756-PXOdqonW7' }).getByLabel('Eliminar orden').click();
   await page.getByRole('button', { name: 'Sí, eliminar' }).click();
   await expect(page.getByText('La orden ha sido eliminada')).toBeVisible();
   await page.getByRole('button', { name: 'OK' }).click();
@@ -145,7 +145,8 @@ test('aprobarOrden', async ({ page }) => {
   await page.getByRole('textbox', { name: 'Contraseña' }).press('Enter');
   await page.getByRole('button', { name: 'Iniciar sesión' }).click();
   await page.getByRole('link', { name: '🧾 Orden de compra' }).click();
-  await page.getByRole('button', { name: 'Pendiente' }).nth(4).click();
+  await page.getByRole('button', { name: 'Pendiente' }).nth(1).click();
   await page.getByRole('button', { name: 'Marcar como Completada' }).click();
   await page.getByRole('button', { name: 'OK' }).click();
+  
 })

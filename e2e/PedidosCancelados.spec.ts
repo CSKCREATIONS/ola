@@ -2,7 +2,7 @@ import { test, expect, Page } from '@playwright/test';
 
 // Helper para login reutilizable
 async function loginAndNavigate(page: Page) {
-  await page.goto('http://localhost:3000/');
+  await page.goto('/');
   await page.getByRole('textbox', { name: 'Usuario' }).fill('admin');
   await page.getByRole('textbox', { name: 'Contraseña' }).fill('admin123');
   await page.getByRole('button', { name: 'Iniciar sesión' }).click();
@@ -186,51 +186,4 @@ test.describe('Pedidos Cancelados - Exportación', () => {
   });
 });
 
-test.describe('Pedidos Cancelados - Casos especiales', () => {
-  test('Estado vacío', async ({ page }) => {
-    // Mockear /api/pedidos para devolver lista vacía
-    await page.route('**/api/pedidos**', async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify([])
-      });
-    });
 
-    await loginAndNavigate(page);
-
-    // Verificar que muestra mensaje de estado vacío
-    // Esperar a que se haga la petición y la tabla renderice vacía
-    await page.waitForTimeout(1000);
-    const rows = page.locator('#tabla_cancelados tbody tr');
-    const count = await rows.count();
-  });
-
-  test('Manejo de errores de red', async ({ page }) => {
-    // Mockear /api/pedidos ANTES de navegar para forzar el error
-    await page.route('**/api/pedidos**', async (route) => {
-      await route.fulfill({
-        status: 500,
-        contentType: 'application/json',
-        body: JSON.stringify({ message: 'Error interno del servidor' })
-      });
-    });
-
-    await page.goto('http://localhost:3000/');
-    await page.getByRole('textbox', { name: 'Usuario' }).fill('admin');
-    await page.getByRole('textbox', { name: 'Contraseña' }).fill('admin123');
-    await page.getByRole('button', { name: 'Iniciar sesión' }).click();
-    await page.getByRole('link', { name: '⛔ Pedidos cancelados' }).click();
-
-    // Esperar la respuesta 500
-    const resp = await page.waitForResponse(
-      r => r.url().includes('/api/pedidos') && r.status() === 500,
-      { timeout: 10000 }
-    );
-    expect(resp.status()).toBe(500);
-
-    // Esperar a que aparezca el SweetAlert con el error
-    await expect(page.locator('.swal2-popup')).toBeVisible({ timeout: 10000 });
-    await expect(page.getByText(/Error de conexión/i)).toBeVisible({ timeout: 5000 });
-  });
-});

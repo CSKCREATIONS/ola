@@ -102,7 +102,7 @@ test('crear-usuario', async ({ page }) => {
   await page.getByRole('textbox', { name: 'Correo Electrónico *' }).fill('gomezraul');
   await page.getByRole('textbox', { name: 'Correo Electrónico *' }).press('Alt+6');
   await page.getByRole('textbox', { name: 'Correo Electrónico *' }).press('Alt+4');
-  await page.getByRole('textbox', { name: 'Correo Electrónico *' }).fill('gomezraul@gmail.com');
+  await page.getByRole('textbox', { name: 'Correo Electrónico *' }).fill('gomezraqusal@gmail.com');
   await page.getByRole('button', { name: 'Crear Usuario' }).nth(1).click();
   await expect(page.getByRole('heading', { name: 'Usuario creado correctamente' })).toBeVisible();
 });
