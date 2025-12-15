@@ -14,3 +14,9 @@
 * cd ../backend -> npm i
 * cd .. -> 'npm run dev'
 * Con esto se ejecuta el backend y el frontend en paralelo. De esta forma ya se podra ver el proyecto en el navegador y se actualizara simultaneamente con los cambios
+
+## Para Pruebas en WRK
+*chmod +x pruebas_wrk.sh - da permisos para la ejecucion
+*./pruebas_wrk.sh - ejecuta todas las pruebas
+
+
