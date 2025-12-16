@@ -367,10 +367,10 @@ const normalizeClientes = (arr, esClienteFlag) =>
 
 // Helper: Sanitizar teléfono
 const sanitizePhone = (value) => {
-  let sanitized = value.replace(/[^\d+ ]/g, '');
-  sanitized = sanitized.replace(/(?!^)\+/g, '');
+  let sanitized = value.replaceAll(/[^\d+ ]/g, '');
+  sanitized = sanitized.replaceAll(/(?!^)\+/g, '');
   if (/\+/.test(sanitized) && sanitized[0] !== '+') {
-    sanitized = '+' + sanitized.replace(/\+/g, '');
+    sanitized = '+' + sanitized.replaceAll('+', '');
   }
   return sanitized;
 };
@@ -1355,7 +1355,7 @@ function PedidosAgendados() {
                             }}
                             onPaste={(e) => {
                               const pasted = (e.clipboardData.getData('text') || '')
-                                .replace(/[^\d+ ]/g, '');
+                                .replaceAll(/[^\d+ ]/g, '');
                               e.preventDefault();
                               setAgendarTelefono(prev => 
                                 sanitizePhone(prev + pasted)
@@ -1484,7 +1484,7 @@ function PedidosAgendados() {
                                       }}
                                       onClick={agregarProductoAgendar}
                                       >
-                                      <i className="fa-solid fa-plus" style={{ marginRight: '6px' }}></i>
+                                      <i className="fa-solid fa-plus" style={{ marginRight: '6px' }} />
                                       Agregar
                                       </button>
                                       {agendarProductos.length > 0 && (
@@ -1687,7 +1687,7 @@ function PedidosAgendados() {
                                     style={BUTTON_STYLES.cancel}
                                     onClick={() => setMostrarModalAgendar(false)}
                                     >
-                                    <i className="fa-solid fa-times" style={{ marginRight: '6px' }}></i>
+                                    <i className="fa-solid fa-times" style={{ marginRight: '6px' }} />
                                     Cancelar
                                     </button>
                                     <button
@@ -1695,7 +1695,7 @@ function PedidosAgendados() {
                                     style={BUTTON_STYLES.success}
                                     onClick={handleGuardarAgendar}
                                     >
-                                    <i className="fa-solid fa-save" style={{ marginRight: '6px' }}></i>
+                                    <i className="fa-solid fa-save" style={{ marginRight: '6px' }} />
                                     Guardar Pedido
                                     </button>
                                   </div>
@@ -1706,6 +1706,11 @@ function PedidosAgendados() {
                               </div>
                             </div>
                             </div>
+                            <div className="custom-footer">
+        <p className="custom-footer-text">
+          © 2025 <span className="custom-highlight">PANGEA</span>. Todos los derechos reservados.
+        </p>
+      </div>
                           </div>
                           );
                         }
