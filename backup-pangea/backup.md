@@ -66,25 +66,7 @@ Este script:
 * siempre lo guarda en la carpeta `latest`
 
 ```bash
-#!/bin/bash
-
-DB_NAME="pangea"
-BACKUP_DIR="/home/ubuntu/pangea-backup/backups/latest"
-
-# Eliminar backup anterior
-rm -rf "$BACKUP_DIR"
-
-# Crear carpeta de backup
-mkdir -p "$BACKUP_DIR"
-
-# Ejecutar backup
-mongodump --db "$DB_NAME" --out "$BACKUP_DIR"
-
-if [ $? -eq 0 ]; then
-  echo "✅ Backup realizado correctamente en $BACKUP_DIR"
-else
-  echo "❌ Error al realizar el backup"
-fi
+cd /home/ubuntu/ola/backup-pangea && bash backup.sh
 ```
 
 ---
@@ -121,8 +103,7 @@ fi
 Ejecutar **una sola vez**:
 
 ```bash
-cd /home/ubuntu/pangea-backup
-chmod +x backup.sh restore.sh
+cd /home/ubuntu/ola/backup-pangea && echo "s" | bash restore.sh
 ```
 
 ---
