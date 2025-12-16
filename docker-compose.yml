@@ -37,9 +37,9 @@ services:
       - JWT_SECRET=${JWT_SECRET:-tusecretoparalostokens}
       - COMPANY_NAME=Pangea Sistemas
       - COMPANY_PHONE=(555) 123-4567
-      - SENDGRID_API_KEY=
+      - SENDGRID_API_KEY=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
       - SENDGRID_FROM_NAME=pangea
-      - SENDGRID_RECUPERACION=
+      - SENDGRID_RECUPERACION=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
       - SENDGRID_FROM_RECUPERACION=${SENDGRID_FROM_RECUPERACION:-gaseosaconpan1@gmail.com}
       - GMAIL_USER=${GMAIL_USER:-elmawabo@gmail.com}
       - GMAIL_APP_PASSWORD=qmfu hjht uawm ntxu
