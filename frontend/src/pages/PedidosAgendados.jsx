@@ -1484,8 +1484,8 @@ function PedidosAgendados() {
                                       }}
                                       onClick={agregarProductoAgendar}
                                       >
-                                      <i className="fa-solid fa-plus" style={{ marginRight: '6px' }} />
-                                      Agregar
+                                      <i className="fa-solid fa-plus" style={{ marginRight: '6px' }}></i>
+                                      {' '}Agregar
                                       </button>
                                       {agendarProductos.length > 0 && (
                                       <button
@@ -1498,7 +1498,7 @@ function PedidosAgendados() {
                                         onClick={limpiarProductosAgendados}
                                       >
                                         <i className="fa-solid fa-trash" style={{ marginRight: '6px' }}></i>
-                                        Limpiar
+                                        <span>Limpiar</span>
                                       </button>
                                       )}
                                     </div>
@@ -1687,16 +1687,16 @@ function PedidosAgendados() {
                                     style={BUTTON_STYLES.cancel}
                                     onClick={() => setMostrarModalAgendar(false)}
                                     >
-                                    <i className="fa-solid fa-times" style={{ marginRight: '6px' }} />
-                                    Cancelar
+                                    <i className="fa-solid fa-times" style={{ marginRight: '6px' }}></i>
+                                    {' '}Cancelar
                                     </button>
                                     <button
                                     type="button"
                                     style={BUTTON_STYLES.success}
                                     onClick={handleGuardarAgendar}
                                     >
-                                    <i className="fa-solid fa-save" style={{ marginRight: '6px' }} />
-                                    Guardar Pedido
+                                    <i className="fa-solid fa-save" style={{ marginRight: '6px' }}></i>
+                                    {' '}Guardar Pedido
                                     </button>
                                   </div>
                                   </div>

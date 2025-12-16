@@ -12,8 +12,7 @@ import '../cotizaciones-modal.css';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import CotizacionPreview from '../components/CotizacionPreview';
-import { calcularSubtotalProducto, calcularTotales } from '../utils/calculations';
-import { formatCurrency, formatDate } from '../utils/formatters';
+import { formatDate } from '../utils/formatters';
 import DeleteButton from '../components/DeleteButton';
 
 // Componente Field para formularios (reutilizable)
@@ -46,7 +45,7 @@ Field.propTypes = {
 
 export default function ListaDeCotizaciones() {
   const [cotizaciones, setCotizaciones] = useState([]);
-  const [productos, setProductos] = useState([]);
+  const [setProductos] = useState([]);
   const [cotizacionSeleccionada, setCotizacionSeleccionada] = useState(null);
   const [mostrarPreview, setMostrarPreview] = useState(false);
   const [modoEdicion, setModoEdicion] = useState(false);
@@ -61,41 +60,6 @@ export default function ListaDeCotizaciones() {
 
   const itemsPerPage = 10;
 
-  const styles = {
-    inputBase: {
-      width: '100%',
-      padding: '0.875rem 1rem',
-      border: '2px solid #e5e7eb',
-      borderRadius: '10px',
-      fontSize: '0.95rem',
-      transition: 'all 0.3s ease',
-      backgroundColor: '#ffffff',
-      fontFamily: 'inherit',
-      boxSizing: 'border-box'
-    }
-  };
-
-  const applyFocus = (e, color = '#3b82f6', shadowColor = 'rgba(59, 130, 246, 0.1)') => {
-    e.target.style.borderColor = color;
-    e.target.style.boxShadow = `0 0 0 3px ${shadowColor}`;
-  };
-
-  const applyBlur = (e) => {
-    e.target.style.borderColor = '#e5e7eb';
-    e.target.style.boxShadow = 'none';
-  };
-
-  const stripHtml = (html) => {
-    if (!html && html !== 0) return '';
-    try {
-      const tmp = document.createElement('div');
-      tmp.innerHTML = String(html);
-      return tmp.textContent || tmp.innerText || '';
-    } catch (e) {
-      console.warn('stripHtml DOM parsing failed, using regex fallback:', e);
-      return String(html).replaceAll(/<[^>]*>/g, '');
-    }
-  };
 
   const exportToExcel = (listaCotizaciones) => {
     if (!listaCotizaciones || listaCotizaciones.length === 0) {
@@ -490,90 +454,7 @@ export default function ListaDeCotizaciones() {
     }
   };
 
-  const guardarEdicion = async () => {
-    Swal.fire({
-      title: 'Guardando cambios...',
-      icon: 'info',
-      allowOutsideClick: false,
-      showConfirmButton: false,
-      willOpen: () => {
-        Swal.showLoading();
-      }
-    });
 
-    try {
-      const cotizacionConSubtotales = {
-        ...cotizacionSeleccionada,
-        productos: cotizacionSeleccionada.productos?.map(p => ({
-          ...p,
-          subtotal: calcularSubtotalProducto(p)
-        }))
-      };
-
-      const res = await api.put(`/api/cotizaciones/${cotizacionSeleccionada._id}`, cotizacionConSubtotales);
-      const cotizacionActualizada = res.data || res;
-
-      const updatedData = cotizacionActualizada.data || cotizacionActualizada;
-      const nuevasCotizaciones = cotizaciones.map(c =>
-        c._id === cotizacionSeleccionada._id ? {
-          ...updatedData,
-          ...cotizacionConSubtotales
-        } : c
-      );
-      setCotizaciones(nuevasCotizaciones);
-
-      setModoEdicion(false);
-      const previewData = { ...updatedData, ...cotizacionConSubtotales };
-      setCotizacionSeleccionada(previewData);
-      setMostrarPreview(true);
-
-      Swal.fire({
-        toast: true,
-        position: 'top-end',
-        icon: 'success',
-        title: 'Cotización editada',
-        showConfirmButton: false,
-        timer: 2000
-      });
-
-    } catch (error) {
-      console.error('Error al guardar cotización:', error);
-      Swal.fire({
-        title: 'Error',
-        text: error.message || 'No se pudo guardar la cotización',
-        icon: 'error',
-        confirmButtonText: 'Entendido'
-      });
-    }
-  };
-
-  const agregarProducto = () => {
-    const nuevoProducto = {
-      producto: {
-        id: '',
-        name: ''
-      },
-      descripcion: '',
-      cantidad: 1,
-      valorUnitario: 0,
-      descuento: 0,
-      subtotal: 0
-    };
-
-    const nuevosProductos = [...(cotizacionSeleccionada.productos || []), nuevoProducto];
-    setCotizacionSeleccionada({
-      ...cotizacionSeleccionada,
-      productos: nuevosProductos
-    });
-  };
-
-  const eliminarProducto = (index) => {
-    const nuevosProductos = cotizacionSeleccionada.productos.filter((_, i) => i !== index);
-    setCotizacionSeleccionada({
-      ...cotizacionSeleccionada,
-      productos: nuevosProductos
-    });
-  };
 
   const cotizacionesFiltradas = cotizaciones.filter(cot => {
     let fechaCompare = null;
