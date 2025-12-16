@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import Swal from 'sweetalert2';
 import api from '../api/axiosConfig';
@@ -41,6 +41,14 @@ const STYLES = {
   modalCard: {
     backgroundColor: 'white', padding: '2rem', borderRadius: '10px', maxWidth: '600px',
     width: '90%', maxHeight: '80vh', overflow: 'auto'
+  },
+  sectionTitle: {
+    borderBottom: '3px solid #fd7e14', paddingBottom: '0.5rem', 
+    color: '#fd7e14', fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '1rem'
+  },
+  infoBox: {
+    background: '#eff6ff', padding: '1rem', borderRadius: '8px', 
+    borderLeft: '4px solid #fd7e14', lineHeight: '1.6'
   }
 };
 
@@ -55,57 +63,15 @@ const buildPrintStyleText = () => `
   }
 `;
 
-/* DOM set helpers (kept for potential alternative print strategies) */
-const trySetDocWithDOM = (doc, title, htmlContent, style) => {
-  try {
-    doc.open();
-    doc.title = title;
-    const styleEl = doc.createElement('style');
-    styleEl.appendChild(doc.createTextNode(style));
-    if (!doc.head) {
-      const head = doc.createElement('head');
-      doc.documentElement.appendChild(head);
-    }
-    doc.head.appendChild(styleEl);
-    if (!doc.body) {
-      const body = doc.createElement('body');
-      doc.documentElement.appendChild(body);
-    }
-    doc.body.innerHTML = htmlContent;
-    return true;
-  } catch (err) {
-    console.error('trySetDocWithDOM failed', err);
-    return false;
-  } finally {
-    try { doc.close(); } catch (e) { console.debug('doc.close failed (trySetDocWithDOM)', e); }
+const renderSanitizedContent = (content) => {
+  if (!content) return null;
+  const looksLikeHtml = typeof content === 'string' && /<[^>]+>/.test(content);
+  if (looksLikeHtml) {
+    return <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }} />;
   }
+  return <div style={{ whiteSpace: 'pre-wrap' }}>{content}</div>;
 };
 
-const trySetDocOuterHTML = (doc, title, htmlContent, style) => {
-  try {
-    doc.open();
-    const html = `
-      <html>
-        <head>
-          <title>${title}</title>
-          <style>${style}</style>
-        </head>
-        <body>
-          ${htmlContent}
-        </body>
-      </html>
-    `;
-    doc.documentElement.outerHTML = html;
-    return true;
-  } catch (err) {
-    console.error('trySetDocOuterHTML failed', err);
-    return false;
-  } finally {
-    try { doc.close(); } catch (e) { console.debug('doc.close failed (trySetDocOuterHTML)', e); }
-  }
-};
-
-/* Small subcomponents */
 const ActionButton = ({ onClick, children, aria, style }) => (
   <button onClick={onClick} aria-label={aria} style={{ ...STYLES.actionBtn(), ...style }}>
     {children}
@@ -170,7 +136,6 @@ EnviarModal.propTypes = {
   onClose: PropTypes.func, onChangeCorreo: PropTypes.func, onChangeAsunto: PropTypes.func, onChangeMensaje: PropTypes.func, onSend: PropTypes.func
 };
 
-/* Main component */
 const PedidoAgendadoPreview = ({ datos = {}, onClose = () => { }, onEmailSent, onRemisionar }) => {
   const [showEnviarModal, setShowEnviarModal] = useState(false);
   const [correo, setCorreo] = useState('');
@@ -299,17 +264,6 @@ const PedidoAgendadoPreview = ({ datos = {}, onClose = () => { }, onEmailSent, o
     }
   }, [onRemisionar]);
 
-  const renderDescripcion = () => {
-    if (!datos?.descripcion) return null;
-    const desc = datos.descripcion;
-    const looksLikeHtml = typeof desc === 'string' && /<[^>]+>/.test(desc);
-    if (looksLikeHtml) {
-      const safeHtml = sanitizeHtml(desc);
-      return <div dangerouslySetInnerHTML={{ __html: safeHtml }} />;
-    }
-    return <div style={{ whiteSpace: 'pre-wrap' }}>{desc}</div>;
-  };
-
   const renderProductosRows = () => {
     return (datos?.productos || []).map((producto, index) => {
       const key = producto._id || producto.product?._id || producto.codigo || producto.product?.codigo || index;
@@ -377,7 +331,7 @@ const PedidoAgendadoPreview = ({ datos = {}, onClose = () => { }, onEmailSent, o
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '2rem' }}>
               <div>
-                <h3 style={{ borderBottom: '3px solid #fd7e14', paddingBottom: '0.5rem', color: '#fd7e14', fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '1rem' }}>Información del Cliente</h3>
+                <h3 style={STYLES.sectionTitle}>Información del Cliente</h3>
                 <div style={{ lineHeight: '1.8' }}>
                   <p><strong>Cliente:</strong> {datos?.cliente?.nombre}</p>
                   <p><strong>Teléfono:</strong> {datos?.cliente?.telefono}</p>
@@ -387,7 +341,7 @@ const PedidoAgendadoPreview = ({ datos = {}, onClose = () => { }, onEmailSent, o
               </div>
 
               <div>
-                <h3 style={{ borderBottom: '3px solid #fd7e14', paddingBottom: '0.5rem', color: '#fd7e14', fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '1rem' }}>Detalles del Pedido</h3>
+                <h3 style={STYLES.sectionTitle}>Detalles del Pedido</h3>
                 <div style={{ lineHeight: '1.8' }}>
                   <p><strong>Fecha de agendamiento:</strong> {datos.fechaAgendamiento}</p>
                   <p><strong>Fecha de Entrega:</strong> {datos.fechaEntrega}</p>
@@ -397,15 +351,14 @@ const PedidoAgendadoPreview = ({ datos = {}, onClose = () => { }, onEmailSent, o
 
             {datos?.descripcion && (
               <div style={{ marginBottom: '2rem' }}>
-                <h3 style={{ borderBottom: '3px solid #fd7e14', paddingBottom: '0.5rem', color: '#fd7e14', fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '1rem' }}>Descripción</h3>
-                <div style={{ background: '#eff6ff', padding: '1rem', borderRadius: '8px', borderLeft: '4px solid #fd7e14', lineHeight: '1.6' }}>
-                  {renderDescripcion()}
+                <h3 style={STYLES.sectionTitle}>Descripción</h3>
+                <div style={STYLES.infoBox}>
+                  {renderSanitizedContent(datos.descripcion)}
                 </div>
               </div>
             )}
 
             <div style={{ marginBottom: '2rem' }}>
-
               <table className="tabla-cotizacion" style={{ width: '100%', borderCollapse: 'collapse', marginTop: '1rem', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
                 <thead>
                   <tr style={{ background: 'linear-gradient(135deg, #fd7e14, #e85d04)', color: 'white' }}>
@@ -429,16 +382,10 @@ const PedidoAgendadoPreview = ({ datos = {}, onClose = () => { }, onEmailSent, o
 
             {datos?.condicionesPago && (
               <div style={{ marginBottom: '2rem' }}>
-                <h3 style={{ borderBottom: '3px solid #fd7e14', paddingBottom: '0.5rem', color: '#fd7e14', fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '1rem' }}>Condiciones de Pago</h3>
-                <div style={{ background: '#eff6ff', padding: '1rem', borderRadius: '8px', borderLeft: '4px solid #fd7e14', lineHeight: '1.6' }}>{(() => {
-                  const desc = datos.condicionesPago;
-                  const looksLikeHtml = typeof desc === 'string' && /<[^>]+>/.test(desc);
-                  if (looksLikeHtml) {
-                    const safeHtml = sanitizeHtml(desc);
-                    return <div dangerouslySetInnerHTML={{ __html: safeHtml }} />;
-                  }
-                  return <div style={{ whiteSpace: 'pre-wrap' }}>{desc}</div>;
-                })()}</div>
+                <h3 style={STYLES.sectionTitle}>Condiciones de Pago</h3>
+                <div style={STYLES.infoBox}>
+                  {renderSanitizedContent(datos.condicionesPago)}
+                </div>
               </div>
             )}
 
