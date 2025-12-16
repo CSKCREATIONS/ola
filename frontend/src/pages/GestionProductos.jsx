@@ -533,7 +533,6 @@ const ProductoModal = ({
   );
 };
 
-// PropTypes for ProductoModal (moved outside to avoid redefining on each render)
 ProductoModal.propTypes = {
   producto: PropTypes.shape({
     _id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
@@ -641,13 +640,12 @@ const GestionProductos = () => {
     } catch (err) {
       const backendMsg = err?.response?.data?.message || err.message || 'Error al guardar el producto';
 
-      // Mostrar modal específico cuando el backend indica nombre duplicado
       if (/ya existe/i.test(backendMsg) || /producto con ese nombre/i.test(backendMsg) || /duplicate key/i.test(backendMsg)) {
         Swal.fire('Error', 'Ya existe un producto con ese nombre', 'error');
         return;
       }
 
-      Swal.fire('Error', 'Ya existe un producto con ese nombre', 'error');
+      Swal.fire('Error', backendMsg, 'error');
     }
   };
 
@@ -662,7 +660,6 @@ const GestionProductos = () => {
     const url = `${API_PRODUCTS}/${productoId}/${accion}`;
 
     try {
-      // Backend define PATCH para activar/desactivar productos
       const res = await api.patch(url);
       if (res.status >= 200 && res.status < 300) {
         Swal.fire(`Producto ${accion === 'deactivate' ? 'desactivado' : 'activado'}`, '', 'success');
@@ -672,7 +669,6 @@ const GestionProductos = () => {
       }
     } catch (error) {
       const backendMsg = error?.response?.data?.message || error.message || '';
-      // Mensaje específico cuando se intenta activar y la categoría está desactivada
       if (!estadoActual && /categoria|categoría/i.test(backendMsg) && /desactivada/i.test(backendMsg)) {
         Swal.fire('Categoría inactiva', 'No se puede activar el producto porque su categoría está desactivada', 'warning');
         return;
