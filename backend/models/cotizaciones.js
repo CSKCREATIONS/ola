@@ -1,0 +1,80 @@
+const mongoose = require('mongoose');
+
+const CotizacionSchema = new mongoose.Schema({
+  codigo: String,
+  cliente: {
+    referencia: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Cliente',
+      required: true
+    },
+    nombre: String,
+    ciudad: String,
+    direccion: String,
+    telefono: String,
+    correo: String,
+    esCliente: Boolean
+  },
+  responsable: {
+    id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true
+    },
+    firstName: String,
+    secondName: String,
+    surname: String,
+    secondSurname: String
+  },
+  fecha: {
+    type: Date,
+    required: true
+  },
+  fechaString: {
+    type: String,
+    required: false
+  },
+  descripcion: String,
+  condicionesPago: String,
+  productos: [
+    {
+      producto: {
+        id: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Product'
+        },
+        name: String
+      },
+      descripcion: String,
+      cantidad: Number,
+      valorUnitario: Number,
+      descuento: Number,
+      subtotal: Number
+    }
+  ],
+  empresa: {
+    nombre: { type: String },
+    direccion: { type: String }
+  },
+  enviadoCorreo: {
+    type: Boolean,
+    default: false
+  },
+  estado: {
+    type: String,
+    enum: ['Pendiente', 'Agendada', 'Remisionada'],
+    default: 'Pendiente'
+  },
+  pedidoReferencia: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Pedido'
+  },
+  remisionReferencia: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Remision'
+  }
+}, {
+  timestamps: true
+});
+
+module.exports = mongoose.model('Cotizacion', CotizacionSchema);

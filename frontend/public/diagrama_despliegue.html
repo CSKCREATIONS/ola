@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Diagrama de Despliegue - Sistema de Gestión Empresarial</title>
+  <style>
+    body { background: #f4f7fb; font-family: 'Segoe UI', Arial, sans-serif; }
+    .container { max-width: 1800px; margin: 0 auto; padding: 40px 10px; position: relative; min-height: 1100px; }
+    .titulo { text-align: center; font-size: 2.3em; color: #2563eb; margin-bottom: 30px; letter-spacing: 1px; }
+    .box {
+      border: 2.5px solid #2563eb; border-radius: 18px; background: #fff;
+      position: absolute; box-shadow: 0 6px 32px #2563eb22, 0 1.5px 8px #0001;
+      transition: box-shadow 0.2s;
+    }
+    .box:hover { box-shadow: 0 8px 40px #2563eb33, 0 2px 12px #0002; }
+    .label { font-weight: bold; font-size: 1.18em; margin-bottom: 8px; color: #222; }
+    .modulo {
+      display: inline-block; border: 1.5px solid #b3c6e7; border-radius: 8px;
+      background: linear-gradient(90deg, #e3eefd 60%, #f7faff 100%);
+      padding: 8px 18px; margin: 8px; font-size: 1em; color: #1a237e;
+      box-shadow: 0 1px 4px #2563eb11;
+      transition: background 0.2s, box-shadow 0.2s;
+    }
+    .modulo:hover { background: #e0f2fe; box-shadow: 0 2px 8px #2563eb22; }
+    /* Layout específico */
+    #user { left: 700px; top: 20px; width: 300px; height: 110px; z-index: 2; }
+    #frontend { left: 600px; top: 170px; width: 500px; height: 120px; z-index: 2; }
+    #backend { left: 300px; top: 320px; width: 1100px; height: 320px; z-index: 2; }
+    #api { left: 340px; top: 370px; width: 1020px; height: 220px; background: #f7faff; border: 2px dashed #2563eb; border-radius: 14px; }
+    #db { left: 1200px; top: 700px; width: 500px; height: 260px; z-index: 2; }
+    #db-mongo { left: 1230px; top: 740px; width: 440px; height: 180px; background: #f7faff; border: 2px dashed #43a047; border-radius: 14px; }
+    /* Módulos internos */
+    .modulos-api { position: absolute; left: 10px; top: 44px; width: 1000px; }
+    .modulos-db { position: absolute; left: 10px; top: 44px; width: 420px; }
+    /* Flechas SVG */
+    .svg-arrow { position: absolute; pointer-events: none; z-index: 10; }
+    /* Etiquetas de flechas */
+    .arrow-label { position: absolute; font-size: 1em; color: #2563eb; background: #fff; padding: 2px 10px; border-radius: 6px; border: 1px solid #e3eefd; box-shadow: 0 1px 4px #2563eb11; }
+    #label1 { left: 870px; top: 150px; }
+    #label2 { left: 870px; top: 310px; }
+    #label3 { left: 1220px; top: 490px; }
+    #label4 { left: 1470px; top: 690px; }
+    @media (max-width: 1200px) {
+      .container { zoom: 0.7; }
+    }
+    @media (max-width: 900px) {
+      .container { zoom: 0.5; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="titulo">Diagrama de Despliegue - Sistema de Gestión Empresarial</div>
+    <!-- Usuario -->
+    <div class="box" id="user">
+      <div class="label">Computadora del Funcionario de la Empresa</div>
+      <div class="modulo">Navegador Web<br><span style="font-size:0.93em; color:#2563eb">Aplicación React</span></div>
+    </div>
+    <!-- Frontend -->
+    <div class="box" id="frontend">
+      <div class="label">Servidor Web</div>
+      <div class="modulo">Frontend<br><span style="font-size:0.93em; color:#2563eb">Build de React (JS/CSS/HTML)</span></div>
+    </div>
+    <!-- Backend -->
+    <div class="box" id="backend">
+      <div class="label">Backend (Node.js/Express)</div>
+      <div class="box" id="api">
+        <div class="label" style="color:#2563eb">API REST</div>
+        <div class="modulos-api">
+          <span class="modulo">Gestión de Pedidos</span>
+          <span class="modulo">Gestión de Productos</span>
+          <span class="modulo">Gestión de Clientes</span>
+          <span class="modulo">Gestión de Cotizaciones</span>
+          <span class="modulo">Gestión de Ventas</span>
+          <span class="modulo">Gestión de Proveedores</span>
+          <span class="modulo">Gestión de Reportes</span>
+          <span class="modulo">Gestión de Categorías</span>
+          <span class="modulo">Gestión de Subcategorías</span>
+          <span class="modulo">Gestión de Compras</span>
+          <span class="modulo">Gestión de Usuarios</span>
+          <span class="modulo">Gestión de Roles</span>
+        </div>
+      </div>
+    </div>
+    <!-- Base de datos -->
+    <div class="box" id="db">
+      <div class="label">Base de Datos NoSQL</div>
+      <div class="box" id="db-mongo">
+        <div class="label" style="color:#43a047">MongoDB</div>
+        <div class="modulos-db">
+          <span class="modulo">Colección Pedidos</span>
+          <span class="modulo">Colección Productos</span>
+          <span class="modulo">Colección Clientes</span>
+          <span class="modulo">Colección Cotizaciones</span>
+          <span class="modulo">Colección Categorías</span>
+          <span class="modulo">Colección Subcategorías</span>
+          <span class="modulo">Colección Compras</span>
+          <span class="modulo">Colección Proveedores</span>
+          <span class="modulo">Colección Ventas</span>
+          <span class="modulo">Colección Usuarios</span>
+          <span class="modulo">Colección Roles</span>
+        </div>
+      </div>
+    </div>
+    <!-- Flechas SVG -->
+    <svg class="svg-arrow" width="10" height="40" style="left:850px; top:130px;"><line x1="5" y1="0" x2="5" y2="40" stroke="#2563eb" stroke-width="3" marker-end="url(#arrowhead)"/></svg>
+    <svg class="svg-arrow" width="10" height="30" style="left:850px; top:290px;"><line x1="5" y1="0" x2="5" y2="30" stroke="#2563eb" stroke-width="3" marker-end="url(#arrowhead)"/></svg>
+    <svg class="svg-arrow" width="120" height="10" style="left:1100px; top:480px;"><line x1="0" y1="5" x2="120" y2="5" stroke="#2563eb" stroke-width="3" marker-end="url(#arrowhead)"/></svg>
+    <svg class="svg-arrow" width="10" height="80" style="left:1450px; top:620px;"><line x1="5" y1="0" x2="5" y2="80" stroke="#43a047" stroke-width="3" marker-end="url(#arrowheadg)"/></svg>
+    <svg width="0" height="0">
+      <defs>
+        <marker id="arrowhead" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto" markerUnits="strokeWidth">
+          <path d="M0,0 L8,4 L0,8 L2,4 Z" fill="#2563eb" />
+        </marker>
+        <marker id="arrowheadg" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto" markerUnits="strokeWidth">
+          <path d="M0,0 L8,4 L0,8 L2,4 Z" fill="#43a047" />
+        </marker>
+      </defs>
+    </svg>
+    <!-- Etiquetas de flechas -->
+    <div class="arrow-label" id="label1">Carga de interfaz (JS/CSS/HTML)</div>
+    <div class="arrow-label" id="label2">Consumo de API (HTTP/HTTPS)</div>
+    <div class="arrow-label" id="label3">Comunicación interna (HTTP/HTTPS)</div>
+    <div class="arrow-label" id="label4">Conexión Mongoose<br>(puerto 27017)</div>
+  </div>
+</body>
+</html>

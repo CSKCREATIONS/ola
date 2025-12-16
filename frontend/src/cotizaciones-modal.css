@@ -1,0 +1,839 @@
+/* Estilos específicos para el modal de edición de cotizaciones */
+.cotizacion-modal-container .modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.7) 0%, rgba(44, 62, 80, 0.8) 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(8px);
+  animation: fadeInOverlay 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes fadeInOverlay {
+  from { 
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+  to { 
+    opacity: 1;
+    backdrop-filter: blur(8px);
+  }
+}
+
+.cotizacion-modal-container .modal-content-large {
+  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 24px;
+  width: 95%;
+  max-width: 1400px;
+  max-height: 95vh;
+  overflow: hidden;
+  box-shadow: 
+    0 25px 80px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  animation: slideInModal 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+}
+
+@keyframes slideInModal {
+  from { 
+    opacity: 0;
+    transform: translateY(-30px) scale(0.9) rotateX(10deg);
+    filter: blur(10px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0) scale(1) rotateX(0deg);
+    filter: blur(0px);
+  }
+}
+
+.cotizacion-modal-container .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 32px 40px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.cotizacion-modal-container .modal-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 50%, rgba(255,255,255,0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255,255,255,0.1) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.cotizacion-modal-container .modal-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+}
+
+.cotizacion-modal-container .header-info {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  position: relative;
+  z-index: 1;
+}
+
+.cotizacion-modal-container .header-info h3 {
+  margin: 0;
+  color: white;
+  font-weight: 800;
+  font-size: 2em;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  letter-spacing: -0.02em;
+}
+
+.cotizacion-modal-container .cotizacion-codigo {
+  background: rgba(255, 255, 255, 0.28);
+  backdrop-filter: blur(10px);
+  /* Sobre fondo translúcido: usar color oscuro para garantizar contraste legible */
+  color: #0f172a;
+  padding: 10px 16px;
+  border-radius: 16px;
+  font-size: 0.9em;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.cotizacion-modal-container .fecha-cotizacion {
+  /* Texto en fondo translúcido: usar tono oscuro para accesibilidad */
+  color: #0f172a;
+  font-size: 1em;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 8px 12px;
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+}
+
+.cotizacion-modal-container .fecha-cotizacion i {
+  color: rgba(15, 23, 42, 0.75);
+  font-size: 1.1em;
+}
+
+.cotizacion-modal-container .close-button {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: 20px;
+  cursor: pointer;
+  /* Botón sobre fondo translúcido: usar color oscuro para legibilidad */
+  color: #0f172a;
+  padding: 12px;
+  border-radius: 16px;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
+  position: relative;
+  z-index: 1;
+}
+
+.cotizacion-modal-container .close-button:hover {
+  background: rgba(255, 107, 107, 0.9);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: rotate(90deg) scale(1.1);
+  box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+}
+
+.cotizacion-modal-container .modal-body {
+  padding: 40px;
+  max-height: calc(95vh - 200px);
+  overflow-y: auto;
+}
+
+.cotizacion-modal-container .modal-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.cotizacion-modal-container .modal-body::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 10px;
+}
+
+.cotizacion-modal-container .modal-body::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  border-radius: 10px;
+}
+
+.cotizacion-modal-container .modal-body::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #5a67d8, #6b46c1);
+}
+
+.cotizacion-modal-container .form-section {
+  margin-bottom: 36px;
+  padding: 32px;
+  border: none;
+  border-radius: 20px;
+  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+  box-shadow: 
+    0 10px 40px rgba(0, 0, 0, 0.1),
+    0 1px 3px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Highlight blink for newly inserted cotización row */
+.row-blink {
+  background-color: rgba(36, 78, 140, 0.12) !important; /* slightly darker blue tint */
+  transition: background-color 0.25s ease;
+}
+.row-blink-off {
+  background-color: rgba(255,255,255,0) !important;
+  transition: background-color 0.25s ease;
+}
+
+.cotizacion-modal-container .form-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #667eea, #764ba2, #f093fb, #f5576c);
+  background-size: 300% 100%;
+  animation: gradientShift 3s ease infinite;
+}
+
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.cotizacion-modal-container .section-title {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 28px;
+  position: relative;
+  z-index: 1;
+}
+
+.cotizacion-modal-container .section-title i {
+  width: 48px;
+  height: 48px;
+  /* Darker gradient to guarantee WCAG contrast with white text */
+  background: linear-gradient(135deg, #061029 0%, #12021a 100%);
+  color: white;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3em;
+  font-weight: 700;
+  box-shadow: 0 8px 25px rgba(34, 4, 44, 0.36);
+}
+
+.cotizacion-modal-container .section-title h4 {
+  margin: 0;
+  color: #1a202c;
+  font-weight: 700;
+  font-size: 1.4em;
+  letter-spacing: -0.02em;
+}
+
+.cotizacion-modal-container .productos-count {
+  background: linear-gradient(135deg, #0b2545 0%, #1b1330 100%);
+  color: #ffffff;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.85em;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 12px rgba(11, 37, 69, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.cotizacion-modal-container .products-section {
+  background: linear-gradient(145deg, #f8fafc 0%, #ffffff 100%);
+  border: 2px solid rgba(102, 126, 234, 0.1);
+}
+
+.cotizacion-modal-container .products-section::before {
+  background: linear-gradient(90deg, #667eea, #764ba2, #f093fb, #f5576c, #667eea);
+}
+
+.cotizacion-modal-container .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 20px;
+}
+
+.cotizacion-modal-container .form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.cotizacion-modal-container .form-group label {
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #495057;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9em;
+}
+
+.cotizacion-modal-container .form-group label i {
+  color: #007bff;
+  width: 16px;
+}
+
+.cotizacion-modal-container .form-group input,
+.cotizacion-modal-container .form-group textarea,
+.cotizacion-modal-container .form-group select {
+  padding: 16px 20px;
+  border: 2px solid #e2e8f0;
+  border-radius: 16px;
+  font-size: 15px;
+  font-family: inherit;
+  font-weight: 500;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+.cotizacion-modal-container .form-group input:focus,
+.cotizacion-modal-container .form-group textarea:focus,
+.cotizacion-modal-container .form-group select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 
+    0 0 0 4px rgba(102, 126, 234, 0.1),
+    0 8px 25px rgba(102, 126, 234, 0.15);
+  transform: translateY(-2px);
+  background: white;
+}
+
+.cotizacion-modal-container .form-group input:hover,
+.cotizacion-modal-container .form-group select:hover,
+.cotizacion-modal-container .form-group textarea:hover {
+  border-color: #cbd5e0;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.cotizacion-modal-container .form-group input::placeholder,
+.cotizacion-modal-container .form-group textarea::placeholder {
+  color: #adb5bd;
+  font-style: italic;
+}
+
+.cotizacion-modal-container .checkbox-group {
+  margin-top: 8px;
+}
+
+.cotizacion-modal-container .checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 6px;
+  transition: background 0.2s ease;
+}
+
+.cotizacion-modal-container .checkbox-label:hover {
+  background: rgba(0, 123, 255, 0.05);
+}
+
+.cotizacion-modal-container .checkbox-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #007bff;
+}
+
+.cotizacion-modal-container .status-display {
+  margin-top: 8px;
+}
+
+.cotizacion-modal-container .status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.85em;
+  letter-spacing: 0.5px;
+}
+
+.cotizacion-modal-container .status-badge.agendada {
+  background: linear-gradient(135deg, #28a745, #20c997);
+  color: #0f172a;
+}
+
+.cotizacion-modal-container .status-badge.pendiente {
+  background: linear-gradient(135deg, #17a2b8, #20c997);
+  color: #0f172a;
+}
+
+.cotizacion-modal-container .section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.cotizacion-modal-container .btn-add {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #0f172a;
+  border: none;
+  padding: 14px 24px;
+  border-radius: 18px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 
+    0 6px 20px rgba(16, 185, 129, 0.3),
+    0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  position: relative;
+  overflow: hidden;
+}
+
+.cotizacion-modal-container .btn-add::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s;
+}
+
+.cotizacion-modal-container .btn-add:hover::before {
+  left: 100%;
+}
+
+.cotizacion-modal-container .btn-add:hover {
+  background: linear-gradient(135deg, #0d9488 0%, #047857 100%);
+  color: #0f172a;
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 
+    0 10px 30px rgba(16, 185, 129, 0.4),
+    0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.cotizacion-modal-container .btn-add i {
+  font-size: 1.1em;
+}
+
+.cotizacion-modal-container .empty-products {
+  text-align: center;
+  padding: 60px 20px;
+  color: #6c757d;
+}
+
+.cotizacion-modal-container .empty-products i {
+  font-size: 4em;
+  color: #dee2e6;
+  margin-bottom: 20px;
+}
+
+.cotizacion-modal-container .empty-products p {
+  margin: 8px 0;
+  font-size: 1.1em;
+}
+
+.cotizacion-modal-container .empty-subtitle {
+  font-size: 0.9em !important;
+  font-style: italic;
+}
+
+.cotizacion-modal-container .productos-list {
+  margin-bottom: 24px;
+}
+
+.cotizacion-modal-container .producto-item {
+  padding: 28px;
+  border: none;
+  border-radius: 20px;
+  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+  margin-bottom: 24px;
+  box-shadow: 
+    0 8px 25px rgba(0, 0, 0, 0.08),
+    0 2px 8px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.cotizacion-modal-container .producto-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #667eea, #764ba2);
+  transition: all 0.3s ease;
+}
+
+.cotizacion-modal-container .producto-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 
+    0 15px 40px rgba(0, 0, 0, 0.12),
+    0 5px 15px rgba(102, 126, 234, 0.1);
+}
+
+.cotizacion-modal-container .producto-item:hover::before {
+  height: 4px;
+  background: linear-gradient(90deg, #667eea, #764ba2, #f093fb, #f5576c);
+}
+
+.cotizacion-modal-container .producto-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.cotizacion-modal-container .producto-numero {
+  background: linear-gradient(135deg, #022b53, #001a33);
+  color: #e6f1ff; /* adjusted to ensure sufficient contrast */
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.85em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+.cotizacion-modal-container .producto-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 20px;
+  align-items: end;
+}
+
+.cotizacion-modal-container .producto-select {
+  grid-column: span 1;
+}
+
+.cotizacion-modal-container .btn-remove {
+  background: linear-gradient(135deg, #dc3545, #c82333);
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+}
+
+.cotizacion-modal-container .btn-remove:hover {
+  background: linear-gradient(135deg, #c82333, #bd2130);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+}
+
+.cotizacion-modal-container .producto-info {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #e9ecef;
+}
+
+.cotizacion-modal-container .subtotal-producto {
+  text-align: right;
+  color: #28a745;
+  font-size: 1.1em;
+}
+
+.cotizacion-modal-container .total-section {
+  margin-top: 32px;
+  padding: 24px;
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  border-radius: 12px;
+  border: 2px solid #dee2e6;
+}
+
+.cotizacion-modal-container .total-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cotizacion-modal-container .total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  font-size: 1.05em;
+}
+
+.cotizacion-modal-container .total-row.descuentos {
+  color: #dc3545;
+  font-weight: 500;
+}
+
+.cotizacion-modal-container .total-row.total-final {
+  border-top: 2px solid #dee2e6;
+  padding-top: 16px;
+  margin-top: 8px;
+  font-size: 1.3em;
+  color: #28a745;
+}
+
+.cotizacion-modal-container .total-final strong {
+  font-weight: 700;
+}
+
+.cotizacion-modal-container .modal-footer {
+  padding: 32px 40px;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  border-top: 1px solid rgba(226, 232, 240, 0.8);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  backdrop-filter: blur(10px);
+  position: relative;
+}
+
+.cotizacion-modal-container .modal-footer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.3), transparent);
+}
+
+.cotizacion-modal-container .footer-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #6c757d;
+  font-size: 0.9em;
+}
+
+.cotizacion-modal-container .footer-info i {
+  color: #17a2b8;
+}
+
+.cotizacion-modal-container .footer-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.cotizacion-modal-container .btn-cancel {
+  background: linear-gradient(135deg, #495057 0%, #343a40 100%);
+  color: #ffffff;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(52, 58, 64, 0.35);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cotizacion-modal-container .btn-cancel:hover {
+  background: linear-gradient(135deg, #2b3036 0%, #1f2326 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(31, 35, 38, 0.5);
+}
+
+.cotizacion-modal-container .btn-preview {
+  background: linear-gradient(135deg, #17a2b8, #138496);
+  color: #0f172a;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(23, 162, 184, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cotizacion-modal-container .btn-preview:hover {
+  background: linear-gradient(135deg, #138496, #117a8b);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(23, 162, 184, 0.4);
+}
+
+.cotizacion-modal-container .btn-save {
+  /* Darker gradient to guarantee WCAG contrast with white text */
+  background: linear-gradient(135deg, #4756c6 0%, #4a2f88 100%);
+  color: #ffffff;
+  border: none;
+  padding: 16px 32px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 700;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 
+    0 8px 25px rgba(71, 86, 198, 0.45),
+    0 2px 8px rgba(0, 0, 0, 0.12);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  position: relative;
+  overflow: hidden;
+}
+
+.cotizacion-modal-container .btn-save::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+  transition: left 0.5s;
+  pointer-events: none;
+}
+
+.cotizacion-modal-container .btn-save:hover::before {
+  left: 100%;
+}
+
+.cotizacion-modal-container .btn-save:hover {
+  background: linear-gradient(135deg, #3947a8 0%, #3f2f7a 100%);
+  color: #ffffff;
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 
+    0 12px 35px rgba(57, 71, 168, 0.52),
+    0 4px 15px rgba(0, 0, 0, 0.22);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .cotizacion-modal-container .modal-content-large {
+    width: 98%;
+    max-height: 98vh;
+    margin: 1vh auto;
+    border-radius: 12px;
+  }
+  
+  .cotizacion-modal-container .modal-header {
+    padding: 16px 20px;
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
+  
+  .cotizacion-modal-container .header-info {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .cotizacion-modal-container .modal-body {
+    padding: 20px 16px;
+  }
+  
+  .cotizacion-modal-container .form-section {
+    padding: 16px;
+    margin-bottom: 20px;
+  }
+  
+  .cotizacion-modal-container .form-row {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .cotizacion-modal-container .producto-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .cotizacion-modal-container .producto-header {
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
+  }
+  
+  .cotizacion-modal-container .modal-footer {
+    padding: 16px 20px;
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .cotizacion-modal-container .footer-actions {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .cotizacion-modal-container .footer-actions button {
+    flex: 1;
+    min-width: 120px;
+  }
+  
+  .cotizacion-modal-container .section-header {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .cotizacion-modal-container .btn-add {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .cotizacion-modal-container .modal-content-large {
+    width: 100%;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+  
+  .cotizacion-modal-container .footer-actions {
+    flex-direction: column;
+  }
+  
+  .cotizacion-modal-container .footer-actions button {
+    width: 100%;
+  }
+}

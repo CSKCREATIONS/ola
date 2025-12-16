@@ -1,0 +1,478 @@
+/* RegistrarCotizacion.css */
+
+ .encabezado-modulo {
+  margin-bottom: 1rem;
+}
+
+.titulo-profesional {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+/* Tarjetas compactas */
+.seccion-compacta {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e2e8f0;
+  margin-bottom: 1.5rem;
+}
+
+.seccion-header-compacto {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #f1f5f9;
+}
+
+.seccion-icono-compacto {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+}
+
+.seccion-titulo-compacto {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+}
+
+/* Grid responsivo */
+.grid-formulario-compacto {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+
+/* Campos de formulario compactos */
+.grupo-campo-compacto {
+  margin-bottom: 0.75rem;
+}
+
+.label-campo-compacto {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.375rem;
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.875rem;
+}
+
+.label-campo-compacto i {
+  font-size: 0.8rem;
+  width: 14px;
+}
+
+.texto-requerido {
+  color: #ef4444;
+  margin-left: 0.25rem;
+}
+
+.input-compacto {
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  background-color: white;
+  box-sizing: border-box;
+}
+
+.input-compacto:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  outline: none;
+}
+
+.input-solo-lectura {
+  background-color: #f8fafc;
+  color: #64748b;
+  cursor: not-allowed;
+}
+
+/* Dropdown de clientes compacto */
+.dropdown-clientes-compacto {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  max-height: 200px;
+  overflow-y: auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.item-dropdown-compacto {
+  padding: 0.75rem;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  border: none;
+  background: white;
+  text-align: left;
+  width: 100%;
+  border-bottom: 1px solid #f1f5f9;
+  transition: background-color 0.2s ease;
+}
+
+.item-dropdown-compacto:hover {
+  background: #f8fafc;
+}
+
+.nombre-dropdown {
+  font-weight: 600;
+  color: #111827;
+  font-size: 0.9rem;
+}
+
+.ciudad-dropdown {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.badge-prospecto-compacto {
+  margin-left: 0.5rem;
+  background: #4338ca;
+  color: white;
+  font-size: 0.7rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+/* Editor compacto */
+.contenedor-editor-compacto {
+  background: white;
+  border-radius: 8px;
+  border: 2px solid #e5e7eb;
+  overflow: hidden;
+}
+
+/* Tabla de productos compacta */
+.contenedor-tabla-productos {
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.tabla-scroll-compacto {
+  overflow-x: auto;
+  max-height: 350px;
+}
+
+.tabla-productos-compacta {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 800px;
+}
+
+.tabla-productos-compacta th {
+  background: #f8fafc;
+  padding: 0.75rem 0.5rem;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.8rem;
+  border-bottom: 2px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.tabla-productos-compacta td {
+  padding: 0.5rem;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+
+.tabla-productos-compacta input,
+.tabla-productos-compacta select {
+  width: 100%;
+  padding: 0.375rem 0.5rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  transition: border-color 0.2s ease;
+}
+
+.tabla-productos-compacta input:focus,
+.tabla-productos-compacta select:focus {
+  border-color: #3b82f6;
+  outline: none;
+}
+
+.input-cantidad-compacto {
+  text-align: center;
+  min-width: 80px;
+}
+
+.input-precio-compacto {
+  text-align: center;
+  min-width: 100px;
+}
+
+.input-descuento-compacto {
+  text-align: center;
+  min-width: 80px;
+}
+
+.input-subtotal-compacto {
+  text-align: center;
+  min-width: 100px;
+  font-weight: 600;
+  color: #047857;
+  background: #f0fdf4;
+}
+
+.alerta-stock-compacto {
+  color: #ef4444;
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  display: block;
+}
+
+/* Botones de acción compactos */
+.botones-accion-compactos {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.btn-agregar-compacto,
+.btn-limpiar-compacto,
+.btn-cancelar-compacto,
+.btn-guardar-compacto,
+.btn-enviar-compacto {
+  padding: 0.625rem 1rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: fit-content;
+}
+
+.btn-agregar-compacto {
+  background: #047857;
+  color: white;
+}
+
+.btn-agregar-compacto:hover {
+  background: #059669;
+  transform: translateY(-1px);
+}
+
+.btn-limpiar-compacto {
+  background: white;
+  color: #b91c1c;
+  border: 1px solid #b91c1c;
+}
+
+.btn-limpiar-compacto:hover {
+  background: #dc2626;
+  color: white;
+  transform: translateY(-1px);
+}
+
+.btn-eliminar-compacto {
+  padding: 0.375rem;
+  border: none;
+  border-radius: 4px;
+  background: #dc2626;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  transition: all 0.2s ease;
+}
+
+.btn-eliminar-compacto:hover {
+  background: #dc2626;
+  transform: scale(1.1);
+}
+
+/* Botones finales compactos */
+.botones-finales-compactos {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.btn-cancelar-compacto {
+  background: white;
+  color: #374151;
+  border: 1px solid #e5e7eb;
+}
+
+.btn-cancelar-compacto:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+  transform: translateY(-1px);
+}
+
+.btn-guardar-compacto {
+  background: #1d4ed8;
+  color: white;
+}
+
+.btn-guardar-compacto:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.btn-enviar-compacto {
+  background: #047857;
+  color: white;
+}
+
+.btn-enviar-compacto:hover {
+  background: #059669;
+  transform: translateY(-1px);
+}
+
+/* Estados vacíos */
+.estado-vacio-compacto {
+  padding: 2rem;
+  text-align: center;
+  color: #64748b;
+  font-style: italic;
+}
+
+.estado-vacio-compacto i {
+  font-size: 1.5rem;
+  color: #cbd5e1;
+  margin-bottom: 0.5rem;
+}
+
+/* Total */
+.fila-total-compacta {
+  background: #f8fafc;
+  border-top: 2px solid #e2e8f0;
+}
+
+.fila-total-compacta td {
+  padding: 0.75rem 0.5rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.valor-total-compacto {
+  color: #059669;
+  font-size: 1rem;
+  text-align: center;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .registrar-cotizacion-modulo {
+    padding: 0.5rem;
+  }
+  
+  .seccion-compacta {
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .grid-formulario-compacto {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .seccion-header-compacto {
+    margin-bottom: 1rem;
+  }
+  
+  .seccion-titulo-compacto {
+    font-size: 1rem;
+  }
+  
+  .botones-accion-compactos,
+  .botones-finales-compactos {
+    justify-content: center;
+  }
+  
+  .botones-finales-compactos {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .botones-finales-compactos button {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .tabla-scroll-compacto {
+    max-height: 300px;
+  }
+  
+  .tabla-productos-compacta {
+    font-size: 0.8rem;
+  }
+  
+  .tabla-productos-compacta th,
+  .tabla-productos-compacta td {
+    padding: 0.375rem 0.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .registrar-cotizacion-modulo {
+    padding: 0.25rem;
+  }
+  
+  .seccion-compacta {
+    padding: 0.75rem;
+    border-radius: 8px;
+  }
+  
+  .input-compacto {
+    padding: 0.5rem 0.625rem;
+    font-size: 0.85rem;
+  }
+  
+  .btn-agregar-compacto,
+  .btn-limpiar-compacto,
+  .btn-cancelar-compacto,
+  .btn-guardar-compacto,
+  .btn-enviar-compacto {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+  }
+  
+  .seccion-icono-compacto {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .titulo-profesional {
+    font-size: 1.25rem;
+  }
+}

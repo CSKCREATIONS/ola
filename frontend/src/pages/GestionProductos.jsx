@@ -1,0 +1,982 @@
+import React, { useEffect, useState } from 'react';
+import PropTypes from 'prop-types';
+import Swal from 'sweetalert2';
+import '../App.css';
+import Fijo from '../components/Fijo';
+import NavProductos from '../components/NavProductos';
+import SharedListHeaderCard from '../components/SharedListHeaderCard';
+import api from '../api/axiosConfig';
+import { calcularInventario } from '../utils/calculations';
+import AdvancedStats from '../components/AdvancedStats';
+
+// API endpoint constants used in this page
+const API_PRODUCTS = '/api/products';
+
+const ProductoModal = ({
+  producto,
+  onClose,
+  onSave,
+  categorias = [],
+  proveedores = [],
+  onToggleEstado
+}) => {
+  const [form, setForm] = useState({
+    name: producto?.name || '',
+    description: producto?.description || '',
+    price: producto?.price || '',
+    stock: producto?.stock || '',
+    category: producto?.category?._id || producto?.category || '',
+    proveedor: producto?.proveedor?._id || producto?.proveedor || ''
+  });
+
+  const handleChange = e => {
+    const { name, value } = e.target;
+    setForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = e => {
+    e.preventDefault();
+    if (Object.values(form).includes('')) {
+      Swal.fire('Error', 'Todos los campos son obligatorios', 'warning');
+      return;
+    }
+    onSave(producto ? { ...producto, ...form } : form);
+  };
+
+  return (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      background: 'rgba(0, 0, 0, 0.5)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 1000
+    }}>
+      <div style={{
+        background: 'white',
+        borderRadius: '20px',
+        width: '90%',
+        maxWidth: '900px',
+        maxHeight: '90vh',
+        height: '90vh',
+        display: 'flex',
+        flexDirection: 'column',
+        boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)'
+      }}>
+        <form onSubmit={handleSubmit} style={{
+          display: 'flex',
+          flexDirection: 'column',
+          flex: 1,
+          minHeight: 0
+        }}>
+          {/* Encabezado del modal */}
+          <div style={{
+            padding: '2rem 2.5rem',
+            background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+            borderRadius: '20px 20px 0 0',
+            color: 'white',
+            flexShrink: 0,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}>
+            <h3 style={{
+              margin: 0,
+              fontSize: '1.8rem',
+              fontWeight: '700'
+            }}>
+              {producto ? 'Editar Producto' : 'Agregar Producto'}
+            </h3>
+            <button
+              type="button"
+              onClick={onClose}
+              style={{
+                background: 'rgba(255, 255, 255, 0.2)',
+                border: 'none',
+                borderRadius: '8px',
+                color: 'white',
+                fontSize: '1.5rem',
+                width: '40px',
+                height: '40px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              &times;
+            </button>
+          </div>
+
+          {/* Contenido scrolleable */}
+          <div style={{
+            flex: 1,
+            minHeight: 0,
+            overflowY: 'auto',
+            padding: '2rem 2.5rem'
+          }}>
+            {/* Información Básica */}
+            <div style={{
+              background: 'white',
+              padding: '1.5rem',
+              borderRadius: '12px',
+              marginBottom: '1.5rem',
+              border: '1px solid #e2e8f0',
+              borderLeft: '4px solid #f59e0b'
+            }}>
+              <h4 style={{
+                margin: '0 0 1.5rem 0',
+                color: '#1e293b',
+                fontSize: '1.1rem',
+                fontWeight: '600',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}>
+                <i className="fa-solid fa-info-circle" style={{ color: '#f59e0b' }} aria-hidden={true}></i>
+                <span>Información Básica</span>
+              </h4>
+
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '2fr 1fr',
+                gap: '1.5rem',
+                marginBottom: '1.5rem'
+              }}>
+                <div>
+                  <label htmlFor="input-producto-nombre" style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    marginBottom: '0.5rem',
+                    fontWeight: '600',
+                    color: '#374151',
+                    fontSize: '0.95rem'
+                  }}>
+                    <i className="fa-solid fa-tag" style={{ color: '#3b82f6', fontSize: '0.9rem' }} aria-hidden={true}></i>
+                    <span>Nombre del Producto</span>
+                    <span style={{ color: '#ef4444' }}>*</span>
+                  </label>
+                  <input
+                    id="input-producto-nombre"
+                    name="name"
+                    value={form.name}
+                    onChange={handleChange}
+                    placeholder="Ingrese el nombre del producto"
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '0.875rem 1rem',
+                      border: '2px solid #e5e7eb',
+                      borderRadius: '10px',
+                      fontSize: '1rem',
+                      transition: 'all 0.3s ease',
+                      backgroundColor: '#ffffff',
+                      fontFamily: 'inherit',
+                      boxSizing: 'border-box'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#f59e0b';
+                      e.target.style.boxShadow = '0 0 0 3px rgba(245, 158, 11, 0.1)';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#e5e7eb';
+                      e.target.style.boxShadow = 'none';
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="input-producto-precio" style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    marginBottom: '0.5rem',
+                    fontWeight: '600',
+                    color: '#374151',
+                    fontSize: '0.95rem'
+                  }}>
+                    <i className="fa-solid fa-dollar-sign" style={{ color: '#10b981', fontSize: '0.9rem' }} aria-hidden={true}></i>
+                    <span>Precio</span>
+                    <span style={{ color: '#ef4444' }}>*</span>
+                  </label>
+                  <input
+                    id="input-producto-precio"
+                    type="number"
+                    step="0.01"
+                    name="price"
+                    value={form.price}
+                    onChange={handleChange}
+                    placeholder="0.00"
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '0.875rem 1rem',
+                      border: '2px solid #e5e7eb',
+                      borderRadius: '10px',
+                      fontSize: '1rem',
+                      transition: 'all 0.3s ease',
+                      backgroundColor: '#ffffff',
+                      fontFamily: 'inherit',
+                      boxSizing: 'border-box'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#f59e0b';
+                      e.target.style.boxShadow = '0 0 0 3px rgba(245, 158, 11, 0.1)';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#e5e7eb';
+                      e.target.style.boxShadow = 'none';
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '2fr 1fr',
+                gap: '1.5rem'
+              }}>
+                <div>
+                  <label htmlFor="input-producto-descripcion" style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    marginBottom: '0.5rem',
+                    fontWeight: '600',
+                    color: '#374151',
+                    fontSize: '0.95rem'
+                  }}>
+                    <i className="fa-solid fa-align-left" style={{ color: '#8b5cf6', fontSize: '0.9rem' }} aria-hidden={true}></i>
+                    <span>Descripción</span>
+                    <span style={{ color: '#ef4444' }}>*</span>
+                  </label>
+                  <input
+                    id="input-producto-descripcion"
+                    name="description"
+                    value={form.description}
+                    onChange={handleChange}
+                    placeholder="Descripción detallada del producto"
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '0.875rem 1rem',
+                      border: '2px solid #e5e7eb',
+                      borderRadius: '10px',
+                      fontSize: '1rem',
+                      transition: 'all 0.3s ease',
+                      backgroundColor: '#ffffff',
+                      fontFamily: 'inherit',
+                      boxSizing: 'border-box'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#f59e0b';
+                      e.target.style.boxShadow = '0 0 0 3px rgba(245, 158, 11, 0.1)';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#e5e7eb';
+                      e.target.style.boxShadow = 'none';
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="input-producto-stock" style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    marginBottom: '0.5rem',
+                    fontWeight: '600',
+                    color: '#374151',
+                    fontSize: '0.95rem'
+                  }}>
+                    <i className="fa-solid fa-warehouse" style={{ color: '#ef4444', fontSize: '0.9rem' }} aria-hidden={true}></i>
+                    <span>Stock</span>
+                    <span style={{ color: '#ef4444' }}>*</span>
+                  </label>
+                  <input
+                    id="input-producto-stock"
+                    type="number"
+                    name="stock"
+                    value={form.stock}
+                    onChange={handleChange}
+                    placeholder="0"
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '0.875rem 1rem',
+                      border: '2px solid #e5e7eb',
+                      borderRadius: '10px',
+                      fontSize: '1rem',
+                      transition: 'all 0.3s ease',
+                      backgroundColor: '#ffffff',
+                      fontFamily: 'inherit',
+                      boxSizing: 'border-box'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#f59e0b';
+                      e.target.style.boxShadow = '0 0 0 3px rgba(245, 158, 11, 0.1)';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#e5e7eb';
+                      e.target.style.boxShadow = 'none';
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Clasificación */}
+            <div style={{
+              background: 'white',
+              padding: '1.5rem',
+              borderRadius: '12px',
+              marginBottom: '1.5rem',
+              border: '1px solid #e2e8f0',
+              borderLeft: '4px solid #10b981'
+            }}>
+              <h4 style={{
+                margin: '0 0 1.5rem 0',
+                color: '#1e293b',
+                fontSize: '1.1rem',
+                fontWeight: '600',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}>
+                <i className="fa-solid fa-sitemap" style={{ color: '#10b981' }} aria-hidden={true}></i>
+                <span>Clasificación y Proveedor</span>
+              </h4>
+
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                gap: '1.5rem'
+              }}>
+                <div>
+                  <label htmlFor="input-producto-categoria" style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    marginBottom: '0.5rem',
+                    fontWeight: '600',
+                    color: '#374151',
+                    fontSize: '0.95rem'
+                  }}>
+                    <i className="fa-solid fa-folder" style={{ color: '#3b82f6', fontSize: '0.9rem' }} aria-hidden={true}></i>
+                    <span>Categoría</span>
+                    <span style={{ color: '#ef4444' }}>*</span>
+                  </label>
+                  <select
+                    id="input-producto-categoria"
+                    name="category"
+                    value={form.category}
+                    onChange={handleChange}
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '0.875rem 1rem',
+                      border: '2px solid #e5e7eb',
+                      borderRadius: '10px',
+                      fontSize: '1rem',
+                      transition: 'all 0.3s ease',
+                      backgroundColor: '#ffffff',
+                      fontFamily: 'inherit',
+                      boxSizing: 'border-box'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#f59e0b';
+                      e.target.style.boxShadow = '0 0 0 3px rgba(245, 158, 11, 0.1)';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#e5e7eb';
+                      e.target.style.boxShadow = 'none';
+                    }}
+                  >
+                    <option value="">Seleccione Categoría</option>
+                    {categorias.map(cat => (
+                      <option key={cat._id} value={cat._id}>{cat.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label htmlFor="input-producto-proveedor" style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    marginBottom: '0.5rem',
+                    fontWeight: '600',
+                    color: '#374151',
+                    fontSize: '0.95rem'
+                  }}>
+                    <i className="fa-solid fa-truck" style={{ color: '#f59e0b', fontSize: '0.9rem' }} aria-hidden={true}></i>
+                    <span>Proveedor</span>
+                    <span style={{ color: '#ef4444' }}>*</span>
+                  </label>
+                  <select
+                    id="input-producto-proveedor"
+                    name="proveedor"
+                    value={form.proveedor}
+                    onChange={handleChange}
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '0.875rem 1rem',
+                      border: '2px solid #e5e7eb',
+                      borderRadius: '10px',
+                      fontSize: '1rem',
+                      transition: 'all 0.3s ease',
+                      backgroundColor: '#ffffff',
+                      fontFamily: 'inherit',
+                      boxSizing: 'border-box'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#f59e0b';
+                      e.target.style.boxShadow = '0 0 0 3px rgba(245, 158, 11, 0.1)';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#e5e7eb';
+                      e.target.style.boxShadow = 'none';
+                    }}
+                  >
+                    <option value="">Seleccione Proveedor</option>
+                    {Array.isArray(proveedores) && proveedores.map(prov => (
+                      <option key={prov._id} value={prov._id}>
+                        {prov.nombre} ({prov.empresa || 'Sin empresa'})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Botones de acción */}
+          <div style={{
+            display: 'flex',
+            gap: '1.5rem',
+            justifyContent: 'flex-end',
+            padding: '2rem 2.5rem',
+            borderTop: '2px solid #e5e7eb',
+            backgroundColor: 'white',
+            borderRadius: '0 0 20px 20px',
+            flexShrink: 0
+          }}>
+            <button
+              type="button"
+              onClick={onClose}
+              style={{
+                padding: '0.875rem 1.5rem',
+                border: '2px solid #e5e7eb',
+                borderRadius: '10px',
+                backgroundColor: 'white',
+                color: '#374151',
+                cursor: 'pointer',
+                fontWeight: '600',
+                fontSize: '0.95rem',
+                transition: 'all 0.3s ease',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.backgroundColor = '#f3f4f6';
+                e.target.style.borderColor = '#d1d5db';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.backgroundColor = 'white';
+                e.target.style.borderColor = '#e5e7eb';
+              }}
+            >
+              <i className="fa-solid fa-times" aria-hidden={true}></i>
+              <span>Cancelar</span>
+            </button>
+
+            <button
+              type="submit"
+              style={{
+                padding: '0.875rem 1.5rem',
+                border: 'none',
+                borderRadius: '10px',
+                background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                color: 'white',
+                cursor: 'pointer',
+                fontWeight: '600',
+                fontSize: '0.95rem',
+                transition: 'all 0.3s ease',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                boxShadow: '0 4px 6px -1px rgba(245, 158, 11, 0.3)'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.transform = 'translateY(-1px)';
+                e.target.style.boxShadow = '0 6px 12px -1px rgba(245, 158, 11, 0.4)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = 'translateY(0)';
+                e.target.style.boxShadow = '0 4px 6px -1px rgba(245, 158, 11, 0.3)';
+              }}
+            >
+              <i className="fa-solid fa-save" aria-hidden={true}></i>
+              <span>{producto ? 'Actualizar' : 'Guardar'} Producto</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// PropTypes for ProductoModal (moved outside to avoid redefining on each render)
+ProductoModal.propTypes = {
+  producto: PropTypes.shape({
+    _id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    name: PropTypes.string,
+    description: PropTypes.string,
+    price: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    stock: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    category: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
+    proveedor: PropTypes.oneOfType([PropTypes.string, PropTypes.object])
+  }),
+  onClose: PropTypes.func,
+  onSave: PropTypes.func.isRequired,
+  categorias: PropTypes.array,
+  proveedores: PropTypes.array,
+  onToggleEstado: PropTypes.func
+};
+
+ProductoModal.defaultProps = {
+  producto: null,
+  onClose: () => { },
+  categorias: [],
+  proveedores: [],
+  onToggleEstado: () => { }
+};
+
+const GestionProductos = () => {
+  const [productos, setProductos] = useState([]);
+  const [categorias, setCategorias] = useState([]);
+  const [proveedores, setProveedores] = useState([]);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [productoEditando, setProductoEditando] = useState(null);
+  const [filtroEstado, setFiltroEstado] = useState('todos');
+
+  const [paginaActual, setPaginaActual] = useState(1);
+  const itemsPorPagina = 10;
+
+  const productosFiltrados = productos.filter(prod => {
+    if (filtroEstado === 'activos') return prod.activo;
+    if (filtroEstado === 'inactivos') return !prod.activo;
+    return true;
+  });
+
+  const totalPaginas = Math.ceil(productosFiltrados.length / itemsPorPagina);
+  const indiceInicio = (paginaActual - 1) * itemsPorPagina;
+  const indiceFin = indiceInicio + itemsPorPagina;
+  const productosPaginados = productosFiltrados.slice(indiceInicio, indiceFin);
+
+  const cambiarPagina = (numeroPagina) => {
+    setPaginaActual(numeroPagina);
+  };
+
+  useEffect(() => {
+    setPaginaActual(1);
+  }, [filtroEstado]);
+
+  useEffect(() => {
+    loadProductos();
+    loadCategorias();
+  }, []);
+
+  useEffect(() => {
+    const fetchProveedores = async () => {
+      try {
+        const res = await api.get('/api/proveedores/activos');
+        const data = res.data || res;
+        setProveedores(data.proveedores || data.data || []);
+      } catch (error) {
+        console.error('Error al cargar proveedores', error);
+      }
+    };
+
+    fetchProveedores();
+  }, []);
+
+  const loadProductos = async () => {
+    try {
+      const res = await api.get('/api/products');
+      const result = res.data || res;
+      const lista = result.products || result.data || result;
+      const productosOrdenados = (Array.isArray(lista) ? lista : []).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      setProductos(productosOrdenados);
+    } catch (err) {
+      console.error('Error loading products', err);
+      Swal.fire('Error', `No se pudieron cargar los productos: ${err?.message || err}`, 'error');
+      setProductos([]);
+    }
+  };
+
+  const handleSave = async (producto) => {
+    const url = producto._id ? `${API_PRODUCTS}/${producto._id}` : API_PRODUCTS;
+    const method = producto._id ? 'PUT' : 'POST';
+
+    const dataToSend = {
+      ...producto,
+      proveedor: typeof producto.proveedor === 'object' ? producto.proveedor._id : producto.proveedor,
+      category: typeof producto.category === 'object' ? producto.category._id : producto.category,
+    };
+
+    try {
+      const res = await api({ url, method, data: dataToSend });
+      if (!(res.status >= 200 && res.status < 300)) throw new Error('Error al guardar el producto');
+      Swal.fire('Éxito', 'Producto guardado correctamente', 'success');
+      setModalVisible(false);
+      loadProductos();
+    } catch (err) {
+      const backendMsg = err?.response?.data?.message || err.message || 'Error al guardar el producto';
+
+      // Mostrar modal específico cuando el backend indica nombre duplicado
+      if (/ya existe/i.test(backendMsg) || /producto con ese nombre/i.test(backendMsg) || /duplicate key/i.test(backendMsg)) {
+        Swal.fire('Error', 'Ya existe un producto con ese nombre', 'error');
+        return;
+      }
+
+      Swal.fire('Error', 'Ya existe un producto con ese nombre', 'error');
+    }
+  };
+
+  const handleEdit = producto => {
+    setProductoEditando(producto);
+    setModalVisible(true);
+  };
+
+  const handleToggleEstado = async (producto, estadoActual) => {
+    const productoId = producto._id;
+    const accion = estadoActual ? 'deactivate' : 'activate';
+    const url = `${API_PRODUCTS}/${productoId}/${accion}`;
+
+    try {
+      // Backend define PATCH para activar/desactivar productos
+      const res = await api.patch(url);
+      if (res.status >= 200 && res.status < 300) {
+        Swal.fire(`Producto ${accion === 'deactivate' ? 'desactivado' : 'activado'}`, '', 'success');
+        loadProductos();
+      } else {
+        throw new Error(res.data?.message || `No se pudo ${accion} el producto`);
+      }
+    } catch (error) {
+      const backendMsg = error?.response?.data?.message || error.message || '';
+      // Mensaje específico cuando se intenta activar y la categoría está desactivada
+      if (!estadoActual && /categoria|categoría/i.test(backendMsg) && /desactivada/i.test(backendMsg)) {
+        Swal.fire('Categoría inactiva', 'No se puede activar el producto porque su categoría está desactivada', 'warning');
+        return;
+      }
+      Swal.fire('Error', backendMsg || 'Error inesperado', 'error');
+    }
+  };
+
+  const loadCategorias = async () => {
+    try {
+      const res = await api.get('/api/categories');
+      const result = res.data || res;
+      const data = result.categories || result.data || result;
+      setCategorias(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('Error loading categories', err);
+      setCategorias([]);
+    }
+  };
+
+  return (
+    <>
+      <Fijo />
+      <div className="content">
+        <NavProductos />
+        <div className="max-width">
+          <div className="contenido-modulo">
+            <SharedListHeaderCard
+              title="Gestión de Productos"
+              subtitle="Administra el inventario y catálogo de productos"
+              iconClass="fa-solid fa-boxes-stacked"
+            >
+              <div className="export-buttons">
+                <button
+                  onClick={() => {
+                    setProductoEditando(null);
+                    setModalVisible(true);
+                  }}
+                  className="export-btn create"
+                >
+                  <i className="fa-solid fa-plus"></i><span>Agregar Producto</span>
+                </button>
+              </div>
+            </SharedListHeaderCard>
+
+            {/* Estadísticas avanzadas */}
+            <AdvancedStats cards={[
+              { iconClass: 'fa-solid fa-boxes-stacked', gradient: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', value: productos.length, label: 'Total Productos' },
+              { iconClass: 'fa-solid fa-check-circle', gradient: 'linear-gradient(135deg, #10b981, #059669)', value: productos.filter(p => p.activo).length, label: 'Productos Activos' },
+              { iconClass: 'fa-solid fa-exclamation-triangle', gradient: 'linear-gradient(135deg, #ef4444, #dc2626)', value: productos.filter(p => p.stock < 10).length, label: 'Stock Bajo' },
+              { iconClass: 'fa-solid fa-dollar-sign', gradient: 'linear-gradient(135deg, #8b5cf6, #7c3aed)', value: `$${calcularInventario(productos).totalValue.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`, label: 'Valor Total del Inventario' }
+            ]} />
+
+            {/* Estadísticas adicionales del inventario */}
+            <div className="inventory-stats-grid">
+              {/* Valor promedio por producto */}
+              <div className="inventory-stat-card blue-gradient">
+                <div className="stat-card-content">
+                  <div className="stat-card-icon blue-icon">
+                    <i className="fa-solid fa-calculator"></i>
+                  </div>
+                  <div>
+                    <h3 className="stat-card-value">
+                      ${productos.length > 0 ? calcularInventario(productos).avgValuePerProduct.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) : '0'}
+                    </h3>
+                    <p className="stat-card-label">
+                      Valor Promedio por Producto
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Stock total */}
+              <div className="inventory-stat-card purple-gradient">
+                <div className="stat-card-content">
+                  <div className="stat-card-icon purple-icon">
+                    <i className="fa-solid fa-boxes-stacked"></i>
+                  </div>
+                  <div>
+                    <h3 className="stat-card-value">
+                      {calcularInventario(productos).totalStock.toLocaleString()}
+                    </h3>
+                    <p className="stat-card-label">
+                      Unidades en Stock Total
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Productos con bajo stock */}
+              <div className="inventory-stat-card yellow-gradient">
+                <div className="stat-card-content">
+                  <div className="stat-card-icon yellow-icon">
+                    <i className="fa-solid fa-triangle-exclamation"></i>
+                  </div>
+                  <div>
+                    <h3 className="stat-card-value">
+                      {productos.filter(p => (Number.parseInt(p.stock) || 0) < 10).length}
+                    </h3>
+                    <p className="stat-card-label">
+                      Productos con Bajo Stock
+                    </p>
+                    <p className="stat-card-sublabel">
+                      Menos de 10 unidades
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Panel de filtros avanzado */}
+            <div className="filters-panel">
+              <div className="filters-header">
+                <i className="fa-solid fa-filter filter-header-icon"></i>
+                <h4 className="filters-title">
+                  Filtros de Productos
+                </h4>
+              </div>
+
+              <div className="filters-grid">
+                <div className="filter-group">
+                  <label htmlFor="input-gestion-prod-1" className="filter-label">
+                    Estado del Producto
+                  </label>
+                  <select 
+                    id="input-gestion-prod-1"
+                    value={filtroEstado}
+                    onChange={(e) => setFiltroEstado(e.target.value)}
+                    className="filter-input"
+                  >
+                    <option value="todos">Todos los estados</option>
+                    <option value="activos">Productos Activos</option>
+                    <option value="inactivos">Productos Inactivos</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Tabla de productos */}
+            <div className="table-container">
+              <div className="table-header">
+                <div className="table-header-content">
+                  <div className="table-header-icon">
+                    <i className="fa-solid fa-table" style={{ color: 'white', fontSize: '16px' }}></i>
+                  </div>
+                  <div>
+                    <h4 className="table-title">
+                      Lista de productos
+                    </h4>
+                    <p className="table-subtitle">
+                      Mostrando {productosPaginados.length} de {productosFiltrados.length} productos
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ overflow: 'auto' }}>
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>
+                        <i className="fa-solid fa-hashtag icon-gap" style={{ color: '#6366f1' }}></i>
+                      </th>
+                      <th>
+                        <i className="fa-solid fa-tag icon-gap"></i><span>NOMBRE</span>
+                      </th>
+                      <th>
+                        <i className="fa-solid fa-align-left icon-gap" style={{ color: '#6366f1' }}></i><span>DESCRIPCIÓN</span>
+                      </th>
+                      <th>
+                        <i className="fa-solid fa-dollar-sign icon-gap"></i><span>PRECIO</span>
+                      </th>
+                      <th>
+                        <i className="fa-solid fa-boxes-stacked icon-gap" style={{ color: '#6366f1' }}></i><span>STOCK</span>
+                      </th>
+                      <th>
+                        <i className="fa-solid fa-layer-group icon-gap"></i><span>CATEGORÍA</span>
+                      </th>
+                      <th>
+                        <i className="fa-solid fa-truck icon-gap" style={{ color: '#6366f1' }}></i><span>PROVEEDOR</span>
+                      </th>
+                      <th style={{ textAlign: 'center' }}>
+                        <i className="fa-solid fa-toggle-on icon-gap"></i><span>ESTADO</span>
+                      </th>
+                      <th style={{ textAlign: 'center' }}>
+                        <i className="fa-solid fa-cogs icon-gap" style={{ color: '#6366f1' }}></i><span>ACCIONES</span>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {productosPaginados.map((prod, index) => (
+                      <tr key={prod._id}>
+                        <td style={{ fontWeight: '600', color: '#6366f1' }}>
+                          {indiceInicio + index + 1}
+                        </td>
+                        <td style={{ fontWeight: '600', color: '#1f2937', fontSize: '14px' }}>
+                          {prod.name}
+                        </td>
+                        <td>
+                          <div className="product-description">
+                            {prod.description}
+                          </div>
+                        </td>
+                        <td style={{ fontWeight: '600', color: '#059669' }}>
+                          ${prod.price}
+                        </td>
+                        <td>
+                          <span className={`stock-badge ${prod.stock < 10 ? 'low-stock' : 'normal-stock'}`}>
+                            {prod.stock}
+                          </span>
+                        </td>
+                        <td>
+                          {prod.category?.name || '-'}
+                        </td>
+                        <td>
+                          {prod.proveedor?.nombre || '-'}
+                        </td>
+                        <td style={{ textAlign: 'center' }}>
+                          <label className="switch">
+                            <input
+                              type="checkbox"
+                              checked={!!prod.activo}
+                              aria-label={`Estado del producto ${prod.name || prod._id}`}
+                              onChange={() => handleToggleEstado(prod, prod.activo)}
+                              style={{ opacity: 0, width: 0, height: 0 }}
+                            />
+                            <span className="slider" style={{
+                              backgroundColor: prod.activo ? '#10b981' : '#ef4444'
+                            }}></span>
+                          </label>
+                        </td>
+                        <td>
+                          <div className="action-buttons">
+                            <button 
+                              className="action-btn edit"
+                              onClick={() => handleEdit(prod)}
+                              title="Editar producto"
+                            >
+                              <i className="fa-solid fa-pen-to-square"></i>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    {productosFiltrados.length === 0 && (
+                      <tr>
+                        <td colSpan="9">
+                          <div className="table-empty-state">
+                            <div className="table-empty-icon">
+                              <i className="fa-solid fa-boxes-stacked" style={{ fontSize: '3.5rem', color: '#9ca3af' }}></i>
+                            </div>
+                            <div>
+                              <h5 className="table-empty-title">
+                                No hay productos disponibles
+                              </h5>
+                              <p className="table-empty-text">
+                                No se encontraron productos con los criterios de búsqueda
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Paginación */}
+              {totalPaginas > 1 && (
+                <div className="table-pagination">
+                  {Array.from({ length: totalPaginas }, (_, i) => (
+                    <button
+                      key={i + 1}
+                      onClick={() => cambiarPagina(i + 1)}
+                      className={`pagination-btn ${paginaActual === i + 1 ? 'active' : ''}`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {modalVisible && (
+              <ProductoModal
+                producto={productoEditando}
+                onClose={() => setModalVisible(false)}
+                onSave={handleSave}
+                categorias={categorias || []}
+                proveedores={proveedores || []}
+                onToggleEstado={handleToggleEstado}
+              />
+            )}
+          </div>
+        </div>
+
+        <div className="custom-footer">
+          <p className="custom-footer-text">
+            © 2025 <span className="custom-highlight">PANGEA</span>. Todos los derechos reservados.
+          </p>
+        </div>
+      </div>
+    </>
+  );
+}
+
+export default GestionProductos;

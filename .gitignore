@@ -1,0 +1,78 @@
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+/.pnp/
+.pnp.js
+
+# Build outputs
+/frontend/build/
+/frontend/dist/
+/backend/build/
+/backend/dist/
+
+# Environment variables
+.env
+.env.*
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+
+# Docker
+docker-compose.override.yml
+**/docker-compose.override.yml
+docker-compose.local.yml
+*.local.env
+
+# Containers / runtime
+/tmp/
+pids/
+*.pid
+*.seed
+
+# Database
+/mongo_data/
+/.mongodb/
+
+# Testing
+/coverage/
+
+# Misc
+.cache/
+.next/
+.parcel-cache/
+dist/
+build/
+public/build/
+
+# Editor swap
+*~
+# Windows
+ehthumbs.db
+Icon?
+node_modules
+.env
+frontend/.env
+*.env
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/

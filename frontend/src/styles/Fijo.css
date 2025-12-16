@@ -1,0 +1,470 @@
+
+/* ===== HEADER RESPONSIVE ===== */
+.header {
+  background: var(--gradient-secondary);
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem;
+  align-items: center;
+  color: var(--text-white);
+  z-index: 1000;
+  transition: var(--transition);
+  box-shadow: var(--shadow-soft);
+  width: 100%;
+}
+
+/* Header fijo solo en desktop */
+@media (min-width: 768px) {
+  .header {
+    padding: 1rem 2rem;
+  }
+
+  
+}
+
+/* ===== IZQUIERDA DEL HEADER ===== */
+.izquierda {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.empresa-nombre {
+  text-decoration: none;
+  font-size: 1.8em;
+  transition: var(--transition);
+  color: var(--text-white);
+  cursor: pointer;
+  font-family: 'Poppins', sans-serif;
+  font-style: italic;
+  font-weight: 700;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.empresa-nombre:hover {
+  transform: translateY(-1px);
+  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+/* Botón del menú hamburguesa */
+#btn-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+  padding: 12px;
+  transition: var(--transition);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--border-radius);
+}
+
+#btn-menu:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
+}
+
+.palito {
+  background: var(--text-lighter);
+  border-radius: 2px;
+  width: 24px;
+  height: 3px;
+  transition: var(--transition);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+#btn-menu:hover .palito {
+  background: var(--text-white);
+  transform: scaleX(1.1);
+}
+
+/* ===== USUARIO EN HEADER ===== */
+.user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-link {
+  color: var(--text-white);
+  font-weight: 500;
+  transition: var(--transition);
+  text-decoration: none;
+  font-size: 0.95rem;
+}
+
+.user-link:hover {
+  color: var(--text-lighter);
+  transform: translateY(-1px);
+}
+
+.user-icon {
+  height: 44px;
+  width: 44px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  transition: var(--transition);
+  box-shadow: var(--shadow-soft);
+}
+
+.user-icon:hover {
+  border-color: var(--text-white);
+  transform: scale(1.08);
+  box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
+}
+
+/* ===== MENÚ LATERAL ===== */
+.menu {
+  background: var(--gradient-secondary);
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: -270px;
+  width: 270px;
+  z-index: 1001;
+  display: flex;
+  flex-direction: column;
+  transition: var(--transition);
+  box-shadow: var(--shadow-strong);
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.menu::-webkit-scrollbar {
+  display: none;
+}
+
+.mostrar-menu {
+  left: 0;
+}
+
+
+
+
+
+
+/* ===== PREVIEW DEL USUARIO ===== */
+.preview-usuario {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 2.3rem 1.5rem 2rem;
+  color: var(--text-white);
+  text-decoration: none;
+  transition: var(--transition);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.preview-usuario:hover {
+  background: var(--hover-strong);
+  transform: translateX(5px);
+}
+
+.preview-usuario-img {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  transition: var(--transition);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.preview-usuario:hover .preview-usuario-img {
+  border-color: rgba(255, 255, 255, 0.6);
+  transform: scale(1.05);
+}
+
+/* Avatar con iniciales (usado en lugar de img) */
+.avatar-initials {
+  display: grid;
+  place-items: center;
+  background: var(--gradient-secondary);
+  color: var(--text-white);
+  font-weight: 700;
+  text-transform: uppercase;
+  user-select: none;
+}
+
+/* Tamaños de fuente acordes al contenedor */
+.user-icon.avatar-initials {
+  font-size: 0.95rem;
+}
+
+.preview-usuario-img.avatar-initials {
+  font-size: 1.2rem;
+}
+
+.datos-usuario {
+  flex: 1;
+}
+
+.usuario-nombre {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-white);
+  display: block;
+  margin-bottom: 4px;
+  line-height: 1.3;
+}
+
+.usuario-rol {
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: var(--text-light);
+  opacity: 0.9;
+  line-height: 1.2;
+}
+
+/* ===== TÍTULO DEL MENÚ ===== */
+.menu-title {
+  padding: 1rem 1.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.7);
+  letter-spacing: 1.5px;
+  background: rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  margin-top: 0;
+}
+
+/* ===== MÓDULOS Y SUBMENÚS ===== */
+.modulos-menu {
+  flex: 1;
+  padding: 0;
+  width: 100%;
+  position: relative;
+  padding-bottom: 100px;
+  /* Espacio para el botón fijo */
+}
+
+.modulos-menu nav {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Botones principales del menú */
+.menu-toggle-button {
+  background: transparent;
+  border: none;
+  padding: 1rem 1.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  color: var(--text-light);
+  transition: var(--transition);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.menu-toggle-button:hover {
+  background: var(--hover-strong);
+  color: var(--text-white);
+  padding-left: 1.75rem;
+}
+
+.menu-toggle-button i {
+  font-size: 1.1rem;
+  width: 20px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.8);
+  transition: var(--transition);
+}
+
+.menu-toggle-button:hover i {
+  color: var(--text-white);
+  transform: scale(1.1);
+}
+
+/* Submenús */
+.dropdown {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+  opacity: 0;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.dropdown.visible {
+  max-height: 1000px;
+  opacity: 1;
+}
+
+.dropdown-link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+
+.dropdown li {
+  padding: 0.85rem 1.5rem 0.85rem 3.5rem;
+  color: var(--text-light);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.8rem;
+  transition: var(--transition);
+  border-left: 3px solid transparent;
+  cursor: pointer;
+}
+
+.dropdown li:hover {
+  background: var(--hover-strong);
+  color: var(--text-white);
+  border-left-color: #e3dffa;
+  padding-left: 3.75rem;
+}
+
+.dropdown li i {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
+  width: 16px;
+  text-align: center;
+  transition: var(--transition);
+}
+
+.dropdown li:hover i {
+  color: var(--text-white);
+  transform: scale(1.1);
+}
+
+/* ===== BOTÓN CERRAR SESIÓN FIJO ===== */
+.logout-btn {
+  bottom: 2rem;
+  width: calc(100% - 3rem);
+  width: 100%;
+  padding: 1rem 1.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-white);
+  background: var(--gradient-accent);
+  cursor: pointer;
+  transition: var(--transition);
+  text-align: center;
+  letter-spacing: 0.5px;
+  box-shadow: var(--shadow-strong);
+  z-index: 1002;
+  backdrop-filter: blur(10px);
+}
+
+.logout-btn:hover {
+  background: linear-gradient(135deg, #3d19ac 0%, #5e35b1 50%, #7e57c2 100%);
+  box-shadow: 0 12px 35px rgba(61, 25, 172, 0.5);
+}
+
+/* ===== OVERLAY PARA MOBILE ===== */
+.menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 999;
+  opacity: 0;
+  visibility: hidden;
+  transition: var(--transition);
+}
+
+.menu-overlay.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 768px) {
+  .header {
+    padding: 1rem;
+  }
+
+  .empresa-nombre {
+    font-size: 1.4rem;
+  }
+
+  body {
+    padding-top: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .empresa-nombre {
+    font-size: 1.2rem;
+  }
+
+  .menu {
+    width: 240px;
+    left: -240px;
+  }
+
+  .preview-usuario {
+    padding: 1.5rem 1rem 1rem;
+  }
+
+  .preview-usuario-img {
+    width: 60px;
+    height: 60px;
+  }
+
+  .menu-toggle-button {
+    padding: 0.9rem 1rem;
+  }
+
+  .dropdown li {
+    padding: 0.75rem 1rem 0.75rem 3rem;
+  }
+}
+
+/* ===== ANIMACIONES SUAVES ===== */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.dropdown.visible li {
+  animation: slideIn 0.3s ease forwards;
+}
+
+.dropdown.visible li:nth-child(1) {
+  animation-delay: 0.05s;
+}
+
+.dropdown.visible li:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.dropdown.visible li:nth-child(3) {
+  animation-delay: 0.15s;
+}
+
+.dropdown.visible li:nth-child(4) {
+  animation-delay: 0.2s;
+}
+
+.dropdown.visible li:nth-child(5) {
+  animation-delay: 0.25s;
+}
+
+/* Logo PANGEA: destacar sobre fondos oscuros del menú */
+.pangea-logo {
+  display: block;
+  width: 100%;
+  height: 3rem;
+  background: rgba(190, 190, 190, 0.26);
+  padding: 6px 10px;
+  border: 1px solid rgba(0,0,0,0.06);
+  object-fit: contain;
+}

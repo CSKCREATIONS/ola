@@ -1,0 +1,221 @@
+erDiagram
+    User {
+        string firstName
+        string secondName
+        string surname
+        string secondSurname
+        string username
+        string email
+        string password
+        ObjectId role
+        boolean enabled
+        boolean mustChangePassword
+        date lastLogin
+    }
+
+    Role {
+        string name
+        string[] permissions
+        boolean enabled
+    }
+
+    Category {
+        string name
+        string description
+        boolean activo
+    }
+
+    Product {
+        string name
+        string description
+        number price
+        number stock
+        ObjectId category
+        string[] images
+        boolean activo
+        ObjectId proveedor
+        ObjectId CreatedBy
+        date createdAt
+    }
+
+    Proveedor {
+        string nombre
+        string contactoTelefono
+        string contactoCorreo
+        string direccionCalle
+        string direccionPais
+        string empresa
+        string[] productos
+        boolean activo
+        date fechaCreacion
+    }
+
+    Cliente {
+        string nombre
+        string ciudad
+        string direccion
+        string telefono
+        string correo
+        boolean esCliente
+        string operacion
+    }
+
+    Cotizacion {
+        string codigo
+        string clienteReferencia
+        string clienteNombre
+        string clienteCiudad
+        string clienteDireccion
+        string clienteTelefono
+        string clienteCorreo
+        boolean clienteEsCliente
+        string responsableId
+        string responsableFirstName
+        string responsableSecondName
+        string responsableSurname
+        string responsableSecondSurname
+        date fecha
+        string fechaString
+        string descripcion
+        string condicionesPago
+        string empresaNombre
+        string empresaDireccion
+        boolean enviadoCorreo
+        string estado
+        string pedidoReferencia
+        string remisionReferencia
+    }
+
+    CotizacionProductos {
+        string productoId
+        string productoName
+        string descripcion
+        number cantidad
+        number valorUnitario
+        number descuento
+        number subtotal
+    }
+
+    Pedido {
+        string numeroPedido
+        string cotizacionReferenciada
+        string descripcion
+        string condicionesPago
+        string remisionGenerada
+        date fechaAgendamiento
+        date fechaCancelacion
+        string responsableCancelacion
+        date fechaEntrega
+        string observacion
+        string estado
+        string cliente
+    }
+
+    PedidoProductos {
+        string product
+        number cantidad
+        number precioUnitario
+    }
+
+    Remision {
+        string numeroRemision
+        string pedidoReferencia
+        string cotizacionReferencia
+        string cotizacionCodigo
+        string descripcion
+        string cliente
+        date fechaEntrega
+        string observaciones
+        string condicionesPago
+        string responsable
+        number subtotal
+        number total
+        number cantidadItems
+        number cantidadTotal
+    }
+
+    OrdenCompra {
+        string numeroOrden
+        string proveedor
+        string responsable
+        number subtotal
+        number impuestos
+        number total
+        string condicionesPago
+        string direccionEntrega
+        string solicitadoPor
+        date fechaOrden
+        boolean enviado
+        string estado
+    }
+
+    OrdenCompraProductos {
+        string producto
+        string descripcion
+        number cantidad
+        number valorUnitario
+        number valorTotal
+    }
+
+    Compra {
+        string numeroOrden
+        string proveedor
+        string solicitadoPor
+        string observaciones
+        date fecha
+        number subtotal
+        number impuestos
+        number total
+        string estado
+    }
+
+    CompraProductos {
+        string producto
+        string descripcion
+        number cantidad
+        number precioUnitario
+    }
+
+    Venta {
+        string cliente
+        number total
+        date fecha
+        string creadoPor
+    }
+
+    VentaProductos {
+        string product
+        number cantidad
+        number precioUnitario
+    }
+
+    Counter {
+        string _id
+        number seq
+    }
+
+    Role ||--o{ User : "has"
+    Role ||--o{ User : "assigned_to"
+    Category ||--o{ Product : "categorizes"
+    Proveedor ||--o{ Product : "supplies"
+    User ||--o{ Product : "created_by"
+
+    Cliente ||--o{ Cotizacion : "quoted_for"
+    User ||--o{ Cotizacion : "responsable"
+    Cotizacion ||--o{ CotizacionProductos : "includes"
+
+    Cotizacion ||--o| Pedido : "can_generate"
+    Pedido ||--o{ PedidoProductos : "includes"
+
+    Pedido ||--o| Remision : "generates"
+    Cotizacion ||--o| Remision : "may_reference"
+    Cliente ||--o{ Remision : "delivered_to"
+    User ||--o{ Remision : "responsable"
+
+    OrdenCompra ||--o{ OrdenCompraProductos : "includes"
+
+    Compra ||--o{ CompraProductos : "includes"
+
+    Cliente ||--o{ Venta : "buys"
+    User ||--o{ Venta : "created_by"
+    Venta ||--o{ VentaProductos : "includes"

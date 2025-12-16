@@ -1,0 +1,48 @@
+import React, { useState } from "react";
+import { Editor } from "@tinymce/tinymce-react";
+
+export default function FormularioConEditor() {
+  const [contenido, setContenido] = useState("");
+
+  const handleEditorChange = (content) => {
+    setContenido(content);
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log("Contenido del editor:", contenido);
+  };
+
+  return (
+    <div className="container">
+      <h3>Formulario con Editor TinyMCE</h3>
+      <form onSubmit={handleSubmit}>
+        <label htmlFor="nombre-documento">Nombre del Documento</label>
+        <input id="nombre-documento" type="text" name="nombre" required />
+
+        <label htmlFor="contenido">Contenido</label>
+        <Editor
+          id="contenido"
+          apiKey="2o32797pg92f9dkmfu7lag00dumqni4pik6xv30ds3v5nq9o"  // Opcional, usa la versión gratuita
+          initialValue="<p>Escribe aquí...</p>"
+          init={{
+            height: 1000,
+            menubar: false,
+            // Nota: el soporte de cadenas multilínea con continuaciones puede ser
+            // problemático en navegadores muy antiguos. Usamos una sola línea
+            // para el `toolbar` y documentamos la limitación.
+            plugins: [
+              "advlist autolink lists link image charmap print preview anchor",
+              "searchreplace visualblocks code fullscreen",
+              "insertdatetime media table paste code help wordcount",
+            ],
+            toolbar: "undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help",
+          }}
+          onEditorChange={handleEditorChange}
+        />
+
+        <button type="submit">Guardar</button>
+      </form>
+    </div>
+  );
+}
