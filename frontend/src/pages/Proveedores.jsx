@@ -1,5 +1,5 @@
 // src/pages/Proveedores.jsx
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import api from '../api/axiosConfig';
 import Swal from 'sweetalert2';
@@ -77,8 +77,6 @@ const proveedoresStyles = `
       align-items: center;
       justify-content: center;
     }
-
-    
 
     .proveedor-action-btn {
       background: linear-gradient(135deg, #6366f1, #8b5cf6);
@@ -165,6 +163,73 @@ if (typeof document !== 'undefined') {
   }
 }
 
+const FormField = ({ id, name, value, onChange, label, icon, iconColor, required, type = 'text', placeholder }) => {
+  const inputStyles = {
+    width: '100%',
+    padding: '0.875rem 1rem',
+    border: '2px solid #e5e7eb',
+    borderRadius: '10px',
+    fontSize: '1rem',
+    transition: 'all 0.3s ease',
+    backgroundColor: '#ffffff',
+    fontFamily: 'inherit',
+    boxSizing: 'border-box'
+  };
+
+  const handleFocus = (e) => {
+    e.target.style.borderColor = iconColor || '#10b981';
+    e.target.style.boxShadow = `0 0 0 3px ${iconColor || '#10b981'}1a`;
+  };
+
+  const handleBlur = (e) => {
+    e.target.style.borderColor = '#e5e7eb';
+    e.target.style.boxShadow = 'none';
+  };
+
+  return (
+    <div>
+      <label htmlFor={id} style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        marginBottom: '0.75rem',
+        fontWeight: '600',
+        color: '#374151',
+        fontSize: '1rem'
+      }}>
+        <i className={icon} style={{ color: iconColor || '#10b981', fontSize: '0.9rem' }}></i>
+        <span>{label}</span>
+        {required && <span style={{ color: '#ef4444' }}>*</span>}
+      </label>
+      <input
+        id={id}
+        name={name}
+        type={type}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        style={inputStyles}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
+        required={required}
+      />
+    </div>
+  );
+};
+
+FormField.propTypes = {
+  id: PropTypes.string.isRequired,
+  name: PropTypes.string.isRequired,
+  value: PropTypes.string.isRequired,
+  onChange: PropTypes.func.isRequired,
+  label: PropTypes.string.isRequired,
+  icon: PropTypes.string.isRequired,
+  iconColor: PropTypes.string,
+  required: PropTypes.bool,
+  type: PropTypes.string,
+  placeholder: PropTypes.string
+};
+
 const ProveedorModal = ({ proveedor, onClose, onSave }) => {
   const [form, setForm] = useState({
     nombre: proveedor?.nombre || '',
@@ -202,6 +267,14 @@ const ProveedorModal = ({ proveedor, onClose, onSave }) => {
     onSave({ ...proveedor, ...form });
   };
 
+  const sectionStyle = {
+    background: 'white',
+    padding: '2rem',
+    borderRadius: '12px',
+    marginBottom: '2rem',
+    border: '1px solid #e2e8f0'
+  };
+
   return (
     <div style={{
       position: 'fixed',
@@ -214,9 +287,7 @@ const ProveedorModal = ({ proveedor, onClose, onSave }) => {
       alignItems: 'center',
       justifyContent: 'center',
       zIndex: 1000,
-      backdropFilter: 'blur(4px)',
-      margin: 0,
-      padding: 0
+      backdropFilter: 'blur(4px)'
     }}>
       <form onSubmit={handleSubmit} style={{
         backgroundColor: 'white',
@@ -226,14 +297,10 @@ const ProveedorModal = ({ proveedor, onClose, onSave }) => {
         maxHeight: '90vh',
         overflow: 'hidden',
         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-        animation: 'modalSlideIn 0.3s ease-out',
-        margin: 0,
-        padding: 0,
-        position: 'relative',
         display: 'flex',
         flexDirection: 'column'
       }}>
-        {/* Header del modal */}
+        {/* Header */}
         <div style={{
           background: 'linear-gradient(135deg, #10b981, #059669)',
           color: 'white',
@@ -261,31 +328,15 @@ const ProveedorModal = ({ proveedor, onClose, onSave }) => {
             </div>
             {proveedor ? 'Editar Proveedor' : 'Nuevo Proveedor'}
           </h3>
-          <p style={{
-            margin: '0.5rem 0 0 4rem',
-            opacity: 0.9,
-            fontSize: '0.95rem'
-          }}>
+          <p style={{ margin: '0.5rem 0 0 4rem', opacity: 0.9, fontSize: '0.95rem' }}>
             {proveedor ? 'Modifica la información del proveedor' : 'Registra un nuevo proveedor para la gestión de inventario'}
           </p>
         </div>
 
-        {/* Contenido scrolleable */}
-        <div style={{
-          flex: 1,
-          overflowY: 'auto',
-          padding: '2.5rem',
-          backgroundColor: '#f8fafc'
-        }}>
+        {/* Body */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '2.5rem', backgroundColor: '#f8fafc' }}>
           {/* Información básica */}
-          <div style={{
-            background: 'white',
-            padding: '2rem',
-            borderRadius: '12px',
-            marginBottom: '2rem',
-            border: '1px solid #e2e8f0',
-            borderLeft: '4px solid #10b981'
-          }}>
+          <div style={{ ...sectionStyle, borderLeft: '4px solid #10b981' }}>
             <h4 style={{
               margin: '0 0 1.5rem 0',
               color: '#1e293b',
@@ -298,103 +349,31 @@ const ProveedorModal = ({ proveedor, onClose, onSave }) => {
               <i className="fa-solid fa-user" style={{ color: '#10b981' }}></i>
               <span>Información Básica</span>
             </h4>
-
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-              <div>
-                <label htmlFor="input-proveedor-nombre" style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  marginBottom: '0.75rem',
-                  fontWeight: '600',
-                  color: '#374151',
-                  fontSize: '1rem'
-                }}>
-                  <i className="fa-solid fa-signature" style={{ color: '#10b981', fontSize: '0.9rem' }}></i>
-                  <span>Nombre del Proveedor</span>
-                  <span style={{ color: '#ef4444' }}>*</span>
-                </label>
-                <input
-                  id="input-proveedor-nombre"
-                  name="nombre"
-                  value={form.nombre}
-                  onChange={handleChange}
-                  placeholder="Ej: Distribuidora ABC"
-                  style={{
-                    width: '100%',
-                    padding: '0.875rem 1rem',
-                    border: '2px solid #e5e7eb',
-                    borderRadius: '10px',
-                    fontSize: '1rem',
-                    transition: 'all 0.3s ease',
-                    backgroundColor: '#ffffff',
-                    fontFamily: 'inherit',
-                    boxSizing: 'border-box'
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = '#10b981';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)';
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = '#e5e7eb';
-                    e.target.style.boxShadow = 'none';
-                  }}
-                  required
-                />
-              </div>
-
-              <div>
-                <label htmlFor="input-proveedor-empresa" style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  marginBottom: '0.75rem',
-                  fontWeight: '600',
-                  color: '#374151',
-                  fontSize: '1rem'
-                }}>
-                  <i className="fa-solid fa-building" style={{ color: '#10b981', fontSize: '0.9rem' }}></i>
-                  <span>Empresa (opcional)</span>
-                </label>
-                <input
-                  id="input-proveedor-empresa"
-                  name="empresa"
-                  value={form.empresa}
-                  onChange={handleChange}
-                  placeholder="Ej: Corporación XYZ"
-                  style={{
-                    width: '100%',
-                    padding: '0.875rem 1rem',
-                    border: '2px solid #e5e7eb',
-                    borderRadius: '10px',
-                    fontSize: '1rem',
-                    transition: 'all 0.3s ease',
-                    backgroundColor: '#ffffff',
-                    fontFamily: 'inherit',
-                    boxSizing: 'border-box'
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = '#10b981';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)';
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = '#e5e7eb';
-                    e.target.style.boxShadow = 'none';
-                  }}
-                />
-              </div>
+              <FormField
+                id="input-proveedor-nombre"
+                name="nombre"
+                value={form.nombre}
+                onChange={handleChange}
+                label="Nombre del Proveedor"
+                icon="fa-solid fa-signature"
+                placeholder="Ej: Distribuidora ABC"
+                required
+              />
+              <FormField
+                id="input-proveedor-empresa"
+                name="empresa"
+                value={form.empresa}
+                onChange={handleChange}
+                label="Empresa (opcional)"
+                icon="fa-solid fa-building"
+                placeholder="Ej: Corporación XYZ"
+              />
             </div>
           </div>
 
           {/* Información de contacto */}
-          <div style={{
-            background: 'white',
-            padding: '2rem',
-            borderRadius: '12px',
-            marginBottom: '2rem',
-            border: '1px solid #e2e8f0',
-            borderLeft: '4px solid #3b82f6'
-          }}>
+          <div style={{ ...sectionStyle, borderLeft: '4px solid #3b82f6' }}>
             <h4 style={{
               margin: '0 0 1.5rem 0',
               color: '#1e293b',
@@ -407,105 +386,35 @@ const ProveedorModal = ({ proveedor, onClose, onSave }) => {
               <i className="fa-solid fa-phone" style={{ color: '#3b82f6' }}></i>
               <span>Información de Contacto</span>
             </h4>
-
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-              <div>
-                <label htmlFor="input-proveedor-telefono" style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  marginBottom: '0.75rem',
-                  fontWeight: '600',
-                  color: '#374151',
-                  fontSize: '1rem'
-                }}>
-                  <i className="fa-solid fa-phone" style={{ color: '#3b82f6', fontSize: '0.9rem' }}></i>
-                  <span>Teléfono</span>
-                  <span style={{ color: '#ef4444' }}>*</span>
-                </label>
-                <input
-                  id="input-proveedor-telefono"
-                  name="contacto.telefono"
-                  value={form.contacto.telefono}
-                  onChange={handleChange}
-                  placeholder="Ej: +57 300 123 4567"
-                  style={{
-                    width: '100%',
-                    padding: '0.875rem 1rem',
-                    border: '2px solid #e5e7eb',
-                    borderRadius: '10px',
-                    fontSize: '1rem',
-                    transition: 'all 0.3s ease',
-                    backgroundColor: '#ffffff',
-                    fontFamily: 'inherit',
-                    boxSizing: 'border-box'
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = '#3b82f6';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = '#e5e7eb';
-                    e.target.style.boxShadow = 'none';
-                  }}
-                  required
-                />
-              </div>
-
-              <div>
-                <label htmlFor="input-proveedor-correo" style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  marginBottom: '0.75rem',
-                  fontWeight: '600',
-                  color: '#374151',
-                  fontSize: '1rem'
-                }}>
-                  <i className="fa-solid fa-envelope" style={{ color: '#3b82f6', fontSize: '0.9rem' }}></i>
-                  <span>Correo Electrónico</span>
-                  <span style={{ color: '#ef4444' }}>*</span>
-                </label>
-                <input
-                  id="input-proveedor-correo"
-                  name="contacto.correo"
-                  type="email"
-                  value={form.contacto.correo}
-                  onChange={handleChange}
-                  placeholder="Ej: contacto@proveedor.com"
-                  style={{
-                    width: '100%',
-                    padding: '0.875rem 1rem',
-                    border: '2px solid #e5e7eb',
-                    borderRadius: '10px',
-                    fontSize: '1rem',
-                    transition: 'all 0.3s ease',
-                    backgroundColor: '#ffffff',
-                    fontFamily: 'inherit',
-                    boxSizing: 'border-box'
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = '#3b82f6';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = '#e5e7eb';
-                    e.target.style.boxShadow = 'none';
-                  }}
-                  required
-                />
-              </div>
+              <FormField
+                id="input-proveedor-telefono"
+                name="contacto.telefono"
+                value={form.contacto.telefono}
+                onChange={handleChange}
+                label="Teléfono"
+                icon="fa-solid fa-phone"
+                iconColor="#3b82f6"
+                placeholder="Ej: +57 300 123 4567"
+                required
+              />
+              <FormField
+                id="input-proveedor-correo"
+                name="contacto.correo"
+                type="email"
+                value={form.contacto.correo}
+                onChange={handleChange}
+                label="Correo Electrónico"
+                icon="fa-solid fa-envelope"
+                iconColor="#3b82f6"
+                placeholder="Ej: contacto@proveedor.com"
+                required
+              />
             </div>
           </div>
 
           {/* Dirección */}
-          <div style={{
-            background: 'white',
-            padding: '2rem',
-            borderRadius: '12px',
-            border: '1px solid #e2e8f0',
-            borderLeft: '4px solid #f59e0b'
-          }}>
+          <div style={{ ...sectionStyle, borderLeft: '4px solid #f59e0b' }}>
             <h4 style={{
               margin: '0 0 1.5rem 0',
               color: '#1e293b',
@@ -518,98 +427,34 @@ const ProveedorModal = ({ proveedor, onClose, onSave }) => {
               <i className="fa-solid fa-map-marker-alt" style={{ color: '#f59e0b' }}></i>
               <span>Dirección</span>
             </h4>
-
             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
-              <div>
-                <label htmlFor="input-proveedor-calle" style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  marginBottom: '0.75rem',
-                  fontWeight: '600',
-                  color: '#374151',
-                  fontSize: '1rem'
-                }}>
-                  <i className="fa-solid fa-road" style={{ color: '#f59e0b', fontSize: '0.9rem' }}></i>
-                  <span>Dirección</span>
-                  <span style={{ color: '#ef4444' }}>*</span>
-                </label>
-                <input
-                  id="input-proveedor-calle"
-                  name="direccion.calle"
-                  value={form.direccion.calle}
-                  onChange={handleChange}
-                  placeholder="Ej: Calle 123 #45-67, Barrio Centro"
-                  style={{
-                    width: '100%',
-                    padding: '0.875rem 1rem',
-                    border: '2px solid #e5e7eb',
-                    borderRadius: '10px',
-                    fontSize: '1rem',
-                    transition: 'all 0.3s ease',
-                    backgroundColor: '#ffffff',
-                    fontFamily: 'inherit',
-                    boxSizing: 'border-box'
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = '#f59e0b';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(245, 158, 11, 0.1)';
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = '#e5e7eb';
-                    e.target.style.boxShadow = 'none';
-                  }}
-                  required
-                />
-              </div>
-
-              <div>
-                <label htmlFor="input-proveedor-pais" style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  marginBottom: '0.75rem',
-                  fontWeight: '600',
-                  color: '#374151',
-                  fontSize: '1rem'
-                }}>
-                  <i className="fa-solid fa-globe" style={{ color: '#f59e0b', fontSize: '0.9rem' }}></i>
-                  <span>País</span>
-                  <span style={{ color: '#ef4444' }}>*</span>
-                </label>
-                <input
-                  id="input-proveedor-pais"
-                  name="direccion.pais"
-                  value={form.direccion.pais}
-                  onChange={handleChange}
-                  placeholder="Ej: Colombia"
-                  style={{
-                    width: '100%',
-                    padding: '0.875rem 1rem',
-                    border: '2px solid #e5e7eb',
-                    borderRadius: '10px',
-                    fontSize: '1rem',
-                    transition: 'all 0.3s ease',
-                    backgroundColor: '#ffffff',
-                    fontFamily: 'inherit',
-                    boxSizing: 'border-box'
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = '#f59e0b';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(245, 158, 11, 0.1)';
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = '#e5e7eb';
-                    e.target.style.boxShadow = 'none';
-                  }}
-                  required
-                />
-              </div>
+              <FormField
+                id="input-proveedor-calle"
+                name="direccion.calle"
+                value={form.direccion.calle}
+                onChange={handleChange}
+                label="Dirección"
+                icon="fa-solid fa-road"
+                iconColor="#f59e0b"
+                placeholder="Ej: Calle 123 #45-67, Barrio Centro"
+                required
+              />
+              <FormField
+                id="input-proveedor-pais"
+                name="direccion.pais"
+                value={form.direccion.pais}
+                onChange={handleChange}
+                label="País"
+                icon="fa-solid fa-globe"
+                iconColor="#f59e0b"
+                placeholder="Ej: Colombia"
+                required
+              />
             </div>
           </div>
         </div>
 
-        {/* Botones de acción */}
+        {/* Footer */}
         <div style={{
           display: 'flex',
           gap: '1.5rem',
@@ -617,8 +462,7 @@ const ProveedorModal = ({ proveedor, onClose, onSave }) => {
           padding: '2rem 2.5rem',
           borderTop: '2px solid #e5e7eb',
           backgroundColor: 'white',
-          borderRadius: '0 0 20px 20px',
-          flexShrink: 0
+          borderRadius: '0 0 20px 20px'
         }}>
           <button
             type="button"
@@ -637,19 +481,10 @@ const ProveedorModal = ({ proveedor, onClose, onSave }) => {
               alignItems: 'center',
               gap: '0.5rem'
             }}
-            onMouseEnter={(e) => {
-              e.target.style.backgroundColor = '#f3f4f6';
-              e.target.style.borderColor = '#d1d5db';
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.backgroundColor = 'white';
-              e.target.style.borderColor = '#e5e7eb';
-            }}
           >
             <i className="fa-solid fa-times"></i>
             <span>Cancelar</span>
           </button>
-
           <button
             type="submit"
             style={{
@@ -667,14 +502,6 @@ const ProveedorModal = ({ proveedor, onClose, onSave }) => {
               gap: '0.5rem',
               boxShadow: '0 4px 6px -1px rgba(16, 185, 129, 0.3)'
             }}
-            onMouseEnter={(e) => {
-              e.target.style.transform = 'translateY(-1px)';
-              e.target.style.boxShadow = '0 6px 12px -1px rgba(16, 185, 129, 0.4)';
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.transform = 'translateY(0)';
-              e.target.style.boxShadow = '0 4px 6px -1px rgba(16, 185, 129, 0.3)';
-            }}
           >
             <i className="fa-solid fa-truck"></i>
             <span>Guardar</span>
@@ -685,22 +512,36 @@ const ProveedorModal = ({ proveedor, onClose, onSave }) => {
   );
 };
 
+ProveedorModal.propTypes = {
+  proveedor: PropTypes.shape({
+    _id: PropTypes.string,
+    nombre: PropTypes.string,
+    contacto: PropTypes.shape({
+      telefono: PropTypes.string,
+      correo: PropTypes.string,
+    }),
+    direccion: PropTypes.shape({
+      calle: PropTypes.string,
+      pais: PropTypes.string,
+    }),
+    empresa: PropTypes.string,
+  }),
+  onClose: PropTypes.func.isRequired,
+  onSave: PropTypes.func.isRequired,
+};
+
 const ModalProductosProveedor = ({ visible, onClose, productos, proveedor }) => {
   if (!visible) return null;
+  
   return (
     <div className="modal-overlay">
       <div className="modal-card">
-        {/* Header */}
         <div className="modal-header">
           <h5 className="modal-title">
             <i className="fas fa-boxes"></i> Productos de {proveedor}
           </h5>
-          <button className="modal-close" onClick={onClose}>
-            &times;
-          </button>
+          <button className="modal-close" onClick={onClose}>&times;</button>
         </div>
-
-        {/* Body */}
         <div className="modal-body">
           {productos.length > 0 ? (
             <ul className="product-list">
@@ -720,92 +561,55 @@ const ModalProductosProveedor = ({ visible, onClose, productos, proveedor }) => 
             </p>
           )}
         </div>
-
-        {/* Footer */}
         <div className="modal-footer">
-          <button className="btn btn-close" onClick={onClose}>
-            Cerrar
-          </button>
+          <button className="btn btn-close" onClick={onClose}>Cerrar</button>
         </div>
       </div>
     </div>
   );
-
-};
-
-ProveedorModal.propTypes = {
-  proveedor: PropTypes.shape({
-    _id: PropTypes.string,
-    nombre: PropTypes.string,
-    contacto: PropTypes.shape({
-      telefono: PropTypes.string,
-      correo: PropTypes.string,
-    }),
-    direccion: PropTypes.shape({
-      calle: PropTypes.string,
-      pais: PropTypes.string,
-    }),
-    empresa: PropTypes.string,
-  }),
-  onClose: PropTypes.func,
-  onSave: PropTypes.func,
-};
-
-ProveedorModal.defaultProps = {
-  proveedor: null,
-  onClose: () => { },
-  onSave: () => { },
 };
 
 ModalProductosProveedor.propTypes = {
-  visible: PropTypes.bool,
-  onClose: PropTypes.func,
+  visible: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
   productos: PropTypes.arrayOf(PropTypes.shape({
     _id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     name: PropTypes.string,
     price: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     stock: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-  })),
-  proveedor: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-};
-
-ModalProductosProveedor.defaultProps = {
-  visible: false,
-  onClose: () => { },
-  productos: [],
-  proveedor: '',
+  })).isRequired,
+  proveedor: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
 };
 
 const GestionProveedores = () => {
   const [proveedores, setProveedores] = useState([]);
-  const statsCards = [
-    { iconClass: 'fa-solid fa-truck', gradient: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', value: proveedores.length, label: 'Total Proveedores' },
-    { iconClass: 'fa-solid fa-check-circle', gradient: 'linear-gradient(135deg, #10b981, #059669)', value: proveedores.filter(p => p.activo !== false).length, label: 'Proveedores Activos' },
-    { iconClass: 'fa-solid fa-boxes', gradient: 'linear-gradient(135deg, #8b5cf6, #7c3aed)', value: contarProductosEnProveedores(proveedores), label: 'Total Productos' }
-  ];
   const [modalVisible, setModalVisible] = useState(false);
   const [modalProductosVisible, setModalProductosVisible] = useState(false);
   const [productosProveedor, setProductosProveedor] = useState([]);
   const [proveedorNombre, setProveedorNombre] = useState('');
   const [proveedorEditando, setProveedorEditando] = useState(null);
-
-  // Paginación
   const [currentPage, setCurrentPage] = useState(1);
+  
   const itemsPerPage = 10;
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = proveedores.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(proveedores.length / itemsPerPage);
-  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+  const statsCards = [
+    { iconClass: 'fa-solid fa-truck', gradient: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', value: proveedores.length, label: 'Total Proveedores' },
+    { iconClass: 'fa-solid fa-check-circle', gradient: 'linear-gradient(135deg, #10b981, #059669)', value: proveedores.filter(p => p.activo !== false).length, label: 'Proveedores Activos' },
+    { iconClass: 'fa-solid fa-boxes', gradient: 'linear-gradient(135deg, #8b5cf6, #7c3aed)', value: contarProductosEnProveedores(proveedores), label: 'Total Productos' }
+  ];
 
   useEffect(() => { cargarProveedores(); }, []);
 
   const cargarProveedores = async () => {
     try {
       const res = await api.get(API_URL);
-      const result = res.data;
-      const listaProveedores = result.proveedores || result.data || [];
-      const proveedoresOrdenados = (Array.isArray(listaProveedores) ? listaProveedores : []).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      const listaProveedores = res.data.proveedores || res.data.data || [];
+      const proveedoresOrdenados = (Array.isArray(listaProveedores) ? listaProveedores : [])
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       setProveedores(proveedoresOrdenados);
     } catch {
       Swal.fire('Error', 'No se pudieron cargar los proveedores', 'error');
@@ -823,7 +627,9 @@ const GestionProveedores = () => {
       Swal.fire('Éxito', 'Proveedor guardado correctamente', 'success');
       setModalVisible(false);
       cargarProveedores();
-    } catch (err) { Swal.fire('Error', err.message, 'error'); }
+    } catch (err) { 
+      Swal.fire('Error', err.message, 'error'); 
+    }
   };
 
   const toggleEstadoProveedor = async (id, activar = false) => {
@@ -836,12 +642,15 @@ const GestionProveedores = () => {
       cancelButtonText: 'Cancelar'
     });
     if (!confirm.isConfirmed) return;
+    
     try {
       const res = await api.patch(`/api/proveedores/${id}/${activar ? 'activate' : 'deactivate'}`);
       if (res.status < 200 || res.status >= 300) throw new Error('Error al cambiar el estado del proveedor');
       Swal.fire(activar ? 'Proveedor activado' : 'Proveedor desactivado', '', 'success');
       cargarProveedores();
-    } catch (err) { Swal.fire('Error', err.message, 'error'); }
+    } catch (err) { 
+      Swal.fire('Error', err.message, 'error'); 
+    }
   };
 
   return (
@@ -851,7 +660,6 @@ const GestionProveedores = () => {
         <NavCompras />
         <div className="max-width">
           <div className="contenido-modulo">
-            {/* Encabezado profesional usando SharedListHeaderCard */}
             <SharedListHeaderCard
               title="Gestión de Proveedores"
               subtitle="Gestión integral de proveedores y servicios"
@@ -867,10 +675,8 @@ const GestionProveedores = () => {
               </div>
             </SharedListHeaderCard>
 
-            {/* Estadísticas avanzadas */}
             <AdvancedStats cards={statsCards} />
 
-            {/* Tabla principal con diseño moderno */}
             <div className="table-container">
               <div className="table-header">
                 <div className="table-header-content">
@@ -878,9 +684,7 @@ const GestionProveedores = () => {
                     <i className="fa-solid fa-table" style={{ color: 'white', fontSize: '16px' }}></i>
                   </div>
                   <div>
-                    <h4 className="table-title">
-                      Lista de Proveedores
-                    </h4>
+                    <h4 className="table-title">Lista de Proveedores</h4>
                     <p className="table-subtitle">
                       Mostrando {currentItems.length} de {proveedores.length} proveedores
                     </p>
@@ -892,46 +696,26 @@ const GestionProveedores = () => {
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>
-                        <i className="fa-solid fa-hashtag icon-gap" style={{ color: '#6366f1' }}></i><span>#</span>
-                      </th>
-                      <th>
-                        <i className="fa-solid fa-truck icon-gap"></i><span>PROVEEDOR</span>
-                      </th>
-                      <th>
-                        <i className="fa-solid fa-address-book icon-gap"></i><span>CONTACTO</span>
-                      </th>
-                      <th>
-                        <i className="fa-solid fa-location-dot icon-gap" style={{ color: '#6366f1' }}></i><span>DIRECCIÓN</span>
-                      </th>
-                      <th>
-                        <i className="fa-solid fa-building icon-gap" style={{ color: '#6366f1' }}></i><span>EMPRESA</span>
-                      </th>
-                      <th style={{ textAlign: 'center' }}>
-                        <i className="fa-solid fa-toggle-on icon-gap" style={{ color: '#6366f1' }}></i><span>ESTADO</span>
-                      </th>
-                      <th>
-                        <i className="fa-solid fa-boxes icon-gap" style={{ color: '#6366f1' }}></i><span>PRODUCTOS</span>
-                      </th>
-                      <th style={{ textAlign: 'center' }}>
-                        <i className="fa-solid fa-cogs icon-gap" style={{ color: '#6366f1' }}></i><span>ACCIONES</span>
-                      </th>
+                      <th><i className="fa-solid fa-hashtag icon-gap" style={{ color: '#6366f1' }}></i><span>#</span></th>
+                      <th><i className="fa-solid fa-truck icon-gap"></i><span>PROVEEDOR</span></th>
+                      <th><i className="fa-solid fa-address-book icon-gap"></i><span>CONTACTO</span></th>
+                      <th><i className="fa-solid fa-location-dot icon-gap" style={{ color: '#6366f1' }}></i><span>DIRECCIÓN</span></th>
+                      <th><i className="fa-solid fa-building icon-gap" style={{ color: '#6366f1' }}></i><span>EMPRESA</span></th>
+                      <th style={{ textAlign: 'center' }}><i className="fa-solid fa-toggle-on icon-gap" style={{ color: '#6366f1' }}></i><span>ESTADO</span></th>
+                      <th><i className="fa-solid fa-boxes icon-gap" style={{ color: '#6366f1' }}></i><span>PRODUCTOS</span></th>
+                      <th style={{ textAlign: 'center' }}><i className="fa-solid fa-cogs icon-gap" style={{ color: '#6366f1' }}></i><span>ACCIONES</span></th>
                     </tr>
                   </thead>
                   <tbody>
                     {currentItems.map((prov, index) => (
                       <tr key={prov._id}>
-                        <td style={{ fontWeight: '600', color: '#6366f1' }}>
-                          {indexOfFirstItem + index + 1}
-                        </td>
+                        <td style={{ fontWeight: '600', color: '#6366f1' }}>{indexOfFirstItem + index + 1}</td>
                         <td>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                             <div className="table-icon-small">
                               <i className="fa-solid fa-truck" style={{ color: 'white', fontSize: '12px' }}></i>
                             </div>
-                            <div style={{ fontWeight: '600', color: '#1f2937', fontSize: '14px' }}>
-                              {prov.nombre}
-                            </div>
+                            <div style={{ fontWeight: '600', color: '#1f2937', fontSize: '14px' }}>{prov.nombre}</div>
                           </div>
                         </td>
                         <td>
@@ -949,14 +733,10 @@ const GestionProveedores = () => {
                         <td>
                           <div className="proveedor-address-info">
                             <div>{prov.direccion?.calle || 'N/A'}</div>
-                            <div className="proveedor-country">
-                              {prov.direccion?.pais || 'N/A'}
-                            </div>
+                            <div className="proveedor-country">{prov.direccion?.pais || 'N/A'}</div>
                           </div>
                         </td>
-                        <td>
-                          {prov.empresa || 'N/A'}
-                        </td>
+                        <td>{prov.empresa || 'N/A'}</td>
                         <td style={{ textAlign: 'center' }}>
                           <label className="switch">
                             <input
@@ -966,9 +746,7 @@ const GestionProveedores = () => {
                               aria-label={`Estado del proveedor ${prov.nombre || ''}: ${prov.activo ? 'Activo' : 'Inactivo'}`}
                               style={{ opacity: 0, width: 0, height: 0 }}
                             />
-                            <span className="slider" style={{
-                              backgroundColor: prov.activo ? '#10b981' : '#ef4444'
-                            }}></span>
+                            <span className="slider" style={{ backgroundColor: prov.activo ? '#10b981' : '#ef4444' }}></span>
                           </label>
                         </td>
                         <td>
@@ -1005,12 +783,8 @@ const GestionProveedores = () => {
                               <i className="fa-solid fa-truck" style={{ fontSize: '3.5rem', color: '#9ca3af' }}></i>
                             </div>
                             <div>
-                              <h5 className="table-empty-title">
-                                No hay proveedores disponibles
-                              </h5>
-                              <p className="table-empty-text">
-                                No se encontraron proveedores con los criterios de búsqueda
-                              </p>
+                              <h5 className="table-empty-title">No hay proveedores disponibles</h5>
+                              <p className="table-empty-text">No se encontraron proveedores con los criterios de búsqueda</p>
                             </div>
                           </div>
                         </td>
@@ -1020,13 +794,12 @@ const GestionProveedores = () => {
                 </table>
               </div>
 
-              {/* Paginación */}
               {totalPages > 1 && (
                 <div className="table-pagination">
                   {Array.from({ length: totalPages }, (_, i) => (
                     <button
                       key={i + 1}
-                      onClick={() => paginate(i + 1)}
+                      onClick={() => setCurrentPage(i + 1)}
                       className={`pagination-btn ${currentPage === i + 1 ? 'active' : ''}`}
                     >
                       {i + 1}
@@ -1036,8 +809,19 @@ const GestionProveedores = () => {
               )}
             </div>
 
-            {modalVisible && <ProveedorModal proveedor={proveedorEditando} onClose={() => setModalVisible(false)} onSave={guardarProveedor} />}
-            <ModalProductosProveedor visible={modalProductosVisible} onClose={() => setModalProductosVisible(false)} productos={productosProveedor} proveedor={proveedorNombre} />
+            {modalVisible && (
+              <ProveedorModal 
+                proveedor={proveedorEditando} 
+                onClose={() => setModalVisible(false)} 
+                onSave={guardarProveedor} 
+              />
+            )}
+            <ModalProductosProveedor 
+              visible={modalProductosVisible} 
+              onClose={() => setModalProductosVisible(false)} 
+              productos={productosProveedor} 
+              proveedor={proveedorNombre} 
+            />
           </div>
         </div>
       </div>

@@ -34,7 +34,15 @@
     "yargs-parser": "^21.1.1"
   },
   "scripts": {
-    "dev": "concurrently \"npm run dev --prefix backend\" \"npm start --prefix frontend\""
+    "dev": "concurrently \"npm run dev --prefix backend\" \"npm start --prefix frontend\"",
+    "backend": "npm start --prefix backend",
+    "frontend": "npm start --prefix frontend",
+    "test:e2e": "playwright test --reporter=list",
+    "test:e2e:ui": "playwright test --ui",
+    "test:verify": "pwsh -File verificar-servicios.ps1",
+    "test:pedidos": "playwright test e2e/PedidosEntregados.spec.ts --reporter=list",
+    "test:prospectos": "playwright test e2e/prospectosCliente.spec.ts --reporter=list",
+    "test:cotizacion": "playwright test e2e/registrarCotizacion.spec.ts --reporter=list"
   },
   "keywords": [],
   "author": "",
