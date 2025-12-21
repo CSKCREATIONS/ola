@@ -676,17 +676,8 @@ exports.enviarCotizacionPorCorreo = async (req, res) => {
     const asuntoFinal = asunto || `Cotización ${cotizacion.codigo} - JLA Global Company`;
     const mensajeFinal = mensaje || `Adjunto encontrará la cotización ${cotizacion.codigo}.\n\nGracias por su preferencia.`;
 
-    // Generar HTML simple con el mensaje del usuario en <pre> tag
-    const htmlParaEnviar = `<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <title>Cotización ${cotizacion.codigo}</title>
-</head>
-<body style="font-family:Arial,sans-serif;line-height:1.6;padding:20px;">
-  <pre style="white-space:pre-wrap;font-family:monospace;font-size:1rem;">${mensajeFinal}</pre>
-</body>
-</html>`;
+    // Generar HTML con estilos completos usando la función generarHTMLCotizacion
+    const htmlParaEnviar = generarHTMLCotizacion(cotizacion);
 
     const pdfAttachment = await generatePdfAttachmentSafe(cotizacion);
 

@@ -1426,20 +1426,7 @@ export default function PedidosEntregados() {
                         Remisionar
                       </button>
 
-                      <button
-                        type="button"
-                        style={{
-                          padding: '0.7rem 1.4rem',
-                          borderRadius: '10px',
-                          border: 'none',
-                          background: 'linear-gradient(135deg, #10b981, #059669)',
-                          color: '#fff',
-                          fontWeight: 600,
-                          cursor: 'pointer'
-                        }}
-                      >
-                        Remisionar y Enviar
-                      </button>
+                      
                     </div>
                   </div>
                 </div>

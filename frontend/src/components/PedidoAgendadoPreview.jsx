@@ -299,6 +299,105 @@ const PedidoAgendadoPreview = ({ datos = {}, onClose = () => { }, onEmailSent, o
     }
   }, [onRemisionar]);
 
+  const handleRemisionarYEnviar = useCallback(async () => {
+    try {
+      // Paso 1: Pedir fecha de entrega
+      const defaultDate = datos?.fechaEntrega ? new Date(datos.fechaEntrega).toISOString().split('T')[0] : '';
+      const { value: fechaSeleccionada } = await Swal.fire({
+        title: 'Seleccione la fecha de entrega',
+        input: 'date',
+        inputLabel: 'Fecha de entrega',
+        inputValue: defaultDate,
+        showCancelButton: true,
+        confirmButtonText: 'Continuar',
+        cancelButtonText: 'Cancelar'
+      });
+
+      if (!fechaSeleccionada) return;
+
+      // Paso 2: Mostrar loading
+      Swal.fire({
+        title: 'Procesando...',
+        text: 'Creando remisión y enviando correo',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        showConfirmButton: false,
+        didOpen: () => Swal.showLoading()
+      });
+
+      // Paso 3: Remisionar el pedido
+      const resRemision = await api.post(`/api/pedidos/${datos._id}/remisionar`, { 
+        fechaEntrega: fechaSeleccionada 
+      });
+
+      if (resRemision.status < 200 || resRemision.status >= 300) {
+        throw new Error('No se pudo crear la remisión');
+      }
+
+      const remision = resRemision?.data?.remision || resRemision?.data?.data?.remision;
+      if (!remision || !remision._id) {
+        throw new Error('La remisión se creó pero no se recibió correctamente');
+      }
+
+      // Paso 4: Enviar el correo de la remisión
+      const correoDestino = datos?.cliente?.correo || correo;
+      if (!correoDestino) {
+        throw new Error('No se encontró el correo del cliente');
+      }
+
+      const resEmail = await api.post(`/api/remisiones/${remision._id}/enviar-remision`, {
+        remisionId: remision._id,
+        correoDestino: correoDestino,
+        asunto: `Remisión ${remision.numeroRemision} - JLA Global Company`,
+        mensaje: 'Adjunto encontrará la remisión de su pedido. Gracias por su preferencia.'
+      });
+
+      if (resEmail.status < 200 || resEmail.status >= 300) {
+        // La remisión se creó pero el correo falló
+        Swal.fire({
+          icon: 'warning',
+          title: 'Remisión creada',
+          html: 'La remisión se creó exitosamente pero no se pudo enviar el correo.<br>Puede enviarlo manualmente desde Pedidos Entregados.',
+          confirmButtonColor: '#fd7e14'
+        });
+      } else {
+        // Todo salió bien
+        Swal.fire({
+          icon: 'success',
+          title: '¡Éxito!',
+          text: 'Remisión creada y correo enviado exitosamente',
+          confirmButtonColor: '#fd7e14'
+        });
+      }
+
+      // Cerrar modal y ejecutar callback
+      onClose();
+      if (typeof onRemisionar === 'function') {
+        onRemisionar();
+      }
+
+    } catch (error) {
+      console.error('Error en remisionar y enviar:', error);
+      const responseData = error?.response?.data;
+      
+      if (responseData?.codigo === 'STOCK_INSUFICIENTE') {
+        Swal.fire({
+          icon: 'error',
+          title: 'Stock insuficiente',
+          html: `<p style="font-size:14px;line-height:1.4;margin:0;">${responseData.message || 'El stock disponible no cubre la cantidad solicitada.'}</p>`,
+          confirmButtonColor: '#fd7e14'
+        });
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: responseData?.message || error.message || 'No se pudo completar la operación',
+          confirmButtonColor: '#fd7e14'
+        });
+      }
+    }
+  }, [datos, correo, onClose, onRemisionar]);
+
   const renderDescripcion = () => {
     if (!datos?.descripcion) return null;
     const desc = datos.descripcion;
@@ -355,6 +454,15 @@ const PedidoAgendadoPreview = ({ datos = {}, onClose = () => { }, onEmailSent, o
             <ActionButton onClick={handleRemisionarClick} aria="Remisionar">
               <i className="fa-solid fa-file-invoice" aria-hidden />
               <span>Remisionar</span>
+            </ActionButton>
+
+            <ActionButton 
+              onClick={handleRemisionarYEnviar} 
+              aria="Remisionar y Enviar"
+              style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}
+            >
+              <i className="fa-solid fa-paper-plane" aria-hidden />
+              <span>Remisionar y Enviar</span>
             </ActionButton>
 
             <button onClick={onClose} style={{ ...STYLES.actionBtn(), padding: '0.75rem', fontSize: '1.2rem' }} aria-label="Cerrar">

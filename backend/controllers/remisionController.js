@@ -148,12 +148,99 @@ exports.enviarRemisionPorCorreo = async (req, res) => {
       // Generar número dinámico para esta remisión derivada del pedido
       numeroRemision = `REM-${pedido.numeroPedido}-${Date.now().toString().slice(-6)}`;
       asuntoFinal = asunto || `Remisión - Pedido ${pedido.numeroPedido} - ${process.env.COMPANY_NAME || 'JLA Global Company'}`;
-      // Usar mensaje personalizado del usuario en lugar de HTML generado
-      htmlContent = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8" /><title>Remisión ${numeroRemision}</title></head><body style="font-family:Arial,sans-serif;line-height:1.6;padding:20px;">
-        <pre style="white-space:pre-wrap;font-family:monospace;font-size:1rem;">${mensaje || 'Adjunto encontrará la remisión solicitada.'}</pre>
-      </body></html>`;
+      
+      // Generar HTML colorido profesional
+      const totalCalculado = pedido.productos.reduce((total, p) => total + ((p.cantidad || 0) * (p.product?.price || 0)), 0);
+      htmlContent = `
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Remisión ${numeroRemision}</title>
+          <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background-color: #f8f9fa; margin: 0; padding: 10px; }
+            .container { max-width: 800px; margin: 0 auto; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+            .header { background: linear-gradient(135deg, #28a745, #20c997); color: white; padding: 20px; text-align: center; }
+            .header h1 { font-size: 2em; margin-bottom: 10px; font-weight: 300; }
+            .content { padding: 30px; }
+            .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+            .info-card { background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #28a745; }
+            .info-card h3 { color: #28a745; margin-bottom: 10px; }
+            .products-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+            .products-table thead { background: linear-gradient(135deg, #28a745, #20c997); color: white; }
+            .products-table th { padding: 12px; text-align: left; }
+            .products-table td { padding: 10px; border-bottom: 1px solid #eee; }
+            .total-section { background: linear-gradient(135deg, #d4edda, #c3e6cb); padding: 15px; border-radius: 8px; margin-top: 20px; text-align: right; }
+            .total-section strong { font-size: 1.3em; color: #28a745; }
+            .message-section { background: #e7f3ff; padding: 15px; border-radius: 8px; border-left: 4px solid #28a745; margin-top: 20px; }
+            .footer { background: #343a40; color: #adb5bd; padding: 20px; text-align: center; margin-top: 30px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>📦 REMISIÓN</h1>
+              <p>N° ${numeroRemision}</p>
+            </div>
+            <div class="content">
+              <div class="info-grid">
+                <div class="info-card">
+                  <h3>👤 Cliente</h3>
+                  <p><strong>Nombre:</strong> ${pedido.cliente?.nombre || 'N/A'}</p>
+                  <p><strong>Correo:</strong> ${pedido.cliente?.correo || 'N/A'}</p>
+                  <p><strong>Teléfono:</strong> ${pedido.cliente?.telefono || 'N/A'}</p>
+                </div>
+                <div class="info-card">
+                  <h3>📋 Detalles</h3>
+                  <p><strong>Pedido:</strong> ${pedido.numeroPedido}</p>
+                  <p><strong>Fecha:</strong> ${new Date().toLocaleDateString('es-ES')}</p>
+                </div>
+              </div>
+              <table class="products-table">
+                <thead>
+                  <tr>
+                    <th>Producto</th>
+                    <th style="text-align: center;">Cantidad</th>
+                    <th style="text-align: right;">Precio</th>
+                    <th style="text-align: right;">Subtotal</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${pedido.productos.map(p => {
+                    const precio = Number(p.product?.price) || 0;
+                    const cantidad = Number(p.cantidad) || 0;
+                    return `<tr>
+                      <td><strong>${p.product?.name || 'N/A'}</strong></td>
+                      <td style="text-align: center;">${cantidad}</td>
+                      <td style="text-align: right;">S/. ${precio.toFixed(2)}</td>
+                      <td style="text-align: right;"><strong>S/. ${(precio * cantidad).toFixed(2)}</strong></td>
+                    </tr>`;
+                  }).join('')}
+                </tbody>
+              </table>
+              <div class="total-section">
+                <strong>TOTAL: S/. ${totalCalculado.toFixed(2)}</strong>
+              </div>
+              ${mensaje ? `<div class="message-section"><h3>Mensaje</h3><p>${mensaje}</p></div>` : ''}
+            </div>
+            <div class="footer">
+              <p><strong>${process.env.COMPANY_NAME || 'JLA Global Company'}</strong></p>
+              <p>${process.env.GMAIL_USER || 'contacto@empresa.com'}</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `;
+      
       try {
-        console.log('Generando PDF (derivado de pedido)...');
+        console.log('📄 [REMISION] Generando PDF (derivado de pedido)...');
+        console.log('📄 [REMISION] Datos pedido:', {
+          numeroPedido: pedido.numeroPedido,
+          productos: pedido.productos?.length,
+          cliente: pedido.cliente?.nombre
+        });
         const pdfService = new PDFService();
         const remisionData = {
           numeroRemision,
@@ -179,28 +266,122 @@ exports.enviarRemisionPorCorreo = async (req, res) => {
         };
         const pdfData = await pdfService.generarPDFRemision(remisionData);
         pdfAttachment = { filename: pdfData.filename, content: pdfData.buffer, contentType: pdfData.contentType };
-        console.log('✅ PDF generado (pedido)');
+        console.log('✅ [REMISION] PDF generado exitosamente (pedido):', pdfData.filename);
       } catch (e) {
-        console.warn('⚠️ PDF no generado (pedido):', e.message);
+        console.error('❌ [REMISION] Error generando PDF (pedido):', e.message);
+        console.error('❌ [REMISION] Stack:', e.stack);
       }
     } else {
       // Modo remisión existente
       numeroRemision = remisionDoc.numeroRemision;
       destinatario = correoDestino || remisionDoc.cliente?.correo;
       asuntoFinal = asunto || `Remisión ${numeroRemision} - ${process.env.COMPANY_NAME || 'JLA Global Company'}`;
-      // Usar mensaje personalizado del usuario en lugar de HTML generado
-      htmlContent = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8" /><title>Remisión ${numeroRemision}</title></head><body style="font-family:Arial,sans-serif;line-height:1.6;padding:20px;">
-        <pre style="white-space:pre-wrap;font-family:monospace;font-size:1rem;">${mensaje || 'Adjunto encontrará la remisión solicitada.'}</pre>
-      </body></html>`;
+      
+      // Generar HTML colorido profesional
+      const totalCalculado = remisionDoc.productos.reduce((total, p) => {
+        const precio = Number(p.precioUnitario) || 0;
+        const cantidad = Number(p.cantidad) || 0;
+        return total + (precio * cantidad);
+      }, 0);
+      
+      htmlContent = `
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Remisión ${numeroRemision}</title>
+          <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background-color: #f8f9fa; margin: 0; padding: 10px; }
+            .container { max-width: 800px; margin: 0 auto; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+            .header { background: linear-gradient(135deg, #28a745, #20c997); color: white; padding: 20px; text-align: center; }
+            .header h1 { font-size: 2em; margin-bottom: 10px; font-weight: 300; }
+            .content { padding: 30px; }
+            .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+            .info-card { background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #28a745; }
+            .info-card h3 { color: #28a745; margin-bottom: 10px; }
+            .products-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+            .products-table thead { background: linear-gradient(135deg, #28a745, #20c997); color: white; }
+            .products-table th { padding: 12px; text-align: left; }
+            .products-table td { padding: 10px; border-bottom: 1px solid #eee; }
+            .total-section { background: linear-gradient(135deg, #d4edda, #c3e6cb); padding: 15px; border-radius: 8px; margin-top: 20px; text-align: right; }
+            .total-section strong { font-size: 1.3em; color: #28a745; }
+            .message-section { background: #e7f3ff; padding: 15px; border-radius: 8px; border-left: 4px solid #28a745; margin-top: 20px; }
+            .footer { background: #343a40; color: #adb5bd; padding: 20px; text-align: center; margin-top: 30px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>📦 REMISIÓN</h1>
+              <p>N° ${numeroRemision}</p>
+            </div>
+            <div class="content">
+              <div class="info-grid">
+                <div class="info-card">
+                  <h3>👤 Cliente</h3>
+                  <p><strong>Nombre:</strong> ${remisionDoc.cliente?.nombre || 'N/A'}</p>
+                  <p><strong>Correo:</strong> ${remisionDoc.cliente?.correo || 'N/A'}</p>
+                  <p><strong>Teléfono:</strong> ${remisionDoc.cliente?.telefono || 'N/A'}</p>
+                </div>
+                <div class="info-card">
+                  <h3>📋 Detalles</h3>
+                  <p><strong>Número:</strong> ${numeroRemision}</p>
+                  <p><strong>Fecha:</strong> ${new Date(remisionDoc.fechaRemision).toLocaleDateString('es-ES')}</p>
+                  <p><strong>Estado:</strong> ${remisionDoc.estado}</p>
+                </div>
+              </div>
+              <table class="products-table">
+                <thead>
+                  <tr>
+                    <th>Producto</th>
+                    <th style="text-align: center;">Cantidad</th>
+                    <th style="text-align: right;">Precio</th>
+                    <th style="text-align: right;">Subtotal</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${remisionDoc.productos.map(p => {
+                    const precio = Number(p.precioUnitario) || 0;
+                    const cantidad = Number(p.cantidad) || 0;
+                    return `<tr>
+                      <td><strong>${p.nombre || 'N/A'}</strong></td>
+                      <td style="text-align: center;">${cantidad}</td>
+                      <td style="text-align: right;">S/. ${precio.toFixed(2)}</td>
+                      <td style="text-align: right;"><strong>S/. ${(precio * cantidad).toFixed(2)}</strong></td>
+                    </tr>`;
+                  }).join('')}
+                </tbody>
+              </table>
+              <div class="total-section">
+                <strong>TOTAL: S/. ${totalCalculado.toFixed(2)}</strong>
+              </div>
+              ${mensaje ? `<div class="message-section"><h3>Mensaje</h3><p>${mensaje}</p></div>` : ''}
+            </div>
+            <div class="footer">
+              <p><strong>${process.env.COMPANY_NAME || 'JLA Global Company'}</strong></p>
+              <p>${process.env.GMAIL_USER || 'contacto@empresa.com'}</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `;
 
       try {
-        console.log('📄 Generando PDF (remisión existente)...');
+        console.log('📄 [REMISION] Generando PDF (remisión existente)...');
+        console.log('📄 [REMISION] Datos remisión:', {
+          numeroRemision: remisionDoc.numeroRemision,
+          productos: remisionDoc.productos?.length,
+          cliente: remisionDoc.cliente?.nombre
+        });
         const pdfService = new PDFService();
         const pdfData = await pdfService.generarPDFRemision(remisionDoc.toObject ? remisionDoc.toObject() : remisionDoc);
         pdfAttachment = { filename: pdfData.filename, content: pdfData.buffer, contentType: pdfData.contentType };
-        console.log('✅ PDF generado (remisión)');
+        console.log('✅ [REMISION] PDF generado exitosamente:', pdfData.filename);
       } catch (e) {
-        console.warn('⚠️ PDF no generado (remisión):', e.message);
+        console.error('❌ [REMISION] Error generando PDF:', e.message);
+        console.error('❌ [REMISION] Stack:', e.stack);
       }
     }
 

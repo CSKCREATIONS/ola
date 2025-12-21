@@ -555,14 +555,13 @@ export default function PedidosAgendados() {
       if (!agendarFechaEnt) newErrors.fechaEnt = 'Fecha de entrega es obligatoria.';
 
       if (agendarProductos?.length) {
-        for (let i = 0; i < agendarProductos.length; i++) {
-          const p = agendarProductos[i];
+        agendarProductos.forEach((p, i) => {
           const pe = {};
           if (!p.producto) pe.producto = 'Seleccione un producto.';
           if (!p.cantidad || Number.parseFloat(p.cantidad) <= 0) pe.cantidad = 'Cantidad debe ser mayor a 0.';
           if (!p.valorUnitario || Number.parseFloat(p.valorUnitario) <= 0) pe.valorUnitario = 'Valor unitario inválido.';
           newProductErrors[i] = pe;
-        }
+        });
       } else {
         newErrors.productos = 'Agrega al menos un producto al pedido.';
       }
@@ -632,6 +631,153 @@ export default function PedidosAgendados() {
     await fetchPedidosAgendados();
     setCotizacionPreview(nuevoPedido);
     showSuccessToast('Pedido agendado');
+  };
+
+  // Función para agendar y enviar correo automáticamente
+  const handleAgendarYEnviar = async () => {
+    try {
+      // Validaciones inline: construir objetos de error
+      const newErrors = {};
+      const newProductErrors = [];
+
+      if (!agendarCliente?.trim()) newErrors.cliente = 'Nombre o razón social es obligatorio.';
+      if (!agendarTelefono?.trim()) newErrors.telefono = 'Teléfono es obligatorio.';
+      if (!agendarCorreo?.trim()) newErrors.correo = 'Correo es obligatorio.';
+      else if (!isValidEmail(agendarCorreo)) newErrors.correo = 'Formato de correo inválido.';
+      if (!agendarFechaAg) newErrors.fechaAg = 'Fecha de agendamiento es obligatoria.';
+      if (!agendarFechaEnt) newErrors.fechaEnt = 'Fecha de entrega es obligatoria.';
+
+      if (agendarProductos?.length) {
+        agendarProductos.forEach((p, i) => {
+          const pe = {};
+          if (!p.producto) pe.producto = 'Seleccione un producto.';
+          if (!p.cantidad || Number.parseFloat(p.cantidad) <= 0) pe.cantidad = 'Cantidad debe ser mayor a 0.';
+          if (!p.valorUnitario || Number.parseFloat(p.valorUnitario) <= 0) pe.valorUnitario = 'Valor unitario inválido.';
+          newProductErrors[i] = pe;
+        });
+      } else {
+        newErrors.productos = 'Agrega al menos un producto al pedido.';
+      }
+
+      // Si hay errores, setearlos y no enviar
+      const hasFieldErrors = Object.keys(newErrors).length > 0 || newProductErrors.some(pe => pe && Object.keys(pe).length > 0);
+      if (hasFieldErrors) {
+        setErrors(newErrors);
+        setProductErrors(newProductErrors);
+        return;
+      }
+
+      // Mostrar loading
+      Swal.fire({
+        title: 'Procesando...',
+        text: 'Creando pedido y enviando correo',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        showConfirmButton: false,
+        didOpen: () => Swal.showLoading()
+      });
+
+      const clientePayload = {
+        nombre: agendarCliente,
+        ciudad: agendarCiudad || '',
+        direccion: agendarDireccion || '',
+        telefono: agendarTelefono,
+        correo: agendarCorreo,
+        esCliente: false,
+        operacion: 'agenda'
+      };
+
+      const productosPayload = agendarProductos.map(p => ({
+        producto: p.producto || null,
+        descripcion: p.descripcion || '',
+        cantidad: Number.parseFloat(p.cantidad) || 0,
+        valorUnitario: Number.parseFloat(p.valorUnitario) || 0,
+        descuento: Number.parseFloat(p.descuento) || 0,
+        subtotal: Number.parseFloat(p.subtotal) || 0
+      }));
+
+      const body = {
+        cliente: clientePayload,
+        productos: productosPayload,
+        fechaAgendamiento: agendarFechaAg || new Date().toISOString(),
+        fechaEntrega: agendarFechaEnt || new Date().toISOString(),
+        descripcion: descripcionRef.current?.getContent({ format: 'html' }) || '',
+        condicionesPago: condicionesRef.current?.getContent({ format: 'html' }) || '',
+        observacion: '',
+        estado: 'agendado'
+      };
+
+      // Paso 1: Crear el pedido
+      const res = await api.post('/api/pedidos', body);
+      if (res.status < 200 || res.status >= 300) {
+        throw new Error(res.data?.message || 'No se pudo crear el pedido.');
+      }
+
+      const data = res.data || res;
+      const nuevoPedido = data.data || data;
+
+      if (!nuevoPedido?._id) {
+        throw new Error('El pedido se creó pero no se recibió el ID correctamente');
+      }
+
+      // Paso 2: Enviar correo automáticamente
+      try {
+        const resEmail = await api.post(`/api/pedidos/${nuevoPedido._id}/enviar-correo`, {
+          pedidoId: nuevoPedido._id,
+          correoDestino: agendarCorreo,
+          asunto: `Pedido Agendado ${nuevoPedido.numeroPedido || ''} - JLA Global Company`,
+          mensaje: 'Adjunto encontrará los detalles de su pedido agendado. Gracias por su preferencia.'
+        });
+
+        if (resEmail.status >= 200 && resEmail.status < 300) {
+          // Todo salió bien
+          Swal.fire({
+            icon: 'success',
+            title: '¡Éxito!',
+            text: 'Pedido agendado y correo enviado exitosamente',
+            confirmButtonColor: '#10b981'
+          });
+        } else {
+          // Pedido creado pero correo falló
+          Swal.fire({
+            icon: 'warning',
+            title: 'Pedido agendado',
+            html: 'El pedido se agendó exitosamente pero no se pudo enviar el correo.<br>Puede enviarlo manualmente desde el pedido.',
+            confirmButtonColor: '#f59e0b'
+          });
+        }
+      } catch (emailError) {
+        console.error('Error al enviar correo:', emailError);
+        // Pedido creado pero correo falló
+        Swal.fire({
+          icon: 'warning',
+          title: 'Pedido agendado',
+          html: 'El pedido se agendó exitosamente pero no se pudo enviar el correo.<br>Puede enviarlo manualmente desde el pedido.',
+          confirmButtonColor: '#f59e0b'
+        });
+      }
+
+      // Limpiar formulario y actualizar vista
+      setMostrarModalAgendar(false);
+      setAgendarCliente(''); setAgendarCiudad(''); setAgendarDireccion(''); 
+      setAgendarTelefono(''); setAgendarCorreo(''); setAgendarFechaAg(''); 
+      setAgendarFechaEnt(''); setAgendarProductos([]);
+      setErrors({}); setProductErrors([]);
+      if (descripcionRef.current) descripcionRef.current.setContent('');
+      if (condicionesRef.current) condicionesRef.current.setContent('');
+
+      await fetchPedidosAgendados();
+      setCotizacionPreview(nuevoPedido);
+
+    } catch (err) {
+      console.error('Error en agendar y enviar:', err);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: err?.response?.data?.message || err?.message || 'Error al crear el pedido',
+        confirmButtonColor: '#ef4444'
+      });
+    }
   };
 
   const showSuccessToast = (title) => {
@@ -816,33 +962,15 @@ export default function PedidosAgendados() {
   const remisionarPedido = async (id) => {
     // Mostrar modal para seleccionar fecha de entrega y luego llamar al endpoint de remisión
     try {
-      const hoy = new Date().toISOString().split('T')[0];
       const defaultDate = pedidoDefaultDateForSwal(id);
-      const fechaInicial = (defaultDate && defaultDate >= hoy) ? defaultDate : hoy;
-      
       const { value: fechaSeleccionada } = await Swal.fire({
         title: 'Seleccione la fecha de entrega',
         input: 'date',
         inputLabel: 'Fecha de entrega',
-        inputValue: fechaInicial,
-        inputAttributes: {
-          min: hoy,
-          max: '2099-12-31'
-        },
+        inputValue: defaultDate,
         showCancelButton: true,
         confirmButtonText: 'Confirmar',
-        cancelButtonText: 'Cancelar',
-        preConfirm: (fecha) => {
-          if (!fecha) {
-            Swal.showValidationMessage('Debe seleccionar una fecha');
-            return false;
-          }
-          if (fecha < hoy) {
-            Swal.showValidationMessage('No puede seleccionar una fecha pasada');
-            return false;
-          }
-          return fecha;
-        }
+        cancelButtonText: 'Cancelar'
       });
 
       if (!fechaSeleccionada) return; // usuario canceló o no escogió
@@ -1317,7 +1445,7 @@ export default function PedidosAgendados() {
                         <TinyMCE.Editor
                           id="agendar-descripcion"
                           onInit={(evt, editor) => (descripcionRef.current = editor)}
-                          apiKey="2o32797pg92f9dkmfu7lag00dumqni4pik6xv30ds3v5nq9o"
+                          apiKey="bjhw7gemroy70lt4bgmfvl29zid7pmrwyrtx944dmm4jq39w"
                           textareaName="Descripcion"
                           init={{ height: 220, menubar: false }}
                         />
@@ -1532,7 +1660,7 @@ export default function PedidosAgendados() {
                         <TinyMCE.Editor
                           id="agendar-condiciones"
                           onInit={(evt, editor) => (condicionesRef.current = editor)}
-                          apiKey="2o32797pg92f9dkmfu7lag00dumqni4pik6xv30ds3v5nq9o"
+                          apiKey="bjhw7gemroy70lt4bgmfvl29zid7pmrwyrtx944dmm4jq39w"
                           textareaName="Condiciones"
                           init={{ height: 260, menubar: false }}
                         />
@@ -1581,20 +1709,7 @@ export default function PedidosAgendados() {
                         Agendar
                       </button>
 
-                      <button
-                        type="button"
-                        style={{
-                          padding: '0.7rem 1.4rem',
-                          borderRadius: '10px',
-                          border: 'none',
-                          background: 'linear-gradient(135deg, #10b981, #059669)',
-                          color: '#fff',
-                          fontWeight: 600,
-                          cursor: 'pointer'
-                        }}
-                      >
-                        Agendar y Enviar
-                      </button>
+                      
                     </div>
                   </div>
                 </div>

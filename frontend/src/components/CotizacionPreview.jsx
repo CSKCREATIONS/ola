@@ -55,7 +55,7 @@ async function openRemisionSwal(datos) {
               <i class="fa-solid fa-truck" style="color: #059669; margin-right: 8px;"></i>
               <span>Fecha de Entrega</span> <span style="color: #ef4444;">*</span>
             </label>
-            <input type="date" id="fechaEntrega" value="${fechaDefault}" min="${new Date().toISOString().split('T')[0]}" style="width:100%; padding:12px; border-radius:8px; border:2px solid #e5e7eb; background:#f9fafb;" />
+            <input type="date" id="fechaEntrega" value="${fechaDefault}" style="width:100%; padding:12px; border-radius:8px; border:2px solid #e5e7eb; background:#f9fafb;" />
             <small style="color:#6b7280; font-size:12px; display:block; margin-top:4px;">Fecha de entrega de los productos</small>
           </div>
           <div style="margin-bottom: 16px;">
@@ -95,11 +95,8 @@ async function openRemisionSwal(datos) {
         Swal.showValidationMessage(`<div style="text-align:left;color:#dc2626;"><i class="fa-solid fa-exclamation-circle"></i> <strong>La fecha de entrega es requerida</strong><br><small>Por favor seleccione una fecha para continuar</small></div>`);
         return { valid: false };
       }
-      const fechaSeleccionada = new Date(fechaEntrega + 'T00:00:00');
-      const hoy = new Date();
-      hoy.setHours(0, 0, 0, 0);
-      fechaSeleccionada.setHours(0, 0, 0, 0);
-      
+      const fechaSeleccionada = new Date(fechaEntrega);
+      const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
       if (fechaSeleccionada < hoy) {
         Swal.showValidationMessage(`<div style="text-align:left;color:#dc2626;"><i class="fa-solid fa-calendar-xmark"></i> <strong>La fecha de entrega no puede ser anterior a hoy</strong><br><small>Por favor seleccione una fecha válida</small></div>`);
         return { valid: false };

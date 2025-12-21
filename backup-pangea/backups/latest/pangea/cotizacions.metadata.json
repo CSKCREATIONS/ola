@@ -1,0 +1,1 @@
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"}],"uuid":"161175491e4549f39db658bb59a75d66","collectionName":"cotizacions","type":"collection"}

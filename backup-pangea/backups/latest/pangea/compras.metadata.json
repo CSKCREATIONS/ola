@@ -1,0 +1,1 @@
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"},{"v":{"$numberInt":"2"},"key":{"numeroOrden":{"$numberInt":"1"}},"name":"numeroOrden_1","background":true,"unique":true}],"uuid":"14cf858add0d4ed0a4af47dd544ff422","collectionName":"compras","type":"collection"}

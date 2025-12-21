@@ -18,7 +18,17 @@ class PDFService {
       },
       footer: {
         height: '28mm'
-      }
+      },
+      // Argumentos de Puppeteer para Docker
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-accelerated-2d-canvas',
+        '--no-first-run',
+        '--no-zygote',
+        '--disable-gpu'
+      ]
     };
   }
 
@@ -186,8 +196,8 @@ class PDFService {
       `;
     }).join('') : `<tr><td colspan="4" class="no-product">No hay productos disponibles</td></tr>`;
 
-    const descripcionHtml = cotizacion.descripcion ? `<div class="descripcion">${escapeHtml(cotizacion.descripcion)}</div>` : '';
-    const condicionesHtml = cotizacion.condicionesPago ? `<div class="condiciones">${escapeHtml(cotizacion.condicionesPago)}</div>` : '';
+    const descripcionHtml = cotizacion.descripcion ? `<div class="descripcion">${cotizacion.descripcion}</div>` : '';
+    const condicionesHtml = cotizacion.condicionesPago ? `<div class="condiciones">${cotizacion.condicionesPago}</div>` : '';
 
     const companyName = escapeHtml(process.env.COMPANY_NAME || 'JLA Global Company');
     const companyPhone = escapeHtml(process.env.COMPANY_PHONE || '(000) 000-0000');
@@ -283,6 +293,8 @@ class PDFService {
       const descuento = Number.parseFloat(p.descuento) || 0;
       return s + cantidad * valorUnitario * (1 - descuento / 100);
     }, 0) : 0);
+    
+    const fechaEntrega = remision.fechaRemision ? new Date(remision.fechaRemision).toLocaleDateString('es-ES') : new Date().toLocaleDateString('es-ES');
 
     const companyName = escapeHtml(process.env.COMPANY_NAME || 'JLA Global Company');
     const companyPhone = escapeHtml(process.env.COMPANY_PHONE || '(555) 123-4567');
@@ -302,13 +314,14 @@ class PDFService {
       const subtotal = (cantidad * (Number(p.precioUnitario || p.valorUnitario || 0))).toFixed(2);
       return `
         <tr class="producto-row ${idx % 2 === 0 ? 'even' : 'odd'}">
-          <td class="producto-nombre">${escapeHtml(String(nombre))}</td>
-          <td class="producto-cantidad">${cantidad}</td>
-          <td class="producto-precio">S/. ${Number(valor).toLocaleString('es-ES')}</td>
-          <td class="producto-subtotal">S/. ${Number(subtotal).toLocaleString('es-ES')}</td>
+          <td style="padding: 0.75rem; text-align: center;">${cantidad}</td>
+          <td class="producto-nombre" style="padding: 0.75rem;">${escapeHtml(String(nombre))}</td>
+          <td style="padding: 0.75rem;">${escapeHtml(p.descripcion || '-')}</td>
+          <td class="producto-precio" style="padding: 0.75rem; text-align: right;">S/. ${Number(valor).toLocaleString('es-ES')}</td>
+          <td class="producto-subtotal" style="padding: 0.75rem; text-align: right;">S/. ${Number(subtotal).toLocaleString('es-ES')}</td>
         </tr>
       `;
-    }).join('') : `<tr><td colspan="4" class="no-product">No hay productos disponibles</td></tr>`;
+    }).join('') : `<tr><td colspan="5" class="no-product">No hay productos disponibles</td></tr>`;
 
     return `<!DOCTYPE html>
     <html lang="es">
@@ -369,7 +382,7 @@ class PDFService {
             <tfoot>
               <tr style="background: linear-gradient(135deg, #ecfdf5, #d1fae5); border-top: 2px solid #059669;">
                 <td colspan="4" style="padding: 1rem; text-align: right; font-weight: bold; font-size: 1.1rem; color: #059669;">TOTAL A ENTREGAR:</td>
-                <td style="padding: 1rem; text-align: right; font-weight: bold; font-size: 1.3rem; color: #059669;">S/. ${Number(total || 0).toLocaleString('es-ES')}</td>
+                <td style="padding: 1rem; text-align: right; font-weight: bold; font-size: 1.3rem; color: #059669;">S/. ${Number(total || 0).toFixed(2)}</td>
               </tr>
             </tfoot>
           </table>
@@ -828,6 +841,440 @@ class PDFService {
     </html>
     `;
   }
+
+  // Generar PDF de Orden de Compra
+  async generarPDFOrdenCompra(orden) {
+    try {
+      const html = this.generarHTMLOrdenCompra(orden);
+      
+      const file = {
+        content: html
+      };
+
+      const pdfBuffer = await htmlPdf.generatePdf(file, this.options);
+      
+      return {
+        buffer: pdfBuffer,
+        filename: `OrdenCompra_${orden.numeroOrden || orden._id}.pdf`,
+        contentType: 'application/pdf'
+      };
+    } catch (error) {
+      console.error('❌ Error generando PDF de orden de compra:', error);
+      throw error;
+    }
+  }
+
+  // Generar HTML para orden de compra
+  generarHTMLOrdenCompra(orden) {
+    const fechaOrden = orden.fechaOrden || orden.fecha;
+    const fechaFormateada = fechaOrden ? new Date(fechaOrden).toLocaleDateString('es-ES', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    }) : 'N/A';
+
+    const totalCalculado = orden.productos?.reduce((total, producto) => {
+      const subtotal = Number(producto.cantidad * (producto.valorUnitario || producto.precioUnitario || 0)) || 0;
+      return total + subtotal;
+    }, 0) || 0;
+
+    const totalFinal = Number(orden.total) || totalCalculado;
+    const subtotalFinal = Number(orden.subtotal) || totalCalculado;
+    const impuestosFinal = Number(orden.impuestos) || 0;
+
+    return `
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Orden de Compra ${orden.numeroOrden}</title>
+      <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+          line-height: 1.6; 
+          color: #333; 
+          background-color: #ffffff;
+          padding: 20px;
+        }
+        .container { 
+          max-width: 800px; 
+          margin: 0 auto; 
+          background: white; 
+        }
+        .header { 
+          background: linear-gradient(135deg, #f39c12, #e67e22); 
+          color: white; 
+          padding: 30px; 
+          text-align: center; 
+          margin-bottom: 30px;
+        }
+        .header h1 { 
+          font-size: 28px; 
+          margin-bottom: 10px; 
+          font-weight: 700; 
+        }
+        .header p { 
+          font-size: 16px; 
+          opacity: 0.9; 
+        }
+        .info-section {
+          margin-bottom: 25px;
+          padding: 20px;
+          background: #f8f9fa;
+          border-left: 4px solid #f39c12;
+          border-radius: 5px;
+        }
+        .info-section h3 {
+          color: #f39c12;
+          margin-bottom: 15px;
+          font-size: 18px;
+        }
+        .info-row {
+          display: flex;
+          justify-content: space-between;
+          padding: 8px 0;
+          border-bottom: 1px solid #e9ecef;
+        }
+        .info-row:last-child {
+          border-bottom: none;
+        }
+        .info-label {
+          font-weight: 600;
+          color: #495057;
+        }
+        .info-value {
+          color: #212529;
+        }
+        table { 
+          width: 100%; 
+          border-collapse: collapse; 
+          margin: 25px 0;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        thead {
+          background: linear-gradient(135deg, #f39c12, #e67e22);
+          color: white;
+        }
+        th { 
+          padding: 15px; 
+          text-align: left; 
+          font-weight: 600;
+        }
+        td { 
+          padding: 12px 15px; 
+          border-bottom: 1px solid #e9ecef; 
+        }
+        tbody tr:hover { 
+          background-color: #f8f9fa; 
+        }
+        .total-section {
+          margin-top: 30px;
+          padding: 20px;
+          background: #f8f9fa;
+          border-radius: 5px;
+        }
+        .total-row {
+          display: flex;
+          justify-content: space-between;
+          padding: 10px 0;
+          font-size: 16px;
+        }
+        .total-row.final {
+          font-size: 20px; 
+          font-weight: bold; 
+          color: #f39c12; 
+          margin-top: 10px; 
+          padding-top: 15px; 
+          border-top: 2px solid #f39c12; 
+        }
+        .condiciones {
+          background: #fff3cd;
+          border-left: 4px solid #ffc107;
+          padding: 15px;
+          border-radius: 5px;
+          margin-top: 20px;
+        }
+        .footer { 
+          text-align: center; 
+          padding: 20px; 
+          color: #6c757d; 
+          font-size: 12px;
+          margin-top: 30px;
+          border-top: 1px solid #dee2e6;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>📝 ORDEN DE COMPRA</h1>
+          <p>N° ${orden.numeroOrden || 'N/A'}</p>
+        </div>
+
+        <div class="info-section">
+          <h3>📋 Información General</h3>
+          <div class="info-row">
+            <span class="info-label">Fecha de Orden:</span>
+            <span class="info-value">${fechaFormateada}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Proveedor:</span>
+            <span class="info-value">${orden.proveedor || 'N/A'}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Responsable:</span>
+            <span class="info-value">${orden.responsable || 'N/A'}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Solicitado por:</span>
+            <span class="info-value">${orden.solicitadoPor || 'N/A'}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Estado:</span>
+            <span class="info-value">${orden.estado || 'Pendiente'}</span>
+          </div>
+          ${orden.direccionEntrega ? `
+          <div class="info-row">
+            <span class="info-label">Dirección de Entrega:</span>
+            <span class="info-value">${orden.direccionEntrega}</span>
+          </div>
+          ` : ''}
+        </div>
+
+        <div class="info-section">
+          <h3>📦 Productos Solicitados</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th style="text-align: center;">Cantidad</th>
+                <th style="text-align: right;">Valor Unit.</th>
+                <th style="text-align: right;">Subtotal</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${orden.productos?.map(p => {
+                  const qty = Number(p.cantidad) || 0;
+                  const precio = Number(p.valorUnitario ?? p.precioUnitario) || 0;
+                  const subtotal = qty * precio;
+                  const prodName = (p.producto && (p.producto.name || p.producto.nombre)) || (typeof p.producto === 'string' ? p.producto : '') || p.descripcion || 'N/A';
+                  return `
+                    <tr>
+                      <td>
+                        <strong>${prodName}</strong>
+                        ${p.descripcion ? `<br><small style="color: #666;">${p.descripcion}</small>` : ''}
+                      </td>
+                      <td style="text-align: center; font-weight: 600;">${qty}</td>
+                      <td style="text-align: right;">$${Number(precio || 0).toLocaleString('es-CO', { minimumFractionDigits: 2 })}</td>
+                      <td style="text-align: right; font-weight: 600;">$${Number(subtotal || 0).toLocaleString('es-CO', { minimumFractionDigits: 2 })}</td>
+                    </tr>
+                  `;
+                }).join('') || '<tr><td colspan="4" style="text-align: center; padding: 20px;">No hay productos</td></tr>'}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="total-section">
+          <div class="total-row">
+            <span><strong>Subtotal:</strong></span>
+            <span>$${subtotalFinal.toLocaleString('es-CO', { minimumFractionDigits: 2 })}</span>
+          </div>
+          <div class="total-row">
+            <span><strong>Impuestos (IVA):</strong></span>
+            <span>$${impuestosFinal.toLocaleString('es-CO', { minimumFractionDigits: 2 })}</span>
+          </div>
+          <div class="total-row final">
+            <span>TOTAL:</span>
+            <span>$${totalFinal.toLocaleString('es-CO', { minimumFractionDigits: 2 })}</span>
+          </div>
+        </div>
+
+        ${orden.condicionesPago ? `
+          <div class="condiciones">
+            <strong>💳 Condiciones de Pago:</strong><br>
+            ${orden.condicionesPago}
+          </div>
+        ` : ''}
+
+        <div class="footer">
+          <p><strong>${process.env.COMPANY_NAME || 'JLA Global Company'}</strong></p>
+          <p>Orden de Compra generada automáticamente</p>
+          <p>© ${new Date().getFullYear()} ${process.env.COMPANY_NAME || 'JLA Global Company'}. Todos los derechos reservados.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+    `;
+  }
+
+  // Generar PDF de Pedido Agendado
+  async generarPDFPedidoAgendado(pedido) {
+    console.log('📄 [PDFService] Iniciando generación de PDF para pedido:', pedido?.numeroPedido || pedido?._id);
+    
+    const productos = pedido.productos || [];
+    console.log('📦 [PDFService] Total productos:', productos.length);
+    
+    const totalCalculado = productos.reduce((total, producto) => {
+      const precio = Number(producto.precioUnitario) || Number(producto.product?.price) || 0;
+      const cantidad = Number(producto.cantidad) || 0;
+      return total + (precio * cantidad);
+    }, 0);
+    
+    console.log('💰 [PDFService] Total calculado:', totalCalculado);
+
+    const html = `
+      <!DOCTYPE html>
+      <html lang="es">
+      <head>
+        <meta charset="UTF-8">
+        <title>Pedido Agendado ${pedido.numeroPedido}</title>
+        <style>
+          @page { size: A4 portrait; margin: 14mm; }
+          * { box-sizing: border-box; margin: 0; padding: 0; }
+          body { font-family: Arial, sans-serif; color: #333; background: #fff; }
+          .container { max-width: 900px; margin: 0 auto; padding: 12px; }
+          .banner { background: linear-gradient(135deg, #fd7e14, #e8590c); color: #fff; padding: 20px; border-radius: 8px; text-align: center; }
+          .banner .title-main { font-size: 24px; font-weight: 700; }
+          .banner .sub { font-size: 14px; margin-top: 6px; }
+          .card { background: #fff; border-radius: 8px; padding: 14px; margin-top: 16px; }
+          .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px; }
+          .info-grid h4 { color: #fd7e14; border-bottom: 3px solid #fd7e14; padding-bottom: 8px; margin-bottom: 10px; font-size: 16px; }
+          .info-field { font-size: 12px; margin: 4px 0; }
+          .products-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+          .products-table thead { background: linear-gradient(135deg, #fd7e14, #e8590c); color: white; }
+          .products-table th { padding: 12px; text-align: left; font-size: 13px; }
+          .products-table td { padding: 10px; border-bottom: 1px solid #eee; font-size: 12px; }
+          .products-table tbody tr:hover { background: #f9f9f9; }
+          .totals-section { margin-top: 16px; }
+          .total-row { display: flex; justify-content: space-between; padding: 10px; font-size: 14px; }
+          .total-row.final { background: linear-gradient(135deg, #fff5e6, #ffe4cc); color: #fd7e14; font-size: 18px; font-weight: bold; padding: 14px; border-radius: 8px; }
+          .descripcion, .condiciones { background: #eff6ff; padding: 12px; border-radius: 8px; border-left: 4px solid #fd7e14; white-space: pre-wrap; }
+          .footer { margin-top: 30px; padding: 20px; background: #f8f9fa; border-top: 3px solid #fd7e14; text-align: center; border-radius: 8px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="banner">
+            <div class="title-main">📅 PEDIDO AGENDADO</div>
+            <div class="sub">N° ${pedido.numeroPedido || 'Sin número'}</div>
+          </div>
+
+          <div class="card">
+            <div class="info-grid">
+              <div>
+                <h4>Información del Cliente</h4>
+                <div class="info-field"><strong>Cliente:</strong> ${pedido.cliente?.nombre || 'N/A'}</div>
+                <div class="info-field"><strong>Teléfono:</strong> ${pedido.cliente?.telefono || 'N/A'}</div>
+                <div class="info-field"><strong>Correo:</strong> ${pedido.cliente?.correo || 'N/A'}</div>
+                <div class="info-field"><strong>Dirección:</strong> ${pedido.cliente?.direccion || 'N/A'}</div>
+                <div class="info-field"><strong>Ciudad:</strong> ${pedido.cliente?.ciudad || 'N/A'}</div>
+              </div>
+              <div>
+                <h4>Detalles del Pedido</h4>
+                <div class="info-field"><strong>Fecha Agendamiento:</strong> ${pedido.fechaAgendamiento ? new Date(pedido.fechaAgendamiento).toLocaleDateString('es-ES') : 'N/A'}</div>
+                <div class="info-field"><strong>Fecha Entrega:</strong> ${pedido.fechaEntrega ? new Date(pedido.fechaEntrega).toLocaleDateString('es-ES') : 'N/A'}</div>
+                <div class="info-field"><strong>Estado:</strong> ${pedido.estado || 'Agendado'}</div>
+                <div class="info-field"><strong>Total Productos:</strong> ${productos.length || 0}</div>
+              </div>
+            </div>
+
+            ${pedido.descripcion ? `
+              <div style="margin-bottom: 16px;">
+                <h4 style="color: #fd7e14; border-bottom: 3px solid #fd7e14; padding-bottom: 8px; margin-bottom: 10px;">Descripción</h4>
+                <div class="descripcion">${pedido.descripcion}</div>
+              </div>
+            ` : ''}
+
+            <div>
+              <h4 style="color: #fd7e14; border-bottom: 3px solid #fd7e14; padding-bottom: 8px; margin-bottom: 10px;">Productos</h4>
+              <table class="products-table">
+                <thead>
+                  <tr>
+                    <th style="text-align: left;">Producto</th>
+                    <th style="text-align: center;">Cantidad</th>
+                    <th style="text-align: right;">Precio Unit.</th>
+                    <th style="text-align: right;">Subtotal</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${productos.map(producto => {
+                    const nombre = producto.product?.name || producto.product?.nombre || producto.nombre || 'Producto sin nombre';
+                    const categoria = producto.product?.categoria || '';
+                    const precio = Number(producto.precioUnitario) || Number(producto.product?.price) || 0;
+                    const cantidad = Number(producto.cantidad) || 0;
+                    const subtotal = precio * cantidad;
+                    return `
+                      <tr>
+                        <td><strong>${nombre}</strong>${categoria ? `<br><span style="font-size: 11px; color: #666;">${categoria}</span>` : ''}</td>
+                        <td style="text-align: center;">${cantidad}</td>
+                        <td style="text-align: right;">S/. ${precio.toFixed(2)}</td>
+                        <td style="text-align: right;"><strong>S/. ${subtotal.toFixed(2)}</strong></td>
+                      </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
+              <div class="totals-section">
+                <div class="total-row final">
+                  <span>TOTAL:</span>
+                  <span>S/. ${totalCalculado.toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+
+            ${pedido.condicionesPago ? `
+              <div style="margin-top: 16px;">
+                <h4 style="color: #fd7e14; border-bottom: 3px solid #fd7e14; padding-bottom: 8px; margin-bottom: 10px;">Condiciones de Pago</h4>
+                <div class="condiciones">${pedido.condicionesPago}</div>
+              </div>
+            ` : ''}
+
+            ${pedido.observacion ? `
+              <div style="margin-top: 16px;">
+                <h4 style="color: #fd7e14; border-bottom: 3px solid #fd7e14; padding-bottom: 8px; margin-bottom: 10px;">Observaciones</h4>
+                <div class="descripcion">${pedido.observacion}</div>
+              </div>
+            ` : ''}
+          </div>
+
+          <div class="footer">
+            <div style="font-size: 18px; font-weight: bold; color: #fd7e14; margin-bottom: 8px;">
+              ${process.env.COMPANY_NAME || 'JLA Global Company'}
+            </div>
+            <div style="font-size: 13px; color: #666;">
+              Gracias por su preferencia • Este pedido está programado para la fecha indicada
+            </div>
+            <div style="margin-top: 12px; font-size: 12px; color: #888;">
+              Documento generado el ${new Date().toLocaleDateString('es-ES')} a las ${new Date().toLocaleTimeString('es-ES')}
+            </div>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const file = { content: html };
+    const options = { format: 'A4' };
+
+    try {
+      console.log('🔄 [PDFService] Llamando a htmlPdf.generatePdf...');
+      const pdfBuffer = await htmlPdf.generatePdf(file, options);
+      console.log('✅ [PDFService] PDF generado, tamaño:', pdfBuffer?.length, 'bytes');
+      
+      return {
+        buffer: pdfBuffer,
+        filename: `Pedido_Agendado_${pedido.numeroPedido || pedido._id}.pdf`,
+        contentType: 'application/pdf'
+      };
+    } catch (error) {
+      console.error('❌ [PDFService] Error generando PDF de pedido agendado:', error);
+      console.error('❌ [PDFService] Stack trace:', error.stack);
+      throw error;
+    }
+  }
 }
 
 module.exports = PDFService;
+

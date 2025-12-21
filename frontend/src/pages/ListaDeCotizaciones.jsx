@@ -2084,4 +2084,3 @@ export default function ListaDeCotizaciones() {
     </div>
   )
 }
-

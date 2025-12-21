@@ -33,11 +33,15 @@ async function populateOrdenProductos(orden) {
 // Helper: generar PDF de forma segura y devolver attachment o null
 async function generatePdfAttachmentSafeOrden(orden) {
   try {
+    console.log('📄 [ORDEN PDF] Iniciando generación de PDF...');
+    console.log('📄 [ORDEN PDF] Número de orden:', orden.numeroOrden);
     const pdfService = new PDFService();
     const pdfData = await pdfService.generarPDFOrdenCompra(orden);
+    console.log('✅ [ORDEN PDF] PDF generado exitosamente');
     return pdfData ? { filename: pdfData.filename, content: pdfData.buffer, contentType: pdfData.contentType } : null;
   } catch (e) {
-    console.error('⚠️ Error generando PDF de orden (no crítico):', e.message);
+    console.error('❌ [ORDEN PDF] Error generando PDF:', e.message);
+    console.error('❌ [ORDEN PDF] Stack:', e.stack);
     return null;
   }
 }
@@ -196,27 +200,44 @@ const enviarOrdenPorCorreo = async (req, res) => {
     const { id } = req.params;
     const { destinatario, asunto, mensaje } = req.body;
 
+    console.log('📧 [ORDEN COMPRA] Iniciando envío de orden por correo...');
+    console.log('📧 [ORDEN COMPRA] ID:', id);
+    console.log('📧 [ORDEN COMPRA] Destinatario:', destinatario);
+
     if (!destinatario) return res.status(400).json({ success: false, message: 'Destinatario es requerido' });
 
     const orden = await OrdenCompra.findById(id);
     if (!orden) return res.status(404).json({ success: false, message: 'Orden de compra no encontrada' });
 
+    console.log('📋 [ORDEN COMPRA] Orden encontrada:', orden.numeroOrden);
+    console.log('📦 [ORDEN COMPRA] Productos en orden:', orden.productos?.length || 0);
+
     // Poblar productos (no-fatal)
     await populateOrdenProductos(orden);
 
     const ordenHTML = generarHTMLOrden(orden, mensaje);
+    console.log('📄 [ORDEN COMPRA] Generando PDF...');
     const pdfAttachment = await generatePdfAttachmentSafeOrden(orden);
+    
+    if (pdfAttachment) {
+      console.log('✅ [ORDEN COMPRA] PDF generado exitosamente:', pdfAttachment.filename);
+    } else {
+      console.warn('⚠️ [ORDEN COMPRA] No se pudo generar el PDF');
+    }
 
     const asuntoFinal = asunto || `Orden de Compra - N° ${orden.numeroOrden || 'N/A'} - JLA Global Company`;
 
     const attachments = pdfAttachment ? [{ filename: pdfAttachment.filename, content: pdfAttachment.content, contentType: pdfAttachment.contentType }] : [];
 
     // Use centralized email sender
+    console.log('📧 [ORDEN COMPRA] Enviando correo...');
     await emailSender.sendMail(destinatario, asuntoFinal, ordenHTML, attachments);
+    console.log('✅ [ORDEN COMPRA] Correo enviado exitosamente');
 
     return res.status(200).json({ success: true, message: `¡Orden de compra enviada por correo exitosamente!${pdfAttachment ? ' con PDF adjunto' : ''}`, details: { destinatario, asunto: asuntoFinal, numeroOrden: orden.numeroOrden, pdfAdjunto: !!pdfAttachment, fecha: new Date().toLocaleString('es-CO') } });
   } catch (error) {
-    console.error('❌ Error al enviar correo:', error);
+    console.error('❌ [ORDEN COMPRA] Error al enviar correo:', error);
+    console.error('❌ [ORDEN COMPRA] Stack:', error.stack);
     return res.status(500).json({ success: false, message: 'Error al enviar correo', error: error.message });
   }
 };
